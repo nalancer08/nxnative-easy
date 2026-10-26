@@ -76,7 +76,7 @@ struct EasyStrings {
         "Mostrar datos romfs": "Show RomFS folder",
         "Abrir Sideloadly": "Open Sideloadly",
         "Primera instalación: instala la IPA ligera y copia romfs por Finder. Para actualizar, conserva la misma cuenta y bundle ID; no desinstales la app.": "First install: install the lightweight IPA, then copy romfs using Finder. For updates, keep the same account and bundle ID; do not uninstall the game.",
-        "Detalles": "Details",
+        "Diagnóstico de la preparación": "Build diagnostics",
         "Guía de instalación": "Installation guide",
         "Copiar diagnóstico": "Copy diagnostics",
         "Preparación local. No se incluyen juegos ni llaves. La firma e instalación se hacen por separado en Sideloadly.": "Local preparation. Games and keys are not included. Signing and installation happen separately in Sideloadly.",

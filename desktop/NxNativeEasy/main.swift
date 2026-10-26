@@ -258,18 +258,22 @@ struct ContentView: View {
                                 .font(.system(size:12)).foregroundStyle(ink.opacity(0.8))
                         }
                     }.padding(24).background(Color.white.opacity(0.045),in:RoundedRectangle(cornerRadius:20))
-                    DisclosureGroup(model.text("Detalles"),isExpanded:$model.showDetails) {
-                        VStack(alignment:.leading,spacing:12) {
-                            if !model.transcript.isEmpty {
+                    HStack {
+                        Link(model.text("Guía de instalación"),destination:URL(string:"https://github.com/nalancer08/nxnative-easy#readme")!)
+                        Spacer()
+                    }.font(.system(size:12))
+                    if !model.transcript.isEmpty {
+                        DisclosureGroup(model.text("Diagnóstico de la preparación"),isExpanded:$model.showDetails) {
+                            VStack(alignment:.leading,spacing:12) {
                                 Text(model.text("Los detalles de compilación se muestran en su idioma original.")).font(.system(size:11)).foregroundStyle(.gray)
                                 ScrollView {Text(model.transcript).font(.system(size:10,design:.monospaced)).textSelection(.enabled).frame(maxWidth:.infinity,alignment:.leading)}.frame(height:180)
-                            }
-                            HStack {
-                                Link(model.text("Guía de instalación"),destination:URL(string:"https://github.com/nalancer08/nxnative-easy#readme")!)
-                                if !model.transcript.isEmpty {Button(model.text("Copiar diagnóstico")){NSPasteboard.general.clearContents();NSPasteboard.general.setString(model.transcript,forType:.string)}}
-                            }
-                        }.padding(.top,10)
-                    }.font(.system(size:12)).foregroundStyle(.gray)
+                                HStack {
+                                    Button(model.text("Copiar diagnóstico")){NSPasteboard.general.clearContents();NSPasteboard.general.setString(model.transcript,forType:.string)}
+                                    Spacer()
+                                }
+                            }.padding(.top,10)
+                        }.font(.system(size:12)).foregroundStyle(.gray)
+                    }
                     Text(model.text("Preparación local. No se incluyen juegos ni llaves. La firma e instalación se hacen por separado en Sideloadly.")+"\n"+model.text("Compatibilidad según perfil, versión y dispositivo. Esta app no verifica que un juego funcione en tu iPhone."))
                         .font(.system(size:11)).foregroundStyle(.gray).lineSpacing(4)
                 }.padding(32)
