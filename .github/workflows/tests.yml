@@ -33,6 +33,11 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: Personal unsigned-build automation tests
+        run: |
+          python3 -m unittest discover -s scripts/tests
+          python3 -m unittest dm.tools.tests.test_nsp_space
+          python3 -m unittest discover -s dm/ios/tests -p test_pad_geometry.py
       - name: Host unit tests (dm/host/tests)
         run: |
           mkdir -p logs

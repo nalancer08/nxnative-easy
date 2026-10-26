@@ -1,0 +1,741 @@
+{
+  "base": "ecbeae164c0b419d1ba1031248fe1402050a3eb0",
+  "scope": "all-open-plus-20-upstream-commits",
+  "pull_requests": [
+    {
+      "number": 29,
+      "head": "c117972a2513fe2819779965954a47e06bd6fcef",
+      "url": "https://github.com/seedds/nxnative/pull/29",
+      "decision": "Conditional hardware support",
+      "reason": "A16 BC decoding and rhythm-specific controls are bundled together; retain generic editor and separate bundle identity deliberately. Requires older iPhone texture, memory and touch testing.",
+      "checks": [],
+      "changed_files": 28,
+      "draft": false
+    },
+    {
+      "number": 32,
+      "head": "0c0d8f3d1709a906c980576e6b75ef50327f4cea",
+      "url": "https://github.com/seedds/nxnative/pull/32",
+      "decision": "Graphics candidate",
+      "reason": "Alpha-test variants can fix foliage, but first-use draws are deliberately skipped while compilation runs. Requires scene comparisons and cold/warm cache tests before adoption.",
+      "checks": [],
+      "changed_files": 4,
+      "draft": false
+    },
+    {
+      "number": 76,
+      "head": "b84966ae37da87da09c2ff57d67181dc46c529b0",
+      "url": "https://github.com/seedds/nxnative/pull/76",
+      "decision": "Game-specific candidate",
+      "reason": "BotW variable frame step and resolution changes require exact registered builds and timing tests. No established Dread benefit; higher caps also need thermal validation.",
+      "checks": [
+        {
+          "name": "Tool tests",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Unsigned iOS app (synthetic modules, Swift and link)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Build check (Mac host, gfx tests, iOS sources)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Host unit tests and CPU-only gfx tests",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "changed_files": 25,
+      "draft": false
+    },
+    {
+      "number": 102,
+      "head": "36afdfa288937333cc467463db32267f79cc1d2d",
+      "url": "https://github.com/seedds/nxnative/pull/102",
+      "decision": "Mac-only option",
+      "reason": "Xbox label preference is opt-in and overlaps Nintendo detection proposals #180/#295. Choose one mapping policy, then test real controllers.",
+      "checks": [],
+      "changed_files": 2,
+      "draft": false
+    },
+    {
+      "number": 104,
+      "head": "48c615d25dd4b23202a884eb948acbf1878cf3bd",
+      "url": "https://github.com/seedds/nxnative/pull/104",
+      "decision": "Defer broad frontend replacement",
+      "reason": "Mac app packaging, save locations and preferences overlap already-existing upstream Mac packaging. Reconcile save migration and current packer before considering it.",
+      "checks": [],
+      "changed_files": 9,
+      "draft": false
+    },
+    {
+      "number": 126,
+      "head": "309722488d994df048b5750f82ad13e451a0cac5",
+      "url": "https://github.com/seedds/nxnative/pull/126",
+      "decision": "Superseded profile candidate",
+      "reason": "Same title ID overlaps #289/#304; compare builds and regenerated tables. Prefer the newer, smaller validated profile series rather than stacking all three.",
+      "checks": [],
+      "changed_files": 9,
+      "draft": false
+    },
+    {
+      "number": 160,
+      "head": "bdbf8eb2c8542cd7851690ff7224bd27221d1d56",
+      "url": "https://github.com/seedds/nxnative/pull/160",
+      "decision": "Game-specific candidate",
+      "reason": "Xenoblade 2/Torna adds SDK 3.5, audio, movie and frame-step behavior. Mac evidence does not validate iOS memory or frame timing.",
+      "checks": [],
+      "changed_files": 20,
+      "draft": false
+    },
+    {
+      "number": 167,
+      "head": "e4dc169c7662685677b47d5a067ebcd6c9647223",
+      "url": "https://github.com/seedds/nxnative/pull/167",
+      "decision": "General rendering candidate",
+      "reason": "CPU-written linear and unflushed sampled texture upload paths can help several games. Requires dirty-page, alias and CPU/GPU synchronization regressions before adoption.",
+      "checks": [],
+      "changed_files": 2,
+      "draft": false
+    },
+    {
+      "number": 171,
+      "head": "52c5daa90308ece5b1420625520d62bc7c02b759",
+      "url": "https://github.com/seedds/nxnative/pull/171",
+      "decision": "Architecture candidate",
+      "reason": "Native SM/CSRNG transport can reduce SDK symbol interceptions. Large service-memory and handle-lifetime surface; run adversarial IPC and thread-safety tests before replacing working paths.",
+      "checks": [
+        {
+          "name": "Host unit tests and CPU-only gfx tests",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Build check (Mac host, gfx tests, iOS sources)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Tool tests",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "changed_files": 14,
+      "draft": false
+    },
+    {
+      "number": 173,
+      "head": "f5e632cf5f89fb94d000ebe843a75209dc282eff",
+      "url": "https://github.com/seedds/nxnative/pull/173",
+      "decision": "Game-specific candidate",
+      "reason": "SMT V combines profile, sparse pools and iOS aspect modes; depends on #263. The aspect changes also touch the editor's coordinate assumptions and need device testing.",
+      "checks": [],
+      "changed_files": 40,
+      "draft": false
+    },
+    {
+      "number": 176,
+      "head": "887a4f058ebfe72e950d6701e5971cb2a9f4cdea",
+      "url": "https://github.com/seedds/nxnative/pull/176",
+      "decision": "Game-specific candidate",
+      "reason": "Trails adds rewriter, scanner and NVN changes as well as a region-specific profile. Rebuild shader chain and check exact regional build; IPA build alone is not gameplay validation.",
+      "checks": [],
+      "changed_files": 23,
+      "draft": false
+    },
+    {
+      "number": 179,
+      "head": "f661323a779d545e76aab50e62fc3f2914e68ec5",
+      "url": "https://github.com/seedds/nxnative/pull/179",
+      "decision": "Input candidate",
+      "reason": "Physical keyboard support changes control visibility and focus cleanup. Must retain editor access and test keyboard/controller connect, disconnect and stale callbacks together.",
+      "checks": [],
+      "changed_files": 1,
+      "draft": false
+    },
+    {
+      "number": 180,
+      "head": "fccf98362334b51d0935d4c443b7d1f354ce0f71",
+      "url": "https://github.com/seedds/nxnative/pull/180",
+      "decision": "Input candidate",
+      "reason": "Nintendo label detection is small and relevant on iOS, but overlaps #295 on Mac. Test Pro/Joy-Con and Xbox/PlayStation hardware before changing mappings.",
+      "checks": [],
+      "changed_files": 2,
+      "draft": false
+    },
+    {
+      "number": 181,
+      "head": "691dd43ef6d37ce080f0b92c4bc5fccb11f30d05",
+      "url": "https://github.com/seedds/nxnative/pull/181",
+      "decision": "Low-scope profile candidate",
+      "reason": "Asian Unicorn Overlord has independent title/build IDs and reportedly identical shader data. Import only for that release, verify build registration and profile tests.",
+      "checks": [],
+      "changed_files": 9,
+      "draft": false
+    },
+    {
+      "number": 186,
+      "head": "bb517566f820d3bbb809e987081b3b1c1537dc41",
+      "url": "https://github.com/seedds/nxnative/pull/186",
+      "decision": "Game-specific candidate",
+      "reason": "Ninja Gaiden adds indexed Team Ninja archive parsing and ReadFile hook. Validate malformed archives, decompressed sizes and SDK ABI along with target-game playback.",
+      "checks": [],
+      "changed_files": 16,
+      "draft": false
+    },
+    {
+      "number": 188,
+      "head": "603a60b780c9ab6277ebbf1aac1e0c830884d203",
+      "url": "https://github.com/seedds/nxnative/pull/188",
+      "decision": "Game-specific candidate",
+      "reason": "Blasphemous offset-table fallback must remain uniquely bounded; Blasphemous 2 relies on the framed tail-call fix already in the base lineage. Run ambiguity regressions before import.",
+      "checks": [],
+      "changed_files": 24,
+      "draft": false
+    },
+    {
+      "number": 189,
+      "head": "e7d470c15244ccaf6f7485dff4e88a03c34a0167",
+      "url": "https://github.com/seedds/nxnative/pull/189",
+      "decision": "Hardware-specific candidate",
+      "reason": "Intel translator launcher can help Intel build hosts, while runtime shader/Oodle capture still needs a native decoder. Do not treat universal launcher as universal game execution.",
+      "checks": [],
+      "changed_files": 4,
+      "draft": false
+    },
+    {
+      "number": 192,
+      "head": "2d5fd5b29e1e06d03dbe050a104fadbab7729f57",
+      "url": "https://github.com/seedds/nxnative/pull/192",
+      "decision": "Narrow game fix",
+      "reason": "Wonder's two feedback snapshots can address flicker; only affects that profile. Compare affected scenes and GPU/attachment cost on the actual version.",
+      "checks": [],
+      "changed_files": 4,
+      "draft": false
+    },
+    {
+      "number": 193,
+      "head": "2c859258934dc786f35f4d6c03ffcbca538c664f",
+      "url": "https://github.com/seedds/nxnative/pull/193",
+      "decision": "Defer large lifecycle series",
+      "reason": "3D All-Stars combines multi-program packaging, JIT, services and program switching. Major lifecycle and iOS changes; validate separately, including rejected 32-bit Galaxy path.",
+      "checks": [
+        {
+          "name": "Unsigned iOS app (synthetic modules, Swift and link)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Build check (Mac host, gfx tests, iOS sources)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Tool tests",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Host unit tests and CPU-only gfx tests",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "changed_files": 106,
+      "draft": false
+    },
+    {
+      "number": 194,
+      "head": "e20c2a5f4dc3469c8623a32095c742edab827c1f",
+      "url": "https://github.com/seedds/nxnative/pull/194",
+      "decision": "Mac-only rendering candidate",
+      "reason": "Fullscreen display-link workaround addresses Mac 60-to-30 drops, not demonstrated iPhone behavior. Test fullscreen, variable refresh and pacing regressions.",
+      "checks": [],
+      "changed_files": 6,
+      "draft": false
+    },
+    {
+      "number": 209,
+      "head": "acdd8dc6c8732409b92a6270b65c33d833984cd2",
+      "url": "https://github.com/seedds/nxnative/pull/209",
+      "decision": "Mac GUI candidate",
+      "reason": "Converter manages dependencies and builds but also signing and engine selection. Preserve this private source checkout and unsigned-only policy if adopting any frontend.",
+      "checks": [],
+      "changed_files": 21,
+      "draft": false
+    },
+    {
+      "number": 210,
+      "head": "c077af7904bd72a8239de2bf8ee75051caf8674c",
+      "url": "https://github.com/seedds/nxnative/pull/210",
+      "decision": "Defer save synchronization",
+      "reason": "Folder import is asynchronous around gameplay startup. Require proof that mounting/game writes cannot race import, plus fault injection and recovery on disposable saves.",
+      "checks": [],
+      "changed_files": 11,
+      "draft": false
+    },
+    {
+      "number": 216,
+      "head": "99f893b8c674e660f092dc8049161b6c8ae709a7",
+      "url": "https://github.com/seedds/nxnative/pull/216",
+      "decision": "Diagnostic candidate",
+      "reason": "Texture-level dumps, A2C fields and probe comparisons help bring-up. Not a speed feature; check dump boundaries and packaged-resource resolution.",
+      "checks": [],
+      "changed_files": 6,
+      "draft": false
+    },
+    {
+      "number": 218,
+      "head": "32e696b8c5d6bc130666ab5c8c3f70f7c03b594d",
+      "url": "https://github.com/seedds/nxnative/pull/218",
+      "decision": "Game-specific candidate",
+      "reason": "Yoshi needs sparse layouts and GPU writes into texture storage, with Mac evidence. Combine carefully with #300 and rebuild/test shader dependencies before iPhone use.",
+      "checks": [],
+      "changed_files": 27,
+      "draft": false
+    },
+    {
+      "number": 221,
+      "head": "f7c2f2f1054310e5776b1f33cbb401abdcb2b485",
+      "url": "https://github.com/seedds/nxnative/pull/221",
+      "decision": "Mac controller candidate",
+      "reason": "Steam controller adds HID, haptics, motion and player ownership. Requires the actual hardware plus multi-controller, reconnect and focus tests; no direct touch-editor benefit.",
+      "checks": [],
+      "changed_files": 21,
+      "draft": false
+    },
+    {
+      "number": 227,
+      "head": "2e835c72451da7fc2d9591f065a183b1db6e9efc",
+      "url": "https://github.com/seedds/nxnative/pull/227",
+      "decision": "Documentation only",
+      "reason": "Persona 5 note explicitly distinguishes install acceptance from gameplay. Useful evidence, no runtime improvement and no reason to replace the existing recipe.",
+      "checks": [],
+      "changed_files": 1,
+      "draft": false
+    },
+    {
+      "number": 231,
+      "head": "69531352b9ee27969d083b187ea2da20d7bc5dee",
+      "url": "https://github.com/seedds/nxnative/pull/231",
+      "decision": "Audio candidate with limitation",
+      "reason": "Secondary renderer advances at about 5 ms but its DeviceSink PCM is discarded. Verify this is intended for each game, and test close/join races before general use.",
+      "checks": [],
+      "changed_files": 1,
+      "draft": false
+    },
+    {
+      "number": 233,
+      "head": "36fc9b37baf8719ee7fbf23d2297877eeefd0f80",
+      "url": "https://github.com/seedds/nxnative/pull/233",
+      "decision": "Narrow game fix",
+      "reason": "War in the North changes an event clear-mode instruction. Keep exact build-ID gate; verify worker wake behavior and absence of lost work in that title.",
+      "checks": [],
+      "changed_files": 1,
+      "draft": false
+    },
+    {
+      "number": 234,
+      "head": "75fd1b28b8ea798b6642c881e4ecebd28ae7e87e",
+      "url": "https://github.com/seedds/nxnative/pull/234",
+      "decision": "Bring-up diagnostic candidate",
+      "reason": "Runtime shader dumping can recover variants missed offline. Validate guest control/code bounds and capture deduplication; keep captured game shaders outside Git.",
+      "checks": [],
+      "changed_files": 1,
+      "draft": false
+    },
+    {
+      "number": 236,
+      "head": "dffb26f608f42322bc477c664a5c922213a3ed5b",
+      "url": "https://github.com/seedds/nxnative/pull/236",
+      "decision": "Compatibility candidate",
+      "reason": "30XX generalizes SDK discovery to subsdk modules and adds GL/EGL and sampler handling. Run GL shader, SDK discovery and existing NVN/Vulkan regressions before adoption.",
+      "checks": [],
+      "changed_files": 25,
+      "draft": false
+    },
+    {
+      "number": 239,
+      "head": "11e1ea58337699e874581ac4b11c19085e47a7bd",
+      "url": "https://github.com/seedds/nxnative/pull/239",
+      "decision": "Mac localization candidate",
+      "reason": "Preferred-language discovery is Mac-only and explicit language wins. Our iOS wrapper persists the selected language already; no iOS benefit from importing this series.",
+      "checks": [
+        {
+          "name": "Build check (Mac host, gfx tests, iOS sources)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Unsigned iOS app (synthetic modules, Swift and link)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Tool tests",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Host unit tests and CPU-only gfx tests",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "changed_files": 16,
+      "draft": false
+    },
+    {
+      "number": 252,
+      "head": "ebc3bc409d47379281be1d72e3ed54e948b57112",
+      "url": "https://github.com/seedds/nxnative/pull/252",
+      "decision": "Game-specific candidate",
+      "reason": "Oodle GFPAKs, address-space cuts and dual-source blending may unlock Arceus/Z-A builds. Requires chain rebuild, precise build gates and visual/gameplay validation.",
+      "checks": [],
+      "changed_files": 16,
+      "draft": false
+    },
+    {
+      "number": 255,
+      "head": "57659f59e0f76bcab94f3eb72035519c38394438",
+      "url": "https://github.com/seedds/nxnative/pull/255",
+      "decision": "Preferred save-sync research candidate",
+      "reason": "Single-file archives and transaction hooks are a stronger starting point than mixing with #210. Still require interrupted-copy, rollback, conflict and unavailable-cloud tests on disposable saves.",
+      "checks": [
+        {
+          "name": "Build check (Mac host, gfx tests, iOS sources)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Unsigned iOS app (synthetic modules, Swift and link)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Tool tests",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Host unit tests and CPU-only gfx tests",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "changed_files": 17,
+      "draft": false
+    },
+    {
+      "number": 258,
+      "head": "27339e1e3d4ba82b02dd8f8192e29cdfbba5ed74",
+      "url": "https://github.com/seedds/nxnative/pull/258",
+      "decision": "Optional input candidate",
+      "reason": "Swipe camera/deadzone helpers have useful tests but the PR remains draft pending integrated device testing. Reconcile DmGamepad changes with our editor before any merge.",
+      "checks": [],
+      "changed_files": 13,
+      "draft": true
+    },
+    {
+      "number": 263,
+      "head": "46b6aa45112b9f568152dce2bf9be42d68f33e8a",
+      "url": "https://github.com/seedds/nxnative/pull/263",
+      "decision": "General graphics candidate",
+      "reason": "Buffer-image type and unbound atomic scratch address concrete admission failures. Related fixes now also exist in later upstream commits; compare first to avoid duplicate or older implementations.",
+      "checks": [],
+      "changed_files": 9,
+      "draft": false
+    },
+    {
+      "number": 265,
+      "head": "633816faa76f5d4e5350c10ccd8ddeedafc8e2b4",
+      "url": "https://github.com/seedds/nxnative/pull/265",
+      "decision": "Mac diagnostic candidate",
+      "reason": "HUD counters and system load can help measurements; overlap game profile and host state. Check sampling overhead and thread safety; no demonstrated iPhone FPS gain.",
+      "checks": [
+        {
+          "name": "Host unit tests and CPU-only gfx tests",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Tool tests",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Build check (Mac host, gfx tests, iOS sources)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Unsigned iOS app (synthetic modules, Swift and link)",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "changed_files": 17,
+      "draft": false
+    },
+    {
+      "number": 268,
+      "head": "c84153fbbbc3625c5a1c0cd7345948bf26cde43f",
+      "url": "https://github.com/seedds/nxnative/pull/268",
+      "decision": "Defer optional cheat engine",
+      "reason": "Adds memory writes, executable baking and a runtime menu. Separate from automated builds and compatibility; requires opcode bounds, build matching and pause/thread testing before opt-in adoption.",
+      "checks": [],
+      "changed_files": 17,
+      "draft": false
+    },
+    {
+      "number": 269,
+      "head": "9bd4ec05fcbfe6edb6189c9c35e92aa790c2ffc6",
+      "url": "https://github.com/seedds/nxnative/pull/269",
+      "decision": "Game-specific candidate",
+      "reason": "Violet profile includes Bluetooth service and rasterization stub. Mac opening evidence plus an acknowledged image-atomic warning does not establish correct iPhone gameplay.",
+      "checks": [],
+      "changed_files": 20,
+      "draft": false
+    },
+    {
+      "number": 273,
+      "head": "028f8b248add4c46de26e02e93110ac5e068fe06",
+      "url": "https://github.com/seedds/nxnative/pull/273",
+      "decision": "Compatibility candidate",
+      "reason": "Jump-table reach, transform-feedback layout and MGFX tolerance can help several titles. Broad translator/binary changes require chain regeneration and cross-game regression comparisons.",
+      "checks": [],
+      "changed_files": 23,
+      "draft": false
+    },
+    {
+      "number": 275,
+      "head": "a6431086446214da678b9ed1b81f6e7561298f87",
+      "url": "https://github.com/seedds/nxnative/pull/275",
+      "decision": "Hold: cache correctness issue",
+      "reason": "cache_outputs gates the entire mac group, including _b.json/_b.metal, when selecting ios only; downstream analysis still consumes those products. Reproduce clean-output cache-hit restoration and fix metadata caching first.",
+      "checks": [],
+      "changed_files": 4,
+      "draft": false
+    },
+    {
+      "number": 277,
+      "head": "841684012800327d6d6fa6b6fd79d3ab689c9751",
+      "url": "https://github.com/seedds/nxnative/pull/277",
+      "decision": "Integrated and tested",
+      "reason": "Count unique archive paths instead of unique byte sizes. Exact source patch and three synthetic regressions adopted; no shader, game profile or runtime change.",
+      "checks": [],
+      "changed_files": 2,
+      "draft": false
+    },
+    {
+      "number": 278,
+      "head": "a0f4d41e1e15ce07f7c508a187090b60aaa64a8a",
+      "url": "https://github.com/seedds/nxnative/pull/278",
+      "decision": "Hold on dependency",
+      "reason": "Multi-platform CLI is stacked on #275 and carries its target-selection changes. Repair and validate target-specific cache restoration first, then test each platform combination.",
+      "checks": [],
+      "changed_files": 4,
+      "draft": false
+    },
+    {
+      "number": 280,
+      "head": "05715be61396b8a8b1368212cbeac8b21c1812e5",
+      "url": "https://github.com/seedds/nxnative/pull/280",
+      "decision": "Defer broad GUI series",
+      "reason": "Spanish GUI also includes scheduler, extraction and shader changes and device signing/install. Extract independent fixes; keep unsigned automation and editor base rather than import the whole application.",
+      "checks": [],
+      "changed_files": 33,
+      "draft": false
+    },
+    {
+      "number": 282,
+      "head": "48192496c8295a971ff92942e3917f1a34858fe2",
+      "url": "https://github.com/seedds/nxnative/pull/282",
+      "decision": "Hold: error masking",
+      "reason": "scan_file catches every Exception and returns an empty shader set, so a build may succeed with omitted shaders. Separate compiler-signal retry from scanner policy; require explicit incomplete-build reporting.",
+      "checks": [],
+      "changed_files": 2,
+      "draft": false
+    },
+    {
+      "number": 285,
+      "head": "e79692b58fa14278c7dc99374c802e0f6364d786",
+      "url": "https://github.com/seedds/nxnative/pull/285",
+      "decision": "Game-specific candidate",
+      "reason": "Crystal Chronicles profile uses build-gated Unity memory-order cuts. Verify registered instruction bytes, worker stress and iPhone behavior; newer Unity TextAsset scanner changes are separately upstream.",
+      "checks": [
+        {
+          "name": "Build check (Mac host, gfx tests, iOS sources)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Tool tests",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Unsigned iOS app (synthetic modules, Swift and link)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Host unit tests and CPU-only gfx tests",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "changed_files": 16,
+      "draft": false
+    },
+    {
+      "number": 286,
+      "head": "0cd0e1658246ecffd79f696aff5583ce430c47eb",
+      "url": "https://github.com/seedds/nxnative/pull/286",
+      "decision": "Hold: synchronization review",
+      "reason": "dm_motion_set writes g_mot_t under g_mot_mu, while mot_fresh reads it without that lock. Fix synchronized snapshots and run race/focus/disconnect tests before gyro adoption.",
+      "checks": [],
+      "changed_files": 4,
+      "draft": false
+    },
+    {
+      "number": 289,
+      "head": "10fc65d5871b2f4e7bf62fb663873c1cdc564157",
+      "url": "https://github.com/seedds/nxnative/pull/289",
+      "decision": "Superseded profile candidate",
+      "reason": "Large FFR regional series overlaps #126/#304 and changes common extraction/allocator paths. Compare exact title/build IDs rather than relying on conflicting region labels.",
+      "checks": [],
+      "changed_files": 29,
+      "draft": false
+    },
+    {
+      "number": 295,
+      "head": "9a9500bbcb13ac6251d603a5d6b5aa3218bb258b",
+      "url": "https://github.com/seedds/nxnative/pull/295",
+      "decision": "Mac input candidate",
+      "reason": "Nintendo label detection plus override overlaps #180. Candidate for a unified mapping helper; reported Mac Pro Controller test does not validate iOS.",
+      "checks": [],
+      "changed_files": 2,
+      "draft": false
+    },
+    {
+      "number": 296,
+      "head": "f1a254912389ad272e93e5b3c5278eb603661325",
+      "url": "https://github.com/seedds/nxnative/pull/296",
+      "decision": "Mac motion candidate",
+      "reason": "Pro Controller HID supplies motion when GameController reports zero. Reconcile with #221/#286 instead of stacking alternate motion APIs; test calibration, axes, drift and ownership.",
+      "checks": [],
+      "changed_files": 7,
+      "draft": false
+    },
+    {
+      "number": 297,
+      "head": "7d8cfcee455ee4e4d26292198a0b2f27e66a8357",
+      "url": "https://github.com/seedds/nxnative/pull/297",
+      "decision": "Hold pending root fix",
+      "reason": "Leaving unlinkable pairs out can salvage an archive but does not restore missing vertex outputs. Prefer #298's padding fix; also verify cache stamp sensitivity to --leave changes.",
+      "checks": [],
+      "changed_files": 2,
+      "draft": false
+    },
+    {
+      "number": 298,
+      "head": "8c81c6e7d152a2d9147089c91dd55a21dca206ad",
+      "url": "https://github.com/seedds/nxnative/pull/298",
+      "decision": "High-priority graphics candidate",
+      "reason": "Padding pso_pairs as well as shader_pairs addresses missing stage outputs at their source. Changes chain version and rebuilds every game; validate fresh and cached builds and visual regressions separately.",
+      "checks": [],
+      "changed_files": 11,
+      "draft": false
+    },
+    {
+      "number": 299,
+      "head": "28fbf0af4f988bf8eae41292fae5e56805e0b07c",
+      "url": "https://github.com/seedds/nxnative/pull/299",
+      "decision": "Game-specific candidate",
+      "reason": "Good Job combines profile, Unity timing and Mac launcher/window changes. Separate reusable UI from title-specific frame-step patches; Mac metrics do not validate iPhone.",
+      "checks": [],
+      "changed_files": 16,
+      "draft": false
+    },
+    {
+      "number": 300,
+      "head": "04d16458249bfa6dd971935d5b6297bfe6fe53a9",
+      "url": "https://github.com/seedds/nxnative/pull/300",
+      "decision": "High-priority texture candidate",
+      "reason": "Sub-tile sparse textures must keep automatic block height. Has synthetic layout tests and a concrete Yoshi symptom; apply with the related sparse-layout series and cross-format tests.",
+      "checks": [],
+      "changed_files": 5,
+      "draft": false
+    },
+    {
+      "number": 301,
+      "head": "57c74b0632f43cdf9585de7579517fccc88f7470",
+      "url": "https://github.com/seedds/nxnative/pull/301",
+      "decision": "Mac experimental feature",
+      "reason": "BotW MetalFX interpolation is opt-in and adds latency, frame hooks and game assumptions. Not an iPhone FPS fix; isolate and compare UI/motion artifacts on supported hardware.",
+      "checks": [],
+      "changed_files": 5,
+      "draft": false
+    },
+    {
+      "number": 302,
+      "head": "ff9727c980c1f51a9f313eb2d3a34f307bcb04ab",
+      "url": "https://github.com/seedds/nxnative/pull/302",
+      "decision": "Mac packaging only",
+      "reason": "DMG window/background automation is useful for Mac distribution, not IPA installation. Finder automation permissions and fallback need testing if Mac delivery becomes a goal.",
+      "checks": [],
+      "changed_files": 3,
+      "draft": false
+    },
+    {
+      "number": 303,
+      "head": "f3c8b0496dcc7898b9750c71cea12c174695c373",
+      "url": "https://github.com/seedds/nxnative/pull/303",
+      "decision": "Diagnostic candidate with lifecycle review",
+      "reason": "Pool high-water tracking can guide memory sizing. Static pool-pointer tracking needs concurrency/lifetime checks; it measures pages ever used, not current live allocations or FPS.",
+      "checks": [
+        {
+          "name": "Host unit tests and CPU-only gfx tests",
+          "status": "completed",
+          "conclusion": "cancelled"
+        },
+        {
+          "name": "Build check (Mac host, gfx tests, iOS sources)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Unsigned iOS app (synthetic modules, Swift and link)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Tool tests",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "changed_files": 6,
+      "draft": false
+    },
+    {
+      "number": 304,
+      "head": "3b32d7d6c3bd06909037e594aecf39d8d6488bb5",
+      "url": "https://github.com/seedds/nxnative/pull/304",
+      "decision": "Preferred FFR profile research candidate",
+      "reason": "Newer FFR regional profile includes translator/host defects and claimed iPhone evidence. Avoid stacking #126/#289; chain binaries and tables require full reproducible regression builds.",
+      "checks": [],
+      "changed_files": 22,
+      "draft": false
+    }
+  ],
+  "reviewed_at": "2026-10-26T16:51:35.630645+00:00",
+  "upstream_head": "40b643bbe68861d171cb1a2733a953aa739f9ac1"
+}

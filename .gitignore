@@ -7,3 +7,25 @@ __pycache__/
 # Made from each shader build's Mac outputs (c1_guard.py, cb_extent.py; the NSP script makes them), not committed
 dm/games/*/c1_full.tsv
 dm/games/*/cb_extent.tsv
+
+# Personal builds: game data, credentials, saves and large local outputs never belong in Git.
+*.ipa
+*.nsp
+*.xci
+*.nsz
+*.xcz
+prod.keys
+title.keys
+*.p12
+*.mobileprovision
+.venv/
+venv/
+*_build/
+*_survey/
+romfs/
+RomFS/
+ExeFS/
+exefs/
+save/
+Payload/
+nxnative-ios.json
