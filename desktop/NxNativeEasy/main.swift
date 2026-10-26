@@ -210,6 +210,24 @@ struct SupportCarousel: View {
     }
 }
 
+// Apply the compact launch height even when macOS restores an older window size.
+struct CompactWindow: NSViewRepresentable {
+    func makeNSView(context:Context) -> NSView { WindowView() }
+    func updateNSView(_ nsView:NSView,context:Context) {}
+    private final class WindowView: NSView {
+        private var adjusted = false
+        override func viewDidMoveToWindow() {
+            super.viewDidMoveToWindow()
+            guard let window=window, !adjusted else {return}
+            adjusted=true
+            DispatchQueue.main.async {
+                let width=max(760,window.contentLayoutRect.width)
+                window.setContentSize(NSSize(width:width,height:600))
+            }
+        }
+    }
+}
+
 struct ContentView: View {
     @StateObject private var model=BuildModel()
     private let ink=Color(red:0.93,green:0.94,blue:0.90)
@@ -322,7 +340,7 @@ struct ContentView: View {
                     }
                 }.padding(28)
             }
-        }.frame(minWidth:760,minHeight:530).preferredColorScheme(.dark)
+        }.frame(minWidth:760,minHeight:530).background(CompactWindow()).preferredColorScheme(.dark)
         .sheet(isPresented:$model.showCatalog) {GameCatalogView(model:model)}
         .onReceive(NotificationCenter.default.publisher(for:NSApplication.willTerminateNotification)) {_ in model.cancel()}
     }
@@ -391,6 +409,6 @@ struct GameCatalogView: View {
 @main struct NxNativeEasyApp: App {
     var body: some Scene {
         WindowGroup("nxnative Easy") {ContentView()}
-            .defaultSize(width:820,height:650)
+            .defaultSize(width:820,height:600)
     }
 }
