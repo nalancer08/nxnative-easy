@@ -25,19 +25,19 @@ La app inicia en **English**. Cambia a **Español** con el selector de la esquin
 ## Abre la app y elige tu juego
 
 1. Abre **nxnative.app**.
-2. Elige la **Carpeta del juego**, selecciona tu **Carpeta de llaves** una vez y pulsa **Preparar juego**.
+2. Elige la **Carpeta de tu juego**, selecciona tu **Carpeta de llaves** una vez y pulsa **Preparar juego**.
 
 La app prepara las herramientas, compila y deja lista la **IPA ligera**. Verás el avance en la ventana. Al terminar aparecen los dos pasos para instalar. **Enviar a Sideloadly** abre allí la IPA preparada; si Sideloadly no está instalado, el botón ofrece descargarlo.
 
-**En nuestro Mac:** la app está disponible como `nxnative.app` en Descargas. Recuerda tu última carpeta y permite volver a mostrar la IPA ya preparada.
+**Una vez creada:** abre `nxnative.app`. Recuerda tu última carpeta y permite volver a mostrar la IPA ya preparada.
 
-**En otro Mac:** después de descargar este repositorio privado, abre [`scripts/Abrir-interfaz.command`](scripts/Abrir-interfaz.command) con doble clic. Crea y abre la app local. La primera vez necesitas Xcode completo y Homebrew instalados; si hacen falta tus llaves, te pedirá elegir la carpeta donde guardas tu propio `prod.keys`. Mantén cada juego fuera del repositorio, en una carpeta con su base y actualizaciones.
+**En otro Mac:** después de descargar este repositorio, abre [`scripts/Abrir-interfaz.command`](scripts/Abrir-interfaz.command) con doble clic. Crea y abre la app local. La primera vez necesitas Xcode completo y Homebrew instalados; si hacen falta tus llaves, te pedirá elegir la carpeta donde guardas tu propio `prod.keys`. Mantén cada juego fuera del repositorio, en una carpeta con su base y actualizaciones.
 
 ## Cómo se compila la app de Mac
 
 El acceso de apertura usa el compilador Swift de tu Xcode. La firma de la app es **ad hoc**, local y sin cuenta, certificado ni equipo Apple (`TeamIdentifier` no asignado). No usa cuentas de empresa. Sólo al instalar la **IPA de iPhone con Sideloadly** introduces tu cuenta personal, dentro de Sideloadly.
 
-Los símbolos de la interfaz son genéricos del sistema; no se usan imágenes ni logotipos de los juegos en la app. La galería de documentación de abajo procede de upstream y está separada de la interfaz.
+El icono del teléfono con controles es original. Los símbolos de los perfiles son genéricos del sistema; no se usan imágenes ni logotipos de los juegos en la app. La galería de documentación de abajo procede de upstream y está separada de la interfaz.
 
 ## Instalar: Sideloadly + Finder
 
@@ -47,9 +47,11 @@ Los símbolos de la interfaz son genéricos del sistema; no se usan imágenes ni
 
 Para actualizar, usa la misma cuenta y el mismo bundle ID efectivo de Sideloadly. **Instala encima; no desinstales la app**, para conservar tus partidas. Si los datos del juego no cambiaron, puedes reutilizar el `romfs` existente. La app instala las herramientas de compilación que falten después de tener Xcode y Homebrew, pero **no firma ni instala el juego en el iPhone**. Esos pasos los hace Sideloadly. La app los explica cuando la IPA está lista.
 
-## Juegos incluidos
+## Perfiles de juegos con soporte
 
-El carrusel muestra los perfiles de esta copia; no proporciona ni descarga juegos. Debes añadir tus propios archivos del juego. Pulsa **Ver todos** arriba a la derecha para consultar la lista completa de soporte. Busca por nombre, versión o Title ID; cada resultado enlaza a su ficha. El catálogo vuelve a leer los perfiles locales cada vez que lo abres.
+El carrusel muestra los perfiles de esta copia; no proporciona ni descarga juegos. Debes añadir tus propios archivos del juego. Pulsa **Ver todos** arriba a la derecha para consultar la lista completa de soporte. Busca por nombre, versión o Title ID; cada resultado enlaza a su ficha. El catálogo vuelve a leer los perfiles locales cada vez que lo abres. El carrusel rota automáticamente y se pausa al colocar el cursor encima.
+
+![Buscador de perfiles de juegos](docs/images/nxnative-catalog-es.png)
 
 **Las pruebas propias cubren compilación y empaquetado en Mac, no una verificación automática de juego en iPhone.** Los perfiles y reportes de juego proceden de upstream; revisa [la ficha de tu juego](dm/games/README.md#games) antes de prepararlo. Un perfil no garantiza que cualquier versión funcione en cualquier iPhone.
 

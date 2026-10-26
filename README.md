@@ -25,19 +25,19 @@ The app starts in **English**. Choose **Español** using the selector at the top
 ## Open the app and choose your game
 
 1. Open **nxnative.app**.
-2. Choose the **Game folder**, select your **Keys folder** once, then click **Prepare game**.
+2. Choose **Your game folder**, select your **Keys folder** once, then click **Prepare game**.
 
 The app prepares the tools, builds the game app and creates a **lightweight IPA**. Progress stays in the window. When finished, the app shows the two installation steps. **Send to Sideloadly** opens the prepared IPA in Sideloadly; if it is not installed, the button offers its download.
 
 **First-time setup:** download or clone this repository, then double-click the local [`scripts/Abrir-interfaz.command`](scripts/Abrir-interfaz.command) file in Finder. It creates and opens the Mac app. Full Xcode and Homebrew must already be installed. Select the folder containing your own `prod.keys` when asked. Keep one game per folder, with the base game and its updates, outside this source checkout.
 
-**Already set up:** open the existing `nxnative.app`. It remembers your last game folder and can reveal a previously prepared IPA. On the owner's Mac, the app shortcut is in Downloads.
+**Already set up:** open the existing `nxnative.app`. It remembers your last game folder and can reveal a previously prepared IPA.
 
 ## How the Mac app is built
 
 The launcher uses Xcode's Swift compiler. The desktop app is explicitly **ad-hoc signed**, locally, with no Apple account, certificate or team (`TeamIdentifier` is unset). No company account is used. You enter your personal Apple account separately in Sideloadly when signing the **iPhone IPA**.
 
-The interface uses generic system symbols, not game artwork or logos. The documentation gallery below comes from upstream and is separate from the app.
+The app has an original phone-and-controller icon and uses generic system symbols for game profiles, without game artwork or logos. The documentation gallery below comes from upstream and is separate from the app.
 
 ## Install with Sideloadly and Finder
 
@@ -49,7 +49,7 @@ For updates, keep the same Apple account and effective bundle ID used in Sideloa
 
 ## Included game profiles
 
-The home carousel shows the game profiles in your checkout; it does not provide or download games. You must add your own game files. Click **View all** at the top right to browse the complete support list. Search by name, version or Title ID; each result links to its game notes. The catalog reads the local profiles each time you open it.
+The home carousel shows the game profiles in your checkout; it does not provide or download games. You must add your own game files. Click **View all** at the top right to browse the complete support list. Search by name, version or Title ID; each result links to its game notes. The catalog reads the local profiles each time you open it. The carousel rotates automatically and pauses while you hover over it.
 
 **Our own checks cover macOS compilation and packaging, not automatic iPhone gameplay verification.** Profiles and gameplay reports come from upstream and may concern Mac or iPhone; read [your game's notes](dm/games/README.md#games). A profile does not guarantee that every game version works on every device.
 
