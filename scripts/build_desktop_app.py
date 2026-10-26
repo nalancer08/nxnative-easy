@@ -25,6 +25,8 @@ def main():
               CFBundlePackageType='APPL',CFBundleShortVersionString='1.0',CFBundleVersion='1',
               LSMinimumSystemVersion='26.0',NSHighResolutionCapable=True,NxNativeSource=str(REPO))
     (contents/'Info.plist').write_bytes(plistlib.dumps(info))
+    # Explicit ad-hoc signing: '-' never selects an Apple certificate or team.
+    subprocess.run(['codesign','--force','--sign','-','--timestamp=none',str(output)],check=True)
     if args.open:subprocess.run(['open',str(output)],check=True)
     print(output)
 

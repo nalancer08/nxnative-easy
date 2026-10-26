@@ -64,7 +64,7 @@ class Pipeline(unittest.TestCase):
                 def cli(self,args):
                     calls.append(args);fixture(Path(args[args.index('-o')+1]));return 0
             with patch.object(build_ios,'load_builder',return_value=Builder()):
-                self.assertEqual(build_ios.main([temp]),0)
+                self.assertEqual(build_ios.main([temp,"--keys-folder",temp]),0)
                 state=json.loads((game/'nxnative-ios.json').read_text())
                 self.assertEqual(state['bundle_id'],'org.nxnative.test')
                 self.assertTrue(list(Path(state['light_dir']).glob('*.ipa')))
@@ -72,6 +72,21 @@ class Pipeline(unittest.TestCase):
                 self.assertEqual(len(calls),1)
                 with self.assertRaises(ValueError):build_ios.main([temp,'--bundle-id','changed','--dry-run'])
             self.assertEqual(calls[0][calls[0].index('--team-id')+1],'0000000000')
+
+    def test_keys_require_explicit_folder_selection(self):
+        with tempfile.TemporaryDirectory() as temp:
+            folder=Path(temp);(folder/'prod.keys').write_bytes(b'synthetic')
+            args=build_ios.parser().parse_args([temp])
+            with patch.object(build_ios,'choose_keys_folder',return_value=folder) as picker:
+                selected=build_ios.select_keys(args)
+                picker.assert_called_once()
+            self.assertEqual(selected,folder.resolve()/'prod.keys')
+            self.assertEqual((folder/'prod.keys').read_bytes(),b'synthetic')
+
+    def test_missing_selected_keys_rejected(self):
+        with tempfile.TemporaryDirectory() as temp:
+            args=build_ios.parser().parse_args([temp,'--keys-folder',temp])
+            with self.assertRaises(ValueError):build_ios.select_keys(args)
 
     def test_parallel_build_is_rejected(self):
         with build_ios.build_lock():

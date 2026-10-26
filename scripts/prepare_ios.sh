@@ -9,7 +9,7 @@ Usage: bash scripts/prepare_ios.sh [--setup-only] [game-folder] [build options]
 No folder: opens the macOS folder picker.
 Installs missing tools, creates a Python environment beside the game, and builds
 an unsigned lightweight IPA using THIS checkout, including local control edits.
-Build options: --keys PATH --language es-419 --bundle-id ID --app-name NAME
+Build options: --keys-folder FOLDER (your own prod.keys) --keys PATH --language es-419 --bundle-id ID --app-name NAME
                --package v327680 --gpu none --full-only --app-only --dry-run
 Examples:
   bash scripts/prepare_ios.sh /Volumes/Games/MetroidDread

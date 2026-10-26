@@ -115,15 +115,15 @@ Necesitas:
 - Un Mac con **Xcode completo** instalado y abierto al menos una vez, y SDK de iOS 26 o posterior.
 - [Homebrew](https://brew.sh) instalado. El script instala las demás herramientas que falten.
 - Un iPhone con **A17 Pro o posterior**, o iPad con **M1 o posterior**, y **iOS/iPadOS 26 o posterior**, según los requisitos de esta base. El soporte para otros chips no se incorporó desde los PR revisados.
-- Tus archivos del juego y `prod.keys`, en una carpeta fuera del repositorio.
+- Tus archivos del juego y `prod.keys`, en carpetas fuera del repositorio.
 - Espacio para los archivos originales, la extracción, cachés, la IPA completa y otra copia de `romfs`.
 - [Sideloadly](https://sideloadly.io) para firmar e instalar con tu cuenta Apple personal.
 
 En un Mac nuevo, descarga nuestra copia privada. Debes tener acceso con tu cuenta GitHub:
 
 ```sh
-git clone https://github.com/nalancer08/nxnative-personal.git
-cd nxnative-personal
+git clone https://github.com/nalancer08/nxnative-easy.git
+cd nxnative-easy
 ```
 
 **Si ya tienes nuestra copia en este Mac, abre Terminal en esa carpeta y omite el clonado.** No clones de nuevo el repositorio original para compilar: esa copia no tendría nuestro editor ni estos scripts.
@@ -138,7 +138,7 @@ Desde la carpeta del repositorio:
 bash scripts/prepare_ios.sh
 ```
 
-Selecciona la carpeta que contiene un solo juego con sus actualizaciones. El script pide `prod.keys` si no está en esa carpeta, prepara las herramientas, compila y separa los datos automáticamente.
+Selecciona la carpeta que contiene un solo juego con sus actualizaciones. El script te pide seleccionar la carpeta que contiene tu propio `prod.keys`, prepara las herramientas, compila y separa los datos automáticamente.
 
 ### Opción 2: indicar la carpeta
 
@@ -148,13 +148,12 @@ Cambia la ruta del ejemplo por la tuya y conserva las comillas:
 bash scripts/prepare_ios.sh "/Volumes/Juegos/MetroidDread"
 ```
 
-La carpeta puede tener esta estructura; no cambies las extensiones de los archivos:
+Las llaves se seleccionan desde su propia carpeta y no se incluyen. La carpeta del juego puede tener esta estructura; no cambies las extensiones de los archivos:
 
 ```text
 MetroidDread/
   juego-base.nsp
   actualizacion.nsp
-  prod.keys
 ```
 
 También se admiten XCI y, con soporte adicional instalado por el script, NSZ/XCZ. Usa una carpeta distinta para cada juego. Por defecto se selecciona la actualización más reciente presente; puedes fijar una con `--package`.

@@ -63,10 +63,35 @@ def verify_ipa(path):
         return info
 
 
+def choose_keys_folder():
+    result=subprocess.run(['/usr/bin/osascript','-e',
+        'POSIX path of (choose folder with prompt "Select your own folder containing prod.keys")'],
+        capture_output=True,text=True,check=True)
+    return Path(result.stdout.rstrip('\n'))
+
+
+def select_keys(args):
+    # Never silently discover keys next to a game or in a bundled/default location.
+    folder=args.keys_folder
+    if args.keys is not None:
+        keys=args.keys.expanduser()
+    else:
+        folder=folder if folder is not None else choose_keys_folder()
+        keys=folder.expanduser()/'prod.keys'
+    resolved=keys.resolve()
+    if REPO==resolved or REPO in resolved.parents:
+        raise ValueError('Select your own keys outside the source repository.')
+    if not resolved.is_file() or not resolved.stat().st_size:
+        raise ValueError('The selected folder must contain your own readable prod.keys.')
+    return resolved
+
+
 def parser():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('game_dir', nargs='?', type=Path, help='folder containing one game and its updates')
-    p.add_argument('-k', '--keys', type=Path, help='prod.keys path; defaults to game_dir/prod.keys')
+    keys=p.add_mutually_exclusive_group()
+    keys.add_argument('--keys-folder',type=Path,help='explicit external folder containing your own prod.keys')
+    keys.add_argument('-k','--keys',type=Path,help='explicit path to your own prod.keys (legacy CLI option)')
     p.add_argument('-l', '--language', help='first build defaults to es-419; later builds retain identity settings')
     p.add_argument('--bundle-id', help='use the SAME effective identifier when updating an installed app')
     p.add_argument('--app-name')
@@ -155,13 +180,7 @@ def main(argv=None):
                 if settings[setting]: env[variable]=settings[setting]
             subprocess.run(['bash',str(REPO/'dm/ios/tools/build_ipa.sh'),str(output)],cwd=REPO,env=env,check=True)
         else:
-            keys = (args.keys or game/'prod.keys').expanduser()
-            if not keys.is_file() or not keys.stat().st_size:
-                result = subprocess.run(['/usr/bin/osascript','-e','POSIX path of (choose file with prompt "Select prod.keys")'],capture_output=True,text=True,check=True)
-                keys = Path(result.stdout.rstrip('\n'))
-            if not keys.is_file() or not keys.stat().st_size: raise ValueError('Missing prod.keys.')
-            if keys.resolve() == REPO or REPO in keys.resolve().parents:
-                raise ValueError('Keep keys outside the source repository.')
+            keys = select_keys(args)
             if any(p.suffix.lower() in {'.nsz','.xcz'} for p in packages):
                 subprocess.run([sys.executable,'-m','pip','install','nsz'],check=True)
             builder = load_builder()

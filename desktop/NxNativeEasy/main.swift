@@ -6,11 +6,13 @@ import Darwin
 struct GameCard: Identifiable {
     let id: String
     let name: String
-    let image: String
+    let symbol: String
+    let tint: Color
 }
 
 @MainActor final class BuildModel: ObservableObject {
     @Published var folder: URL?
+    @Published var keysFolder: URL?
     @Published var running = false
     @Published var phase = "Tu próximo juego empieza aquí."
     @Published var detail = "Elige su carpeta. Nosotros preparamos la IPA ligera."
@@ -24,16 +26,17 @@ struct GameCard: Identifiable {
     private var cancelled = false
     let repo: URL
     let cards: [GameCard] = [
-        .init(id:"dread",name:"Metroid Dread",image:"metroid-dread.jpg"),
-        .init(id:"wonder",name:"Super Mario Bros. Wonder",image:"super-mario-bros-wonder.jpg"),
-        .init(id:"zelda",name:"Zelda: Breath of the Wild",image:"zelda-breath-of-the-wild.jpg"),
-        .init(id:"odyssey",name:"Super Mario Odyssey",image:"super-mario-odyssey.jpg"),
-        .init(id:"cuphead",name:"Cuphead",image:"cuphead.jpg"),
-        .init(id:"hades",name:"Hades",image:"hades.jpg")
+        .init(id:"dread",name:"Metroid Dread",symbol:"scope",tint:.orange),
+        .init(id:"wonder",name:"Super Mario Bros. Wonder",symbol:"sparkles",tint:.mint),
+        .init(id:"zelda",name:"Zelda: Breath of the Wild",symbol:"mountain.2",tint:.cyan),
+        .init(id:"odyssey",name:"Super Mario Odyssey",symbol:"globe.americas",tint:.red)
     ]
     init() {
         let configured = Bundle.main.object(forInfoDictionaryKey:"NxNativeSource") as? String ?? ""
         repo = URL(fileURLWithPath:configured)
+        if let path=UserDefaults.standard.string(forKey:"keysDirectory"), FileManager.default.fileExists(atPath:path+"/prod.keys") {
+            keysFolder=URL(fileURLWithPath:path)
+        }
         if let path = UserDefaults.standard.string(forKey:"lastGameFolder"), FileManager.default.fileExists(atPath:path) {
             folder=URL(fileURLWithPath:path)
             restoreOutput()
@@ -60,6 +63,21 @@ struct GameCard: Identifiable {
             failed=false;output=nil;assets=nil;transcript="";restoreOutput()
         } catch { phase="No pudimos leer esa carpeta.";detail=error.localizedDescription;failed=true }
     }
+    func chooseKeysFolder() {
+        let panel=NSOpenPanel();panel.canChooseDirectories=true;panel.canChooseFiles=false
+        panel.allowsMultipleSelection=false;panel.prompt="Usar mis llaves"
+        panel.message="Elige tu carpeta con prod.keys. No copiamos las llaves ni las incluimos en la app."
+        guard panel.runModal() == .OK, let url=panel.url else {return}
+        let resolved=url.resolvingSymlinksInPath().standardizedFileURL
+        let root=repo.resolvingSymlinksInPath().standardizedFileURL
+        let key=resolved.appendingPathComponent("prod.keys")
+        guard resolved != root, !resolved.path.hasPrefix(root.path+"/"),
+              FileManager.default.isReadableFile(atPath:key.path) else {
+            failed=true;phase="Elige una carpeta externa con tu prod.keys.";detail="No se proporcionan llaves. Debes seleccionar las tuyas.";return
+        }
+        keysFolder=resolved;UserDefaults.standard.set(resolved.path,forKey:"keysDirectory")
+        failed=false;phase="Tus llaves están seleccionadas.";detail="Sólo guardamos la ruta en este Mac, nunca su contenido."
+    }
     func restoreOutput() {
         guard let folder,
               let data=try? Data(contentsOf:folder.appendingPathComponent("nxnative-ios.json")),
@@ -75,16 +93,13 @@ struct GameCard: Identifiable {
         guard FileManager.default.fileExists(atPath:script.path) else {
             phase="No encontramos el código de nxnative.";detail="Vuelve a crear la app desde el repositorio con Abrir-interfaz.command.";failed=true;return
         }
-        var keys: URL?
-        if !appOnly && !FileManager.default.fileExists(atPath:folder.appendingPathComponent("prod.keys").path) {
-            let panel=NSOpenPanel();panel.prompt="Elegir prod.keys";panel.message="Sólo la primera vez: selecciona tus llaves. Se quedan en tu Mac."
-            guard panel.runModal() == .OK else {return};keys=panel.url
-        }
+        if !appOnly && keysFolder == nil {chooseKeysFolder()}
+        guard appOnly || keysFolder != nil else {return}
         let task=Process();let pipe=Pipe()
         task.executableURL=URL(fileURLWithPath:"/usr/bin/python3")
         var arguments=[repo.appendingPathComponent("desktop/NxNativeEasy/build_session.py").path,script.path,folder.path]
         if appOnly { arguments.append("--app-only") }
-        if let keys {arguments += ["--keys",keys.path]}
+        if !appOnly, let keysFolder {arguments += ["--keys-folder",keysFolder.path]}
         task.arguments=arguments;task.currentDirectoryURL=repo
         task.standardOutput=pipe;task.standardError=pipe
         var environment=ProcessInfo.processInfo.environment
@@ -154,7 +169,7 @@ struct ContentView: View {
             ScrollView {
                 VStack(alignment:.leading,spacing:24) {
                     HStack {
-                        Label("nxnative / personal",systemImage:"gamecontroller.fill").font(.system(size:15,weight:.semibold,design:.monospaced)).foregroundStyle(lime)
+                        Label("nxnative / easy",systemImage:"gamecontroller.fill").font(.system(size:15,weight:.semibold,design:.monospaced)).foregroundStyle(lime)
                         Spacer()
                         Text("HECHO PARA TU IPHONE").font(.system(size:10,weight:.medium,design:.monospaced)).tracking(2).foregroundStyle(.gray)
                     }
@@ -165,9 +180,10 @@ struct ContentView: View {
                     HStack(spacing:12) {
                         ForEach(model.cards.prefix(4)) {card in
                             VStack(alignment:.leading,spacing:8) {
-                                if let image=NSImage(contentsOf:model.repo.appendingPathComponent("docs/images/"+card.image)) {
-                                    Image(nsImage:image).resizable().scaledToFill().frame(height:106).clipped().clipShape(RoundedRectangle(cornerRadius:12))
-                                }
+                                ZStack {
+                                    RoundedRectangle(cornerRadius:12).fill(card.tint.opacity(0.12))
+                                    Image(systemName:card.symbol).font(.system(size:38,weight:.light)).foregroundStyle(card.tint)
+                                }.frame(height:106)
                                 Text(card.name).font(.system(size:11,weight:.medium)).foregroundStyle(ink).lineLimit(1)
                             }.frame(maxWidth:.infinity)
                         }
@@ -182,6 +198,13 @@ struct ContentView: View {
                             }
                             Spacer()
                             Button(model.folder == nil ? "1. Elegir juego" : "Cambiar") {model.chooseFolder()}.disabled(model.running)
+                        }
+                        HStack {
+                            Image(systemName:"key.horizontal").foregroundStyle(lime)
+                            Text(model.keysFolder == nil ? "Tus llaves: selecciona su carpeta" : "Tus llaves: carpeta seleccionada")
+                                .font(.system(size:12)).foregroundStyle(ink)
+                            Spacer()
+                            Button(model.keysFolder == nil ? "Elegir carpeta de llaves" : "Cambiar llaves") {model.chooseKeysFolder()}.disabled(model.running)
                         }
                         Divider().overlay(Color.white.opacity(0.08))
                         HStack {
@@ -218,7 +241,7 @@ struct ContentView: View {
                                 ScrollView {Text(model.transcript).font(.system(size:10,design:.monospaced)).textSelection(.enabled).frame(maxWidth:.infinity,alignment:.leading)}.frame(height:180)
                             }
                             HStack {
-                                Link("Guía de instalación",destination:URL(string:"https://github.com/nalancer08/nxnative-personal#readme")!)
+                                Link("Guía de instalación",destination:URL(string:"https://github.com/nalancer08/nxnative-easy#readme")!)
                                 if !model.transcript.isEmpty {Button("Copiar diagnóstico"){NSPasteboard.general.clearContents();NSPasteboard.general.setString(model.transcript,forType:.string)}}
                             }
                         }.padding(.top,10)

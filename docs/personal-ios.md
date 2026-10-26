@@ -1,7 +1,7 @@
 # Desktop interface
 
 For daily use, open `nxnative.app`, choose a game folder and press **Preparar para iPhone**.
-The native macOS interface shows progress and provides buttons for the lightweight IPA,
+The native macOS interface uses generic SF Symbols instead of game artwork and shows progress and provides buttons for the lightweight IPA,
 RomFS folder and Sideloadly. First-time setup still needs full Xcode, Homebrew and the
 user's game/key files. It never signs, installs or enters an Apple account.
 
@@ -12,7 +12,7 @@ CLI remains available below. Cancellation signals the entire build process group
 
 # Personal iOS builds
 
-This private branch retains nxnative's MIT license and attribution. It starts from
+This branch retains nxnative's MIT license and attribution. It starts from
 upstream `ecbeae164c0b419d1ba1031248fe1402050a3eb0`, includes the shared iOS touch
 editor and the tested #277 extraction-space fix, and keeps the working Dread shader
 chain. Upstream changes are reviewed in [the PR review](personal-pr-review.md).
@@ -20,7 +20,7 @@ chain. Upstream changes are reviewed in [the PR review](personal-pr-review.md).
 ## One command, including lightweight export
 
 Double-click `scripts/Build-iPhone.command` in Finder, choose the folder containing
-one game's base NSP/XCI and updates, and select your own `prod.keys` when asked.
+one game's base NSP/XCI and updates, and select the external folder containing your own `prod.keys` when asked.
 Alternatively, from this checkout:
 
 ```sh
@@ -83,7 +83,7 @@ The direct Python build invocation needs the prepared venv. For example use
 `<game>/nxnative-tools/venv/bin/python` instead of `python3`. Dry-run reads the
 folder/configuration and source revision without opening keys or running a build;
 the setup shell still checks/installs dependencies before invoking Python.
-`--full-only` omits RomFS export. `--keys`, `--bundle-id`, `--app-name`, `--language`,
+`--full-only` omits RomFS export. `--keys-folder` (or an explicit `--keys` file path), `--bundle-id`, `--app-name`, `--language`,
 `--package` and `--gpu` provide explicit overrides. The wrapper rejects simultaneous builds from this checkout because generated files
 and caches are shared. Avoid launching the original upstream builder alongside it.
 
@@ -125,3 +125,15 @@ outside this source repository. `.gitignore` guards common output types; it is
 not a substitute for reviewing staged files. Original downloaded scripts were
 preserved on the Mac. These maintained scripts generalize that preparation and
 splitting workflow without the Metroid-only profile/bundle assumptions.
+
+## Accounts and keys
+
+The desktop build runs swiftc and explicitly ad-hoc signs with `codesign --sign -`.
+No Apple identity, certificate or development team is selected. The iPhone package
+continues to use CODE_SIGNING_ALLOWED=NO; Sideloadly signing is a separate user step.
+The GUI remembers only a user-selected keys-folder path in local UserDefaults.
+It passes that explicit folder to the builder; keys are not copied, bundled,
+downloaded or stored in repository configuration. The CLI always prompts for a
+folder when no explicit key option is supplied, even if prod.keys is beside a game.
+The game app's key file is never packed into an IPA. Tests use disposable synthetic
+bytes, not Nintendo key material.
