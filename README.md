@@ -49,6 +49,8 @@ For updates, keep the same Apple account and effective bundle ID used in Sideloa
 
 ## Included game profiles
 
+In the desktop app, click **View all** to browse every profile in your checkout. Search by name, version or Title ID; each result links to its game notes. The catalog reads the local profiles each time you open it.
+
 **Our own checks cover macOS compilation and packaging, not automatic iPhone gameplay verification.** Profiles and gameplay reports come from upstream and may concern Mac or iPhone; read [your game's notes](dm/games/README.md#games). A profile does not guarantee that every game version works on every device.
 
 This base requires iOS/iPadOS 26 or later, an iPhone with A17 Pro or later, or an iPad with M1 or later. Supply your own game files and keys.

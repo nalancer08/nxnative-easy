@@ -146,3 +146,14 @@ downloaded or stored in repository configuration. The CLI always prompts for a
 folder when no explicit key option is supplied, even if prod.keys is beside a game.
 The game app's key file is never packed into an IPA. Tests use disposable synthetic
 bytes, not Nintendo key material.
+
+## Game catalog
+
+The fourth home card opens **View all / Ver todos**. The native catalog reads every
+16-digit title directory containing `dm/games/<id>/game.tsv` from the current checkout
+when opened. It shows the profile name, registered build display versions and title ID,
+with a link to the corresponding repository game note. Search ignores case and accents
+and matches name, version or title ID; whitespace-separated terms must all match.
+No game artwork or network request is needed to populate/search the list. Profile
+presence is not interpreted as verified iPhone gameplay. The current checkout has 70
+profiles, including regional variants.

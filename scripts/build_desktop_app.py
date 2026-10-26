@@ -18,7 +18,7 @@ def main():
     if output.suffix!='.app':parser.error('Output must end with .app')
     contents=output/'Contents';macos=contents/'MacOS';macos.mkdir(parents=True,exist_ok=True)
     subprocess.run(['xcrun','swiftc','-parse-as-library','-swift-version','5',
-        str(REPO/'desktop/NxNativeEasy/main.swift'),str(REPO/'desktop/NxNativeEasy/Localization.swift'),'-o',str(macos/'NxNativeEasy'),
+        str(REPO/'desktop/NxNativeEasy/main.swift'),str(REPO/'desktop/NxNativeEasy/Localization.swift'),str(REPO/'desktop/NxNativeEasy/GameCatalog.swift'),'-o',str(macos/'NxNativeEasy'),
         '-framework','SwiftUI','-framework','AppKit'],check=True)
     info=dict(CFBundleIdentifier='com.nalancer08.nxnative.easy',CFBundleName='nxnative',
               CFBundleDisplayName='nxnative Easy',CFBundleExecutable='NxNativeEasy',

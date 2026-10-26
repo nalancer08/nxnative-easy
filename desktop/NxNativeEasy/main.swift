@@ -26,14 +26,16 @@ struct GameCard: Identifiable {
     @Published var failed = false
     @Published var appOnly = false
     @Published var showDetails = false
+    @Published var showCatalog = false
+    @Published var catalog: [CatalogGame] = []
+    @Published var catalogFailed = false
     private var process: Process?
     private var cancelled = false
     let repo: URL
     let cards: [GameCard] = [
         .init(id:"dread",name:"Metroid Dread",symbol:"scope",tint:.orange),
         .init(id:"wonder",name:"Super Mario Bros. Wonder",symbol:"sparkles",tint:.mint),
-        .init(id:"zelda",name:"Zelda: Breath of the Wild",symbol:"mountain.2",tint:.cyan),
-        .init(id:"odyssey",name:"Super Mario Odyssey",symbol:"globe.americas",tint:.red)
+        .init(id:"zelda",name:"Zelda: Breath of the Wild",symbol:"mountain.2",tint:.cyan)
     ]
     init() {
         let configured = Bundle.main.object(forInfoDictionaryKey:"NxNativeSource") as? String ?? ""
@@ -47,6 +49,11 @@ struct GameCard: Identifiable {
         }
     }
     var gameName: String { folder?.lastPathComponent ?? text("Ningún juego seleccionado") }
+    func openCatalog() {
+        do {catalog=try GameCatalog.load(repo:repo);catalogFailed=false}
+        catch {catalog=[];catalogFailed=true}
+        showCatalog=true
+    }
     func chooseFolder() {
         let panel=NSOpenPanel();panel.canChooseDirectories=true;panel.canChooseFiles=false
         panel.allowsMultipleSelection=false;panel.prompt=text("Elegir juego")
@@ -186,7 +193,7 @@ struct ContentView: View {
                         Text(model.text("Elige una carpeta. Prepara tu juego. A jugar.")).font(.system(size:17)).foregroundStyle(.gray)
                     }
                     HStack(spacing:12) {
-                        ForEach(model.cards.prefix(4)) {card in
+                        ForEach(model.cards) {card in
                             VStack(alignment:.leading,spacing:8) {
                                 ZStack {
                                     RoundedRectangle(cornerRadius:12).fill(card.tint.opacity(0.12))
@@ -195,7 +202,20 @@ struct ContentView: View {
                                 Text(card.name).font(.system(size:11,weight:.medium)).foregroundStyle(ink).lineLimit(1)
                             }.frame(maxWidth:.infinity)
                         }
-                    }.accessibilityLabel(model.text("Juegos con perfiles incluidos; consulta la ficha de cada juego para compatibilidad"))
+                        Button {model.openCatalog()} label: {
+                            VStack(alignment:.leading,spacing:8) {
+                                ZStack {
+                                    RoundedRectangle(cornerRadius:12).fill(lime.opacity(0.12))
+                                    Image(systemName:"square.grid.2x2").font(.system(size:34,weight:.light)).foregroundStyle(lime)
+                                }.frame(height:106)
+                                HStack {
+                                    Text(model.text("Ver todos")).font(.system(size:11,weight:.semibold))
+                                    Spacer()
+                                    Image(systemName:"arrow.up.right").font(.system(size:10))
+                                }.foregroundStyle(ink)
+                            }.frame(maxWidth:.infinity)
+                        }.buttonStyle(.plain).accessibilityIdentifier("view-all-games")
+                    }
                     VStack(alignment:.leading,spacing:18) {
                         HStack(alignment:.center,spacing:14) {
                             Image(systemName:"folder.fill").font(.system(size:28)).foregroundStyle(lime)
@@ -260,7 +280,69 @@ struct ContentView: View {
                 }.padding(32)
             }
         }.frame(minWidth:820,minHeight:680).preferredColorScheme(.dark)
+        .sheet(isPresented:$model.showCatalog) {GameCatalogView(model:model)}
         .onReceive(NotificationCenter.default.publisher(for:NSApplication.willTerminateNotification)) {_ in model.cancel()}
+    }
+}
+
+struct GameCatalogView: View {
+    @ObservedObject var model: BuildModel
+    @State private var query=""
+    @FocusState private var searchFocused: Bool
+    private let lime=Color(red:0.79,green:0.95,blue:0.37)
+    private var results: [CatalogGame] {GameCatalog.search(model.catalog,query:query)}
+    var body: some View {
+        VStack(alignment:.leading,spacing:18) {
+            HStack {
+                VStack(alignment:.leading,spacing:5) {
+                    Text(model.text("Todos los juegos")).font(.system(size:26,weight:.bold,design:.rounded))
+                    HStack(spacing:5) {
+                        Text("\(results.count) / \(model.catalog.count)").monospacedDigit()
+                        Text(model.text("perfiles incluidos en esta copia"))
+                    }.font(.system(size:12)).foregroundStyle(.secondary)
+                }
+                Spacer()
+                Button(model.text("Cerrar")) {model.showCatalog=false}.keyboardShortcut(.cancelAction)
+            }
+            Text(model.text("Son perfiles del repositorio, no una prueba de funcionamiento en tu dispositivo. Consulta la ficha para ver plataformas, versiones y límites."))
+                .font(.system(size:12)).foregroundStyle(.secondary).fixedSize(horizontal:false,vertical:true)
+            HStack {
+                Image(systemName:"magnifyingglass").foregroundStyle(lime)
+                TextField(model.text("Buscar por nombre, versión o Title ID"),text:$query)
+                    .textFieldStyle(.plain).focused($searchFocused).accessibilityIdentifier("game-search")
+                if !query.isEmpty {Button {query=""} label: {Image(systemName:"xmark.circle.fill")}.buttonStyle(.plain).accessibilityLabel(model.text("Limpiar búsqueda"))}
+            }.padding(12).background(Color.white.opacity(0.06),in:RoundedRectangle(cornerRadius:10))
+            if model.catalogFailed {
+                Text(model.text("No pudimos leer los perfiles. Comprueba que el repositorio siga en su ubicación original."))
+                    .foregroundStyle(.orange).frame(maxWidth:.infinity,maxHeight:.infinity)
+            } else if results.isEmpty {
+                VStack(spacing:8) {
+                    Image(systemName:"magnifyingglass").font(.system(size:32)).foregroundStyle(.secondary)
+                    Text(model.text("No encontramos juegos con esa búsqueda."))
+                }.frame(maxWidth:.infinity,maxHeight:.infinity)
+            } else {
+                ScrollView {
+                    LazyVStack(spacing:8) {
+                        ForEach(results) {game in
+                            HStack(spacing:12) {
+                                Image(systemName:"gamecontroller").font(.system(size:20)).foregroundStyle(lime).frame(width:36)
+                                VStack(alignment:.leading,spacing:5) {
+                                    Text(game.name).font(.system(size:14,weight:.semibold)).fixedSize(horizontal:false,vertical:true)
+                                    Text(game.id).font(.system(size:10,design:.monospaced)).foregroundStyle(.secondary).textSelection(.enabled)
+                                    if !game.versions.isEmpty {
+                                        Text(model.text("Versiones del perfil")+": "+game.versions.joined(separator:", "))
+                                            .font(.system(size:11)).foregroundStyle(.secondary)
+                                    }
+                                }
+                                Spacer()
+                                Link(model.text("Ficha del juego"),destination:game.notesURL).font(.system(size:12))
+                            }.padding(14).background(Color.white.opacity(0.04),in:RoundedRectangle(cornerRadius:12))
+                        }
+                    }
+                }
+            }
+        }.padding(26).frame(width:760,height:620).preferredColorScheme(.dark)
+        .onAppear {searchFocused=true}
     }
 }
 

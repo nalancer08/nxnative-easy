@@ -12,6 +12,18 @@ enum EasyLanguage: String, CaseIterable {
 
 struct EasyStrings {
     static let english: [String:String] = [
+        "Ver todos": "View all",
+        "Todos los juegos": "All games",
+        "Cerrar": "Close",
+        "perfiles incluidos en esta copia": "profiles included in this checkout",
+        "Son perfiles del repositorio, no una prueba de funcionamiento en tu dispositivo. Consulta la ficha para ver plataformas, versiones y límites.": "These are repository profiles, not proof of gameplay on your device. Check each game note for platforms, versions and limitations.",
+        "Buscar por nombre, versión o Title ID": "Search by name, version or Title ID",
+        "Limpiar búsqueda": "Clear search",
+        "No pudimos leer los perfiles. Comprueba que el repositorio siga en su ubicación original.": "Could not read the profiles. Check that the source checkout is still at its original location.",
+        "No encontramos juegos con esa búsqueda.": "No games match your search.",
+        "Versiones del perfil": "Profile versions",
+        "Ficha del juego": "Game notes",
+
         "Tu próximo juego empieza aquí.": "Your next game starts here.",
         "Elige su carpeta. Nosotros preparamos la IPA ligera.": "Choose its folder. We will prepare the lightweight IPA.",
         "Ningún juego seleccionado": "No game selected",

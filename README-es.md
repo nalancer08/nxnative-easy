@@ -49,6 +49,8 @@ Para actualizar, usa la misma cuenta y el mismo bundle ID efectivo de Sideloadly
 
 ## Juegos incluidos
 
+En la app pulsa **Ver todos** para consultar los perfiles de esta copia. Busca por nombre, versión o Title ID; cada resultado enlaza a su ficha. El catálogo vuelve a leer los perfiles locales cada vez que lo abres.
+
 **Las pruebas propias cubren compilación y empaquetado en Mac, no una verificación automática de juego en iPhone.** Los perfiles y reportes de juego proceden de upstream; revisa [la ficha de tu juego](dm/games/README.md#games) antes de prepararlo. Un perfil no garantiza que cualquier versión funcione en cualquier iPhone.
 
 Esta base requiere iOS/iPadOS 26 o posterior, iPhone con A17 Pro o posterior o iPad con M1 o posterior. Los datos de los juegos y las llaves los aportas tú.
