@@ -60,7 +60,11 @@ build; choose a known compatible target explicitly with `--gpu` when desired.
 Game versions are selected by upstream (newest present unless `--package` is set).
 An update may change RomFS, so only reuse phone data when that data are identical.
 
-## Rebuild the app using existing caches
+## Developer CLI: rebuild the app using existing caches
+
+The desktop interface always uses the normal pipeline, which validates and reuses
+unchanged stages automatically. There is no cache-mode toggle for users to choose.
+The app-only option below remains a developer CLI tool, outside the desktop flow.
 
 For editor/app-only changes on an already prepared game:
 

@@ -24,7 +24,6 @@ struct GameCard: Identifiable {
     @Published var output: URL?
     @Published var assets: URL?
     @Published var failed = false
-    @Published var appOnly = false
     @Published var showDetails = false
     @Published var showCatalog = false
     @Published var catalog: [CatalogGame] = []
@@ -104,13 +103,12 @@ struct GameCard: Identifiable {
         guard FileManager.default.fileExists(atPath:script.path) else {
             phase="No encontramos el código de nxnative.";detail="Vuelve a crear la app desde el repositorio con Abrir-interfaz.command.";failed=true;return
         }
-        if !appOnly && keysFolder == nil {chooseKeysFolder()}
-        guard appOnly || keysFolder != nil else {return}
+        if keysFolder == nil {chooseKeysFolder()}
+        guard let keysFolder else {return}
         let task=Process();let pipe=Pipe()
         task.executableURL=URL(fileURLWithPath:"/usr/bin/python3")
         var arguments=[repo.appendingPathComponent("desktop/NxNativeEasy/build_session.py").path,script.path,folder.path]
-        if appOnly { arguments.append("--app-only") }
-        if !appOnly, let keysFolder {arguments += ["--keys-folder",keysFolder.path]}
+        arguments += ["--keys-folder",keysFolder.path]
         task.arguments=arguments;task.currentDirectoryURL=repo
         task.standardOutput=pipe;task.standardError=pipe
         var environment=ProcessInfo.processInfo.environment
@@ -261,10 +259,8 @@ struct ContentView: View {
                                 .font(.system(size:12)).foregroundStyle(ink.opacity(0.8))
                         }
                     }.padding(24).background(Color.white.opacity(0.045),in:RoundedRectangle(cornerRadius:20))
-                    DisclosureGroup(model.text("Opciones y detalles"),isExpanded:$model.showDetails) {
+                    DisclosureGroup(model.text("Detalles"),isExpanded:$model.showDetails) {
                         VStack(alignment:.leading,spacing:12) {
-                            Toggle(model.text("Recrear sólo la app con las cachés existentes"),isOn:$model.appOnly).disabled(model.running)
-                            Text(model.text("Úsalo para actualizar el editor. Para una versión nueva del juego, déjalo desactivado. La primera preparación necesita Xcode y Homebrew instalados.")).font(.system(size:12)).foregroundStyle(.gray)
                             if !model.transcript.isEmpty {
                                 Text(model.text("Los detalles de compilación se muestran en su idioma original.")).font(.system(size:11)).foregroundStyle(.gray)
                                 ScrollView {Text(model.transcript).font(.system(size:10,design:.monospaced)).textSelection(.enabled).frame(maxWidth:.infinity,alignment:.leading)}.frame(height:180)
