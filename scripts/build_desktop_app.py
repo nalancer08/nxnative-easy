@@ -30,7 +30,7 @@ def main():
         subprocess.run(['iconutil','-c','icns',str(iconset),'-o',str(resources/'AppIcon.icns')],check=True)
     info=dict(CFBundleIconFile='AppIcon', CFBundleIdentifier='com.nalancer08.nxnative.easy',CFBundleName='nxnative',
               CFBundleDisplayName='nxnative Easy',CFBundleExecutable='NxNativeEasy',
-              CFBundlePackageType='APPL',CFBundleShortVersionString='1.0',CFBundleVersion='1',
+              CFBundlePackageType='APPL',CFBundleShortVersionString='1.1',CFBundleVersion='2',
               LSMinimumSystemVersion='26.0',CFBundleDevelopmentRegion='en',CFBundleLocalizations=['en','es'],NSHighResolutionCapable=True,NxNativeSource=str(REPO))
     (contents/'Info.plist').write_bytes(plistlib.dumps(info))
     # Explicit ad-hoc signing: '-' never selects an Apple certificate or team.

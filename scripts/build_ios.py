@@ -151,7 +151,7 @@ def main(argv=None):
         if settings[key]: command += ['--'+key.replace('_','-'), settings[key]]
     command += ['--show-fps' if settings['show_fps'] else '--no-show-fps']
     if args.package: command += ['--package',args.package]
-    revision = subprocess.run(['git','-C',str(REPO),'rev-parse','HEAD'],capture_output=True,text=True,check=True).stdout.strip()
+    revision = subprocess.run(['git','-C',str(REPO),'rev-parse','HEAD'],capture_output=True,text=True).stdout.strip() or 'downloaded-source'
     print('Source checkout:',REPO,flush=True)
     print('Source revision:',revision,flush=True)
     print('Output:',output,flush=True)

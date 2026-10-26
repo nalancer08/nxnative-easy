@@ -1,0 +1,17 @@
+START HERE / EMPIEZA AQUÍ
+
+1. Install Xcode from the Mac App Store and open it once.
+   Instala Xcode desde App Store y ábrelo una vez.
+
+2. Double-click START-HERE.command in this folder.
+   Abre START-HERE.command en esta carpeta con doble clic.
+
+It downloads missing tools, builds your own app and opens it.
+Descarga las herramientas que faltan, compila tu app y la abre.
+
+3. Choose iPhone / iPad or Mac, then your own game and keys folders.
+   Elige iPhone / iPad o Mac y las carpetas de tu juego y tus llaves.
+
+App location / Dónde queda: ~/Applications/nxnative Easy.app
+Requires / Necesitas: Apple silicon (M1+), macOS 26+, full Xcode.
+No games or keys included / No incluye juegos ni llaves.

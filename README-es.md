@@ -2,7 +2,35 @@
 
 [English](README.md) · **Español**
 
-**Prepara tus juegos para iPhone desde una app de Mac. Sin comandos para el uso diario.**
+**Tus propios juegos, preparados para iPhone, iPad o Mac.**
+
+## Empieza aquí
+
+**Primero:** instala [Xcode](https://apps.apple.com/app/xcode/id497799835) completo desde App Store y ábrelo una vez. **Xcode también compila los juegos**; una interfaz ya compilada no elimina ese requisito.
+
+**Después:** pega este único comando en Terminal:
+
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/nalancer08/nxnative-easy/main/install.sh)"
+```
+
+Descarga nxnative Easy, instala Homebrew y las herramientas que falten, **compila tu interfaz de Mac y la abre**. Sigue las solicitudes de contraseña o confirmación que aparezcan en Terminal. No usa una cuenta de desarrollador Apple.
+
+**¿Ya descargaste el repositorio?** Abre **START-HERE.command** en la carpeta principal con doble clic. Hace la misma preparación; no necesitas buscar scripts dentro de `scripts/`. Si macOS bloquea ese archivo, usa el comando de arriba.
+
+Cuando abra la app:
+
+1. Elige **iPhone / iPad** o **Mac**.
+2. Selecciona la **carpeta de tu juego** y la **carpeta de tus llaves**.
+3. Pulsa **Preparar juego**.
+
+**Las siguientes veces:** abre **nxnative Easy.app** en la carpeta **Aplicaciones de tu usuario**. La preparación conserva su propia copia del código; puedes borrar el ZIP y la carpeta que descargaste.
+
+**Mac:** crea una `.app` del juego; pulsa **Abrir juego**. No necesitas Sideloadly ni un iPhone. Las partidas quedan en `~/Library/Application Support/nxnative/<title ID>/`.
+
+**iPhone / iPad:** crea una IPA ligera sin firmar. Instálala con Sideloadly y copia los datos del juego como te indica la app.
+
+**Necesitas:** Mac con Apple silicon (M1 o posterior), macOS 26+ y Xcode 26+. El comando instala las otras herramientas. Los juegos y las llaves los aportas tú. La primera compilación puede tardar.
 
 ![Nuestra app para preparar juegos](docs/images/nxnative-easy-es.png)
 
@@ -16,22 +44,17 @@ Partimos de [seedds/nxnative](https://github.com/seedds/nxnative): el motor, los
 - **Llaves del usuario:** debes seleccionar la carpeta de tus propias `prod.keys`. No incluimos, descargamos ni distribuimos llaves o juegos.
 - **Preparación local:** sin cuenta Apple, sin certificados de empresa y sin servicio que reciba tus archivos.
 
-Entregamos **código, una interfaz de preparación y herramientas de compilación**. El resultado es una IPA sin firmar; tú la firmas e instalas con Sideloadly. No ofrecemos juegos, llaves, firma de Apple ni compatibilidad garantizada con cualquier juego.
+Entregamos **código, una interfaz de preparación y herramientas de compilación**. El resultado es una app local para Mac o una IPA para iPhone/iPad sin firmar, que firmas e instalas con Sideloadly. No ofrecemos juegos, llaves, firma de Apple ni compatibilidad garantizada con cualquier juego.
 
 ## Idioma
 
 La app inicia en **English**. Cambia a **Español** con el selector de la esquina superior; la elección se guarda en este Mac. Cambia el idioma de la interfaz, no el del juego. Los detalles técnicos se muestran en su idioma original.
 
-## Abre la app y elige tu juego
+## ¿Qué pasa al pulsar Preparar juego?
 
-1. Abre **nxnative.app**.
-2. Elige la **Carpeta de tu juego**, selecciona tu **Carpeta de llaves** una vez y pulsa **Preparar juego**.
+La app prepara las herramientas y compila para el dispositivo que elegiste. **Mac** genera una app del juego con los botones **Abrir juego** y **Mostrar app**. **iPhone / iPad** genera una IPA ligera y muestra los pasos de Sideloadly y Finder al terminar. Tus archivos y salidas anteriores se conservan en la carpeta del juego.
 
-La app prepara las herramientas, compila y deja lista la **IPA ligera**. Verás el avance en la ventana. Al terminar aparecen los dos pasos para instalar. **Enviar a Sideloadly** abre allí la IPA preparada; si Sideloadly no está instalado, el botón ofrece descargarlo.
-
-**Una vez creada:** abre `nxnative.app`. Recuerda tu última carpeta y permite volver a mostrar la IPA ya preparada.
-
-**En otro Mac:** después de descargar este repositorio, abre [`scripts/Abrir-interfaz.command`](scripts/Abrir-interfaz.command) con doble clic. Crea y abre la app local. La primera vez necesitas Xcode completo y Homebrew instalados; si hacen falta tus llaves, te pedirá elegir la carpeta donde guardas tu propio `prod.keys`. Mantén cada juego fuera del repositorio, en una carpeta con su base y actualizaciones.
+La preparación conserva una copia separada del código y respeta los cambios locales. Para desarrollo sigue disponible [`scripts/Abrir-interfaz.command`](scripts/Abrir-interfaz.command).
 
 ## Cómo se compila la app de Mac
 

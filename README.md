@@ -2,7 +2,35 @@
 
 **English** · [Español](README-es.md)
 
-**Prepare your games for iPhone with a native Mac app. No commands for everyday use.**
+**Your own games, prepared for iPhone, iPad or Mac.**
+
+## Start here
+
+**First:** install full [Xcode](https://apps.apple.com/app/xcode/id497799835) from the Mac App Store and open it once. **Xcode compiles the games too**, so a prebuilt launcher cannot remove this requirement.
+
+**Then:** paste this single command into Terminal:
+
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/nalancer08/nxnative-easy/main/install.sh)"
+```
+
+It downloads nxnative Easy, installs Homebrew and the missing build tools, **compiles your own Mac interface and opens it**. Follow any password or confirmation prompts in Terminal. No Apple developer account is used.
+
+**Already downloaded this repository?** Double-click **START-HERE.command** in its top-level folder. It performs the same setup; you do not need to find a script under `scripts/`. If macOS blocks that file, use the Terminal command above.
+
+When the app opens:
+
+1. Choose **iPhone / iPad** or **Mac**.
+2. Choose your own **game folder** and **keys folder**.
+3. Click **Prepare game**.
+
+**After setup:** open **nxnative Easy.app** in your home **Applications** folder. The setup keeps its source checkout separately, so you can delete the downloaded ZIP and folder.
+
+**Mac:** creates a game `.app`; click **Open game**. No Sideloadly or iPhone needed. Saves stay in `~/Library/Application Support/nxnative/<title ID>/`.
+
+**iPhone / iPad:** creates an unsigned lightweight IPA; install it with Sideloadly, then copy the game data as shown in the app.
+
+**Required:** an Apple silicon Mac (M1 or newer), macOS 26+ and Xcode 26+. The command installs the other tools. You must provide your own games and keys. Compilation can take time, especially for the first game.
 
 ![The nxnative Easy desktop app](docs/images/nxnative-easy.png)
 
@@ -16,22 +44,17 @@ Built on [seedds/nxnative](https://github.com/seedds/nxnative). The original pro
 - **Your own keys:** explicitly select the external folder containing your `prod.keys`. No games or keys are included, downloaded or distributed.
 - **Local preparation:** no Apple account or company certificate is used to build the desktop app.
 
-We provide **source code, a preparation interface and build tools**. The output is an unsigned IPA that you sign and install yourself with Sideloadly. Games, console keys, Apple signing and universal game compatibility are not provided.
+We provide **source code, a preparation interface and build tools**. The output is a local Mac game app, or an unsigned iPhone/iPad IPA that you sign and install yourself with Sideloadly. Games, console keys, Apple signing and universal game compatibility are not provided.
 
 ## Language
 
 The app starts in **English**. Choose **Español** using the selector at the top; your selection is remembered on this Mac. This changes the interface language, not the game's language. Build diagnostics keep their original language.
 
-## Open the app and choose your game
+## What happens after Prepare game?
 
-1. Open **nxnative.app**.
-2. Choose **Your game folder**, select your **Keys folder** once, then click **Prepare game**.
+The app prepares the tools and builds for your chosen device. **Mac** produces a game app with **Open game** and **Show app** buttons. **iPhone / iPad** produces a lightweight IPA and shows the Sideloadly and Finder steps when ready. Your own files and previous outputs stay in the game folder.
 
-The app prepares the tools, builds the game app and creates a **lightweight IPA**. Progress stays in the window. When finished, the app shows the two installation steps. **Send to Sideloadly** opens the prepared IPA in Sideloadly; if it is not installed, the button offers its download.
-
-**First-time setup:** download or clone this repository, then double-click the local [`scripts/Abrir-interfaz.command`](scripts/Abrir-interfaz.command) file in Finder. It creates and opens the Mac app. Full Xcode and Homebrew must already be installed. Select the folder containing your own `prod.keys` when asked. Keep one game per folder, with the base game and its updates, outside this source checkout.
-
-**Already set up:** open the existing `nxnative.app`. It remembers your last game folder and can reveal a previously prepared IPA.
+Setup keeps a separate source checkout and preserves local edits. Developers can still use [`scripts/Abrir-interfaz.command`](scripts/Abrir-interfaz.command).
 
 ## How the Mac app is built
 

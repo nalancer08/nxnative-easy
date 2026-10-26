@@ -8,6 +8,10 @@ import Darwin
         didSet {language.save()}
     }
     func text(_ source: String) -> String {EasyStrings.text(source, language:language)}
+    @Published var target = "" {
+        didSet { output=nil;assets=nil;failed=false;restoreOutput() }
+    }
+    var isMac: Bool {target == "mac"}
     @Published var folder: URL?
     @Published var keysFolder: URL?
     @Published var running = false
@@ -25,8 +29,8 @@ import Darwin
     private var cancelled = false
     let repo: URL
     init() {
-        let configured = Bundle.main.object(forInfoDictionaryKey:"NxNativeSource") as? String ?? ""
-        repo = URL(fileURLWithPath:configured)
+        let configured=Bundle.main.object(forInfoDictionaryKey:"NxNativeSource") as? String ?? ""
+        repo=URL(fileURLWithPath:configured)
         refreshCatalog()
         if let path=UserDefaults.standard.string(forKey:"keysDirectory"), FileManager.default.fileExists(atPath:path+"/prod.keys") {
             keysFolder=URL(fileURLWithPath:path)
@@ -81,7 +85,15 @@ import Darwin
         failed=false;phase="Tus llaves están seleccionadas.";detail="Sólo guardamos la ruta en este Mac, nunca su contenido."
     }
     func restoreOutput() {
-        guard let folder,
+        if isMac {
+            guard let folder,
+                  let data=try? Data(contentsOf:folder.appendingPathComponent("nxnative-mac.json")),
+                  let record=(try? JSONSerialization.jsonObject(with:data)) as? [String:Any],
+                  let path=record["app_path"] as? String,
+                  FileManager.default.fileExists(atPath:path+"/Contents/MacOS/dmhost") else {return}
+            output=URL(fileURLWithPath:path);return
+        }
+        guard target == "ios", let folder,
               let data=try? Data(contentsOf:folder.appendingPathComponent("nxnative-ios.json")),
               let record=(try? JSONSerialization.jsonObject(with:data)) as? [String:Any],
               let path=record["light_dir"] as? String else {return}
@@ -90,7 +102,7 @@ import Darwin
            let ipa=files.first(where:{$0.pathExtension=="ipa"}) { output=ipa;assets=directory.appendingPathComponent("romfs") }
     }
     func build() {
-        guard let folder, !running else {return}
+        guard let folder, !running, !target.isEmpty else {return}
         let script=repo.appendingPathComponent("scripts/prepare_ios.sh")
         guard FileManager.default.fileExists(atPath:script.path) else {
             phase="No encontramos el código de nxnative.";detail="Vuelve a crear la app desde el repositorio con Abrir-interfaz.command.";failed=true;return
@@ -99,7 +111,7 @@ import Darwin
         guard let keysFolder else {return}
         let task=Process();let pipe=Pipe()
         task.executableURL=URL(fileURLWithPath:"/usr/bin/python3")
-        var arguments=[repo.appendingPathComponent("desktop/NxNativeEasy/build_session.py").path,script.path,folder.path]
+        var arguments=[repo.appendingPathComponent("desktop/NxNativeEasy/build_session.py").path,script.path,"--target",target,folder.path]
         arguments += ["--keys-folder",keysFolder.path]
         task.arguments=arguments;task.currentDirectoryURL=repo
         task.standardOutput=pipe;task.standardError=pipe
@@ -124,7 +136,7 @@ import Darwin
                 } else if status==0 {
                     self.restoreOutput()
                     self.failed=self.output==nil
-                    self.phase=self.output == nil ? "Terminó, pero no encontramos la IPA." : "Tu juego está listo para Sideloadly."
+                    self.phase=self.output == nil ? "Terminó, pero no encontramos la app." : (self.isMac ? "Tu juego está listo para Mac." : "Tu juego está listo para Sideloadly.")
                     self.detail=self.output == nil ? "Usa Ver error para revisar lo que ocurrió." : "Abre la IPA y arrástrala a Sideloadly. La firma se hace con tu cuenta personal."
                 } else {
                     self.failed=true;self.phase="No pudimos preparar el juego."
@@ -150,7 +162,7 @@ import Darwin
         guard running else {return}
         let lower=text.lowercased()
         if lower.contains("pack ipa") || lower.contains("source ipa:") || lower.contains("procesados") || lower.contains("processed ") {phase="Creando tu IPA ligera…"}
-        else if lower.contains("xcodebuild") || lower.contains("building the ipa") {phase="Compilando la app para iPhone…"}
+        else if lower.contains("xcodebuild") || lower.contains("building the ipa") {phase=isMac ? "Compilando la app para Mac…" : "Compilando la app para iPhone…"}
         else if lower.contains("shader") {phase="Preparando los gráficos del juego…"}
         else if lower.contains("extract") {phase="Preparando los archivos del juego…"}
     }
@@ -160,6 +172,7 @@ import Darwin
         if kill(-process.processIdentifier,SIGTERM) != 0 {process.terminate()}
         phase="Cancelando…"
     }
+    func openMacGame() {if let output, isMac {NSWorkspace.shared.open(output)}}
     func revealIPA() {if let output {NSWorkspace.shared.activateFileViewerSelecting([output])}}
     func revealAssets() {if let assets {NSWorkspace.shared.activateFileViewerSelecting([assets])}}
     var sideloadlyURL: URL? {NSWorkspace.shared.urlForApplication(withBundleIdentifier:"io.sideloadly.sideloadly")}
@@ -200,6 +213,8 @@ struct SupportCarousel: View {
                 }.offset(x:-offset).frame(width:geometry.size.width,alignment:.leading)
             }
         }.frame(height:103).clipped()
+        .accessibilityElement(children:.ignore)
+        .accessibilityLabel(games.map(\.name).joined(separator:", "))
         .onHover { hovering in
             if hovering { pausedAt = Date() }
             else if let pause = pausedAt {
@@ -222,7 +237,7 @@ struct CompactWindow: NSViewRepresentable {
             adjusted=true
             DispatchQueue.main.async {
                 let width=max(760,window.contentLayoutRect.width)
-                window.setContentSize(NSSize(width:width,height:600))
+                window.setContentSize(NSSize(width:width,height:650))
             }
         }
     }
@@ -259,7 +274,7 @@ struct ContentView: View {
                     }
                     VStack(alignment:.leading,spacing:6) {
                         Text(model.text("Prepara tu juego.")).font(.system(size:32,weight:.bold,design:.rounded)).foregroundStyle(ink)
-                        Text(model.text("Creamos la IPA. La instalas en tu iPhone con Sideloadly."))
+                        Text(model.text(model.isMac ? "Creamos una app para jugar en tu Mac." : "Elige dónde quieres jugar y añade tus archivos."))
                             .font(.system(size:14)).foregroundStyle(.secondary)
                     }
                     VStack(alignment:.leading,spacing:10) {
@@ -277,6 +292,11 @@ struct ContentView: View {
                         SupportCarousel(games:model.catalog)
                     }
                     VStack(alignment:.leading,spacing:18) {
+                        Picker(model.text("¿Dónde quieres jugar?"),selection:$model.target) {
+                            Text(model.text("Elige un dispositivo")).tag("")
+                            Text("iPhone / iPad").tag("ios")
+                            Text("Mac").tag("mac")
+                        }.pickerStyle(.menu).disabled(model.running)
                         HStack(spacing:12) {
                             Image(systemName:"folder.fill").font(.system(size:24)).foregroundStyle(lime)
                             VStack(alignment:.leading,spacing:4) {
@@ -318,13 +338,24 @@ struct ContentView: View {
                                     Spacer()
                                     Image(systemName:"arrow.right")
                                 }.font(.system(size:15,weight:.bold)).padding(15).foregroundStyle(Color.black)
-                                    .background(model.folder == nil ? Color.gray : lime,in:RoundedRectangle(cornerRadius:10))
-                            }.buttonStyle(.plain).disabled(model.folder == nil)
+                                    .background(model.folder == nil || model.target.isEmpty ? Color.gray : lime,in:RoundedRectangle(cornerRadius:10))
+                            }.buttonStyle(.plain).disabled(model.folder == nil || model.target.isEmpty)
                         }
                     }.padding(22).background(Color.white.opacity(0.045),in:RoundedRectangle(cornerRadius:16))
                     if model.output != nil && !model.running && !model.failed {
                         VStack(alignment:.leading,spacing:16) {
-                            Label(model.text("Listo. Instálalo en tu iPhone."),systemImage:"checkmark.circle.fill")
+                            if model.isMac {
+                                Label(model.text("Listo. Juega en tu Mac."),systemImage:"checkmark.circle.fill")
+                                    .font(.system(size:20,weight:.semibold)).foregroundStyle(lime)
+                                HStack {
+                                    Button(model.text("Abrir juego")){model.openMacGame()}
+                                        .buttonStyle(.borderedProminent).tint(lime).foregroundStyle(.black)
+                                    Button(model.text("Mostrar app")){model.revealIPA()}
+                                }
+                                Text(model.text("Tus partidas se guardan en este Mac y se conservan al crear otra versión."))
+                                    .font(.system(size:12)).foregroundStyle(.secondary)
+                            } else {
+                            Label(model.text("Listo. Instálalo en tu iPhone / iPad."),systemImage:"checkmark.circle.fill")
                                 .font(.system(size:20,weight:.semibold)).foregroundStyle(lime)
                             Text(model.text("1. Envía la IPA a Sideloadly y pulsa Start con tu cuenta personal."))
                                 .font(.system(size:13))
@@ -337,6 +368,7 @@ struct ContentView: View {
                             Button(model.text("Mostrar datos del juego")){model.revealAssets()}
                             Text(model.text("Para actualizar: misma cuenta e identificador de Sideloadly. Instala encima, sin desinstalar."))
                                 .font(.system(size:11)).foregroundStyle(.secondary)
+                            }
                             Button(model.text("Preparar de nuevo")){model.build()}.buttonStyle(.link)
                         }.padding(22).frame(maxWidth:.infinity,alignment:.leading)
                             .background(lime.opacity(0.045),in:RoundedRectangle(cornerRadius:16))
@@ -424,6 +456,6 @@ struct GameCatalogView: View {
                 NSApplication.shared.applicationIconImage=AppArtwork.icon
             }
         }
-            .defaultSize(width:820,height:600)
+            .defaultSize(width:820,height:650)
     }
 }

@@ -178,3 +178,18 @@ it does not click Start, select an account, sign or install on a phone. If Sidel
 is missing, the action is labelled Get Sideloadly and opens its official website.
 The normal build workflow still requires Xcode/Homebrew first and installs other
 missing dependencies. No Apple identity is selected by the desktop compiler.
+
+## One-command setup and destination selection
+
+`install.sh` installs missing Homebrew/build tools, prepares an isolated Python
+runtime, compiles the desktop app locally and opens it. Full Xcode must already be
+installed and opened once; the script checks this before downloading anything.
+The install uses an independent source checkout and never resets local changes.
+`--check` reports prerequisite status without installations or network access.
+
+Users must explicitly choose iPhone/iPad or Mac before preparing a game. The iOS
+route preserves the lightweight IPA workflow and `nxnative-ios.json`. The Mac route
+uses the upstream `--platform mac-app` packer with explicit ad-hoc signing, a unique
+output path per build and a separate `nxnative-mac.json` output record. It uses the
+upstream per-title save location without replacing iOS state. Apple silicon is
+required. Successful packaging is not a new claim of gameplay verification.

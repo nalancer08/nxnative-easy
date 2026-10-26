@@ -12,6 +12,18 @@ enum EasyLanguage: String, CaseIterable {
 
 struct EasyStrings {
     static let english: [String:String] = [
+        "¿Dónde quieres jugar?": "Where do you want to play?",
+        "Elige un dispositivo": "Choose a device",
+        "Elige dónde quieres jugar y añade tus archivos.": "Choose where to play, then add your own files.",
+        "Creamos una app para jugar en tu Mac.": "We create an app to play on your Mac.",
+        "Terminó, pero no encontramos la app.": "Finished, but the app could not be found.",
+        "Tu juego está listo para Mac.": "Your game is ready for Mac.",
+        "Listo. Juega en tu Mac.": "Ready. Play on your Mac.",
+        "Listo. Instálalo en tu iPhone / iPad.": "Ready. Install it on your iPhone / iPad.",
+        "Abrir juego": "Open game",
+        "Compilando la app para Mac…": "Building the Mac app…",
+        "Mostrar app": "Show app",
+        "Tus partidas se guardan en este Mac y se conservan al crear otra versión.": "Saves stay on this Mac and are preserved when you build a new version.",
         "Juegos con soporte en la herramienta": "Supported game profiles",
         "No incluye ni descarga juegos. Debes añadir tus propios archivos.": "No games are included or downloaded. You must add your own files.",
         "Carpeta de tu juego": "Your game folder",
