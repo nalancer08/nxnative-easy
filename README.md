@@ -1,51 +1,57 @@
 # nxnative Easy
 
-**Prepara tus juegos para iPhone desde una app de Mac. Sin comandos para el uso diario.**
+**English** · [Español](README-es.md)
 
-![Nuestra app para preparar juegos](docs/images/nxnative-easy.png)
+**Prepare your games for iPhone with a native Mac app. No commands for everyday use.**
 
-## Qué aporta esta versión
+![The nxnative Easy desktop app](docs/images/nxnative-easy.png)
 
-Partimos de [seedds/nxnative](https://github.com/seedds/nxnative): el motor, los perfiles y la compatibilidad son trabajo del proyecto original. **nxnative Easy** añade:
+## What this version adds
 
-- **App para Mac:** elegir juego, avance, cancelación y acceso a IPA, datos y Sideloadly.
-- **Controles editables en iPhone:** posición, tamaño y opacidad, guardados por juego y layout.
-- **IPA ligera automática:** los datos `romfs` van aparte; se conservan salidas y cachés válidas.
-- **Llaves del usuario:** debes seleccionar la carpeta de tus propias `prod.keys`. No incluimos, descargamos ni distribuimos llaves o juegos.
-- **Preparación local:** sin cuenta Apple, sin certificados de empresa y sin servicio que reciba tus archivos.
+Built on [seedds/nxnative](https://github.com/seedds/nxnative). The original project provides the engine, game profiles and compatibility work. **nxnative Easy** adds:
 
-Entregamos **código, una interfaz de preparación y herramientas de compilación**. El resultado es una IPA sin firmar; tú la firmas e instalas con Sideloadly. No ofrecemos juegos, llaves, firma de Apple ni compatibilidad garantizada con cualquier juego.
+- **Native Mac app:** game-folder selection, progress, cancellation, and buttons for the IPA, RomFS data and Sideloadly.
+- **Editable iPhone touch controls:** position, size and opacity, saved per game and 2D/3D layout.
+- **Automatic lightweight IPA export:** RomFS data live separately; existing outputs and valid caches are preserved.
+- **Your own keys:** explicitly select the external folder containing your `prod.keys`. No games or keys are included, downloaded or distributed.
+- **Local preparation:** no Apple account or company certificate is used to build the desktop app.
 
-## Abre la app y elige tu juego
+We provide **source code, a preparation interface and build tools**. The output is an unsigned IPA that you sign and install yourself with Sideloadly. Games, console keys, Apple signing and universal game compatibility are not provided.
 
-1. Abre **nxnative.app**.
-2. Pulsa **Elegir juego**, selecciona su carpeta y pulsa **Preparar para iPhone**.
+## Language
 
-La app prepara las herramientas, compila y deja lista la **IPA ligera**. Verás el avance en la ventana. Al terminar, pulsa **Mostrar IPA** y **Abrir Sideloadly**.
+The app starts in **English**. Choose **Español** using the selector at the top; your selection is remembered on this Mac. This changes the interface language, not the game's language. Build diagnostics keep their original language.
 
-**En nuestro Mac:** la app está disponible como `nxnative.app` en Descargas. Recuerda tu última carpeta y permite volver a mostrar la IPA ya preparada.
+## Open the app and choose your game
 
-**En otro Mac:** después de descargar este repositorio privado, abre [`scripts/Abrir-interfaz.command`](scripts/Abrir-interfaz.command) con doble clic. Crea y abre la app local. La primera vez necesitas Xcode completo y Homebrew instalados; si hacen falta tus llaves, te pedirá elegir la carpeta donde guardas tu propio `prod.keys`. Mantén cada juego fuera del repositorio, en una carpeta con su base y actualizaciones.
+1. Open **nxnative.app**.
+2. Click **Choose game**, select its folder, then click **Prepare for iPhone**.
 
-## Cómo se compila la app de Mac
+The app prepares the tools, builds the game app and creates a **lightweight IPA**. Progress stays in the window. When finished, click **Show IPA** and **Open Sideloadly**.
 
-El acceso de apertura usa el compilador Swift de tu Xcode. La firma de la app es **ad hoc**, local y sin cuenta, certificado ni equipo Apple (`TeamIdentifier` no asignado). No usa cuentas de empresa. Sólo al instalar la **IPA de iPhone con Sideloadly** introduces tu cuenta personal, dentro de Sideloadly.
+**First-time setup:** download or clone this repository, then double-click the local [`scripts/Abrir-interfaz.command`](scripts/Abrir-interfaz.command) file in Finder. It creates and opens the Mac app. Full Xcode and Homebrew must already be installed. Select the folder containing your own `prod.keys` when asked. Keep one game per folder, with the base game and its updates, outside this source checkout.
 
-Los símbolos de la interfaz son genéricos del sistema; no se usan imágenes ni logotipos de los juegos en la app. La galería de documentación de abajo procede de upstream y está separada de la interfaz.
+**Already set up:** open the existing `nxnative.app`. It remembers your last game folder and can reveal a previously prepared IPA. On the owner's Mac, the app shortcut is in Downloads.
 
-## Instalar: Sideloadly + Finder
+## How the Mac app is built
 
-1. Conecta tu iPhone al Mac y abre [Sideloadly](https://sideloadly.io).
-2. Arrastra la **IPA ligera** y pulsa **Start** con tu cuenta Apple **personal**.
-3. La primera vez, pulsa **Mostrar datos romfs** en nuestra app y copia la carpeta `romfs` completa por **Finder → iPhone → Archivos → tu juego**.
+The launcher uses Xcode's Swift compiler. The desktop app is explicitly **ad-hoc signed**, locally, with no Apple account, certificate or team (`TeamIdentifier` is unset). No company account is used. You enter your personal Apple account separately in Sideloadly when signing the **iPhone IPA**.
 
-Para actualizar, usa la misma cuenta y el mismo bundle ID efectivo de Sideloadly. **Instala encima; no desinstales la app**, para conservar tus partidas. Si los datos del juego no cambiaron, puedes reutilizar el `romfs` existente. La firma e instalación siguen siendo pasos de Sideloadly; nuestra app prepara el archivo sin firmar.
+The interface uses generic system symbols, not game artwork or logos. The documentation gallery below comes from upstream and is separate from the app.
 
-## Juegos incluidos
+## Install with Sideloadly and Finder
 
-**Metroid Dread 2.1.0 está confirmado en nuestro iPhone.** Los demás tienen perfiles y pruebas reportadas por upstream en Mac o iPhone; revisa [la ficha de tu juego](dm/games/README.md#games) antes de prepararlo. Un perfil no garantiza que cualquier versión funcione en cualquier iPhone.
+1. Connect your iPhone to the Mac and open [Sideloadly](https://sideloadly.io).
+2. Drag in the **lightweight IPA** and click **Start**, using your **personal** Apple account.
+3. On the first installation, click **Show RomFS folder** in our app and copy the complete `romfs` folder using **Finder → iPhone → Files → your game**.
 
-Esta base requiere iOS/iPadOS 26 o posterior, iPhone con A17 Pro o posterior o iPad con M1 o posterior. Los datos de los juegos y las llaves los aportas tú.
+For updates, keep the same Apple account and effective bundle ID used in Sideloadly. **Install over the existing app; do not uninstall it**, to retain its saves. Reuse the existing `romfs` only when the game data have not changed. Signing and device installation are separate Sideloadly steps, not actions performed by this app. See the [official Sideloadly FAQ](https://sideloadly.io/faq).
+
+## Included game profiles
+
+**Our own checks cover macOS compilation and packaging, not automatic iPhone gameplay verification.** Profiles and gameplay reports come from upstream and may concern Mac or iPhone; read [your game's notes](dm/games/README.md#games). A profile does not guarantee that every game version works on every device.
+
+This base requires iOS/iPadOS 26 or later, an iPhone with A17 Pro or later, or an iPad with M1 or later. Supply your own game files and keys.
 
 <table>
 <tr>
@@ -165,18 +171,18 @@ Esta base requiere iOS/iPadOS 26 o posterior, iPhone con A17 Pro o posterior o i
 </tr>
 </table>
 
-## Controles a tu gusto
+## Make the controls your own
 
-En el juego pulsa **Edit controls**. Mueve los botones, ajusta tamaño y opacidad y pulsa **Save**. **Cancel** descarta y **Reset control / Reset all** restaura. Cada juego guarda su acomodo 2D y 3D. El juego sigue corriendo mientras editas.
+Inside the game, tap **Edit controls**. Move buttons, adjust their size and opacity, then tap **Save**. **Cancel** discards edits; **Reset control / Reset all** restores defaults. Each game keeps separate 2D and 3D layouts. The game continues running while you edit. The desktop language selector does not translate this in-game editor.
 
 <details>
-<summary>Guías, comandos y detalles técnicos</summary>
+<summary>Guides, commands and technical details</summary>
 
-- [Guía de comandos e instalación detallada](README-comandos.md).
-- [Automatización y solución de problemas](docs/personal-ios.md).
-- [Revisión de los PR de upstream](docs/personal-pr-review.md).
-- [README anterior y créditos completos](README-original.md).
+- [Detailed command and installation guide, in Spanish](README-comandos.md).
+- [Automation and troubleshooting](docs/personal-ios.md).
+- [Upstream PR applicability review](docs/personal-pr-review.md).
+- [Previous README and full credits](README-original.md).
 
 </details>
 
-Basado en [seedds/nxnative](https://github.com/seedds/nxnative), con nuestro editor de controles y automatización. Conservamos la [licencia MIT](LICENSE) y los [créditos originales](README-original.md#acknowledgements). Nuestros cambios pertenecen a la cuenta de GitHub **nalancer08**; los commits históricos de upstream conservan su autoría.
+Based on [seedds/nxnative](https://github.com/seedds/nxnative), with our touch editor and preparation workflow. The [MIT license](LICENSE), [original acknowledgements](README-original.md#acknowledgements) and third-party licenses are retained. Personal additions are authored by **nalancer08**; upstream commits retain their original authors.

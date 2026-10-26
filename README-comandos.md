@@ -8,7 +8,7 @@ Esta es nuestra copia privada de [nxnative](https://github.com/seedds/nxnative),
 
 ## Qué juegos correr
 
-**Metroid Dread 2.1.0 es el juego confirmado funcionando en nuestro iPhone.** También comprobamos su recompilación sin firma y la generación automática de la IPA ligera. El editor nuevo todavía requiere comprobar su uso físico tras instalarlo.
+**El propietario reportó que Metroid Dread 2.1.0 funciona en su iPhone. No es una prueba física realizada por este proyecto.** También comprobamos su recompilación sin firma y la generación automática de la IPA ligera. El editor nuevo todavía requiere comprobar su uso físico tras instalarlo.
 
 Esta base incluye perfiles para los juegos de la tabla completa de abajo. Upstream publica pruebas en Mac o iPhone según el título: **tener un perfil o una IPA compilada no confirma que ese juego funcione en tu iPhone**. Abre la ficha del juego para comprobar plataforma, versión y problemas conocidos.
 
@@ -16,7 +16,7 @@ Algunos títulos incluidos para empezar a explorar:
 
 | Juego | Versión del perfil | Referencia |
 |---|---|---|
-| **Metroid Dread** | **2.1.0** | [Ficha](dm/games/010093801237C000/README.md) · confirmado en nuestro iPhone |
+| **Metroid Dread** | **2.1.0** | [Ficha](dm/games/010093801237C000/README.md) · funcionamiento reportado por el propietario |
 | Super Mario Bros. Wonder | 1.2.1 / 1.0.0 | [Ficha y límites](dm/games/010015100B514000/README.md) |
 | Super Mario Odyssey | 1.4.1 | [Ficha y límites](dm/games/0100000000010000/README.md) |
 | Mario Kart 8 Deluxe | 4.0.0 | [Ficha y límites](dm/games/0100152000022000/README.md) |

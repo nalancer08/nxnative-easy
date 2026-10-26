@@ -1,3 +1,12 @@
+## Interface language
+
+The desktop app defaults to English. Its English/Español selector updates labels,
+status messages and app-owned folder-picker prompts immediately, and persists the
+choice in local UserDefaults (`interfaceLanguage`). Invalid saved values fall back
+to English. Game language, the in-game touch editor and raw build/tool/OS diagnostics
+are independent and are not translated by this selector. Gameplay compatibility is
+reported by upstream game notes, not detected from a build or device by this app.
+
 # Desktop interface
 
 For daily use, open `nxnative.app`, choose a game folder and press **Preparar para iPhone**.
