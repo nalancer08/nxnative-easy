@@ -199,8 +199,8 @@ required. Successful packaging is not a new claim of gameplay verification.
 
 `desktop/NxNativeEasy/ControllerMonitor.swift` enumerates `GCController.controllers`
 at launch and refreshes on connect, disconnect and foreground notifications. Only
-an extended gamepad profile is marked ready. This is local Mac input readiness,
-not a claim of a phone connection or a successful game boot. It does not install
+an extended gamepad profile is marked ready. The entire controller panel is displayed only for Mac builds. This is local Mac
+input readiness, not a claim of a phone connection or a successful game boot. It does not install
 input handlers or change pairing, so it cannot take input away from a game.
 Notification tests use Apple's snapshot controllers, including unsupported profiles;
 they do not claim testing physical Xbox or PlayStation hardware.
@@ -208,3 +208,16 @@ they do not claim testing physical Xbox or PlayStation hardware.
 The launcher has one SwiftUI Window scene and activates an existing process with
 the same bundle ID rather than keeping a duplicate process. The installer and
 local opening command now use `~/Applications/nxnative Easy.app` by default.
+
+
+## Live controller test
+
+The Mac-only Test controller sheet samples `GCExtendedGamepad` values at 60 Hz
+while visible and foreground. It draws actual button/D-pad presses, both stick
+positions, thumbstick clicks, menu buttons and analog trigger pressure. The success
+label requires input, not a connection alone. PlayStation gamepad profiles use
+PlayStation face-button symbols. Disconnecting or changing the selected controller
+clears stale input; switching to another app clears the live drawing. Sampling
+never replaces input handlers or enables background controller capture.
+Snapshot-controller tests check pressure, axes, releases, disconnect and selecting
+a second device. They are not physical-hardware or game compatibility validation.

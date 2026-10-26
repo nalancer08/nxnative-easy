@@ -20,7 +20,7 @@ def main():
     if output.suffix!='.app':parser.error('Output must end with .app')
     contents=output/'Contents';macos=contents/'MacOS';macos.mkdir(parents=True,exist_ok=True)
     subprocess.run(['xcrun','swiftc','-parse-as-library','-swift-version','5',
-        str(REPO/'desktop/NxNativeEasy/main.swift'),str(REPO/'desktop/NxNativeEasy/Localization.swift'),str(REPO/'desktop/NxNativeEasy/GameCatalog.swift'),str(REPO/'desktop/NxNativeEasy/ControllerMonitor.swift'),'-o',str(macos/'NxNativeEasy'),
+        str(REPO/'desktop/NxNativeEasy/main.swift'),str(REPO/'desktop/NxNativeEasy/Localization.swift'),str(REPO/'desktop/NxNativeEasy/GameCatalog.swift'),str(REPO/'desktop/NxNativeEasy/ControllerMonitor.swift'),str(REPO/'desktop/NxNativeEasy/ControllerTest.swift'),'-o',str(macos/'NxNativeEasy'),
         '-framework','SwiftUI','-framework','AppKit','-framework','GameController'],check=True)
     resources=contents/'Resources';resources.mkdir(exist_ok=True)
     shutil.copy2(REPO/'desktop/NxNativeEasy/Assets/AppIcon.png',resources/'BrandIcon.png')
@@ -30,7 +30,7 @@ def main():
         subprocess.run(['iconutil','-c','icns',str(iconset),'-o',str(resources/'AppIcon.icns')],check=True)
     info=dict(CFBundleIconFile='AppIcon', CFBundleIdentifier='com.nalancer08.nxnative.easy',CFBundleName='nxnative Easy',
               CFBundleDisplayName='nxnative Easy',CFBundleExecutable='NxNativeEasy',
-              CFBundlePackageType='APPL',CFBundleShortVersionString='1.2',CFBundleVersion='3',
+              CFBundlePackageType='APPL',CFBundleShortVersionString='1.3',CFBundleVersion='4',
               LSMinimumSystemVersion='26.0',CFBundleDevelopmentRegion='en',CFBundleLocalizations=['en','es'],NSHighResolutionCapable=True,NxNativeSource=str(REPO))
     (contents/'Info.plist').write_bytes(plistlib.dumps(info))
     # Explicit ad-hoc signing: '-' never selects an Apple certificate or team.

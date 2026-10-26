@@ -2,7 +2,7 @@ import AppKit
 import Combine
 import GameController
 
-struct DetectedController: Identifiable {
+struct DetectedController: Identifiable, Equatable {
     let id: ObjectIdentifier
     let name: String
     let supported: Bool
@@ -28,9 +28,10 @@ struct DetectedController: Identifiable {
     }
     deinit {for observer in observers {center.removeObserver(observer)}}
     func refresh() {
-        controllers=query().map {
+        let next=query().map {
             DetectedController(id:ObjectIdentifier($0),name:$0.vendorName ?? "",supported:$0.extendedGamepad != nil)
         }
+        if next != controllers {controllers=next}
     }
 }
 

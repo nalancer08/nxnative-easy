@@ -28,11 +28,11 @@ Cuando abra la app:
 
 **Mac:** crea una sola `.app` completa, con todos los datos del juego dentro; pulsa **Abrir juego**. No necesitas copiar una carpeta RomFS aparte. No necesitas Sideloadly ni un iPhone. Las partidas quedan en `~/Library/Application Support/nxnative/<title ID>/`.
 
-**iPhone / iPad:** crea una IPA ligera sin firmar. Instálala con Sideloadly y copia los datos del juego como te indica la app.
+**iPhone / iPad:** crea una IPA ligera sin firmar. Instálala con Sideloadly y copia los datos del juego como te indica la app. [Ver pantalla de preparación para iPhone/iPad](docs/images/nxnative-ios-es.png).
 
 **Necesitas:** Mac con Apple silicon (M1 o posterior), macOS 26+ y Xcode 26+. El comando instala las otras herramientas. Los juegos y las llaves los aportas tú. La primera compilación puede tardar.
 
-![Nuestra app para preparar juegos](docs/images/nxnative-easy-es.png)
+![Nuestra app para preparar juegos](docs/images/nxnative-mac-es-v1.3.png)
 
 ## Qué aporta esta versión
 
@@ -74,7 +74,7 @@ Para actualizar, usa la misma cuenta y el mismo bundle ID efectivo de Sideloadly
 
 El carrusel muestra los perfiles de esta copia; no proporciona ni descarga juegos. Debes añadir tus propios archivos del juego. Pulsa **Ver todos** arriba a la derecha para consultar la lista completa de soporte. Busca por nombre, versión o Title ID; cada resultado enlaza a su ficha. El catálogo vuelve a leer los perfiles locales cada vez que lo abres. El carrusel rota automáticamente y se pausa al colocar el cursor encima.
 
-![Buscador de perfiles de juegos](docs/images/nxnative-catalog-es.png)
+![Buscador de perfiles de juegos](docs/images/nxnative-catalog-es-v1.3.png)
 
 **Las pruebas propias cubren compilación y empaquetado en Mac, no una verificación automática de juego en iPhone.** Los perfiles y reportes de juego proceden de upstream; revisa [la ficha de tu juego](dm/games/README.md#games) antes de prepararlo. Un perfil no garantiza que cualquier versión funcione en cualquier iPhone.
 
@@ -206,7 +206,11 @@ Los juegos preparados usan GameController de Apple en **Mac, iPhone y iPad**:
 - **PS5:** DualSense y DualSense Edge.
 - **PS4:** DualShock 4.
 
-La app muestra automáticamente el nombre del control conectado y **Listo en este Mac** cuando Apple reconoce un perfil compatible. Se actualiza al conectar o desconectar el control. Si preparas para iPhone/iPad, te recuerda conectarlo **a ese dispositivo**: estar conectado al Mac no lo conecta al teléfono.
+La app muestra automáticamente el nombre del control conectado y **Listo en este Mac** cuando Apple reconoce un perfil compatible. Se actualiza al conectar o desconectar el control. El panel de controles del Mac no aparece al elegir iPhone/iPad. Conecta el control directamente al dispositivo donde vas a jugar.
+
+En modo **Mac**, pulsa **Probar control**: se iluminan botones y cruceta, se mueven ambos sticks y las barras muestran la presión de los gatillos. **¡Está respondiendo!** aparece después de recibir una pulsación o movimiento. Si hay varios controles, puedes elegir cuál probar. La prueba sólo lee entradas mientras está abierta y no reemplaza los manejadores de entrada de los juegos.
+
+![Prueba visual del control en Mac](docs/images/nxnative-controller-test-es.png)
 
 Conecta el control desde **Bluetooth del dispositivo** y abre tu juego. No necesitas instalar drivers ni activar opciones en la herramienta. Se mapean sticks, cruceta, botones, gatillos, botones superiores, clics de sticks y menús. En iPhone/iPad los controles táctiles se ocultan al conectar uno físico.
 

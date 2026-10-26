@@ -28,11 +28,11 @@ When the app opens:
 
 **Mac:** creates one complete game `.app`, with its game data included inside; click **Open game**. No separate RomFS folder to copy. No Sideloadly or iPhone needed. Saves stay in `~/Library/Application Support/nxnative/<title ID>/`.
 
-**iPhone / iPad:** creates an unsigned lightweight IPA; install it with Sideloadly, then copy the game data as shown in the app.
+**iPhone / iPad:** creates an unsigned lightweight IPA; install it with Sideloadly, then copy the game data as shown in the app. [See the iPhone/iPad preparation screen](docs/images/nxnative-ios.png).
 
 **Required:** an Apple silicon Mac (M1 or newer), macOS 26+ and Xcode 26+. The command installs the other tools. You must provide your own games and keys. Compilation can take time, especially for the first game.
 
-![The nxnative Easy desktop app](docs/images/nxnative-easy.png)
+![The nxnative Easy desktop app](docs/images/nxnative-mac-v1.3.png)
 
 ## What this version adds
 
@@ -204,7 +204,11 @@ The game apps use Apple's GameController framework on **Mac, iPhone and iPad**:
 - **PS5:** DualSense and DualSense Edge.
 - **PS4:** DualShock 4.
 
-The preparation app automatically shows connected controller names and **Ready on this Mac** when Apple exposes a compatible gamepad profile. It updates when you connect or disconnect a controller. For an iPhone/iPad build, it reminds you to pair the controller **on that device**; a controller connected to the Mac is not a remote connection to the phone.
+The preparation app automatically shows connected controller names and **Ready on this Mac** when Apple exposes a compatible gamepad profile. It updates when you connect or disconnect a controller. The Mac controller panel is hidden when you choose iPhone/iPad. Pair a controller directly with the device where you will play.
+
+In **Mac** mode, click **Test controller** to see live input: buttons and D-pad light up, both sticks move, and trigger bars show pressure. **Input received!** appears only after input is detected. If several controllers are connected, choose which one to test. The tester reads input only while its window is visible and does not take input handlers away from games.
+
+![Live controller test on Mac](docs/images/nxnative-controller-test.png)
 
 Pair your controller in the device's **Bluetooth settings**, then open the prepared game. No extra driver or launcher setting is needed. Sticks, D-pad, face buttons, shoulders, triggers, stick clicks and menu buttons are mapped automatically. On iPhone/iPad, touch controls hide while a physical controller is connected.
 

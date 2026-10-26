@@ -227,17 +227,19 @@ struct SupportCarousel: View {
 
 // Apply the compact launch height even when macOS restores an older window size.
 struct CompactWindow: NSViewRepresentable {
-    func makeNSView(context:Context) -> NSView { WindowView() }
-    func updateNSView(_ nsView:NSView,context:Context) {}
+    let height: CGFloat
+    func makeNSView(context:Context) -> NSView {let view=WindowView();view.height=height;return view}
+    func updateNSView(_ nsView:NSView,context:Context) {(nsView as? WindowView)?.height=height}
     private final class WindowView: NSView {
-        private var adjusted = false
-        override func viewDidMoveToWindow() {
-            super.viewDidMoveToWindow()
-            guard let window=window, !adjusted else {return}
-            adjusted=true
+        var height: CGFloat=650 {didSet {if height != oldValue {resize()}}}
+        private var lastHeight: CGFloat?
+        override func viewDidMoveToWindow() {super.viewDidMoveToWindow();resize()}
+        private func resize() {
+            guard let window=window, lastHeight != height else {return}
+            let target=height;lastHeight=target
             DispatchQueue.main.async {
-                let width=max(760,window.contentLayoutRect.width)
-                window.setContentSize(NSSize(width:width,height:710))
+                guard !window.styleMask.contains(.fullScreen) else {return}
+                window.setContentSize(NSSize(width:max(760,window.contentLayoutRect.width),height:target))
             }
         }
     }
@@ -254,6 +256,7 @@ enum AppArtwork {
 struct ContentView: View {
     @StateObject private var model=BuildModel()
     @StateObject private var controllerMonitor=ControllerMonitor()
+    @State private var showControllerTest=false
     private let ink=Color(red:0.93,green:0.94,blue:0.90)
     private let lime=Color(red:0.79,green:0.95,blue:0.37)
     var body: some View {
@@ -293,11 +296,19 @@ struct ContentView: View {
                         SupportCarousel(games:model.catalog)
                     }
                     VStack(alignment:.leading,spacing:18) {
-                        Picker(model.text("¿Dónde quieres jugar?"),selection:$model.target) {
-                            Text(model.text("Elige un dispositivo")).tag("")
-                            Text("iPhone / iPad").tag("ios")
-                            Text("Mac").tag("mac")
-                        }.pickerStyle(.menu).disabled(model.running)
+                        HStack {
+                            Text(model.text("¿Dónde quieres jugar?")).font(.system(size:13,weight:.medium))
+                            Spacer()
+                            ForEach(["ios","mac"],id:\.self) { target in
+                                Button {model.target=target} label: {
+                                    Text(target == "ios" ? "iPhone / iPad" : "Mac")
+                                        .font(.system(size:13,weight:.semibold)).padding(.horizontal,16).padding(.vertical,9)
+                                        .foregroundStyle(model.target == target ? Color.black : ink)
+                                        .background(model.target == target ? lime : Color.white.opacity(0.06),in:RoundedRectangle(cornerRadius:9))
+                                }.buttonStyle(.plain).disabled(model.running).accessibilityIdentifier("target-"+target)
+                            }
+                        }
+                        if model.isMac {
                         HStack(alignment:.top,spacing:10) {
                             Image(systemName:controllerMonitor.controllers.contains(where:{$0.supported}) ? "checkmark.circle.fill" : "gamecontroller")
                                 .foregroundStyle(controllerMonitor.controllers.contains(where:{$0.supported}) ? lime : .gray)
@@ -311,12 +322,12 @@ struct ContentView: View {
                                             .font(.system(size:13,weight:.medium))
                                     }
                                 }
-                                if model.target == "ios" {
-                                    Text(model.text("Para jugar en iPhone/iPad, conecta el control a ese dispositivo."))
-                                        .font(.system(size:12)).foregroundStyle(.secondary)
-                                }
                             }
+                            Spacer()
+                            Button(model.text("Probar control")){showControllerTest=true}
+                                .disabled(model.running).accessibilityIdentifier("test-controller")
                         }.accessibilityIdentifier("controller-status")
+                        }
                         HStack(spacing:12) {
                             Image(systemName:"folder.fill").font(.system(size:24)).foregroundStyle(lime)
                             VStack(alignment:.leading,spacing:4) {
@@ -405,8 +416,9 @@ struct ContentView: View {
                     }
                 }.padding(28)
             }
-        }.frame(minWidth:760,minHeight:530).background(CompactWindow()).preferredColorScheme(.dark)
+        }.frame(minWidth:760,minHeight:530).background(CompactWindow(height:model.isMac ? 710 : 650)).preferredColorScheme(.dark)
         .sheet(isPresented:$model.showCatalog) {GameCatalogView(model:model)}
+        .sheet(isPresented:$showControllerTest) {ControllerTestView(text:model.text)}
         .onReceive(NotificationCenter.default.publisher(for:NSApplication.willTerminateNotification)) {_ in model.cancel()}
     }
 }
