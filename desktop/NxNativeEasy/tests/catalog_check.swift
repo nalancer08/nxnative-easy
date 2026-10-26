@@ -33,6 +33,7 @@ import Foundation
         let expected=children.filter {$0.lastPathComponent.range(of:"^[0-9A-Fa-f]{16}$",options:.regularExpression) != nil && FileManager.default.fileExists(atPath:$0.appendingPathComponent("game.tsv").path)}
         assert(!actual.isEmpty && actual.count==expected.count)
         assert(Set(actual.map {$0.id}).count==actual.count)
+        assert(actual.allSatisfy {$0.artworkURL != nil},"Every current profile must have its existing repo screenshot")
         assert(actual.contains {$0.name=="Metroid Dread" && $0.versions.contains("2.1.0")})
         print("Catalog PASS: \(actual.count) repository profiles, live discovery, sorting, versions, accent-insensitive search and no-results state")
     }

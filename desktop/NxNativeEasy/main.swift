@@ -1,4 +1,5 @@
 import SwiftUI
+import Combine
 import AppKit
 import Foundation
 import Darwin
@@ -183,6 +184,28 @@ import Darwin
     }
 }
 
+@MainActor enum GameArtworkCache {
+    static var images: [URL:NSImage] = [:]
+    static func image(_ url:URL?) -> NSImage? {
+        guard let url else {return nil}
+        if let image=images[url] {return image}
+        guard let image=NSImage(contentsOf:url) else {return nil}
+        images[url]=image;return image
+    }
+}
+
+struct GameArtworkView: View {
+    let game: CatalogGame
+    var body: some View {
+        GeometryReader { geometry in
+            if let image=GameArtworkCache.image(game.artworkURL) {
+                Image(nsImage:image).resizable().scaledToFill()
+                    .frame(width:geometry.size.width,height:geometry.size.height).clipped()
+            } else {Color.white.opacity(0.05)}
+        }.accessibilityLabel(game.name)
+    }
+}
+
 struct SupportCarousel: View {
     let games: [CatalogGame]
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -198,12 +221,8 @@ struct SupportCarousel: View {
                 HStack(spacing:12) {
                     ForEach(0..<2,id:\.self) { copy in
                         ForEach(Array(games.enumerated()),id:\.element.id) { index, game in
-                            let tint: Color = [.orange,.mint,.cyan,.purple,.pink][index % 5]
                             VStack(alignment:.leading,spacing:7) {
-                                ZStack {
-                                    RoundedRectangle(cornerRadius:12).fill(tint.opacity(0.12))
-                                    Image(systemName:"gamecontroller").font(.system(size:29,weight:.light)).foregroundStyle(tint)
-                                }.frame(height:66)
+                                GameArtworkView(game:game).frame(height:92).clipShape(RoundedRectangle(cornerRadius:12))
                                 Text(game.name).font(.system(size:11,weight:.medium))
                                     .foregroundStyle(Color(red:0.91,green:0.93,blue:0.88))
                                     .lineLimit(2).frame(height:30,alignment:.topLeading)
@@ -212,7 +231,7 @@ struct SupportCarousel: View {
                     }
                 }.offset(x:-offset).frame(width:geometry.size.width,alignment:.leading)
             }
-        }.frame(height:103).clipped()
+        }.frame(height:129).clipped()
         .accessibilityElement(children:.ignore)
         .accessibilityLabel(games.map(\.name).joined(separator:", "))
         .onHover { hovering in
@@ -254,6 +273,7 @@ enum AppArtwork {
 }
 
 struct ContentView: View {
+    @ObservedObject var updater: AppUpdater
     @StateObject private var model=BuildModel()
     @StateObject private var controllerMonitor=ControllerMonitor()
     @State private var showControllerTest=false
@@ -275,6 +295,34 @@ struct ContentView: View {
                             Text("English").tag(EasyLanguage.english)
                             Text("Español").tag(EasyLanguage.spanish)
                         }.labelsHidden().frame(width:120).accessibilityIdentifier("interface-language")
+                    }
+                    if updater.visible {
+                        VStack(alignment:.leading,spacing:10) {
+                            HStack(alignment:.top) {
+                                VStack(alignment:.leading,spacing:4) {
+                                    Text(model.text(updater.busy ? updater.phaseText : updater.error ?? "Hay una nueva versión")+(updater.busy || updater.error != nil ? "" : " "+(updater.available?.version ?? "")))
+                                        .font(.system(size:14,weight:.semibold))
+                                    if !updater.busy && updater.error == nil {
+                                        Text(model.text("Actualiza la app y sus perfiles de juegos."))
+                                            .font(.system(size:12)).foregroundStyle(.secondary)
+                                    }
+                                }
+                                Spacer()
+                                if !updater.busy {
+                                    if updater.available != nil {
+                                        Button(model.text(updater.error == nil ? "Actualizar ahora" : "Intentar de nuevo")){updater.start()}
+                                            .disabled(model.running || updater.busy).accessibilityIdentifier("install-update")
+                                    } else {
+                                        Button(model.text("Intentar de nuevo")){Task {await updater.check(manual:true)}}
+                                    }
+                                    if updater.error != nil {Button(model.text("Cerrar")){updater.dismissError()}}
+                                }
+                            }
+                            if updater.busy {
+                                if let progress=updater.progress {ProgressView(value:progress).tint(lime)}
+                                else {ProgressView().progressViewStyle(.linear).tint(lime)}
+                            }
+                        }.padding(16).background(lime.opacity(0.07),in:RoundedRectangle(cornerRadius:12))
                     }
                     VStack(alignment:.leading,spacing:6) {
                         Text(model.text("Prepara tu juego.")).font(.system(size:32,weight:.bold,design:.rounded)).foregroundStyle(ink)
@@ -305,7 +353,7 @@ struct ContentView: View {
                                         .font(.system(size:13,weight:.semibold)).padding(.horizontal,16).padding(.vertical,9)
                                         .foregroundStyle(model.target == target ? Color.black : ink)
                                         .background(model.target == target ? lime : Color.white.opacity(0.06),in:RoundedRectangle(cornerRadius:9))
-                                }.buttonStyle(.plain).disabled(model.running).accessibilityIdentifier("target-"+target)
+                                }.buttonStyle(.plain).disabled(model.running || updater.busy).accessibilityIdentifier("target-"+target)
                             }
                         }
                         if model.isMac {
@@ -325,7 +373,7 @@ struct ContentView: View {
                             }
                             Spacer()
                             Button(model.text("Probar control")){showControllerTest=true}
-                                .disabled(model.running).accessibilityIdentifier("test-controller")
+                                .disabled(model.running || updater.busy).accessibilityIdentifier("test-controller")
                         }.accessibilityIdentifier("controller-status")
                         }
                         HStack(spacing:12) {
@@ -338,7 +386,7 @@ struct ContentView: View {
                                 }
                             }
                             Spacer()
-                            Button(model.folder == nil ? model.text("Elegir") : model.text("Cambiar")) {model.chooseFolder()}.disabled(model.running).accessibilityLabel(model.text("Carpeta de tu juego"))
+                            Button(model.folder == nil ? model.text("Elegir") : model.text("Cambiar")) {model.chooseFolder()}.disabled(model.running || updater.busy).accessibilityLabel(model.text("Carpeta de tu juego"))
                         }
                         HStack(spacing:12) {
                             Image(systemName:"key.horizontal").font(.system(size:19)).foregroundStyle(lime).frame(width:24)
@@ -348,7 +396,7 @@ struct ContentView: View {
                                     .font(.system(size:12)).foregroundStyle(.secondary)
                             }
                             Spacer()
-                            Button(model.keysFolder == nil ? model.text("Elegir") : model.text("Cambiar")) {model.chooseKeysFolder()}.disabled(model.running).accessibilityLabel(model.text("Carpeta de llaves"))
+                            Button(model.keysFolder == nil ? model.text("Elegir") : model.text("Cambiar")) {model.chooseKeysFolder()}.disabled(model.running || updater.busy).accessibilityLabel(model.text("Carpeta de llaves"))
                         }
                         if model.running {
                             Divider().overlay(Color.white.opacity(0.08))
@@ -370,7 +418,7 @@ struct ContentView: View {
                                     Image(systemName:"arrow.right")
                                 }.font(.system(size:15,weight:.bold)).padding(15).foregroundStyle(Color.black)
                                     .background(model.folder == nil || model.target.isEmpty ? Color.gray : lime,in:RoundedRectangle(cornerRadius:10))
-                            }.buttonStyle(.plain).disabled(model.folder == nil || model.target.isEmpty)
+                            }.buttonStyle(.plain).disabled(model.folder == nil || model.target.isEmpty || updater.busy)
                         }
                     }.padding(22).background(Color.white.opacity(0.045),in:RoundedRectangle(cornerRadius:16))
                     if model.output != nil && !model.running && !model.failed {
@@ -402,7 +450,7 @@ struct ContentView: View {
                             Text(model.text("Para actualizar: misma cuenta e identificador de Sideloadly. Instala encima, sin desinstalar."))
                                 .font(.system(size:11)).foregroundStyle(.secondary)
                             }
-                            Button(model.text("Preparar de nuevo")){model.build()}.buttonStyle(.link)
+                            Button(model.text("Preparar de nuevo")){model.build()}.buttonStyle(.link).disabled(updater.busy)
                         }.padding(22).frame(maxWidth:.infinity,alignment:.leading)
                             .background(lime.opacity(0.045),in:RoundedRectangle(cornerRadius:16))
                     }
@@ -416,9 +464,12 @@ struct ContentView: View {
                     }
                 }.padding(28)
             }
-        }.frame(minWidth:760,minHeight:530).background(CompactWindow(height:model.isMac ? 710 : 650)).preferredColorScheme(.dark)
+        }.frame(minWidth:760,minHeight:530).background(CompactWindow(height:(model.isMac ? 740 : 680)+(updater.visible ? 95 : 0))).preferredColorScheme(.dark)
         .sheet(isPresented:$model.showCatalog) {GameCatalogView(model:model)}
         .sheet(isPresented:$showControllerTest) {ControllerTestView(text:model.text)}
+        .task {await updater.check()}
+        .onReceive(Timer.publish(every:21600,on:.main,in:.common).autoconnect()) {_ in Task {await updater.check()}}
+        .alert(model.text("Ya tienes la versión más reciente."),isPresented:$updater.showNotice) {Button(model.text("Aceptar"),role:.cancel) {}}
         .onReceive(NotificationCenter.default.publisher(for:NSApplication.willTerminateNotification)) {_ in model.cancel()}
     }
 }
@@ -463,7 +514,7 @@ struct GameCatalogView: View {
                     LazyVStack(spacing:8) {
                         ForEach(results) {game in
                             HStack(spacing:12) {
-                                Image(systemName:"gamecontroller").font(.system(size:20)).foregroundStyle(lime).frame(width:36)
+                                GameArtworkView(game:game).frame(width:80,height:45).clipShape(RoundedRectangle(cornerRadius:7))
                                 VStack(alignment:.leading,spacing:5) {
                                     Text(game.name).font(.system(size:14,weight:.semibold)).fixedSize(horizontal:false,vertical:true)
                                     if !game.versions.isEmpty {
@@ -485,12 +536,21 @@ struct GameCatalogView: View {
 
 @main struct NxNativeEasyApp: App {
     @NSApplicationDelegateAdaptor(LauncherDelegate.self) private var delegate
+    @StateObject private var updater=AppUpdater()
+    @AppStorage("interfaceLanguage") private var appLanguage="en"
     var body: some Scene {
         Window("nxnative Easy",id:"main") {
-            ContentView().onAppear {
+            ContentView(updater:updater).onAppear {
                 NSApplication.shared.applicationIconImage=AppArtwork.icon
             }
         }
-            .defaultSize(width:820,height:710)
+            .defaultSize(width:820,height:740)
+            .commands {
+                CommandGroup(after:.appInfo) {
+                    Button(EasyStrings.text("Buscar actualizaciones…",language:EasyLanguage(rawValue:appLanguage) ?? .english)) {
+                        Task {await updater.check(manual:true)}
+                    }.disabled(updater.busy)
+                }
+            }
     }
 }

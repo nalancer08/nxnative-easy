@@ -4,6 +4,10 @@ struct CatalogGame: Identifiable, Equatable {
     let id: String
     let name: String
     let versions: [String]
+    let artworkURL: URL?
+    init(id:String,name:String,versions:[String],artworkURL:URL? = nil) {
+        self.id=id;self.name=name;self.versions=versions;self.artworkURL=artworkURL
+    }
 
     func matches(_ query: String) -> Bool {
         let normalize: (String) -> String = {
@@ -22,6 +26,8 @@ struct GameCatalog {
     static func load(repo: URL) throws -> [CatalogGame] {
         let directory=repo.appendingPathComponent("dm/games",isDirectory:true)
         let children=try FileManager.default.contentsOfDirectory(at:directory,includingPropertiesForKeys:nil)
+        let artworkFile=repo.appendingPathComponent("desktop/NxNativeEasy/game-artwork.json")
+        let artwork=(try? JSONDecoder().decode([String:String].self,from:Data(contentsOf:artworkFile))) ?? [:]
         var games: [CatalogGame]=[]
         for child in children {
             let id=child.lastPathComponent
@@ -39,7 +45,12 @@ struct GameCatalog {
                     if !version.isEmpty && !versions.contains(version) {versions.append(version)}
                 }
             }
-            games.append(CatalogGame(id:id,name:name?.isEmpty == false ? name! : id,versions:versions))
+            var image: URL?
+            if let path=artwork[id],path.hasPrefix("docs/images/"),!path.contains("..") {
+                let candidate=repo.appendingPathComponent(path).resolvingSymlinksInPath()
+                if candidate.path.hasPrefix(repo.resolvingSymlinksInPath().path+"/"),FileManager.default.fileExists(atPath:candidate.path) {image=candidate}
+            }
+            games.append(CatalogGame(id:id,name:name?.isEmpty == false ? name! : id,versions:versions,artworkURL:image))
         }
         return games.sorted {
             let comparison=$0.name.localizedStandardCompare($1.name)

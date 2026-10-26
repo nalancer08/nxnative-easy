@@ -12,6 +12,23 @@ enum EasyLanguage: String, CaseIterable {
 
 struct EasyStrings {
     static let english: [String:String] = [
+        "Buscar actualizaciones…": "Check for updates…",
+        "Hay una nueva versión": "A new version is available:",
+        "Actualizar ahora": "Update now",
+        "Actualiza la app y sus perfiles de juegos.": "Update the app and its game profiles.",
+        "Descargando actualización…": "Downloading update…",
+        "Preparando el código nuevo…": "Preparing the new source…",
+        "Compilando la actualización…": "Building the update…",
+        "Verificando la app…": "Verifying the app…",
+        "Reiniciando con la versión nueva…": "Restarting with the new version…",
+        "Preparando actualización…": "Preparing update…",
+        "No pudimos actualizar. Tu versión anterior se conservó.": "Could not update. Your previous version was preserved.",
+        "No pudimos buscar actualizaciones. Intenta de nuevo más tarde.": "Could not check for updates. Try again later.",
+        "Primero actualiza macOS para instalar esta versión.": "Update macOS first to install this version.",
+        "Vuelve a ejecutar el comando de instalación para activar las actualizaciones.": "Run the setup command again to enable updates.",
+        "No pudimos iniciar la actualización.": "Could not start the update.",
+        "Ya tienes la versión más reciente.": "You are up to date.",
+        "Aceptar": "OK",
         "Probar control": "Test controller",
         "Prueba tu control": "Test your controller",
         "Pulsa botones y mueve los sticks. Verás cada movimiento aquí.": "Press buttons and move the sticks. Every movement appears here.",

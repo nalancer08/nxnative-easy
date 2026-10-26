@@ -50,6 +50,14 @@ Entregamos **código, una interfaz de preparación y herramientas de compilació
 
 La app inicia en **English**. Cambia a **Español** con el selector de la esquina superior; la elección se guarda en este Mac. Cambia el idioma de la interfaz, no el del juego. Los detalles técnicos se muestran en su idioma original.
 
+## Actualizar la app
+
+Desde la **versión 1.4**, la app busca versiones nuevas al abrirse y cada seis horas mientras está abierta. Cuando haya una, pulsa **Actualizar ahora**. Descarga el código y los perfiles nuevos, compila y verifica la interfaz y la reinicia. Verás el avance dentro de la ventana. También puedes usar **nxnative Easy → Buscar actualizaciones…**.
+
+La actualización usa una carpeta separada y guarda la app anterior como respaldo. No restablece tu checkout ni modifica tus juegos, llaves o partidas. No se puede actualizar mientras se prepara un juego. Para aplicar cambios del motor o de un perfil a un juego que ya habías preparado, vuelve a prepararlo.
+
+**La app vieja de tu amigo todavía no tiene actualizador:** que ejecute una vez el comando de arriba o abra **START-HERE.command** para recibir esta versión. Las siguientes actualizaciones ya aparecerán dentro de la app.
+
 ## ¿Qué pasa al pulsar Preparar juego?
 
 La app prepara las herramientas y compila para el dispositivo que elegiste. **Mac** genera una app del juego con los botones **Abrir juego** y **Mostrar app**. **iPhone / iPad** genera una IPA ligera y muestra los pasos de Sideloadly y Finder al terminar. Tus archivos y salidas anteriores se conservan en la carpeta del juego.
@@ -60,7 +68,7 @@ La preparación conserva una copia separada del código y respeta los cambios lo
 
 El acceso de apertura usa el compilador Swift de tu Xcode. La firma de la app es **ad hoc**, local y sin cuenta, certificado ni equipo Apple (`TeamIdentifier` no asignado). No usa cuentas de empresa. Sólo al instalar la **IPA de iPhone con Sideloadly** introduces tu cuenta personal, dentro de Sideloadly.
 
-El icono del teléfono con controles es original. Los símbolos de los perfiles son genéricos del sistema; no se usan imágenes ni logotipos de los juegos en la app. La galería de documentación de abajo procede de upstream y está separada de la interfaz.
+El icono del teléfono con controles es original. Las tarjetas usan las capturas de upstream que ya están en este repositorio como referencia de soporte; no proporcionan ni descargan juegos.
 
 ## Instalar: Sideloadly + Finder
 

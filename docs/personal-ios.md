@@ -221,3 +221,30 @@ clears stale input; switching to another app clears the live drawing. Sampling
 never replaces input handlers or enables background controller capture.
 Snapshot-controller tests check pressure, axes, releases, disconnect and selecting
 a second device. They are not physical-hardware or game compatibility validation.
+
+
+## In-app source updates (1.4+)
+
+`desktop/release.json` is the public release version, monotonically increasing
+build number and minimum macOS version. The app checks GitHub's public main commit,
+then reads the manifest pinned to that SHA. It checks at launch, every six hours
+while open, and from the app menu. Offline automatic checks stay quiet.
+
+The bundled `update_app.py` helper downloads only the fixed repository at that SHA,
+rejects unsafe ZIP paths, symlinks, game packages and credential filenames, and
+extracts to a new versioned directory under Application Support. It never pulls or
+resets the existing checkout. It compiles the app in a staging directory on the
+installation volume and verifies its build, version, bundle identifier and ad-hoc
+signature before asking the old process to quit. After that process exits, it swaps
+in the new bundle, retains a hidden backup and relaunches. A failed swap rolls back;
+a failure before verification leaves the running app intact. The helper serializes
+updates with a per-installation file lock. It does not sign or install iPhone games.
+
+`--prepare-only` downloads and compiles without closing, replacing or launching an
+installed app, for release validation. Pass an external `--cache` directory in tests.
+Older apps must run the setup command once to receive the updater itself. Existing
+prepared games require a normal rebuild to incorporate newer engine/profile code.
+
+Profile artwork is mapped by title ID in `desktop/NxNativeEasy/game-artwork.json`.
+All 70 current profiles use existing repository screenshots, including the shared
+13 Sentinels image for its Asia profile; no network image search is performed.

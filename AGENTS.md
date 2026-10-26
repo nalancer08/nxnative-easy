@@ -28,3 +28,5 @@
   The translator is `dm/gfx/tools/dmsh_xlate_bin`, which matches `dmsh_chain.lock`; a fresh `dotnet publish` does not.
 - iOS builds are unsigned IPAs that the user sideloads and tests; diagnostics come back as the app's `Documents/log.txt`. Do not sign or install builds on the user's devices.
 - Commit only when requested or as part of an authorized repository upload. Personal commits use the repository owner: `Erick Sanchez <7268597+nalancer08@users.noreply.github.com>`. Never attribute personal changes to seedds; retain original upstream authors.
+
+- Desktop functionality releases must increment `desktop/release.json` version/build. The updater offers newer builds only. Preserve existing checkouts and games; test updates with an external cache.

@@ -50,6 +50,14 @@ We provide **source code, a preparation interface and build tools**. The output 
 
 The app starts in **English**. Choose **Español** using the selector at the top; your selection is remembered on this Mac. This changes the interface language, not the game's language. Build diagnostics keep their original language.
 
+## Updating the app
+
+From **version 1.4**, the app checks for new releases at launch and every six hours while open. When one is available, click **Update now**. It downloads the new source and game profiles, builds and verifies the new Mac interface, then restarts it. Progress stays in the window. You can also use **nxnative Easy → Check for updates…**.
+
+The update uses a separate source folder and keeps the previous app as a backup. It does not reset your checkout or modify your game files, keys or saves. Updates are disabled while preparing a game. To apply new engine or profile changes to a previously prepared game, prepare that game again.
+
+**Your friend's older app has no updater yet:** run the setup command above once, or double-click **START-HERE.command**, to get this version. Future updates then appear inside the app.
+
 ## What happens after Prepare game?
 
 The app prepares the tools and builds for your chosen device. **Mac** produces a game app with **Open game** and **Show app** buttons. **iPhone / iPad** produces a lightweight IPA and shows the Sideloadly and Finder steps when ready. Your own files and previous outputs stay in the game folder.
@@ -60,7 +68,7 @@ Setup keeps a separate source checkout and preserves local edits. Developers can
 
 The launcher uses Xcode's Swift compiler. The desktop app is explicitly **ad-hoc signed**, locally, with no Apple account, certificate or team (`TeamIdentifier` is unset). No company account is used. You enter your personal Apple account separately in Sideloadly when signing the **iPhone IPA**.
 
-The app has an original phone-and-controller icon and uses generic system symbols for game profiles, without game artwork or logos. The documentation gallery below comes from upstream and is separate from the app.
+The app has an original phone-and-controller icon. Game cards use the existing upstream screenshots in this repository as a support reference; they do not provide or download games.
 
 ## Install with Sideloadly and Finder
 

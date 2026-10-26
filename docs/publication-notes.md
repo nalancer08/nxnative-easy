@@ -6,11 +6,11 @@ MIT notice and third-party license files. Our additions are the native desktop
 preparation UI, persistent iOS touch-control editor and lightweight build workflow.
 No endorsement by Nintendo, Apple, game publishers or upstream authors is implied.
 
-The desktop UI uses original phone/controller artwork and generic system symbols rather than game screenshots or logos.
-The README/gallery and upstream documentation still contain game screenshots;
-removing artwork from the app does not remove that documentation or historical
-Git objects. The code's license is not a blanket grant of rights over third-party
-artwork. Publication is a separate owner decision; this check is not legal clearance.
+The desktop UI uses original phone/controller icon artwork and, at the owner's
+request, the existing upstream game screenshots for profile cards. The same images
+remain in the README/gallery and historical Git objects. The code license does not
+independently grant rights over third-party artwork; source attribution is retained.
+No games or console keys are provided with those screenshots.
 
 The current local desktop build uses Xcode's Swift compiler and explicit ad-hoc
 signing (`codesign --sign - --timestamp=none`). `Signature=adhoc` and an unset
