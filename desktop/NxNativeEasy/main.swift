@@ -228,6 +228,14 @@ struct CompactWindow: NSViewRepresentable {
     }
 }
 
+enum AppArtwork {
+    static let icon: NSImage = {
+        guard let url=Bundle.main.url(forResource:"BrandIcon",withExtension:"png"),
+              let image=NSImage(contentsOf:url) else {return NSImage(size:NSSize(width:32,height:32))}
+        return image
+    }()
+}
+
 struct ContentView: View {
     @StateObject private var model=BuildModel()
     private let ink=Color(red:0.93,green:0.94,blue:0.90)
@@ -238,8 +246,11 @@ struct ContentView: View {
             ScrollView {
                 VStack(alignment:.leading,spacing:22) {
                     HStack {
-                        Label("nxnative easy",systemImage:"gamecontroller.fill")
-                            .font(.system(size:15,weight:.semibold)).foregroundStyle(lime)
+                        HStack(spacing:9) {
+                            Image(nsImage:AppArtwork.icon).resizable().interpolation(.high)
+                                .frame(width:34,height:34).accessibilityHidden(true)
+                            Text("nxnative easy").font(.system(size:15,weight:.semibold)).foregroundStyle(lime)
+                        }
                         Spacer()
                         Picker(model.text("Idioma de la interfaz"),selection:$model.language) {
                             Text("English").tag(EasyLanguage.english)
@@ -408,7 +419,11 @@ struct GameCatalogView: View {
 
 @main struct NxNativeEasyApp: App {
     var body: some Scene {
-        WindowGroup("nxnative Easy") {ContentView()}
+        WindowGroup("nxnative Easy") {
+            ContentView().onAppear {
+                NSApplication.shared.applicationIconImage=AppArtwork.icon
+            }
+        }
             .defaultSize(width:820,height:600)
     }
 }

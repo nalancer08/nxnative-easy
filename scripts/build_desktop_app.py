@@ -6,6 +6,7 @@ import plistlib
 import subprocess
 import sys
 import tempfile
+import shutil
 
 REPO=Path(__file__).resolve().parents[1]
 
@@ -22,6 +23,7 @@ def main():
         str(REPO/'desktop/NxNativeEasy/main.swift'),str(REPO/'desktop/NxNativeEasy/Localization.swift'),str(REPO/'desktop/NxNativeEasy/GameCatalog.swift'),'-o',str(macos/'NxNativeEasy'),
         '-framework','SwiftUI','-framework','AppKit'],check=True)
     resources=contents/'Resources';resources.mkdir(exist_ok=True)
+    shutil.copy2(REPO/'desktop/NxNativeEasy/Assets/AppIcon.png',resources/'BrandIcon.png')
     with tempfile.TemporaryDirectory(prefix='nxnative-icon-') as temporary:
         iconset=Path(temporary)/'AppIcon.iconset';iconset.mkdir()
         subprocess.run(['xcrun','swift',str(REPO/'desktop/NxNativeEasy/Assets/draw_icon.swift'),str(iconset)],check=True)
