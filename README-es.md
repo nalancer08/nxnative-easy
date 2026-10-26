@@ -206,6 +206,8 @@ Los juegos preparados usan GameController de Apple en **Mac, iPhone y iPad**:
 - **PS5:** DualSense y DualSense Edge.
 - **PS4:** DualShock 4.
 
+La app muestra automáticamente el nombre del control conectado y **Listo en este Mac** cuando Apple reconoce un perfil compatible. Se actualiza al conectar o desconectar el control. Si preparas para iPhone/iPad, te recuerda conectarlo **a ese dispositivo**: estar conectado al Mac no lo conecta al teléfono.
+
 Conecta el control desde **Bluetooth del dispositivo** y abre tu juego. No necesitas instalar drivers ni activar opciones en la herramienta. Se mapean sticks, cruceta, botones, gatillos, botones superiores, clics de sticks y menús. En iPhone/iPad los controles táctiles se ocultan al conectar uno físico.
 
 Los botones siguen las **posiciones de Nintendo**, no las letras impresas en Xbox: A de Switch = B de Xbox / círculo de PlayStation; B = A / cruz; X = Y / triángulo; Y = X / cuadrado.

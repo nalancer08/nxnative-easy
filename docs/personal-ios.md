@@ -193,3 +193,18 @@ uses the upstream `--platform mac-app` packer with explicit ad-hoc signing, a un
 output path per build and a separate `nxnative-mac.json` output record. It uses the
 upstream per-title save location without replacing iOS state. Apple silicon is
 required. Successful packaging is not a new claim of gameplay verification.
+
+
+## Controller readiness and one launcher
+
+`desktop/NxNativeEasy/ControllerMonitor.swift` enumerates `GCController.controllers`
+at launch and refreshes on connect, disconnect and foreground notifications. Only
+an extended gamepad profile is marked ready. This is local Mac input readiness,
+not a claim of a phone connection or a successful game boot. It does not install
+input handlers or change pairing, so it cannot take input away from a game.
+Notification tests use Apple's snapshot controllers, including unsupported profiles;
+they do not claim testing physical Xbox or PlayStation hardware.
+
+The launcher has one SwiftUI Window scene and activates an existing process with
+the same bundle ID rather than keeping a duplicate process. The installer and
+local opening command now use `~/Applications/nxnative Easy.app` by default.

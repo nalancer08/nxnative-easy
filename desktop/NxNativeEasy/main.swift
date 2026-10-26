@@ -237,7 +237,7 @@ struct CompactWindow: NSViewRepresentable {
             adjusted=true
             DispatchQueue.main.async {
                 let width=max(760,window.contentLayoutRect.width)
-                window.setContentSize(NSSize(width:width,height:650))
+                window.setContentSize(NSSize(width:width,height:710))
             }
         }
     }
@@ -253,6 +253,7 @@ enum AppArtwork {
 
 struct ContentView: View {
     @StateObject private var model=BuildModel()
+    @StateObject private var controllerMonitor=ControllerMonitor()
     private let ink=Color(red:0.93,green:0.94,blue:0.90)
     private let lime=Color(red:0.79,green:0.95,blue:0.37)
     var body: some View {
@@ -297,6 +298,25 @@ struct ContentView: View {
                             Text("iPhone / iPad").tag("ios")
                             Text("Mac").tag("mac")
                         }.pickerStyle(.menu).disabled(model.running)
+                        HStack(alignment:.top,spacing:10) {
+                            Image(systemName:controllerMonitor.controllers.contains(where:{$0.supported}) ? "checkmark.circle.fill" : "gamecontroller")
+                                .foregroundStyle(controllerMonitor.controllers.contains(where:{$0.supported}) ? lime : .gray)
+                            VStack(alignment:.leading,spacing:4) {
+                                if controllerMonitor.controllers.isEmpty {
+                                    Text(model.text("Sin control conectado en este Mac")).font(.system(size:13,weight:.medium))
+                                    Text(model.text("Conéctalo por Bluetooth y aparecerá aquí.")).font(.system(size:12)).foregroundStyle(.secondary)
+                                } else {
+                                    ForEach(controllerMonitor.controllers) { controller in
+                                        Text((controller.name.isEmpty ? model.text("Control") : controller.name)+" · "+model.text(controller.supported ? "Listo en este Mac" : "Sin perfil compatible"))
+                                            .font(.system(size:13,weight:.medium))
+                                    }
+                                }
+                                if model.target == "ios" {
+                                    Text(model.text("Para jugar en iPhone/iPad, conecta el control a ese dispositivo."))
+                                        .font(.system(size:12)).foregroundStyle(.secondary)
+                                }
+                            }
+                        }.accessibilityIdentifier("controller-status")
                         HStack(spacing:12) {
                             Image(systemName:"folder.fill").font(.system(size:24)).foregroundStyle(lime)
                             VStack(alignment:.leading,spacing:4) {
@@ -452,12 +472,13 @@ struct GameCatalogView: View {
 }
 
 @main struct NxNativeEasyApp: App {
+    @NSApplicationDelegateAdaptor(LauncherDelegate.self) private var delegate
     var body: some Scene {
-        WindowGroup("nxnative Easy") {
+        Window("nxnative Easy",id:"main") {
             ContentView().onAppear {
                 NSApplication.shared.applicationIconImage=AppArtwork.icon
             }
         }
-            .defaultSize(width:820,height:650)
+            .defaultSize(width:820,height:710)
     }
 }

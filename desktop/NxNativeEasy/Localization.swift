@@ -12,6 +12,12 @@ enum EasyLanguage: String, CaseIterable {
 
 struct EasyStrings {
     static let english: [String:String] = [
+        "Sin control conectado en este Mac": "No controller connected to this Mac",
+        "Conéctalo por Bluetooth y aparecerá aquí.": "Connect it via Bluetooth and it will appear here.",
+        "Control": "Controller",
+        "Listo en este Mac": "Ready on this Mac",
+        "Sin perfil compatible": "No compatible gamepad profile",
+        "Para jugar en iPhone/iPad, conecta el control a ese dispositivo.": "To play on iPhone/iPad, connect the controller to that device.",
         "¿Dónde quieres jugar?": "Where do you want to play?",
         "Elige un dispositivo": "Choose a device",
         "Elige dónde quieres jugar y añade tus archivos.": "Choose where to play, then add your own files.",

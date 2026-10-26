@@ -204,6 +204,8 @@ The game apps use Apple's GameController framework on **Mac, iPhone and iPad**:
 - **PS5:** DualSense and DualSense Edge.
 - **PS4:** DualShock 4.
 
+The preparation app automatically shows connected controller names and **Ready on this Mac** when Apple exposes a compatible gamepad profile. It updates when you connect or disconnect a controller. For an iPhone/iPad build, it reminds you to pair the controller **on that device**; a controller connected to the Mac is not a remote connection to the phone.
+
 Pair your controller in the device's **Bluetooth settings**, then open the prepared game. No extra driver or launcher setting is needed. Sticks, D-pad, face buttons, shoulders, triggers, stick clicks and menu buttons are mapped automatically. On iPhone/iPad, touch controls hide while a physical controller is connected.
 
 Face buttons follow **Nintendo positions**, rather than the letters printed on an Xbox controller: Switch A = Xbox B / PlayStation Circle; Switch B = Xbox A / Cross; Switch X = Xbox Y / Triangle; Switch Y = Xbox X / Square.
