@@ -14,7 +14,7 @@
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/nalancer08/nxnative-easy/main/install.sh)"
 ```
 
-Descarga nxnative Easy, instala Homebrew y las herramientas que falten, **compila tu interfaz de Mac y la abre**. Sigue las solicitudes de contraseña o confirmación que aparezcan en Terminal. No usa una cuenta de desarrollador Apple.
+Descarga nxnative Easy, instala Homebrew y las herramientas que falten, **compila tu interfaz de Mac y la abre**. Sigue las cuatro etapas numeradas y las solicitudes de contraseña o confirmación que aparezcan en Terminal. No usa una cuenta de desarrollador Apple. Si repites la instalación, verifica la app nueva antes de sustituir la existente y guarda la anterior como respaldo.
 
 **¿Ya descargaste el repositorio?** Abre **START-HERE.command** en la carpeta principal con doble clic. Hace la misma preparación; no necesitas buscar scripts dentro de `scripts/`. Si macOS bloquea ese archivo, usa el comando de arriba.
 

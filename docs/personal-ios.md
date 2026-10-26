@@ -256,3 +256,39 @@ The resulting app reported version 1.4/build 5 and only one launcher process
 remained. The manual check then reported it was up to date. The 24 script tests
 and four documentation checks passed. No game preparation or gameplay was part
 of this updater validation.
+
+## Clean-download installation validation (1.4.1)
+
+On 2026-10-26, a public GitHub main ZIP at `a5ed1e8` was downloaded and
+extracted outside the development checkout. Its `START-HERE.command` was run
+through Bash with new installation, tools and application directories. Automatic
+opening was suppressed only so the installed bundle could be opened explicitly
+through the UI. Setup cloned an independent checkout, created a new Python
+environment, installed its packages, compiled and signed version 1.4/build 5.
+After moving the downloaded folder away, the installed app still opened and
+its catalog displayed all 70 profiles; searching Metroid returned its one profile.
+
+That unmodified release version detected the genuinely newer public release
+1.4.1/build 6 at `d151d54`. Clicking Update now downloaded, compiled, verified,
+replaced and automatically reopened the app. Its version, pinned source revision,
+ad-hoc signature and retained previous bundle were verified; one launcher process
+remained, and the manual check reported it was up to date. Only the validation
+cache location was overridden, keeping test downloads in the separate validation
+directory outside the checkout.
+The original installer checkout remained clean and unchanged.
+
+A second new installation used the current published raw `install.sh` with
+separate source, tools and app directories. All four setup stages completed and
+produced version 1.4.1/build 6; opening it through Finder displayed the home
+window with its profiles and game/key folder selectors. Launcher rebuilds now
+stage and verify before
+replacement, keep backups and roll back on replacement failure. Regression tests
+cover compile failure, replacement failure and preserving an unrelated app.
+All 27 script tests and four documentation checks passed.
+
+This validates clean app installations on an existing Apple silicon Mac, not a
+fresh macOS installation or another physical Mac. Xcode 27.1, Homebrew, Metal
+tools and system build dependencies were already installed; initial installation
+of those system components, browser quarantine prompts, a fresh macOS user
+account and game compilation/gameplay were not exercised by this check. No
+game packages, keys or saves were used or modified.
