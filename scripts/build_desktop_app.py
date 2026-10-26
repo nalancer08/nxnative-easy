@@ -5,6 +5,7 @@ from pathlib import Path
 import plistlib
 import subprocess
 import sys
+import tempfile
 
 REPO=Path(__file__).resolve().parents[1]
 
@@ -20,7 +21,12 @@ def main():
     subprocess.run(['xcrun','swiftc','-parse-as-library','-swift-version','5',
         str(REPO/'desktop/NxNativeEasy/main.swift'),str(REPO/'desktop/NxNativeEasy/Localization.swift'),str(REPO/'desktop/NxNativeEasy/GameCatalog.swift'),'-o',str(macos/'NxNativeEasy'),
         '-framework','SwiftUI','-framework','AppKit'],check=True)
-    info=dict(CFBundleIdentifier='com.nalancer08.nxnative.easy',CFBundleName='nxnative',
+    resources=contents/'Resources';resources.mkdir(exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix='nxnative-icon-') as temporary:
+        iconset=Path(temporary)/'AppIcon.iconset';iconset.mkdir()
+        subprocess.run(['xcrun','swift',str(REPO/'desktop/NxNativeEasy/Assets/draw_icon.swift'),str(iconset)],check=True)
+        subprocess.run(['iconutil','-c','icns',str(iconset),'-o',str(resources/'AppIcon.icns')],check=True)
+    info=dict(CFBundleIconFile='AppIcon', CFBundleIdentifier='com.nalancer08.nxnative.easy',CFBundleName='nxnative',
               CFBundleDisplayName='nxnative Easy',CFBundleExecutable='NxNativeEasy',
               CFBundlePackageType='APPL',CFBundleShortVersionString='1.0',CFBundleVersion='1',
               LSMinimumSystemVersion='26.0',CFBundleDevelopmentRegion='en',CFBundleLocalizations=['en','es'],NSHighResolutionCapable=True,NxNativeSource=str(REPO))
