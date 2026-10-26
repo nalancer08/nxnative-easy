@@ -490,6 +490,10 @@ def pick_nsps(fam, have, versions):
     return out
 
 
+def picked_nsp_bytes(picks):   # count each archive once, not each distinct size (the base occurs in every version)
+    return sum(p.stat().st_size for p in {p for base, update in picks.values() for p in (base, update) if p is not None})
+
+
 def can_clone(d):   # whether this volume supports APFS clones (nx_extract uses them to save space; without them it writes full copies)
     a, b = d / '.clone_test', d / '.clone_test2'
     try:
@@ -1750,7 +1754,7 @@ def main(args=None):
     picks = pick_nsps(fam, have, versions)
 
     ex = work / 'extract'; ex.mkdir(parents=True, exist_ok=True); (work / 'tmp').mkdir(exist_ok=True)
-    gb = sum({p.stat().st_size for b, u in picks.values() for p in (b, u) if p}) / 2**30 + 6   # extraction + shader cache + slack
+    gb = picked_nsp_bytes(picks) / 2**30 + 6   # extraction + shader cache + slack
     if free_gb(work) < gb and not all((ex / v).exists() for v in versions): raise BuildError(f'less than {gb:.0f} GB free on the volume of {work}')
     heapck = provisional and HEAP_CHECK and not args.no_heap_check and not heap_checked(g)   # the heap check, when the game needs one (once per provisional profile: it stamps the profile)
     PROG.plan(1 + len(versions) + bool(fam['dlc']) + 4 - (prepare_xcode or (mac and not mac_pack)))   # prepare Xcode (a Mac-only build: the Mac host) replaces app build + IPA pack with one stage (a Mac app: Mac host + Mac app)
