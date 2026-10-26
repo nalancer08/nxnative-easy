@@ -36,8 +36,9 @@ def main(argv=None):
             subprocess.run([sys.executable,'-m','pip','install','nsz'],check=True)
         code=load_builder().cli(command+['-k',str(keys)])
         if code: return code
-        if not (output/'Contents/MacOS/dmhost').is_file():
-            raise ValueError('Build finished without a Mac game app.')
+        romfs=output/'Contents/Resources/romfs'
+        if not (output/'Contents/MacOS/dmhost').is_file() or not romfs.is_dir() or romfs.is_symlink():
+            raise ValueError('Build finished without a complete Mac game app (embedded game data required).')
         record={'schema':1,'app_path':str(output)}
         state=game/'nxnative-mac.json'
         temporary=state.with_suffix('.json.tmp')

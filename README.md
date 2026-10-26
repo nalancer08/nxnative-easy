@@ -26,7 +26,7 @@ When the app opens:
 
 **After setup:** open **nxnative Easy.app** in your home **Applications** folder. The setup keeps its source checkout separately, so you can delete the downloaded ZIP and folder.
 
-**Mac:** creates a game `.app`; click **Open game**. No Sideloadly or iPhone needed. Saves stay in `~/Library/Application Support/nxnative/<title ID>/`.
+**Mac:** creates one complete game `.app`, with its game data included inside; click **Open game**. No separate RomFS folder to copy. No Sideloadly or iPhone needed. Saves stay in `~/Library/Application Support/nxnative/<title ID>/`.
 
 **iPhone / iPad:** creates an unsigned lightweight IPA; install it with Sideloadly, then copy the game data as shown in the app.
 
@@ -40,7 +40,7 @@ Built on [seedds/nxnative](https://github.com/seedds/nxnative). The original pro
 
 - **Native Mac app:** game-folder selection, progress, cancellation, and buttons for the IPA, RomFS data and Sideloadly.
 - **Editable iPhone touch controls:** position, size and opacity, saved per game and 2D/3D layout.
-- **Automatic lightweight IPA export:** RomFS data live separately; existing outputs and valid caches are preserved.
+- **Lightweight IPA export for iPhone/iPad only:** RomFS data live separately; existing outputs and valid caches are preserved.
 - **Your own keys:** explicitly select the external folder containing your `prod.keys`. No games or keys are included, downloaded or distributed.
 - **Local preparation:** no Apple account or company certificate is used to build the desktop app.
 

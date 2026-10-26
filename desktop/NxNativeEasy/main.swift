@@ -274,7 +274,7 @@ struct ContentView: View {
                     }
                     VStack(alignment:.leading,spacing:6) {
                         Text(model.text("Prepara tu juego.")).font(.system(size:32,weight:.bold,design:.rounded)).foregroundStyle(ink)
-                        Text(model.text(model.isMac ? "Creamos una app para jugar en tu Mac." : "Elige dónde quieres jugar y añade tus archivos."))
+                        Text(model.text(model.isMac ? "Creamos una app completa para jugar en tu Mac." : "Elige dónde quieres jugar y añade tus archivos."))
                             .font(.system(size:14)).foregroundStyle(.secondary)
                     }
                     VStack(alignment:.leading,spacing:10) {
@@ -352,6 +352,8 @@ struct ContentView: View {
                                         .buttonStyle(.borderedProminent).tint(lime).foregroundStyle(.black)
                                     Button(model.text("Mostrar app")){model.revealIPA()}
                                 }
+                                Text(model.text("Todo el juego va dentro de la app. No necesitas copiar carpetas."))
+                                    .font(.system(size:12)).foregroundStyle(.secondary)
                                 Text(model.text("Tus partidas se guardan en este Mac y se conservan al crear otra versión."))
                                     .font(.system(size:12)).foregroundStyle(.secondary)
                             } else {

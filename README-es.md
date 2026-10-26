@@ -26,7 +26,7 @@ Cuando abra la app:
 
 **Las siguientes veces:** abre **nxnative Easy.app** en la carpeta **Aplicaciones de tu usuario**. La preparación conserva su propia copia del código; puedes borrar el ZIP y la carpeta que descargaste.
 
-**Mac:** crea una `.app` del juego; pulsa **Abrir juego**. No necesitas Sideloadly ni un iPhone. Las partidas quedan en `~/Library/Application Support/nxnative/<title ID>/`.
+**Mac:** crea una sola `.app` completa, con todos los datos del juego dentro; pulsa **Abrir juego**. No necesitas copiar una carpeta RomFS aparte. No necesitas Sideloadly ni un iPhone. Las partidas quedan en `~/Library/Application Support/nxnative/<title ID>/`.
 
 **iPhone / iPad:** crea una IPA ligera sin firmar. Instálala con Sideloadly y copia los datos del juego como te indica la app.
 
@@ -40,7 +40,7 @@ Partimos de [seedds/nxnative](https://github.com/seedds/nxnative): el motor, los
 
 - **App para Mac:** elegir juego, avance, cancelación y acceso a IPA, datos y Sideloadly.
 - **Controles editables en iPhone:** posición, tamaño y opacidad, guardados por juego y layout.
-- **IPA ligera automática:** los datos `romfs` van aparte; se conservan salidas y cachés válidas.
+- **IPA ligera sólo para iPhone/iPad:** los datos `romfs` van aparte; se conservan salidas y cachés válidas.
 - **Llaves del usuario:** debes seleccionar la carpeta de tus propias `prod.keys`. No incluimos, descargamos ni distribuimos llaves o juegos.
 - **Preparación local:** sin cuenta Apple, sin certificados de empresa y sin servicio que reciba tus archivos.
 
