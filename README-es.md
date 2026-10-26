@@ -2,7 +2,7 @@
 
 [English](README.md) · **Español**
 
-**Tus propios juegos, preparados para iPhone, iPad o Mac.**
+**Ejecuta tus propios juegos compatibles de Nintendo Switch de forma nativa en Mac, iPhone y iPad, con gráficos Metal, controles físicos y controles táctiles editables.**
 
 ## Empieza aquí
 
@@ -197,6 +197,22 @@ Esta base requiere iOS/iPadOS 26 o posterior, iPhone con A17 Pro o posterior o i
 <td align="center" valign="top" width="33%"><img src="docs/images/zelda-echoes-of-wisdom.jpg" width="256" alt="The Legend of Zelda: Echoes of Wisdom"><br>The Legend of Zelda: Echoes of Wisdom<br><sub>~7.8 GB</sub></td>
 </tr>
 </table>
+
+## Controles Xbox, PS5 y PS4
+
+Los juegos preparados usan GameController de Apple en **Mac, iPhone y iPad**:
+
+- **Xbox:** Xbox Wireless Controller con Bluetooth (modelo 1708), Series X/S y Elite Series 2.
+- **PS5:** DualSense y DualSense Edge.
+- **PS4:** DualShock 4.
+
+Conecta el control desde **Bluetooth del dispositivo** y abre tu juego. No necesitas instalar drivers ni activar opciones en la herramienta. Se mapean sticks, cruceta, botones, gatillos, botones superiores, clics de sticks y menús. En iPhone/iPad los controles táctiles se ocultan al conectar uno físico.
+
+Los botones siguen las **posiciones de Nintendo**, no las letras impresas en Xbox: A de Switch = B de Xbox / círculo de PlayStation; B = A / cruz; X = Y / triángulo; Y = X / cuadrado.
+
+Se admite la entrada estándar del control; no se mapean gatillos adaptativos de DualSense, movimiento del mando ni gestos del panel táctil. La vibración depende de lo que expongan el control y el sistema. En Mac puede haber varios jugadores locales si el juego lo permite; en iPhone/iPad los controles se combinan como jugador 1.
+
+Guías de Apple para [conectar Xbox](https://support.apple.com/en-us/111101) y [conectar PlayStation](https://support.apple.com/en-us/111100). Revisamos el código y las pruebas automáticas; no hemos probado físicamente estos modelos en este checkout.
 
 ## Controles a tu gusto
 

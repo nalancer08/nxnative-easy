@@ -2,7 +2,7 @@
 
 **English** · [Español](README-es.md)
 
-**Your own games, prepared for iPhone, iPad or Mac.**
+**Run your own supported Nintendo Switch games natively on Mac, iPhone and iPad — with Metal graphics, physical controllers and editable touch controls.**
 
 ## Start here
 
@@ -195,6 +195,22 @@ This base requires iOS/iPadOS 26 or later, an iPhone with A17 Pro or later, or a
 <td align="center" valign="top" width="33%"><img src="docs/images/zelda-echoes-of-wisdom.jpg" width="256" alt="The Legend of Zelda: Echoes of Wisdom"><br>The Legend of Zelda: Echoes of Wisdom<br><sub>~7.8 GB</sub></td>
 </tr>
 </table>
+
+## Xbox, PS5 and PS4 controllers
+
+The game apps use Apple's GameController framework on **Mac, iPhone and iPad**:
+
+- **Xbox:** Bluetooth-capable Xbox Wireless Controller (model 1708), Series X/S and Elite Series 2.
+- **PS5:** DualSense and DualSense Edge.
+- **PS4:** DualShock 4.
+
+Pair your controller in the device's **Bluetooth settings**, then open the prepared game. No extra driver or launcher setting is needed. Sticks, D-pad, face buttons, shoulders, triggers, stick clicks and menu buttons are mapped automatically. On iPhone/iPad, touch controls hide while a physical controller is connected.
+
+Face buttons follow **Nintendo positions**, rather than the letters printed on an Xbox controller: Switch A = Xbox B / PlayStation Circle; Switch B = Xbox A / Cross; Switch X = Xbox Y / Triangle; Switch Y = Xbox X / Square.
+
+Standard gamepad input is supported; DualSense adaptive triggers, controller motion and touchpad gestures are not mapped. Rumble depends on the features exposed by the controller and OS. Mac supports separate local players when the game allows it; iPhone/iPad merge controllers into player 1.
+
+See Apple's [Xbox pairing guide](https://support.apple.com/en-us/111101) and [PlayStation pairing guide](https://support.apple.com/en-us/111100). This support was checked in the input code and automated tests; these specific physical models have not been tested in this checkout.
 
 ## Make the controls your own
 
