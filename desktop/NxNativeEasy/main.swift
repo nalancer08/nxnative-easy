@@ -170,6 +170,46 @@ import Darwin
     }
 }
 
+struct SupportCarousel: View {
+    let games: [CatalogGame]
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var started = Date()
+    @State private var pausedAt: Date?
+
+    var body: some View {
+        GeometryReader { geometry in
+            TimelineView(.animation(minimumInterval:1.0 / 30.0,paused:pausedAt != nil || reduceMotion)) { context in
+                let width = CGFloat(games.count) * 177
+                let elapsed = max(0,(pausedAt ?? context.date).timeIntervalSince(started))
+                let offset = width > 0 && !reduceMotion ? CGFloat(elapsed * 22).truncatingRemainder(dividingBy:width) : 0
+                HStack(spacing:12) {
+                    ForEach(0..<2,id:\.self) { copy in
+                        ForEach(Array(games.enumerated()),id:\.element.id) { index, game in
+                            let tint: Color = [.orange,.mint,.cyan,.purple,.pink][index % 5]
+                            VStack(alignment:.leading,spacing:7) {
+                                ZStack {
+                                    RoundedRectangle(cornerRadius:12).fill(tint.opacity(0.12))
+                                    Image(systemName:"gamecontroller").font(.system(size:29,weight:.light)).foregroundStyle(tint)
+                                }.frame(height:66)
+                                Text(game.name).font(.system(size:11,weight:.medium))
+                                    .foregroundStyle(Color(red:0.91,green:0.93,blue:0.88))
+                                    .lineLimit(2).frame(height:30,alignment:.topLeading)
+                            }.frame(width:165).accessibilityHidden(copy == 1)
+                        }
+                    }
+                }.offset(x:-offset).frame(width:geometry.size.width,alignment:.leading)
+            }
+        }.frame(height:103).clipped()
+        .onHover { hovering in
+            if hovering { pausedAt = Date() }
+            else if let pause = pausedAt {
+                started = started.addingTimeInterval(Date().timeIntervalSince(pause))
+                pausedAt = nil
+            }
+        }
+    }
+}
+
 struct ContentView: View {
     @StateObject private var model=BuildModel()
     private let ink=Color(red:0.93,green:0.94,blue:0.90)
@@ -194,29 +234,18 @@ struct ContentView: View {
                             .font(.system(size:14)).foregroundStyle(.secondary)
                     }
                     VStack(alignment:.leading,spacing:10) {
-                        Text(model.text("Juegos con soporte en la herramienta"))
-                            .font(.system(size:14,weight:.semibold)).foregroundStyle(ink)
+                        HStack {
+                            Text(model.text("Juegos con soporte en la herramienta"))
+                                .font(.system(size:14,weight:.semibold)).foregroundStyle(ink)
+                            Spacer()
+                            Button {model.openCatalog()} label: {
+                                Label(model.text("Ver todos"),systemImage:"magnifyingglass")
+                                    .font(.system(size:12,weight:.semibold))
+                            }.buttonStyle(.plain).foregroundStyle(lime).accessibilityIdentifier("view-all-games")
+                        }
                         Text(model.text("No incluye ni descarga juegos. Debes añadir tus propios archivos."))
                             .font(.system(size:12)).foregroundStyle(.secondary)
-                        ScrollView(.horizontal,showsIndicators:true) {
-                            LazyHStack(spacing:12) {
-                                ForEach(Array(model.catalog.enumerated()),id:\.element.id) { index, game in
-                                    let tint: Color = [.orange,.mint,.cyan,.purple,.pink][index % 5]
-                                    VStack(alignment:.leading,spacing:7) {
-                                        ZStack {
-                                            RoundedRectangle(cornerRadius:12).fill(tint.opacity(0.12))
-                                            Image(systemName:"gamecontroller").font(.system(size:29,weight:.light)).foregroundStyle(tint)
-                                        }.frame(height:66)
-                                        Text(game.name).font(.system(size:11,weight:.medium))
-                                            .foregroundStyle(ink).lineLimit(2).frame(height:30,alignment:.topLeading)
-                                    }.frame(width:165)
-                                }
-                            }.padding(.bottom,8)
-                        }
-                        Button {model.openCatalog()} label: {
-                            Label(model.text("Ver todos"),systemImage:"magnifyingglass")
-                                .font(.system(size:12,weight:.semibold))
-                        }.buttonStyle(.plain).foregroundStyle(lime).accessibilityIdentifier("view-all-games")
+                        SupportCarousel(games:model.catalog)
                     }
                     VStack(alignment:.leading,spacing:18) {
                         HStack(spacing:12) {

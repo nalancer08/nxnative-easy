@@ -153,7 +153,7 @@ bytes, not Nintendo key material.
 
 ## Game catalog
 
-The home carousel lists all local game profiles as a support reference, with an explicit reminder that users must supply their own game files. **View all / Ver todos** below the carousel opens the searchable catalog. The native catalog reads every
+The home carousel lists all local game profiles as a support reference, with an explicit reminder that users must supply their own game files. **View all / Ver todos** at the top right of the carousel opens the searchable catalog. The native catalog reads every
 16-digit title directory containing `dm/games/<id>/game.tsv` from the current checkout
 when opened. It shows the profile name, registered build display versions and title ID,
 with a link to the corresponding repository game note. Search ignores case and accents
