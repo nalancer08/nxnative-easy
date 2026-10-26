@@ -1,260 +1,164 @@
-# nxnative personal · Juegos de Switch en iPhone y iPad
+# nxnative personal
 
-Esta es nuestra copia privada de [nxnative](https://github.com/seedds/nxnative), con **editor de controles táctiles** y **scripts que preparan herramientas, compilan y generan una IPA ligera** para instalar con Sideloadly.
+**Tus juegos, en tu iPhone. Con imágenes y sin comandos para el uso diario.**
 
-**Empieza aquí:** elige un juego compatible → ejecuta un comando → instala la IPA ligera → copia `romfs` por Finder la primera vez.
+![Nuestra app para preparar juegos](docs/images/nxnative-easy.png)
 
-[Qué juegos correr](#qué-juegos-correr) · [Preparar el Mac](#preparar-el-mac) · [Compilar fácilmente](#compilar-fácilmente) · [Instalar con Sideloadly](#instalar-con-sideloadly) · [Actualizar sin perder partidas](#actualizar-sin-perder-partidas) · [README anterior](README-original.md)
+## Abre la app y elige tu juego
 
-## Qué juegos correr
+1. Abre **nxnative.app**.
+2. Pulsa **Elegir juego**, selecciona su carpeta y pulsa **Preparar para iPhone**.
 
-**Metroid Dread 2.1.0 es el juego confirmado funcionando en nuestro iPhone.** También comprobamos su recompilación sin firma y la generación automática de la IPA ligera. El editor nuevo todavía requiere comprobar su uso físico tras instalarlo.
+La app prepara las herramientas, compila y deja lista la **IPA ligera**. Verás el avance en la ventana. Al terminar, pulsa **Mostrar IPA** y **Abrir Sideloadly**.
 
-Esta base incluye perfiles para los juegos de la tabla completa de abajo. Upstream publica pruebas en Mac o iPhone según el título: **tener un perfil o una IPA compilada no confirma que ese juego funcione en tu iPhone**. Abre la ficha del juego para comprobar plataforma, versión y problemas conocidos.
+**En nuestro Mac:** la app está disponible como `nxnative.app` en Descargas. Recuerda tu última carpeta y permite volver a mostrar la IPA ya preparada.
 
-Algunos títulos incluidos para empezar a explorar:
+**En otro Mac:** después de descargar este repositorio privado, abre [`scripts/Abrir-interfaz.command`](scripts/Abrir-interfaz.command) con doble clic. Crea y abre la app local. La primera vez necesitas Xcode completo y Homebrew instalados; si hacen falta tus llaves, te pedirá elegir `prod.keys`. Mantén cada juego fuera del repositorio, en una carpeta con su base y actualizaciones.
 
-| Juego | Versión del perfil | Referencia |
-|---|---|---|
-| **Metroid Dread** | **2.1.0** | [Ficha](dm/games/010093801237C000/README.md) · confirmado en nuestro iPhone |
-| Super Mario Bros. Wonder | 1.2.1 / 1.0.0 | [Ficha y límites](dm/games/010015100B514000/README.md) |
-| Super Mario Odyssey | 1.4.1 | [Ficha y límites](dm/games/0100000000010000/README.md) |
-| Mario Kart 8 Deluxe | 4.0.0 | [Ficha y límites](dm/games/0100152000022000/README.md) |
-| The Legend of Zelda: Breath of the Wild | 1.9.0 | [Ficha y límites](dm/games/01007EF00011E000/README.md) |
-| The Legend of Zelda: Tears of the Kingdom | 1.4.3 | [Ficha y límites](dm/games/0100F2C0115B6000/README.md) |
-| The Legend of Zelda: Link's Awakening | 1.1.0 | [Ficha y límites](dm/games/01006BB00C6F0000/README.md) |
-| Hades | 1.0.38233 | [Ficha y límites](dm/games/0100535012974000/README.md) |
-| Cuphead | 1.3.7 | [Ficha y límites](dm/games/0100A5C00D162000/README.md) |
-| Celeste | 1.4.1.1 | [Ficha y límites](dm/games/01002B30028F6000/README.md) |
-| Balatro | 1.1.3 | [Ficha y límites](dm/games/0100CD801CE5E000/README.md) |
+## Instalar: Sideloadly + Finder
+
+1. Conecta tu iPhone al Mac y abre [Sideloadly](https://sideloadly.io).
+2. Arrastra la **IPA ligera** y pulsa **Start** con tu cuenta Apple **personal**.
+3. La primera vez, pulsa **Mostrar datos romfs** en nuestra app y copia la carpeta `romfs` completa por **Finder → iPhone → Archivos → tu juego**.
+
+Para actualizar, usa la misma cuenta y el mismo bundle ID efectivo de Sideloadly. **Instala encima; no desinstales la app**, para conservar tus partidas. Si los datos del juego no cambiaron, puedes reutilizar el `romfs` existente. La firma e instalación siguen siendo pasos de Sideloadly; nuestra app prepara el archivo sin firmar.
+
+## Juegos incluidos
+
+**Metroid Dread 2.1.0 está confirmado en nuestro iPhone.** Los demás tienen perfiles y pruebas reportadas por upstream en Mac o iPhone; revisa [la ficha de tu juego](dm/games/README.md#games) antes de prepararlo. Un perfil no garantiza que cualquier versión funcione en cualquier iPhone.
+
+Esta base requiere iOS/iPadOS 26 o posterior, iPhone con A17 Pro o posterior o iPad con M1 o posterior. Los datos de los juegos y las llaves los aportas tú.
+
+<table>
+<tr>
+<td align="center" valign="top" width="33%"><img src="docs/images/mario-kart-8-deluxe.jpg" width="256" alt="Mario Kart 8 Deluxe"><br>Mario Kart 8 Deluxe<br><sub>~11.9 GB · no Mii heads</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/mario-vs-donkey-kong.jpg" width="256" alt="Mario vs. Donkey Kong"><br>Mario vs. Donkey Kong<br><sub>~1.6 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/paper-mario-the-thousand-year-door.jpg" width="256" alt="Paper Mario: The Thousand-Year Door"><br>Paper Mario: The Thousand-Year Door<br><sub>~5 GB · 60 fps with 1.0.1</sub></td>
+</tr>
+<tr>
+<td align="center" valign="top" width="33%"><img src="docs/images/super-mario-3d-world.jpg" width="256" alt="Super Mario 3D World + Bowser's Fury"><br>Super Mario 3D World + Bowser's Fury<br><sub>~3 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/super-mario-bros-wonder.jpg" width="256" alt="Super Mario Bros. Wonder"><br>Super Mario Bros. Wonder<br><sub>~4 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/super-mario-galaxy.jpg" width="256" alt="Super Mario Galaxy"><br>Super Mario Galaxy<br><sub>~3 GB</sub></td>
+</tr>
+<tr>
+<td align="center" valign="top" width="33%"><img src="docs/images/super-mario-galaxy-2.jpg" width="256" alt="Super Mario Galaxy 2"><br>Super Mario Galaxy 2<br><sub>~3 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/super-mario-odyssey.jpg" width="256" alt="Super Mario Odyssey"><br>Super Mario Odyssey<br><sub>~6 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/zelda-breath-of-the-wild.jpg" width="256" alt="The Legend of Zelda: Breath of the Wild"><br>The Legend of Zelda: Breath of the Wild<br><sub>~16 GB · 60 fps with 1.9.0</sub></td>
+</tr>
+<tr>
+<td align="center" valign="top" width="33%"><img src="docs/images/zelda-links-awakening.jpg" width="256" alt="The Legend of Zelda: Link's Awakening"><br>The Legend of Zelda: Link's Awakening<br><sub>~6 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/zelda-tears-of-the-kingdom.jpg" width="256" alt="The Legend of Zelda: Tears of the Kingdom"><br>The Legend of Zelda: Tears of the Kingdom<br><sub>~17 GB · 60 fps with 1.4.3</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/13-sentinels.jpg" width="256" alt="13 Sentinels: Aegis Rim"><br>13 Sentinels: Aegis Rim<br><sub>~5 GB</sub></td>
+</tr>
+<tr>
+<td align="center" valign="top" width="33%"><img src="docs/images/absolum.jpg" width="256" alt="Absolum"><br>Absolum<br><sub>~2 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/ace-attorney-investigations.jpg" width="256" alt="Ace Attorney Investigations Collection"><br>Ace Attorney Investigations Collection<br><sub>~7 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/advance-wars-1-2-re-boot-camp.jpg" width="256" alt="Advance Wars 1+2: Re-Boot Camp"><br>Advance Wars 1+2: Re-Boot Camp<br><sub>~7.1 GB</sub></td>
+</tr>
+<tr>
+<td align="center" valign="top" width="33%"><img src="docs/images/ai-the-somnium-files.jpg" width="256" alt="AI: THE SOMNIUM FILES"><br>AI: THE SOMNIUM FILES<br><sub>~8.3 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/ai-the-somnium-files-nirvana-initiative.jpg" width="256" alt="AI: THE SOMNIUM FILES - nirvanA Initiative"><br>AI: THE SOMNIUM FILES - nirvanA Initiative<br><sub>~11.6 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/animal-crossing-new-horizons.jpg" width="256" alt="Animal Crossing: New Horizons"><br>Animal Crossing: New Horizons<br><sub>~10.5 GB</sub></td>
+</tr>
+<tr>
+<td align="center" valign="top" width="33%"><img src="docs/images/animal-well.png" width="256" alt="ANIMAL WELL"><br>ANIMAL WELL<br><sub>~54 MB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/astral-chain.png" width="256" alt="ASTRAL CHAIN"><br><a href="dm/games/01007300020FA000/README.md">ASTRAL CHAIN</a><br><sub>~9.7 GB · 60 fps target with 1.0.1</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/balatro.jpg" width="256" alt="Balatro"><br>Balatro<br><sub>~82 MB · played by touch</sub></td>
+</tr>
+<tr>
+<td align="center" valign="top" width="33%"><img src="docs/images/ball-x-pit.jpg" width="256" alt="BALL x PIT"><br>BALL x PIT<br><sub>~1.1 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/bayonetta.jpg" width="256" alt="Bayonetta"><br>Bayonetta<br><sub>~8.8 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/bayonetta-2.jpg" width="256" alt="Bayonetta 2"><br>Bayonetta 2<br><sub>~12.5 GB</sub></td>
+</tr>
+<tr>
+<td align="center" valign="top" width="33%"><img src="docs/images/bayonetta-3.jpg" width="256" alt="Bayonetta 3"><br>Bayonetta 3<br><sub>~14.2 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/big-brain-academy-brain-vs-brain.jpg" width="256" alt="Big Brain Academy: Brain vs. Brain"><br>Big Brain Academy: Brain vs. Brain<br><sub>~0.8 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/brain-memory-training-academy.jpg" width="256" alt="Brain Memory Training Academy"><br>Brain Memory Training Academy<br><sub>~0.1 GB</sub></td>
+</tr>
+<tr>
+<td align="center" valign="top" width="33%"><img src="docs/images/captain-toad-treasure-tracker.jpg" width="256" alt="Captain Toad: Treasure Tracker"><br>Captain Toad: Treasure Tracker<br><sub>~2 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/catherine-full-body.jpg" width="256" alt="Catherine: Full Body"><br>Catherine: Full Body<br><sub>~14 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/celeste.jpg" width="256" alt="Celeste"><br>Celeste<br><sub>~0.9 GB</sub></td>
+</tr>
+<tr>
+<td align="center" valign="top" width="33%"><img src="docs/images/cuphead.jpg" width="256" alt="Cuphead"><br>Cuphead<br><sub>~5 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/dark-souls-remastered-creation.jpg" width="256" alt="DARK SOULS: REMASTERED"><br>DARK SOULS: REMASTERED<br><sub>~4 GB · 60 fps with 1.0.3</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/digimon-story-cyber-sleuth.jpg" width="256" alt="Digimon Story Cyber Sleuth: Complete Edition"><br>Digimon Story Cyber Sleuth: Complete Edition<br><sub>~5 GB</sub></td>
+</tr>
+<tr>
+<td align="center" valign="top" width="33%"><img src="docs/images/dragon-quest-vii-reimagined.jpg" width="256" alt="DRAGON QUEST VII Reimagined"><br>DRAGON QUEST VII Reimagined<br><sub>~5.9 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/dragon-quest-xi-s.jpg" width="256" alt="DRAGON QUEST XI S: Echoes of an Elusive Age – Definitive Edition"><br>DRAGON QUEST XI S: Echoes of an Elusive Age – Definitive Edition<br><sub>~15 GB · 60 fps with 1.0.4</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/final-fantasy-resonance.jpg" width="256" alt="FINAL FANTASY RESONANCE"><br>FINAL FANTASY RESONANCE<br><sub>~10 GB · 60 fps with 1.0.1</sub></td>
+</tr>
+<tr>
+<td align="center" valign="top" width="33%"><img src="docs/images/final-fantasy-tactics.jpg" width="256" alt="FINAL FANTASY TACTICS - The Ivalice Chronicles"><br>FINAL FANTASY TACTICS - The Ivalice Chronicles<br><sub>~11 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/fire-emblem-engage.jpg" width="256" alt="Fire Emblem Engage"><br>Fire Emblem Engage<br><sub>~15 GB · 60 fps with 2.0.0</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/fire-emblem-three-houses.jpg" width="256" alt="Fire Emblem: Three Houses"><br>Fire Emblem: Three Houses<br><sub>~13 GB · 60 fps with 1.2.0</sub></td>
+</tr>
+<tr>
+<td align="center" valign="top" width="33%"><img src="docs/images/ghost-trick-phantom-detective.jpg" width="256" alt="Ghost Trick: Phantom Detective"><br>Ghost Trick: Phantom Detective<br><sub>~3 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/the-great-ace-attorney-chronicles.jpg" width="256" alt="The Great Ace Attorney Chronicles"><br>The Great Ace Attorney Chronicles<br><sub>~4 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/hades.jpg" width="256" alt="Hades"><br>Hades<br><sub>~4 GB</sub></td>
+</tr>
+<tr>
+<td align="center" valign="top" width="33%"><img src="docs/images/hades-ii.jpg" width="256" alt="Hades II"><br>Hades II<br><sub>~4 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/hollow-knight-silksong.jpg" width="256" alt="Hollow Knight: Silksong"><br>Hollow Knight: Silksong<br><sub>~6.4 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/hyrule-warriors-age-of-calamity.jpg" width="256" alt="Hyrule Warriors: Age of Calamity"><br>Hyrule Warriors: Age of Calamity<br><sub>~15 GB · 60 fps with 1.3.0</sub></td>
+</tr>
+<tr>
+<td align="center" valign="top" width="33%"><img src="docs/images/luigis-mansion-3.jpg" width="256" alt="Luigi's Mansion 3"><br>Luigi's Mansion 3<br><sub>~7.5 GB · 60 fps with 1.4.0</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/metroid-dread.jpg" width="256" alt="Metroid Dread"><br>Metroid Dread<br><sub>~5 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/monster-hunter-rise.jpg" width="256" alt="Monster Hunter Rise"><br>Monster Hunter Rise<br><sub>~22 GB · 60 fps with 16.0.2</sub></td>
+</tr>
+<tr>
+<td align="center" valign="top" width="33%"><img src="docs/images/monster-train-2.jpg" width="256" alt="Monster Train 2"><br>Monster Train 2<br><sub>~1.6 GB · 60 fps with 1.1.1</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/octopath-traveler-0.jpg" width="256" alt="Octopath Traveler 0"><br>Octopath Traveler 0<br><sub>~4 GB · 60 fps with 1.0.5</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/octopath-traveler-ii.jpg" width="256" alt="Octopath Traveler II"><br>Octopath Traveler II<br><sub>~5.9 GB · 60 fps with 1.1.1</sub></td>
+</tr>
+<tr>
+<td align="center" valign="top" width="33%"><img src="docs/images/patricks-parabox.jpg" width="256" alt="Patrick's Parabox"><br>Patrick's Parabox<br><sub>~0.2 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/persona-5-royal.jpg" width="256" alt="Persona 5 Royal"><br>Persona 5 Royal<br><sub>~14.9 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/pikmin-4.jpg" width="256" alt="Pikmin 4"><br>Pikmin 4<br><sub>~10.8 GB</sub></td>
+</tr>
+<tr>
+<td align="center" valign="top" width="33%"><img src="docs/images/pokemon-brilliant-diamond.jpg" width="256" alt="Pokémon Brilliant Diamond"><br>Pokémon Brilliant Diamond<br><sub>~4.6 GB · 60 fps with 1.3.0</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/pokemon-legends-z-a.jpg" width="256" alt="Pokémon Legends: Z-A"><br>Pokémon Legends: Z-A<br><sub>~6 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/pokemon-sword.jpg" width="256" alt="Pokémon Sword"><br>Pokémon Sword<br><sub>~12.4 GB</sub></td>
+</tr>
+<tr>
+<td align="center" valign="top" width="33%"><img src="docs/images/pokemon-shield.jpg" width="256" alt="Pokémon Shield"><br>Pokémon Shield<br><sub>~12.4 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/portal.jpg" width="256" alt="Portal"><br>Portal<br><sub>~2.6 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/raging-loop.jpg" width="256" alt="Raging Loop"><br>Raging Loop<br><sub>~0.9 GB</sub></td>
+</tr>
+<tr>
+<td align="center" valign="top" width="33%"><img src="docs/images/rhythm-heaven-groove.jpg" width="256" alt="Rhythm Heaven Groove"><br>Rhythm Heaven Groove<br><sub>~3 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/romance-of-the-three-kingdoms-8-remake.jpg" width="256" alt="ROMANCE OF THE THREE KINGDOMS 8 REMAKE"><br>ROMANCE OF THE THREE KINGDOMS 8 REMAKE<br><sub>~16.8 GB · controller only</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/stardew-valley.jpg" width="256" alt="Stardew Valley"><br>Stardew Valley<br><sub>~0.6 GB</sub></td>
+</tr>
+<tr>
+<td align="center" valign="top" width="33%"><img src="docs/images/steins-gate-reboot.jpg" width="256" alt="STEINS;GATE RE:BOOT"><br>STEINS;GATE RE:BOOT<br><sub>~6 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/super-smash-bros-ultimate.jpg" width="256" alt="Super Smash Bros. Ultimate"><br>Super Smash Bros. Ultimate<br><sub>~17.5 GB · offline</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/taiko-risshiden-v-dx.jpg" width="256" alt="Taiko Risshiden V DX"><br>Taiko Risshiden V DX<br><sub>~3.3 GB · Japanese · played by touch</sub></td>
+</tr>
+<tr>
+<td align="center" valign="top" width="33%"><img src="docs/images/unicorn-overlord.jpg" width="256" alt="Unicorn Overlord"><br>Unicorn Overlord<br><sub>~4 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/nier-automata.png" width="256" alt="NieR:Automata The End of YoRHa Edition"><br>NieR:Automata The End of YoRHa Edition<br><sub>~10.9 GB · 60 fps with 1.0.3</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/zelda-echoes-of-wisdom.jpg" width="256" alt="The Legend of Zelda: Echoes of Wisdom"><br>The Legend of Zelda: Echoes of Wisdom<br><sub>~7.8 GB</sub></td>
+</tr>
+</table>
+
+## Controles a tu gusto
+
+En el juego pulsa **Edit controls**. Mueve los botones, ajusta tamaño y opacidad y pulsa **Save**. **Cancel** descarta y **Reset control / Reset all** restaura. Cada juego guarda su acomodo 2D y 3D. El juego sigue corriendo mientras editas.
 
 <details>
-<summary>Ver los 70 perfiles incluidos y sus versiones</summary>
+<summary>Guías, comandos y detalles técnicos</summary>
 
-| Juego y ficha | Versión del perfil |
-|---|---|
-| [13 Sentinels: Aegis Rim](dm/games/01003FC01670C000/README.md) | 1.10 |
-| [13 Sentinels: Aegis Rim, Asian release](dm/games/01008D7016438000/README.md) | 1.00 (base) |
-| [Absolum](dm/games/0100A83022A22000/README.md) | 1.1.1 |
-| [Ace Attorney Investigations Collection](dm/games/010005501E68C000/README.md) | 1.0.0.2 |
-| [Advance Wars 1+2: Re-Boot Camp](dm/games/0100300012F2A000/README.md) | 1.0.0 (base) |
-| [AI: THE SOMNIUM FILES](dm/games/010089B00D09C000/README.md) | 1.0.1 |
-| [ASTRAL CHAIN](dm/games/01007300020FA000/README.md) | 1.0.1 |
-| [AI: THE SOMNIUM FILES - nirvanA Initiative](dm/games/0100713016CCC000/README.md) | 1.0.2 |
-| [ANIMAL WELL](dm/games/010020D01AD24000/README.md) | 1.0.10 |
-| [Animal Crossing: New Horizons](dm/games/01006F8002326000/README.md) | 3.0.3 |
-| [BALL x PIT](dm/games/010086A022444000/README.md) | 1.293 |
-| [Balatro](dm/games/0100CD801CE5E000/README.md) | 1.1.3 |
-| [Bayonetta](dm/games/010076F0049A2000/README.md) | 1.1 |
-| [Bayonetta 2](dm/games/01007960049A0000/README.md) | 1.2 |
-| [Bayonetta 3](dm/games/01004A4010FEA000/README.md) | 1.2.0 |
-| [Big Brain Academy: Brain vs. Brain](dm/games/0100620012D6E000/README.md) | 1.2.0 |
-| [Brain Memory Training Academy](dm/games/0100F5D01DA3A000/README.md) | 1.0.0 (base) |
-| [Captain Toad: Treasure Tracker](dm/games/01009BF0072D4000/README.md) | 1.4.2 |
-| [Catherine: Full Body](dm/games/0100BF00112C0000/README.md) | 1.0.1a |
-| [Celeste](dm/games/01002B30028F6000/README.md) | 1.4.1.1 |
-| [Cuphead](dm/games/0100A5C00D162000/README.md) | 1.3.7 |
-| [DARK SOULS: REMASTERED](dm/games/01004AB00A260000/README.md) | 1.0.3 |
-| [Digimon Story Cyber Sleuth: Complete Edition](dm/games/010014E00DB56000/README.md) | 1.0.3 |
-| [DRAGON QUEST VII Reimagined](dm/games/0100A9D01C446000/README.md) | 1.2.0 |
-| [DRAGON QUEST XI S: Echoes of an Elusive Age – Definitive Edition](dm/games/01006C300E9F0000/README.md) | 1.0.4 |
-| [FINAL FANTASY RESONANCE](dm/games/0100606026F12000/README.md) | 1.0.1 |
-| [FINAL FANTASY TACTICS - The Ivalice Chronicles](dm/games/010038B015560000/README.md) | 1.4.0 |
-| [Fire Emblem Engage](dm/games/0100A6301214E000/README.md) | 2.0.0 |
-| [Fire Emblem: Three Houses](dm/games/010055D009F78000/README.md) | 1.2.0 |
-| [Ghost Trick: Phantom Detective](dm/games/010029B018432000/README.md) | 1.0.0 (base) |
-| [Hades](dm/games/0100535012974000/README.md) | 1.0.38233 |
-| [Hades II](dm/games/0100A00019DE0000/README.md) | base game |
-| [Hollow Knight: Silksong](dm/games/010013C00E930000/README.md) | 1.0.30000 |
-| [Hyrule Warriors: Age of Calamity](dm/games/01002B00111A2000/README.md) | 1.3.0 |
-| [Luigi's Mansion 3](dm/games/0100DCA0064A6000/README.md) | 1.4.0 |
-| [Mario Kart 8 Deluxe](dm/games/0100152000022000/README.md) | 4.0.0 |
-| [Mario vs. Donkey Kong](dm/games/0100B99019412000/README.md) | 1.0.1 (cartridge base) |
-| [Metroid Dread](dm/games/010093801237C000/README.md) | 2.1.0 |
-| [Monster Hunter Rise](dm/games/0100B04011742000/README.md) | 16.0.2 |
-| [Monster Train 2](dm/games/010051701FB46000/README.md) | 1.1.1 |
-| [NieR:Automata The End of YoRHa Edition](dm/games/010056B015FE8000/README.md) | 1.0.3 |
-| [Octopath Traveler 0](dm/games/01005270232F2000/README.md) | 1.0.5 |
-| [OCTOPATH TRAVELER II](dm/games/0100A3501946E000/README.md) | 1.1.1 |
-| [Paper Mario: The Thousand-Year Door](dm/games/0100ECD018EBE000/README.md) | 1.0.1 |
-| [Patrick's Parabox](dm/games/0100E44016C22000/README.md) | 1.0.1 |
-| [Persona 5 Royal](dm/games/01005CA01580E000/README.md) | 1.0.2 |
-| [Pikmin 4](dm/games/0100B7C00933A000/README.md) | 1.1.1 |
-| [Pokémon Brilliant Diamond](dm/games/0100000011D90000/README.md) | 1.3.0 |
-| [Pokémon Legends: Z-A](dm/games/0100F43008C44000/README.md) | 2.0.2 |
-| [Pokémon Shield](dm/games/01008DB008C2C000/README.md) | 1.3.2 |
-| [Pokémon Sword](dm/games/0100ABF008968000/README.md) | 1.3.2 |
-| [Portal](dm/games/01007BB017812000/README.md) | 1.0.3 |
-| [Raging Loop](dm/games/010020400E1C2000/README.md) | 1.0.0 (base) |
-| [Rhythm Heaven Groove](dm/games/0100D9F01D474000/README.md) | 1.0.0 (base) |
-| [ROMANCE OF THE THREE KINGDOMS 8 REMAKE](dm/games/0100C2A01A730000/README.md) | 1.1.3 |
-| [STEINS;GATE RE:BOOT](dm/games/01008BC024FDE000/README.md) | 1.0.3 |
-| [Stardew Valley](dm/games/0100E65002BB8000/README.md) | 1.6.15.13 |
-| [Super Mario 3D World + Bowser's Fury](dm/games/010028600EBDA000/README.md) | 1.2.2 |
-| [Super Mario Bros. Wonder](dm/games/010015100B514000/README.md) | 1.2.1 (and 1.0.0) |
-| [Super Mario Galaxy](dm/games/010099C022B96000/README.md) | 1.3.1 |
-| [Super Mario Galaxy 2](dm/games/0100FD8022DAA000/README.md) | 1.4.0 |
-| [Super Mario Odyssey](dm/games/0100000000010000/README.md) | 1.4.1 |
-| [Super Smash Bros. Ultimate](dm/games/01006A800016E000/README.md) | 13.0.5 |
-| [Taiko Risshiden V DX](dm/games/0100346017304000/README.md) | 1.1.1 |
-| [The Great Ace Attorney Chronicles](dm/games/010036E00FB20000/README.md) | 1.0.0 (base) |
-| [The Legend of Zelda: Breath of the Wild](dm/games/01007EF00011E000/README.md) | 1.9.0 |
-| [The Legend of Zelda: Echoes of Wisdom](dm/games/01008CF01BAAC000/README.md) | 1.1.0 |
-| [The Legend of Zelda: Link's Awakening](dm/games/01006BB00C6F0000/README.md) | 1.1.0 |
-| [The Legend of Zelda: Tears of the Kingdom](dm/games/0100F2C0115B6000/README.md) | 1.4.3 |
-| [Unicorn Overlord](dm/games/010069401ADB8000/README.md) | 1.05 |
+- [Guía de comandos e instalación detallada](README-comandos.md).
+- [Automatización y solución de problemas](docs/personal-ios.md).
+- [Revisión de los PR de upstream](docs/personal-pr-review.md).
+- [README anterior y créditos completos](README-original.md).
 
 </details>
 
-La región y versión del juego importan. Un título sin perfil puede recibir una compilación provisional y aun así no arrancar. Los PR de juegos nuevos que sólo revisamos no están incluidos automáticamente; consulta [la revisión de PR](docs/personal-pr-review.md).
-
-## Preparar el Mac
-
-Necesitas:
-
-- Un Mac con **Xcode completo** instalado y abierto al menos una vez, y SDK de iOS 26 o posterior.
-- [Homebrew](https://brew.sh) instalado. El script instala las demás herramientas que falten.
-- Un iPhone con **A17 Pro o posterior**, o iPad con **M1 o posterior**, y **iOS/iPadOS 26 o posterior**, según los requisitos de esta base. El soporte para otros chips no se incorporó desde los PR revisados.
-- Tus archivos del juego y `prod.keys`, en una carpeta fuera del repositorio.
-- Espacio para los archivos originales, la extracción, cachés, la IPA completa y otra copia de `romfs`.
-- [Sideloadly](https://sideloadly.io) para firmar e instalar con tu cuenta Apple personal.
-
-En un Mac nuevo, descarga nuestra copia privada. Debes tener acceso con tu cuenta GitHub:
-
-```sh
-git clone https://github.com/nalancer08/nxnative-personal.git
-cd nxnative-personal
-```
-
-**Si ya tienes nuestra copia en este Mac, abre Terminal en esa carpeta y omite el clonado.** No clones de nuevo el repositorio original para compilar: esa copia no tendría nuestro editor ni estos scripts.
-
-## Compilar fácilmente
-
-### Opción 1: un comando y selector de carpeta
-
-Desde la carpeta del repositorio:
-
-```sh
-bash scripts/prepare_ios.sh
-```
-
-Selecciona la carpeta que contiene un solo juego con sus actualizaciones. El script pide `prod.keys` si no está en esa carpeta, prepara las herramientas, compila y separa los datos automáticamente.
-
-### Opción 2: indicar la carpeta
-
-Cambia la ruta del ejemplo por la tuya y conserva las comillas:
-
-```sh
-bash scripts/prepare_ios.sh "/Volumes/Juegos/MetroidDread"
-```
-
-La carpeta puede tener esta estructura; no cambies las extensiones de los archivos:
-
-```text
-MetroidDread/
-  juego-base.nsp
-  actualizacion.nsp
-  prod.keys
-```
-
-También se admiten XCI y, con soporte adicional instalado por el script, NSZ/XCZ. Usa una carpeta distinta para cada juego. Por defecto se selecciona la actualización más reciente presente; puedes fijar una con `--package`.
-
-### Opción 3: doble clic
-
-Abre **`scripts/Build-iPhone.command`** desde Finder. Ejecuta el mismo flujo y te pide la carpeta. En nuestro Mac también está el acceso `Preparar-juego-iPhone.command` en Descargas.
-
-### Qué obtienes
-
-Al terminar, la consola muestra las rutas exactas. Junto al juego encontrarás:
-
-```text
-nxnative-ios-FECHA-unsigned.ipa             ← copia completa, se conserva
-nxnative-ios-FECHA-unsigned-light-XXXX/
-  nxnative-ios-FECHA-unsigned-light.ipa     ← instala ESTA con Sideloadly
-  romfs/                                  ← datos del juego para Finder
-  INSTALL.txt
-nxnative-ios.json                         ← identidad y opciones de futuras compilaciones
-```
-
-Los nombres incluyen fecha y una parte única. La IPA ligera de Dread mide aproximadamente **57 MB**; sus datos van aparte. Otros juegos pueden tener tamaños distintos.
-
-El proceso conserva las salidas anteriores y reutiliza las cachés válidas. **La IPA se genera sin firmar**: la cuenta Apple se usa después, dentro de Sideloadly. No se suben juegos, llaves ni partidas a GitHub.
-
-## Instalar con Sideloadly
-
-1. Descarga y abre [Sideloadly](https://sideloadly.io) en el Mac.
-2. Conecta el iPhone por USB, desbloquéalo y acepta **Confiar** si lo solicita.
-3. Selecciona tu iPhone en Sideloadly y arrastra la **IPA que termina en `-light.ipa`**.
-4. Usa tu **cuenta Apple personal**, la misma que utilizaste si estás actualizando una instalación existente. En este proyecto no usamos cuentas ni equipos de empresa.
-5. Pulsa **Start** y completa la autenticación que solicite Sideloadly.
-6. Si el iPhone lo solicita, activa **Ajustes → Privacidad y seguridad → Modo de desarrollador**. Para un desarrollador no confiable, revisa **Ajustes → General → VPN y gestión de dispositivos** y autoriza la cuenta con la que firmaste.
-
-Consulta las instrucciones vigentes y los errores en la [FAQ oficial de Sideloadly](https://sideloadly.io/faq). Con cuenta gratuita, la firma normalmente dura **7 días**; Sideloadly también ofrece renovación automática cuando su configuración y conexión lo permiten.
-
-### Copiar los datos con Finder: primera instalación
-
-1. En Finder, selecciona el **iPhone → Archivos → la app del juego**.
-2. Arrastra la carpeta **`romfs` completa** del resultado de compilación a los documentos de esa app y espera a que termine.
-3. Abre el juego. Si ya estaba abierto, ciérralo por completo y ábrelo otra vez.
-
-En Dread, la estructura dentro de la app debe ser `Documents/romfs/system/shd/...`. Evita `romfs/romfs`. En otros juegos el contenido cambia, pero el directorio que copias sigue siendo `romfs`.
-
-Si la app no aparece en Archivos de Finder, ábrela una vez y ciérrala; aún sin los datos puede fallar al arrancar. Copia `romfs` y vuelve a abrirla. [Guía de Apple para compartir archivos](https://support.apple.com/en-us/119585).
-
-## Actualizar sin perder partidas
-
-**Instala encima de la app existente. No la desinstales.** Desinstalar elimina sus documentos, partidas y datos copiados.
-
-- Usa la **misma cuenta Apple personal** y el **mismo bundle ID efectivo** de la instalación anterior. Si configuraste un identificador personalizado en Sideloadly, consérvalo.
-- Mantén `nxnative-ios.json`: nuestros scripts guardan ahí la identidad para siguientes compilaciones. Eso no sustituye los ajustes que Sideloadly haya aplicado al firmar.
-- Haz una copia de `save` desde los documentos de la app antes de cambiar de versión, cuando esté disponible y con el juego cerrado.
-- Una actualización del editor puede reutilizar el `romfs` del teléfono si los datos del juego siguen siendo idénticos. Una actualización del juego puede necesitar el nuevo `romfs`.
-- Para renovar una firma, vuelve a instalar la misma IPA con la misma identidad o usa la renovación de Sideloadly. [Referencia oficial sobre actualizar y conservar progreso](https://sideloadly.io/faq).
-
-### Recompilar sólo la app con los datos ya preparados
-
-Para cambios del editor u otros cambios de la app, cuando ya existen extracción, módulos reescritos y shaders válidos:
-
-```sh
-bash scripts/prepare_ios.sh "/Volumes/Juegos/MetroidDread" --app-only
-```
-
-Este modo no necesita llaves ni vuelve a extraer el juego. Recompila y vuelve a generar las IPA y una copia de `romfs`. Verifica las cachés; si no son válidas, se detiene. Para una versión de juego o cadena de shaders distinta, usa el comando normal.
-
-## Mover y ajustar los controles
-
-Dentro del juego toca **Edit controls**:
-
-1. Selecciona A, B, X, Y u otro control en el menú, o toca cerca de su centro.
-2. Arrastra fuera del panel para mover el seleccionado. **Show / hide tools** muestra u oculta el panel para acceder al área detrás.
-3. Ajusta **Size** entre 50–200% y **Opacity** entre 0–100%.
-4. **Save** guarda; **Cancel** descarta. **Reset control** restaura el seleccionado y **Reset all** restaura el layout; confirma con **Save**.
-
-Cada juego guarda sus propios acomodos de **2D y 3D**. Un control al 0% sigue recibiendo toques; el editor lo muestra parcialmente para encontrarlo. **El juego sigue corriendo mientras editas.** Conectar o desconectar un mando cancela los cambios de edición no guardados.
-
-## Si algo falla
-
-| Problema | Qué revisar |
-|---|---|
-| No hay NSP/XCI en la carpeta | Elige la carpeta que contiene los archivos directamente, no su carpeta padre. |
-| Faltan herramientas | Instala Xcode y Homebrew; ejecuta otra vez el preparador y revisa el primer error. |
-| Caché de shaders inválida en `--app-only` | Ejecuta el flujo normal para regenerar lo que haya cambiado. |
-| Sideloadly no detecta el iPhone | Desbloquéalo, revisa el cable USB y acepta Confiar en el Mac/iPhone. |
-| El juego no abre después de instalar | Comprueba que `romfs` se copió completo, la versión y los requisitos de la ficha del juego. |
-| El juego dejó de abrir días después | Revisa si venció la firma y renueva conservando la cuenta y el identificador. |
-| Error de compilación o pantalla incorrecta | Conserva el error y los logs de `<title ID>_build/logs/`; en el teléfono, busca `Documents/log.txt`. |
-
-Los mensajes de compilación se muestran en inglés. El nuevo preparador usa esta copia del código y no exige borrar tus modificaciones ni volver al checkout original.
-
-## Qué cambiamos en esta copia
-
-- Editor compartido de posición, tamaño y opacidad por control, con guardado por juego/layout.
-- Preparación de dependencias y compilación desde nuestra propia base.
-- Exportación automática de IPA ligera y `romfs`, validación de integridad y conservación de archivos anteriores.
-- Registro de identidad por juego y bloqueo de compilaciones simultáneas desde el wrapper.
-- Corrección del cálculo de espacio de extracción del PR #277.
-- [Revisión de 57 PR abiertos y 20 cambios posteriores](docs/personal-pr-review.md). Sólo #277 se integró desde esa revisión; los demás conservan decisiones y validaciones pendientes.
-
-Guías adicionales: [automatización detallada](docs/personal-ios.md) · [documentación de desarrollo](docs/development.md) · [README anterior con la galería y créditos completos](README-original.md).
-
-Este proyecto deriva de **seedds/nxnative** y conserva la [licencia MIT](LICENSE). Los créditos y licencias de sus componentes siguen en el [README anterior](README-original.md#acknowledgements) y en [third_party](dm/third_party/README.md). El repositorio no contiene los juegos ni sus llaves.
+Basado en [seedds/nxnative](https://github.com/seedds/nxnative), con nuestro editor de controles y automatización. Conservamos la [licencia MIT](LICENSE) y los [créditos originales](README-original.md#acknowledgements). Nuestros cambios pertenecen a la cuenta de GitHub **nalancer08**; los commits históricos de upstream conservan su autoría.

@@ -1,3 +1,15 @@
+# Desktop interface
+
+For daily use, open `nxnative.app`, choose a game folder and press **Preparar para iPhone**.
+The native macOS interface shows progress and provides buttons for the lightweight IPA,
+RomFS folder and Sideloadly. First-time setup still needs full Xcode, Homebrew and the
+user's game/key files. It never signs, installs or enters an Apple account.
+
+To create it on another Mac, double-click `scripts/Abrir-interfaz.command` from the
+checkout. Build outputs stay beside the repository, under `nxnative-easy/`; the local
+app points back to this checkout, so recreate it if the checkout is moved. The existing
+CLI remains available below. Cancellation signals the entire build process group.
+
 # Personal iOS builds
 
 This private branch retains nxnative's MIT license and attribution. It starts from
