@@ -3,13 +3,6 @@ import AppKit
 import Foundation
 import Darwin
 
-struct GameCard: Identifiable {
-    let id: String
-    let name: String
-    let symbol: String
-    let tint: Color
-}
-
 @MainActor final class BuildModel: ObservableObject {
     @Published var language: EasyLanguage = EasyLanguage.load() {
         didSet {language.save()}
@@ -31,14 +24,10 @@ struct GameCard: Identifiable {
     private var process: Process?
     private var cancelled = false
     let repo: URL
-    let cards: [GameCard] = [
-        .init(id:"dread",name:"Metroid Dread",symbol:"scope",tint:.orange),
-        .init(id:"wonder",name:"Super Mario Bros. Wonder",symbol:"sparkles",tint:.mint),
-        .init(id:"zelda",name:"Zelda: Breath of the Wild",symbol:"mountain.2",tint:.cyan)
-    ]
     init() {
         let configured = Bundle.main.object(forInfoDictionaryKey:"NxNativeSource") as? String ?? ""
         repo = URL(fileURLWithPath:configured)
+        refreshCatalog()
         if let path=UserDefaults.standard.string(forKey:"keysDirectory"), FileManager.default.fileExists(atPath:path+"/prod.keys") {
             keysFolder=URL(fileURLWithPath:path)
         }
@@ -48,9 +37,12 @@ struct GameCard: Identifiable {
         }
     }
     var gameName: String { folder?.lastPathComponent ?? text("Ningún juego seleccionado") }
-    func openCatalog() {
+    private func refreshCatalog() {
         do {catalog=try GameCatalog.load(repo:repo);catalogFailed=false}
         catch {catalog=[];catalogFailed=true}
+    }
+    func openCatalog() {
+        refreshCatalog()
         showCatalog=true
     }
     func chooseFolder() {
@@ -201,42 +193,43 @@ struct ContentView: View {
                         Text(model.text("Creamos la IPA. La instalas en tu iPhone con Sideloadly."))
                             .font(.system(size:14)).foregroundStyle(.secondary)
                     }
-                    HStack(spacing:12) {
-                        ForEach(model.cards) {card in
-                            VStack(alignment:.leading,spacing:7) {
-                                ZStack {
-                                    RoundedRectangle(cornerRadius:12).fill(card.tint.opacity(0.12))
-                                    Image(systemName:card.symbol).font(.system(size:29,weight:.light)).foregroundStyle(card.tint)
-                                }.frame(height:74)
-                                Text(card.name).font(.system(size:10,weight:.medium)).foregroundStyle(ink).lineLimit(1)
-                            }.frame(maxWidth:.infinity)
+                    VStack(alignment:.leading,spacing:10) {
+                        Text(model.text("Juegos con soporte en la herramienta"))
+                            .font(.system(size:14,weight:.semibold)).foregroundStyle(ink)
+                        Text(model.text("No incluye ni descarga juegos. Debes añadir tus propios archivos."))
+                            .font(.system(size:12)).foregroundStyle(.secondary)
+                        ScrollView(.horizontal,showsIndicators:true) {
+                            LazyHStack(spacing:12) {
+                                ForEach(Array(model.catalog.enumerated()),id:\.element.id) { index, game in
+                                    let tint: Color = [.orange,.mint,.cyan,.purple,.pink][index % 5]
+                                    VStack(alignment:.leading,spacing:7) {
+                                        ZStack {
+                                            RoundedRectangle(cornerRadius:12).fill(tint.opacity(0.12))
+                                            Image(systemName:"gamecontroller").font(.system(size:29,weight:.light)).foregroundStyle(tint)
+                                        }.frame(height:66)
+                                        Text(game.name).font(.system(size:11,weight:.medium))
+                                            .foregroundStyle(ink).lineLimit(2).frame(height:30,alignment:.topLeading)
+                                    }.frame(width:165)
+                                }
+                            }.padding(.bottom,8)
                         }
                         Button {model.openCatalog()} label: {
-                            VStack(alignment:.leading,spacing:7) {
-                                ZStack {
-                                    RoundedRectangle(cornerRadius:12).fill(lime.opacity(0.12))
-                                    Image(systemName:"square.grid.2x2").font(.system(size:28,weight:.light)).foregroundStyle(lime)
-                                }.frame(height:74)
-                                HStack {
-                                    Text(model.text("Ver todos")).font(.system(size:10,weight:.semibold))
-                                    Spacer()
-                                    Image(systemName:"arrow.up.right").font(.system(size:10))
-                                }.foregroundStyle(ink)
-                            }.frame(maxWidth:.infinity)
-                        }.buttonStyle(.plain).accessibilityIdentifier("view-all-games")
+                            Label(model.text("Ver todos"),systemImage:"magnifyingglass")
+                                .font(.system(size:12,weight:.semibold))
+                        }.buttonStyle(.plain).foregroundStyle(lime).accessibilityIdentifier("view-all-games")
                     }
                     VStack(alignment:.leading,spacing:18) {
                         HStack(spacing:12) {
                             Image(systemName:"folder.fill").font(.system(size:24)).foregroundStyle(lime)
                             VStack(alignment:.leading,spacing:4) {
-                                Text(model.folder == nil ? model.text("Carpeta del juego") : model.gameName)
+                                Text(model.folder == nil ? model.text("Carpeta de tu juego") : model.gameName)
                                     .font(.system(size:16,weight:.semibold)).foregroundStyle(ink)
                                 if model.folder == nil {
                                     Text(model.text("Con el juego base y sus actualizaciones.")).font(.system(size:12)).foregroundStyle(.secondary)
                                 }
                             }
                             Spacer()
-                            Button(model.folder == nil ? model.text("Elegir") : model.text("Cambiar")) {model.chooseFolder()}.disabled(model.running).accessibilityLabel(model.text("Carpeta del juego"))
+                            Button(model.folder == nil ? model.text("Elegir") : model.text("Cambiar")) {model.chooseFolder()}.disabled(model.running).accessibilityLabel(model.text("Carpeta de tu juego"))
                         }
                         HStack(spacing:12) {
                             Image(systemName:"key.horizontal").font(.system(size:19)).foregroundStyle(lime).frame(width:24)

@@ -12,6 +12,9 @@ enum EasyLanguage: String, CaseIterable {
 
 struct EasyStrings {
     static let english: [String:String] = [
+        "Juegos con soporte en la herramienta": "Supported game profiles",
+        "No incluye ni descarga juegos. Debes añadir tus propios archivos.": "No games are included or downloaded. You must add your own files.",
+        "Carpeta de tu juego": "Your game folder",
         "Descargar Sideloadly": "Get Sideloadly",
         "Enviar a Sideloadly": "Send to Sideloadly",
         "Prepara tu juego.": "Prepare your game.",
