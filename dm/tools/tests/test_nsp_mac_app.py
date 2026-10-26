@@ -99,8 +99,10 @@ class App(unittest.TestCase):
         (t / 'cache/b-0123456789ab/k_b.json').write_text('{}'); (t / 'cache/b-0123456789ab/k_b.metal').write_text('msl'); (t / 'cache/b-0123456789ab/_b_build.json').write_text('[]')
         (t / 'cache/cas').mkdir()   # the Metal compile cache: not for the app
         for n in ('shader_map.tsv', 'pso_manifest.tsv', 'c1_full.tsv', 'game.tsv'): (t / 'profile' / n).write_text(n)
+        (t / 'profile/shader_pairs.tsv').write_text('vertex-key\tpixel-key\n'); (t / 'profile/pso_pairs.tsv').write_text('other-vertex\tother-pixel\n')
         (t / 'font/nintendo_ext.ttf').write_bytes(b'ttf')
         (t / 'aoc/1/x').write_bytes(b'dlc')
+        (t / 'pso').mkdir(); (t / 'pso/applegpu_g14s.mtl4a').write_bytes(b'arch'); (t / 'pso/prebuilt.tsv').write_text('chain\t0123456789ab\n'); (t / 'pso/key.x').write_text('not for the app')
         (t / 'env.txt').write_text('# baked in\nDM_BAKED=1\nDM_BOTH=bundle\n')
         subprocess.run(['sips', '-s', 'format', 'jpeg', '-z', '256', '256', '/System/Library/CoreServices/CoreTypes.bundle/Contents/Resources/GenericApplicationIcon.icns',
                         '--out', t / 'icon.jpg'], check=True, capture_output=True)
@@ -109,7 +111,7 @@ class App(unittest.TestCase):
         (t / 'bin/osascript').chmod(0o755)
         cls.app = t / 'Game - Test.app'
         cls.args = pack_app.parse([str(cls.app), '--host', str(t / 'dmhost'), '--patched', str(t / 'patched'), '--romfs', str(t / 'romfs'), '--msl', str(t / 'cache/b-0123456789ab'),
-                                   '--tables', str(t / 'profile'), '--font', str(t / 'font'), '--aoc', str(t / 'aoc'), '--env-file', str(t / 'env.txt'), '--title-id', TID.lower(),
+                                   '--tables', str(t / 'profile'), '--font', str(t / 'font'), '--aoc', str(t / 'aoc'), '--pso', str(t / 'pso'), '--env-file', str(t / 'env.txt'), '--title-id', TID.lower(),
                                    '--name', 'Game: Test', '--version', '1.0.1', '--lang', 'fr', '--marker', 'region_common/audio/edward.bfsar', '--icon', str(t / 'icon.jpg'),
                                    '--category', 'public.app-category.games'])
         with contextlib.redirect_stdout(io.StringIO()): pack_app.pack(cls.args)
@@ -134,13 +136,29 @@ class App(unittest.TestCase):
         self.assertFalse(self.app.with_name(self.app.name + '.partial').exists())
         self.assertEqual(sorted(p.name for p in (c / 'MacOS').iterdir()), ['dmhost', 'nxnative'])
         self.assertEqual(sorted(p.name for p in (c / 'Resources/dm').iterdir()),
-                         ['c1_full.tsv', 'env.txt', 'font', 'main.cuts.tsv', 'main.fixups.tsv', 'main.gates.tsv', 'main.obs.tsv', 'main.patched.bin', 'pso_manifest.tsv', 'shader_map.tsv'])
+                         ['c1_full.tsv', 'env.txt', 'font', 'main.cuts.tsv', 'main.fixups.tsv', 'main.gates.tsv', 'main.obs.tsv', 'main.patched.bin', 'pso_manifest.tsv', 'pso_pairs.tsv',
+                          'shader_map.tsv', 'shader_pairs.tsv'])   # the shader pairs: the pipeline prebuild's, without which hybrid draws have no stand-in
         self.assertEqual([p.name for p in (c / 'Resources/msl').iterdir()], ['b-0123456789ab'])   # the libraries only, not the compile cache
         self.assertEqual(sorted(p.name for p in (c / 'Resources/msl/b-0123456789ab').iterdir()), ['inputs.tsv', 'k_b.json', 'k_b.metallib'])
         self.assertEqual((c / 'Resources/msl/b-0123456789ab/k_b.metallib').read_bytes(), b'lib')
         self.assertTrue((c / 'Resources/romfs/region_common/audio/edward.bfsar').is_file())
         self.assertTrue((c / 'Resources/aoc/1/x').is_file()); self.assertTrue((c / 'Resources/dm/font/nintendo_ext.ttf').is_file())
+        self.assertEqual(sorted(p.name for p in (c / 'Resources/pso').iterdir()), ['applegpu_g14s.mtl4a', 'prebuilt.tsv'])   # the pipeline archive and its stamp only
         self.assertEqual((c / 'Resources/AppIcon.icns').read_bytes()[:4], b'icns')
+
+    def test_pipeline_pair_tables(self):   # the pipeline prebuild reads them beside DM_NVN_SHMAP: without them it builds nothing, though every shader library is there
+        dm = self.app / 'Contents/Resources/dm'
+        self.assertEqual((dm / 'shader_pairs.tsv').read_text(), 'vertex-key\tpixel-key\n')
+        self.assertEqual((dm / 'pso_pairs.tsv').read_text(), 'other-vertex\tother-pixel\n')
+
+    def test_split_pso_pairs(self):   # a profile without pso_pairs.tsv: the shader split's copy (--pso-pairs); the profile's own wins when it has one
+        with tempfile.TemporaryDirectory() as d, mock.patch.object(pack_app, 'sign', lambda *a: None), mock.patch('sys.stdout'):
+            d = Path(d); (d / 'profile').mkdir(); (d / 'profile/shader_map.tsv').write_text('m'); (d / 'split.tsv').write_text('split-vertex\tsplit-pixel\n')
+            a = types.SimpleNamespace(**vars(self.args)); a.out = str(self.tmp / 'Split.app'); a.icon = None; a.tables = str(d / 'profile'); a.pso_pairs = str(d / 'split.tsv')
+            pack_app.pack(a)
+            self.assertEqual((self.tmp / 'Split.app/Contents/Resources/dm/pso_pairs.tsv').read_text(), 'split-vertex\tsplit-pixel\n')
+            a.out = str(self.tmp / 'Own.app'); a.tables = self.args.tables; pack_app.pack(a)
+            self.assertEqual((self.tmp / 'Own.app/Contents/Resources/dm/pso_pairs.tsv').read_text(), 'other-vertex\tother-pixel\n')
 
     def test_info_plist(self):
         p = plistlib.loads((self.app / 'Contents/Info.plist').read_bytes())
@@ -162,6 +180,7 @@ class App(unittest.TestCase):
         self.assertEqual(r['argv0'], str(self.app / 'Contents/MacOS/dmhost')); self.assertEqual(r['argv1'], str(res / 'dm'))
         self.assertEqual((r['DM_ROMFS'], r['DM_MSL_DIR'], r['DM_NVN_SHMAP'], r['DM_FONT_DIR'], r['DM_AOC_DIR']),
                          (str(res / 'romfs'), str(res / 'msl'), str(res / 'dm/shader_map.tsv'), str(res / 'dm/font'), str(res / 'aoc')))
+        self.assertEqual(r['DM_PSO_BUNDLE'], str(res / 'pso'))   # the pipeline archive made offline, as the iOS app's main.m sets it
         self.assertEqual((r['DM_SAVE'], r['DM_TEMP'], r['DM_ROOT'], r['cwd']), (str(sup / 'save'), str(sup / 'temp'), str(sup), str(sup)))   # pso_user.tsv goes beside save/
         self.assertEqual((r['DM_WINDOW'], r['DM_AUDIO'], r['DM_LANG']), ('1', '1', 'ja'))   # the caller's DM_LANG wins over the packed language
         self.assertEqual((r['DM_BAKED'], r['DM_BOTH']), ('1', 'player'))   # the player's env.txt before the bundle's
@@ -244,6 +263,23 @@ class App(unittest.TestCase):
                 pack_app.pack(a)
             self.assertFalse(Path(a.out).exists())
 
+    def test_pack_bad_archive(self):   # a pipeline archive folder without its archive or stamp is refused before anything is copied
+        with tempfile.TemporaryDirectory() as src:
+            src = Path(src); (src / 'prebuilt.tsv').write_text('chain\t0123456789ab\n')
+            a = types.SimpleNamespace(**vars(self.args)); a.pso = str(src); a.out = str(self.tmp / 'NoArchive.app')
+            with contextlib.redirect_stdout(io.StringIO()) as o, self.assertRaisesRegex(SystemExit, 'no pipeline archive with its prebuilt.tsv'):
+                pack_app.pack(a)
+            self.assertEqual(o.getvalue(), ''); self.assertFalse(Path(a.out).exists())
+
+    def test_copies_count_archive(self):   # another volume: the archive's bytes count in the free-space check, which runs before anything is copied
+        a = types.SimpleNamespace(**vars(self.args)); a.out = str(self.tmp / 'Full.app')
+        msls = sum(p.stat().st_size for pat in pack_app.MSL_FILES for p in Path(a.msl).glob(pat) if p.is_file() and p.name != '_b_build.json')
+        pso = sum(p.stat().st_size for pat in pack_app.PSO_FILES for p in Path(a.pso).glob(pat))
+        with mock.patch.object(pack_app, 'can_clone', lambda *a: False), mock.patch.object(pack_app, 'tree_bytes', lambda d: 0), \
+             mock.patch.object(shutil, 'disk_usage', lambda p: types.SimpleNamespace(free=(1 << 30) + msls + pso - 1)), contextlib.redirect_stdout(io.StringIO()) as o:
+            with self.assertRaisesRegex(SystemExit, 'the app needs'): pack_app.pack(a)
+        self.assertEqual(o.getvalue(), ''); self.assertFalse(Path(a.out).exists())
+
     def test_copies(self):   # another volume (no APFS clone): plain copies, the same layout; a new app replaces the old one whole
         with mock.patch.object(pack_app, 'can_clone', lambda *a: False), mock.patch.object(pack_app, 'sign', lambda *a: None), mock.patch('sys.stdout'):
             a = types.SimpleNamespace(**vars(self.args)); a.out = str(self.tmp / 'Copy.app'); a.icon = None
@@ -263,25 +299,60 @@ class Script(unittest.TestCase):
         self.assertEqual(nsp.mac_app_name('AC/DC'), 'AC - DC'); self.assertEqual(nsp.mac_app_name(':'), 'nxnative')
 
     def pack_cmd(self, gfx, **kw):
-        ran, tmp = [], Path(tempfile.mkdtemp()); self.addCleanup(shutil.rmtree, tmp)
-        out = tmp / 'G.app'
+        ran, tmp = [], Path(tempfile.mkdtemp()); self.addCleanup(shutil.rmtree, tmp); self.said = []
+        if kw.get('work'): tmp = kw['work']
+        out = tmp / 'G.app'; shutil.rmtree(out, ignore_errors=True)
         def fake_run(cmd, log, env=None, cwd=None, on_line=None):
-            ran.append([str(c) for c in cmd]); (out / 'Contents/MacOS').mkdir(parents=True); (out / 'Contents/MacOS/dmhost').write_bytes(b'x')
+            ran.append([str(c) for c in cmd])
+            if not on_line:   # pso_offline.py: its archive, or none when every eligible pair has function constants
+                o = Path(cmd[cmd.index('--out') + 1]); o.mkdir(parents=True, exist_ok=True)
+                if not kw.get('no_bases'): (o / f'{cmd[cmd.index("--gpu") + 1]}.mtl4a').write_bytes(b'arch')
+                return
+            (out / 'Contents/MacOS').mkdir(parents=True); (out / 'Contents/MacOS/dmhost').write_bytes(b'x')
             on_line('step: launcher and host (clones of the game files)')
         g = types.SimpleNamespace(table=lambda n: tmp / 'profile' / n, get={'app_category': 'public.app-category.games', 'romfs_marker': 'a/b'}.get)
-        with mock.patch.object(nsp, 'run', fake_run), mock.patch.object(nsp, 'PROG', mock.Mock()), mock.patch.object(nsp, 'chain_of', lambda repo: '0123456789ab'):
+        g.id = '01008CF01BAAC000'
+        with mock.patch.object(nsp, 'run', fake_run), mock.patch.object(nsp, 'PROG', mock.Mock()), mock.patch.object(nsp, 'chain_of', lambda repo: '0123456789ab'), \
+             mock.patch.object(nsp, 'mac_gpu_arch', lambda *a: 'applegpu_g14s'), mock.patch.object(nsp, 'say', self.said.append):
             clones = nsp.mac_app(sys.executable, REPO, out, 0x01008CF01BAAC000, tmp, tmp / 'ex', tmp / 'patched', tmp / 'dmhost', tmp / 'font', tmp / 'shader/cache' if gfx == 'nvn' else tmp / 'shader',
-                                 kw.get('aoc'), gfx, 'en-US', g, 'Game', '1.0.0', 'org.nxnative.01008cf01baac000', None, kw.get('sign', ''), {}, tmp)
+                                 kw.get('aoc'), gfx, 'en-US', g, 'Game', '1.0.0', 'org.nxnative.01008cf01baac000', None, kw.get('sign', ''), {}, tmp, gpus=kw.get('gpus', ''))
         self.assertTrue(clones)
-        c = ran[0]; return {c[i]: c[i + 1] for i in range(3, len(c) - 1) if c[i].startswith('--')}, tmp
+        self.pso_cmd = ran[0] if len(ran) > 1 else None   # pso_offline.py, before the packer
+        c = ran[-1]; return {c[i]: c[i + 1] for i in range(3, len(c) - 1) if c[i].startswith('--')}, tmp
 
     def test_pack_command(self):
+        o, tmp = self.pack_cmd('nvn')
+        self.assertNotIn('--pso-pairs', o)   # no split copy
+        (tmp / 'shader').mkdir(); (tmp / 'shader/pso_pairs.tsv').write_text('v\tf\n')
+        o, tmp2 = self.pack_cmd('nvn', work=tmp)
+        self.assertEqual(o['--pso-pairs'], str(tmp / 'shader/pso_pairs.tsv'))   # the profile has no pso_pairs.tsv: the split's copy goes in
         o, tmp = self.pack_cmd('nvn')
         self.assertEqual((o['--msl'], o['--romfs'], o['--tables'], o['--title-id'], o['--sign'], o['--marker']),
                          (str(tmp / 'shader/cache/b-0123456789ab'), str(tmp / 'ex/RomFS'), str(tmp / 'profile'), TID, '-', 'a/b'))
         self.assertNotIn('--aoc', o); self.assertNotIn('--icon', o)
+        self.assertNotIn('--pso', o)   # no shader pairs: no pipeline archive
         o, tmp = self.pack_cmd('vulkan', aoc=Path('/x/aoc'), sign='Developer ID Application: X (T)')
         self.assertEqual((o['--msl'], o['--aoc'], o['--sign']), (str(tmp / 'shader/vk'), '/x/aoc', 'Developer ID Application: X (T)'))
+
+    def test_pso_archive(self):   # an NVN game with shader pairs: its pipeline archive for this Mac's GPU, made by pso_offline.py, goes into the app
+        tmp = Path(tempfile.mkdtemp()); self.addCleanup(shutil.rmtree, tmp)
+        (tmp / 'profile').mkdir(); (tmp / 'profile/shader_pairs.tsv').write_text('v\tf\n')
+        o, _ = self.pack_cmd('nvn', work=tmp)
+        self.assertEqual(o['--pso'], str(tmp / 'pso/mac'))
+        p = self.pso_cmd; self.assertTrue(p[1].endswith('dm/gfx/tools/pso_offline.py'))
+        self.assertEqual({p[i]: p[i + 1] for i in range(2, len(p) - 1) if p[i].startswith('--')},
+                         {'--game': '01008CF01BAAC000', '--msl': str(tmp / 'shader/cache/b-0123456789ab'), '--out': str(tmp / 'pso/mac'), '--work': str(tmp / 'pso/mac-work'),
+                          '--gpu': 'applegpu_g14s', '--platform': 'macos'})
+        self.assertFalse(any('does not name this Mac' in m for m in self.said))
+        o, _ = self.pack_cmd('nvn', work=tmp, gpus='g18p')   # PSO_GPUS set for the IPA: built as asked, with a note that this Mac's app builds its own bases
+        self.assertEqual(o['--pso'], str(tmp / 'pso/mac'))
+        self.assertTrue(any('does not name this Mac\'s GPU (applegpu_g14s)' in m for m in self.said))
+        o, _ = self.pack_cmd('nvn', work=tmp, gpus='applegpu_g14s,g18p'); self.assertFalse(any('does not name this Mac' in m for m in self.said))
+        o, _ = self.pack_cmd('nvn', work=tmp, gpus='none')
+        self.assertNotIn('--pso', o); self.assertIsNone(self.pso_cmd)   # --gpu none: no archive, the app builds its bases on its first start
+        shutil.rmtree(tmp / 'pso')
+        o, _ = self.pack_cmd('nvn', work=tmp, no_bases=True)   # every eligible pair has function constants: pso_offline.py makes no archive, the app is packed without one
+        self.assertNotIn('--pso', o); self.assertIsNotNone(self.pso_cmd)
 
 
 if __name__ == '__main__':

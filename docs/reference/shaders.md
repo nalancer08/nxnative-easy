@@ -697,6 +697,14 @@ shader on a GPU.
 
 ## Pipelines and caches
 
+### Shader-pair tables in a Mac app
+
+- **Symptom:** a self-contained Mac app (`--platform mac-app`) logs `pipeline prebuild: no .../Resources/dm/shader_pairs.tsv, nothing to build` although every shader library is there; it draws no hybrid stand-ins, and each pipeline seen for the first time compiles on the submit thread (frames of 100–550 ms).
+- **Cause:** `dm/mac/pack_app.py` copied the shader map, the prewarm manifest, `c1_full.tsv` and `cb_extent.tsv` beside `DM_NVN_SHMAP`, but not `shader_pairs.tsv` and `pso_pairs.tsv`, which `build_ipa.sh` copies into the IPA and the host's pipeline prebuild reads there (`pso_prebuild`). Without them the app makes no pulling bases. For a profile without `pso_pairs.tsv` a Mac run (`mac_run`) passes the shader split's copy as `DM_PSO_PAIRS`; the app had neither. A full shader-library build does not build the pipeline bases by itself.
+- **Fix:** the packer copies both tables when the profile has them, and the split's `pso_pairs.tsv` (`--pso-pairs`, which the NSP script passes) when the profile has none. They stay optional. An app packed before the fix needs repacking. An NVN game's app also carries its pipeline archive made offline for this Mac's GPU, so the first start builds no base: [A Mac app](../development.md#a-mac-app).
+- **Found on:** [The Legend of Zelda: Echoes of Wisdom](../../dm/games/01008CF01BAAC000/README.md#rendering-and-shaders), update 1.1.0: a 308.4 ms frame, 283.5 ms of it pipeline acquisition and 5.9 ms GPU work; with the tables the offline prebuild built all 7,495 bases. [The Legend of Zelda: Breath of the Wild](../../dm/games/01007EF00011E000/README.md#pipelines-on-a-cold-start): frames of 100–546 ms before, none of its bases compiled on the first start after.
+- **Check:** `test_nsp_mac_app`: `App.test_pipeline_pair_tables`, `App.test_split_pso_pairs` and `App.test_layout` fail without the tables in the packer; `Script.test_pack_command` checks the split's copy is passed only when the profile has no `pso_pairs.tsv`.
+
 ### Offline pipeline archive reuse and fallback
 
 - **Symptom:** a truncated `.mtl4a` reaches `MTL4ArchiveImpl::loadFromURL`; the bundle reports coverage with `0 of 0 probed bases found`; rebuilt shader libraries reuse an archive of their old binaries; or packing fails with `pso_offline: no base to build` when every eligible pair has function constants.

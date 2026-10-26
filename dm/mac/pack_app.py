@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 # Pack a self-contained, double-clickable Mac app of a game (the NSP script's --platform mac-app): the launcher (dm/mac/launcher.c, compiled here) as CFBundleExecutable, the Mac host beside it,
 # and in Contents/Resources what the IPA carries (dm/ios/tools/build_ipa.sh): romfs/ (the RomFS), msl/<b-chain | vk | gl>/ (the Mac shader libraries, the folder named as in the IPA),
-# aoc/<index>/ (DLC), and dm/ (the rewritten modules and their rewriter tables, nro.tsv, the profile's shader_map.tsv / pso_manifest.tsv / c1_full.tsv / cb_extent.tsv, font/, env.txt),
+# aoc/<index>/ (DLC), pso/ (an NVN game's pipeline archive made offline for this Mac's GPU, dm/gfx/tools/pso_offline.py: the launcher hands it to the host as DM_PSO_BUNDLE),
+# and dm/ (the rewritten modules and their rewriter tables, nro.tsv, the profile's shader_map.tsv / pso_manifest.tsv / c1_full.tsv / cb_extent.tsv / shader_pairs.tsv / pso_pairs.tsv, font/, env.txt),
 # plus AppIcon.icns from the game's icon (sips, iconutil) and the Info.plist keys the launcher reads (DMTitleID, DMRomfsMarker, DMLanguage).
 # The large folders are APFS clones (cp -c) when the app is on the same APFS volume as the build, so they take no space; plain copies otherwise.
 # Signing: the inner host first, then the bundle (codesign --force --sign <identity>; '-' = ad-hoc), without the hardened runtime: the host maps the game's code executable, which the hardened
@@ -14,7 +15,10 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 MODULE_FILES = ('*.patched.bin', '*.fixups.tsv', '*.gates.tsv', '*.cuts.tsv', '*.obs.tsv', 'nro.tsv')   # what the host reads from the module folder (build_ipa.sh copies the same tables)
 MSL_FILES = ('*.metallib', '*.json', '*.tsv')   # what the host reads from msl/ (not the Mac build's .metal sources or _b_build.json)
-TABLES = ('shader_map.tsv', 'pso_manifest.tsv', 'c1_full.tsv', 'cb_extent.tsv')   # read beside DM_NVN_SHMAP; any of them may be absent (a Vulkan or GL game has no c1_full.tsv)
+# read beside DM_NVN_SHMAP; any of them may be absent (a Vulkan or GL game has no c1_full.tsv). The shader pairs are the pipeline prebuild's (nvn_mtl.m pso_prebuild): without them the
+# app makes no pulling bases, a hybrid draw has no stand-in and a new pipeline compiles on the submit thread (build_ipa.sh copies them into the IPA the same way)
+TABLES = ('shader_map.tsv', 'pso_manifest.tsv', 'c1_full.tsv', 'cb_extent.tsv', 'shader_pairs.tsv', 'pso_pairs.tsv')
+PSO_FILES = ('*.mtl4a', 'prebuilt.tsv', 'rest_pairs.tsv', 'archive.tsv')   # what the app takes of pso_offline.py's output folder
 EXE = 'nxnative'   # the launcher's file name (Contents/MacOS/nxnative)
 ICON_SIZES = (16, 32, 128, 256, 512)
 
@@ -113,9 +117,11 @@ def pack(a):
     if a.marker and not (romfs / a.marker).exists(): raise SystemExit(f'no RomFS at {romfs} (missing {a.marker})')
     msls = sorted(p for pat in MSL_FILES for p in msl.glob(pat) if p.is_file() and p.name != '_b_build.json') if msl.is_dir() else []
     if not any(p.suffix == '.metallib' for p in msls): raise SystemExit(f'no shader libraries at {msl}')
-    clone = can_clone(romfs, res)
-    if not clone:
-        need = sum(tree_bytes(d) for d in [romfs] + ([aoc] if aoc else [])) + sum(p.stat().st_size for p in msls)
+    pso = sorted({p for pat in PSO_FILES for p in Path(a.pso).glob(pat)}) if a.pso else []
+    if a.pso and (not any(p.suffix == '.mtl4a' for p in pso) or not (Path(a.pso) / 'prebuilt.tsv').is_file()): raise SystemExit(f'no pipeline archive with its prebuilt.tsv in {a.pso}')
+    clone = can_clone(romfs, res); pso_clone = bool(pso) and can_clone(Path(a.pso), res)
+    if not clone or (pso and not pso_clone):
+        need = (0 if clone else sum(tree_bytes(d) for d in [romfs] + ([aoc] if aoc else [])) + sum(p.stat().st_size for p in msls)) + (0 if pso_clone else sum(p.stat().st_size for p in pso))
         free = shutil.disk_usage(res).free
         if need + (1 << 30) > free: raise SystemExit(f'the app needs {need / 2**30:.1f} GB on the volume of {out.parent} (no APFS clones from the build there) and {free / 2**30:.1f} GB are free')
     step(f'launcher and host ({"clones" if clone else "copies"} of the game files)')
@@ -130,11 +136,13 @@ def pack(a):
     copy(mods, dm, clone)
     tables = [Path(a.tables) / n for n in TABLES if (Path(a.tables) / n).is_file()]
     if tables: copy(tables, dm, False)
+    if a.pso_pairs and not (dm / 'pso_pairs.tsv').is_file(): shutil.copyfile(a.pso_pairs, dm / 'pso_pairs.tsv')   # the split's copy, for a profile without the table
     fonts = sorted(Path(a.font).glob('*.ttf'))
     if fonts: copy(fonts, dm / 'font', False)
     if a.env_file: shutil.copyfile(a.env_file, dm / 'env.txt')
     step('shader libraries'); msl_dst = res / 'msl' / (a.msl_name or msl.name); msl_dst.mkdir(parents=True); copy(msls, msl_dst, clone)
     if aoc: step('add-on content'); copy([aoc], res / 'aoc', clone)
+    if pso: step('pipeline archive'); (res / 'pso').mkdir(); copy(pso, res / 'pso', pso_clone)
     step('game files'); copy([romfs], res / 'romfs', clone)
     icon = bool(a.icon and Path(a.icon).is_file())
     if icon: step('icon'); make_icns(a.icon, res / 'AppIcon.icns')
@@ -162,6 +170,8 @@ def parse(argv):
     ap.add_argument('--tables', required=True, help='the game profile folder (shader_map.tsv and the tables beside it)')
     ap.add_argument('--font', required=True, help='the folder of the shared-font stand-ins (nintendo_ext.ttf)')
     ap.add_argument('--aoc', help='the DLC RomFS folders by index')
+    ap.add_argument('--pso', help='the pipeline archive made offline for this Mac (pso_offline.py --platform macos output: <arch>.mtl4a, prebuilt.tsv)')
+    ap.add_argument('--pso-pairs', help='pso_pairs.tsv for a profile that has none (the shader split\'s copy)')
     ap.add_argument('--env-file', help='environment switches baked in (Resources/dm/env.txt)')
     ap.add_argument('--title-id', required=True); ap.add_argument('--name', required=True)
     ap.add_argument('--version'); ap.add_argument('--bundle-id'); ap.add_argument('--category'); ap.add_argument('--lang'); ap.add_argument('--marker', help='the profile\'s romfs_marker')
