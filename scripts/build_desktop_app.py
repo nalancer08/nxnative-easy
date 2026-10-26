@@ -8,6 +8,8 @@ import sys
 import tempfile
 import shutil
 import json
+import os
+import uuid
 
 REPO=Path(__file__).resolve().parents[1]
 
@@ -19,6 +21,33 @@ def main():
     output=args.output.expanduser().absolute()
     if output==REPO or REPO in output.parents:parser.error('Keep build outputs outside the repository.')
     if output.suffix!='.app':parser.error('Output must end with .app')
+    output.parent.mkdir(parents=True,exist_ok=True)
+    # Compile beside the destination. A compiler/signing failure must preserve the installed app.
+    with tempfile.TemporaryDirectory(prefix='.nxnative-build-',dir=output.parent) as temporary:
+        staged=Path(temporary)/output.name
+        build_bundle(staged)
+        subprocess.run(['codesign','--verify','--deep','--strict',str(staged)],check=True)
+        install_bundle(staged,output)
+    if args.open:subprocess.run(['open',str(output)],check=True)
+    print(output)
+
+def install_bundle(staged,output):
+    if not output.exists():
+        os.replace(staged,output)
+        return
+    info=plistlib.loads((output/'Contents/Info.plist').read_bytes())
+    if info.get('CFBundleIdentifier')!='com.nalancer08.nxnative.easy':
+        raise ValueError('The destination contains another app; it was preserved.')
+    backup=output.with_name('.'+output.name+'.previous-'+uuid.uuid4().hex[:10])
+    os.replace(output,backup)
+    try:
+        os.replace(staged,output)
+    except BaseException:
+        os.replace(backup,output)
+        raise
+
+
+def build_bundle(output):
     contents=output/'Contents';macos=contents/'MacOS';macos.mkdir(parents=True,exist_ok=True)
     subprocess.run(['xcrun','swiftc','-parse-as-library','-swift-version','5',
         str(REPO/'desktop/NxNativeEasy/main.swift'),str(REPO/'desktop/NxNativeEasy/Localization.swift'),str(REPO/'desktop/NxNativeEasy/GameCatalog.swift'),str(REPO/'desktop/NxNativeEasy/ControllerMonitor.swift'),str(REPO/'desktop/NxNativeEasy/ControllerTest.swift'),str(REPO/'desktop/NxNativeEasy/UpdateRelease.swift'),str(REPO/'desktop/NxNativeEasy/AppUpdater.swift'),'-o',str(macos/'NxNativeEasy'),
@@ -40,7 +69,5 @@ def main():
     (contents/'Info.plist').write_bytes(plistlib.dumps(info))
     # Explicit ad-hoc signing: '-' never selects an Apple certificate or team.
     subprocess.run(['codesign','--force','--sign','-','--timestamp=none',str(output)],check=True)
-    if args.open:subprocess.run(['open',str(output)],check=True)
-    print(output)
 
 if __name__=='__main__':main()

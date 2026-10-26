@@ -58,7 +58,7 @@ La actualización usa una carpeta separada y guarda la app anterior como respald
 
 ![Aviso de actualización dentro de la app](docs/images/nxnative-update-es-v1.4.png)
 
-**La app vieja de tu amigo todavía no tiene actualizador:** que ejecute una vez el comando de arriba o abra **START-HERE.command** para recibir esta versión. Las siguientes actualizaciones ya aparecerán dentro de la app.
+**¿Tienes la versión 1.3 o anterior?** Ejecuta una vez el comando de arriba o abre **START-HERE.command**. Las siguientes actualizaciones ya aparecerán dentro de la app.
 
 ## ¿Qué pasa al pulsar Preparar juego?
 

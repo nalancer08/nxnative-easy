@@ -7,6 +7,7 @@ case "${1:-}" in --check) nxe_check=1;; '') ;; *) echo 'Usage: bash install.sh [
 [ "$(uname -m)" = arm64 ] || { echo 'An Apple silicon Mac (M1 or newer) is required.' >&2; exit 1; }
 nxe_os=$(/usr/bin/sw_vers -productVersion)
 [ "${nxe_os%%.*}" -ge 26 ] || { echo 'Update this Mac to macOS 26 or newer first.' >&2; exit 1; }
+echo "[1/4] Checking your Mac and Xcode / Revisando tu Mac y Xcode…"
 nxe_developer=${DEVELOPER_DIR:-$(/usr/bin/xcode-select -p 2>/dev/null || true)}
 if [ ! -d "$nxe_developer/Platforms/MacOSX.platform" ]; then nxe_developer=/Applications/Xcode.app/Contents/Developer; fi
 if [ ! -d "$nxe_developer/Platforms/MacOSX.platform" ]; then
@@ -27,6 +28,7 @@ if [ "$nxe_check" -eq 1 ]; then
   if [ -n "$nxe_brew" ]; then echo 'Homebrew: ready.'; else echo 'Homebrew: will be installed by setup.'; fi
   exit 0
 fi
+echo "[2/4] Preparing Homebrew and source / Preparando Homebrew y código…"
 if [ -z "$nxe_brew" ]; then
   echo 'Installing Homebrew / Instalando Homebrew. It may request your Mac password.'
   /bin/bash -c "$(/usr/bin/curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
@@ -54,9 +56,9 @@ elif [ -d "$nxe_source/.git" ]; then
 else
   echo 'The setup folder already contains other files; preserved without changes.' >&2; exit 1
 fi
-echo 'Preparing tools / Preparando herramientas…'
+echo '[3/4] Preparing tools / Preparando herramientas…'
 /bin/bash "$nxe_source/scripts/prepare_ios.sh" --target mac --setup-only "$nxe_tools"
-echo 'Building your Mac app / Compilando tu app de Mac…'
+echo '[4/4] Building and verifying your Mac app / Compilando y verificando tu app…'
 "$nxe_tools/nxnative-tools/venv/bin/python" "$nxe_source/scripts/build_desktop_app.py" --output "$nxe_app"
 echo "Ready / Lista: $nxe_app"
 if [ "${NXNATIVE_NO_OPEN:-0}" != 1 ]; then /usr/bin/open "$nxe_app"; fi

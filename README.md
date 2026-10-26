@@ -14,7 +14,7 @@
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/nalancer08/nxnative-easy/main/install.sh)"
 ```
 
-It downloads nxnative Easy, installs Homebrew and the missing build tools, **compiles your own Mac interface and opens it**. Follow any password or confirmation prompts in Terminal. No Apple developer account is used.
+It downloads nxnative Easy, installs Homebrew and the missing build tools, **compiles your own Mac interface and opens it**. Follow the four numbered setup stages and any password or confirmation prompts in Terminal. No Apple developer account is used. If you run setup again, it verifies the new app before replacing your installed version and keeps the previous app as a backup.
 
 **Already downloaded this repository?** Double-click **START-HERE.command** in its top-level folder. It performs the same setup; you do not need to find a script under `scripts/`. If macOS blocks that file, use the Terminal command above.
 
@@ -56,7 +56,7 @@ From **version 1.4**, the app checks for new releases at launch and every six ho
 
 The update uses a separate source folder and keeps the previous app as a backup. It does not reset your checkout or modify your game files, keys or saves. Updates are disabled while preparing a game. To apply new engine or profile changes to a previously prepared game, prepare that game again.
 
-**Your friend's older app has no updater yet:** run the setup command above once, or double-click **START-HERE.command**, to get this version. Future updates then appear inside the app.
+**Using version 1.3 or earlier?** Run the setup command above once, or double-click **START-HERE.command**. Future updates then appear inside the app.
 
 ## What happens after Prepare game?
 
