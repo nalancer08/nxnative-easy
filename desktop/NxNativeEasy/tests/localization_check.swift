@@ -12,8 +12,8 @@ import Foundation
         assert(EasyLanguage.load(defaults:d) == .english)
         d.set("unsupported",forKey:"interfaceLanguage")
         assert(EasyLanguage.load(defaults:d) == .english)
-        assert(EasyStrings.text("1. Elegir juego",language:.english)=="1. Choose game")
-        assert(EasyStrings.text("1. Elegir juego",language:.spanish)=="1. Elegir juego")
+        assert(EasyStrings.text("Carpeta del juego",language:.english)=="Game folder")
+        assert(EasyStrings.text("Carpeta del juego",language:.spanish)=="Carpeta del juego")
         assert(EasyStrings.text("Creando tu IPA ligera…",language:.english)=="Creating your lightweight IPA…")
         assert(EasyStrings.text("raw system error",language:.spanish)=="raw system error")
         for (spanish,english) in EasyStrings.english {

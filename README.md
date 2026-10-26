@@ -25,9 +25,9 @@ The app starts in **English**. Choose **Español** using the selector at the top
 ## Open the app and choose your game
 
 1. Open **nxnative.app**.
-2. Click **Choose game**, select its folder, then click **Prepare for iPhone**.
+2. Choose the **Game folder**, select your **Keys folder** once, then click **Prepare game**.
 
-The app prepares the tools, builds the game app and creates a **lightweight IPA**. Progress stays in the window. When finished, click **Show IPA** and **Open Sideloadly**.
+The app prepares the tools, builds the game app and creates a **lightweight IPA**. Progress stays in the window. When finished, the app shows the two installation steps. **Send to Sideloadly** opens the prepared IPA in Sideloadly; if it is not installed, the button offers its download.
 
 **First-time setup:** download or clone this repository, then double-click the local [`scripts/Abrir-interfaz.command`](scripts/Abrir-interfaz.command) file in Finder. It creates and opens the Mac app. Full Xcode and Homebrew must already be installed. Select the folder containing your own `prod.keys` when asked. Keep one game per folder, with the base game and its updates, outside this source checkout.
 
@@ -41,11 +41,11 @@ The interface uses generic system symbols, not game artwork or logos. The docume
 
 ## Install with Sideloadly and Finder
 
-1. Connect your iPhone to the Mac and open [Sideloadly](https://sideloadly.io).
-2. Drag in the **lightweight IPA** and click **Start**, using your **personal** Apple account.
-3. On the first installation, click **Show RomFS folder** in our app and copy the complete `romfs` folder using **Finder → iPhone → Files → your game**.
+1. When the IPA is ready, connect your iPhone and click **Send to Sideloadly**. The app opens the prepared IPA there.
+2. In Sideloadly, click **Start** using your **personal** Apple account. If needed, use **Show IPA** to find the file manually.
+3. On the first installation, click **Show game data** and copy the complete `romfs` folder using **Finder → iPhone → Files → your game**.
 
-For updates, keep the same Apple account and effective bundle ID used in Sideloadly. **Install over the existing app; do not uninstall it**, to retain its saves. Reuse the existing `romfs` only when the game data have not changed. Signing and device installation are separate Sideloadly steps, not actions performed by this app. See the [official Sideloadly FAQ](https://sideloadly.io/faq).
+For updates, keep the same Apple account and effective bundle ID used in Sideloadly. **Install over the existing app; do not uninstall it**, to retain its saves. Reuse the existing `romfs` only when the game data have not changed. The app installs missing build dependencies after Xcode and Homebrew are available, but **does not sign or install the iPhone game**. Those steps happen in Sideloadly. The app explains them only when the IPA is ready. See the [official Sideloadly FAQ](https://sideloadly.io/faq).
 
 ## Included game profiles
 

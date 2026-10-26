@@ -29,7 +29,7 @@ fi
 [ -d "$nxi_game" ] || { echo 'Game folder does not exist.' >&2; exit 1; }
 nxi_game=$(cd "$nxi_game" && pwd -P)
 case "$nxi_game/" in "$nxi_repo/"*) echo 'Keep game data outside the source checkout.' >&2; exit 1;; esac
-nxi_developer=${DEVELOPER_DIR:-$(/usr/bin/xcode-select -p)}
+nxi_developer=${DEVELOPER_DIR:-$(/usr/bin/xcode-select -p 2>/dev/null || true)}
 if [ ! -d "$nxi_developer/Platforms/iPhoneOS.platform" ]; then nxi_developer=/Applications/Xcode.app/Contents/Developer; fi
 [ -d "$nxi_developer/Platforms/iPhoneOS.platform" ] || { echo 'Install and open full Xcode first.' >&2; exit 1; }
 export DEVELOPER_DIR="$nxi_developer"

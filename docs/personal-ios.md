@@ -161,3 +161,20 @@ and matches name, version or title ID; whitespace-separated terms must all match
 No game artwork or network request is needed to populate/search the list. Profile
 presence is not interpreted as verified iPhone gameplay. The current checkout has 70
 profiles, including regional variants.
+
+## Simplified player flow
+
+The home screen contains the catalog, game-folder selection, explicit keys-folder
+selection and one prepare action. Empty-state status copy, technical cache choices,
+permanent legal/compatibility footers and the standalone installation-guide link
+were removed. There is one progress indicator while running. Only failures expose
+raw diagnostics; common missing-tool failures receive direct recovery instructions.
+The catalog keeps version search but does not show raw title IDs in every row.
+
+When an existing or newly built IPA is available, the app shows the two remaining
+steps: send the prepared file to Sideloadly, then copy RomFS through Finder for a
+first installation. Sending a file opens it in the installed Sideloadly application;
+it does not click Start, select an account, sign or install on a phone. If Sideloadly
+is missing, the action is labelled Get Sideloadly and opens its official website.
+The normal build workflow still requires Xcode/Homebrew first and installs other
+missing dependencies. No Apple identity is selected by the desktop compiler.

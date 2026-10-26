@@ -61,7 +61,7 @@ struct GameCard: Identifiable {
         do {
             let files=try FileManager.default.contentsOfDirectory(at:url,includingPropertiesForKeys:nil)
             guard files.contains(where:{["nsp","xci","nsz","xcz"].contains($0.pathExtension.lowercased())}) else {
-                phase="No encontramos el juego en esa carpeta."
+                output=nil;assets=nil;phase="No encontramos el juego en esa carpeta."
                 detail="Elige la carpeta que contiene los archivos NSP o XCI directamente."
                 failed=true;return
             }
@@ -103,7 +103,7 @@ struct GameCard: Identifiable {
         guard FileManager.default.fileExists(atPath:script.path) else {
             phase="No encontramos el código de nxnative.";detail="Vuelve a crear la app desde el repositorio con Abrir-interfaz.command.";failed=true;return
         }
-        if keysFolder == nil {chooseKeysFolder()}
+        if keysFolder == nil || !FileManager.default.isReadableFile(atPath:keysFolder!.appendingPathComponent("prod.keys").path) {chooseKeysFolder()}
         guard let keysFolder else {return}
         let task=Process();let pipe=Pipe()
         task.executableURL=URL(fileURLWithPath:"/usr/bin/python3")
@@ -114,7 +114,7 @@ struct GameCard: Identifiable {
         var environment=ProcessInfo.processInfo.environment
         environment["PYTHONUNBUFFERED"]="1"
         task.environment=environment
-        running=true;cancelled=false;failed=false;output=nil;assets=nil;transcript=""
+        running=true;cancelled=false;failed=false;showDetails=false;output=nil;assets=nil;transcript=""
         phase="Preparando herramientas…";detail="Puedes dejar esta ventana abierta. No necesitas usar Terminal."
         pipe.fileHandleForReading.readabilityHandler={ [weak self] handle in
             let data=handle.availableData
@@ -133,10 +133,19 @@ struct GameCard: Identifiable {
                     self.restoreOutput()
                     self.failed=self.output==nil
                     self.phase=self.output == nil ? "Terminó, pero no encontramos la IPA." : "Tu juego está listo para Sideloadly."
-                    self.detail=self.output == nil ? "Abre los detalles para revisar las rutas de salida." : "Abre la IPA y arrástrala a Sideloadly. La firma se hace con tu cuenta personal."
+                    self.detail=self.output == nil ? "Usa Ver error para revisar lo que ocurrió." : "Abre la IPA y arrástrala a Sideloadly. La firma se hace con tu cuenta personal."
                 } else {
-                    self.failed=true;self.phase="Necesitamos revisar un paso."
-                    self.detail="No borramos tus archivos. Abre los detalles para ver el error y vuelve a intentar."
+                    self.failed=true;self.phase="No pudimos preparar el juego."
+                    let log=self.transcript.lowercased()
+                    if log.contains("install and open full xcode") {
+                        self.detail="Instala Xcode y ábrelo una vez. Después vuelve a intentar."
+                    } else if log.contains("install homebrew") {
+                        self.detail="Instala Homebrew desde brew.sh y vuelve a intentar."
+                    } else if log.contains("ios sdk 26 or newer") {
+                        self.detail="Actualiza Xcode: necesitas el SDK de iOS 26 o posterior."
+                    } else {
+                        self.detail="Tus archivos anteriores se conservaron. Puedes ver o copiar el error para revisarlo."
+                    }
                 }
             }
         }
@@ -161,9 +170,10 @@ struct GameCard: Identifiable {
     }
     func revealIPA() {if let output {NSWorkspace.shared.activateFileViewerSelecting([output])}}
     func revealAssets() {if let assets {NSWorkspace.shared.activateFileViewerSelecting([assets])}}
+    var sideloadlyURL: URL? {NSWorkspace.shared.urlForApplication(withBundleIdentifier:"io.sideloadly.sideloadly")}
     func openSideloadly() {
-        if let app=NSWorkspace.shared.urlForApplication(withBundleIdentifier:"io.sideloadly.sideloadly") {
-            NSWorkspace.shared.openApplication(at:app,configuration:.init())
+        if let app=sideloadlyURL, let output {
+            NSWorkspace.shared.open([output],withApplicationAt:app,configuration:NSWorkspace.OpenConfiguration())
         } else {NSWorkspace.shared.open(URL(string:"https://sideloadly.io")!)}
     }
 }
@@ -176,37 +186,39 @@ struct ContentView: View {
         ZStack {
             Color(red:0.065,green:0.075,blue:0.07).ignoresSafeArea()
             ScrollView {
-                VStack(alignment:.leading,spacing:24) {
+                VStack(alignment:.leading,spacing:22) {
                     HStack {
-                        Label("nxnative / easy",systemImage:"gamecontroller.fill").font(.system(size:15,weight:.semibold,design:.monospaced)).foregroundStyle(lime)
+                        Label("nxnative easy",systemImage:"gamecontroller.fill")
+                            .font(.system(size:15,weight:.semibold)).foregroundStyle(lime)
                         Spacer()
                         Picker(model.text("Idioma de la interfaz"),selection:$model.language) {
                             Text("English").tag(EasyLanguage.english)
                             Text("Español").tag(EasyLanguage.spanish)
-                        }.labelsHidden().frame(width:130).accessibilityIdentifier("interface-language")
+                        }.labelsHidden().frame(width:120).accessibilityIdentifier("interface-language")
                     }
-                    VStack(alignment:.leading,spacing:8) {
-                        Text(model.text("Del juego a tu iPhone.")).font(.system(size:42,weight:.bold,design:.rounded)).foregroundStyle(ink)
-                        Text(model.text("Elige una carpeta. Prepara tu juego. A jugar.")).font(.system(size:17)).foregroundStyle(.gray)
+                    VStack(alignment:.leading,spacing:6) {
+                        Text(model.text("Prepara tu juego.")).font(.system(size:32,weight:.bold,design:.rounded)).foregroundStyle(ink)
+                        Text(model.text("Creamos la IPA. La instalas en tu iPhone con Sideloadly."))
+                            .font(.system(size:14)).foregroundStyle(.secondary)
                     }
                     HStack(spacing:12) {
                         ForEach(model.cards) {card in
-                            VStack(alignment:.leading,spacing:8) {
+                            VStack(alignment:.leading,spacing:7) {
                                 ZStack {
                                     RoundedRectangle(cornerRadius:12).fill(card.tint.opacity(0.12))
-                                    Image(systemName:card.symbol).font(.system(size:38,weight:.light)).foregroundStyle(card.tint)
-                                }.frame(height:106)
-                                Text(card.name).font(.system(size:11,weight:.medium)).foregroundStyle(ink).lineLimit(1)
+                                    Image(systemName:card.symbol).font(.system(size:29,weight:.light)).foregroundStyle(card.tint)
+                                }.frame(height:74)
+                                Text(card.name).font(.system(size:10,weight:.medium)).foregroundStyle(ink).lineLimit(1)
                             }.frame(maxWidth:.infinity)
                         }
                         Button {model.openCatalog()} label: {
-                            VStack(alignment:.leading,spacing:8) {
+                            VStack(alignment:.leading,spacing:7) {
                                 ZStack {
                                     RoundedRectangle(cornerRadius:12).fill(lime.opacity(0.12))
-                                    Image(systemName:"square.grid.2x2").font(.system(size:34,weight:.light)).foregroundStyle(lime)
-                                }.frame(height:106)
+                                    Image(systemName:"square.grid.2x2").font(.system(size:28,weight:.light)).foregroundStyle(lime)
+                                }.frame(height:74)
                                 HStack {
-                                    Text(model.text("Ver todos")).font(.system(size:11,weight:.semibold))
+                                    Text(model.text("Ver todos")).font(.system(size:10,weight:.semibold))
                                     Spacer()
                                     Image(systemName:"arrow.up.right").font(.system(size:10))
                                 }.foregroundStyle(ink)
@@ -214,71 +226,81 @@ struct ContentView: View {
                         }.buttonStyle(.plain).accessibilityIdentifier("view-all-games")
                     }
                     VStack(alignment:.leading,spacing:18) {
-                        HStack(alignment:.center,spacing:14) {
-                            Image(systemName:"folder.fill").font(.system(size:28)).foregroundStyle(lime)
+                        HStack(spacing:12) {
+                            Image(systemName:"folder.fill").font(.system(size:24)).foregroundStyle(lime)
                             VStack(alignment:.leading,spacing:4) {
-                                Text(model.gameName).font(.system(size:18,weight:.semibold)).foregroundStyle(ink)
-                                Text(model.folder == nil ? model.text("Una carpeta por juego, con su base y actualizaciones.") : model.folder!.path)
-                                    .font(.system(size:11)).foregroundStyle(.gray).lineLimit(1).truncationMode(.middle)
+                                Text(model.folder == nil ? model.text("Carpeta del juego") : model.gameName)
+                                    .font(.system(size:16,weight:.semibold)).foregroundStyle(ink)
+                                if model.folder == nil {
+                                    Text(model.text("Con el juego base y sus actualizaciones.")).font(.system(size:12)).foregroundStyle(.secondary)
+                                }
                             }
                             Spacer()
-                            Button(model.folder == nil ? model.text("1. Elegir juego") : model.text("Cambiar")) {model.chooseFolder()}.disabled(model.running)
+                            Button(model.folder == nil ? model.text("Elegir") : model.text("Cambiar")) {model.chooseFolder()}.disabled(model.running).accessibilityLabel(model.text("Carpeta del juego"))
                         }
-                        HStack {
-                            Image(systemName:"key.horizontal").foregroundStyle(lime)
-                            Text(model.keysFolder == nil ? model.text("Tus llaves: selecciona su carpeta") : model.text("Tus llaves: carpeta seleccionada"))
-                                .font(.system(size:12)).foregroundStyle(ink)
-                            Spacer()
-                            Button(model.keysFolder == nil ? model.text("Elegir carpeta de llaves") : model.text("Cambiar llaves")) {model.chooseKeysFolder()}.disabled(model.running)
-                        }
-                        Divider().overlay(Color.white.opacity(0.08))
-                        HStack {
-                            VStack(alignment:.leading,spacing:5) {
-                                Text(model.text(model.phase)).font(.system(size:16,weight:.semibold)).foregroundStyle(model.failed ? .orange : ink)
-                                Text(model.text(model.detail)).font(.system(size:12)).foregroundStyle(.gray).fixedSize(horizontal:false,vertical:true)
+                        HStack(spacing:12) {
+                            Image(systemName:"key.horizontal").font(.system(size:19)).foregroundStyle(lime).frame(width:24)
+                            VStack(alignment:.leading,spacing:4) {
+                                Text(model.text("Carpeta de llaves")).font(.system(size:14,weight:.medium))
+                                Text(model.keysFolder?.lastPathComponent ?? model.text("Selecciona tus propias prod.keys."))
+                                    .font(.system(size:12)).foregroundStyle(.secondary)
                             }
                             Spacer()
-                            if model.running {ProgressView().controlSize(.small);Button(model.text("Cancelar")){model.cancel()}}
+                            Button(model.keysFolder == nil ? model.text("Elegir") : model.text("Cambiar")) {model.chooseKeysFolder()}.disabled(model.running).accessibilityLabel(model.text("Carpeta de llaves"))
                         }
-                        if !model.running {
+                        if model.running {
+                            Divider().overlay(Color.white.opacity(0.08))
+                            HStack {
+                                Text(model.text(model.phase)).font(.system(size:14,weight:.medium))
+                                Spacer()
+                                Button(model.text("Cancelar")){model.cancel()}
+                            }
+                            ProgressView().progressViewStyle(.linear).tint(lime)
+                        } else if model.failed {
+                            Text(model.text(model.phase)).font(.system(size:14,weight:.semibold)).foregroundStyle(.orange)
+                            Text(model.text(model.detail)).font(.system(size:12)).foregroundStyle(.secondary)
+                        }
+                        if !model.running && (model.output == nil || model.failed) {
                             Button {model.build()} label: {
-                                HStack {Image(systemName:"iphone.gen3");Text(model.text("2. Preparar para iPhone"));Spacer();Image(systemName:"arrow.right")}
-                                    .font(.system(size:16,weight:.bold)).padding(16).foregroundStyle(Color.black)
-                                    .background(model.folder == nil ? Color.gray : lime,in:RoundedRectangle(cornerRadius:12))
+                                HStack {
+                                    Text(model.text(model.failed ? "Intentar de nuevo" : "Preparar juego"))
+                                    Spacer()
+                                    Image(systemName:"arrow.right")
+                                }.font(.system(size:15,weight:.bold)).padding(15).foregroundStyle(Color.black)
+                                    .background(model.folder == nil ? Color.gray : lime,in:RoundedRectangle(cornerRadius:10))
                             }.buttonStyle(.plain).disabled(model.folder == nil)
                         }
-                        if model.running {ProgressView().progressViewStyle(.linear).tint(lime)}
-                        if model.output != nil && !model.running {
+                    }.padding(22).background(Color.white.opacity(0.045),in:RoundedRectangle(cornerRadius:16))
+                    if model.output != nil && !model.running && !model.failed {
+                        VStack(alignment:.leading,spacing:16) {
+                            Label(model.text("Listo. Instálalo en tu iPhone."),systemImage:"checkmark.circle.fill")
+                                .font(.system(size:20,weight:.semibold)).foregroundStyle(lime)
+                            Text(model.text("1. Envía la IPA a Sideloadly y pulsa Start con tu cuenta personal."))
+                                .font(.system(size:13))
                             HStack {
+                                Button(model.text(model.sideloadlyURL == nil ? "Descargar Sideloadly" : "Enviar a Sideloadly")){model.openSideloadly()}.buttonStyle(.borderedProminent).tint(lime).foregroundStyle(.black)
                                 Button(model.text("Mostrar IPA")){model.revealIPA()}
-                                Button(model.text("Mostrar datos romfs")){model.revealAssets()}
-                                Button(model.text("Abrir Sideloadly")){model.openSideloadly()}
                             }
-                            Text(model.text("Primera instalación: instala la IPA ligera y copia romfs por Finder. Para actualizar, conserva la misma cuenta y bundle ID; no desinstales la app."))
-                                .font(.system(size:12)).foregroundStyle(ink.opacity(0.8))
-                        }
-                    }.padding(24).background(Color.white.opacity(0.045),in:RoundedRectangle(cornerRadius:20))
-                    HStack {
-                        Link(model.text("Guía de instalación"),destination:URL(string:"https://github.com/nalancer08/nxnative-easy#readme")!)
-                        Spacer()
-                    }.font(.system(size:12))
-                    if !model.transcript.isEmpty {
-                        DisclosureGroup(model.text("Diagnóstico de la preparación"),isExpanded:$model.showDetails) {
-                            VStack(alignment:.leading,spacing:12) {
-                                Text(model.text("Los detalles de compilación se muestran en su idioma original.")).font(.system(size:11)).foregroundStyle(.gray)
-                                ScrollView {Text(model.transcript).font(.system(size:10,design:.monospaced)).textSelection(.enabled).frame(maxWidth:.infinity,alignment:.leading)}.frame(height:180)
-                                HStack {
-                                    Button(model.text("Copiar diagnóstico")){NSPasteboard.general.clearContents();NSPasteboard.general.setString(model.transcript,forType:.string)}
-                                    Spacer()
-                                }
-                            }.padding(.top,10)
-                        }.font(.system(size:12)).foregroundStyle(.gray)
+                            Text(model.text("2. La primera vez, copia romfs por Finder → iPhone → Archivos → tu juego."))
+                                .font(.system(size:13))
+                            Button(model.text("Mostrar datos del juego")){model.revealAssets()}
+                            Text(model.text("Para actualizar: misma cuenta e identificador de Sideloadly. Instala encima, sin desinstalar."))
+                                .font(.system(size:11)).foregroundStyle(.secondary)
+                            Button(model.text("Preparar de nuevo")){model.build()}.buttonStyle(.link)
+                        }.padding(22).frame(maxWidth:.infinity,alignment:.leading)
+                            .background(lime.opacity(0.045),in:RoundedRectangle(cornerRadius:16))
                     }
-                    Text(model.text("Preparación local. No se incluyen juegos ni llaves. La firma e instalación se hacen por separado en Sideloadly.")+"\n"+model.text("Compatibilidad según perfil, versión y dispositivo. Esta app no verifica que un juego funcione en tu iPhone."))
-                        .font(.system(size:11)).foregroundStyle(.gray).lineSpacing(4)
-                }.padding(32)
+                    if model.failed && !model.transcript.isEmpty {
+                        DisclosureGroup(model.text("Ver error"),isExpanded:$model.showDetails) {
+                            VStack(alignment:.leading,spacing:10) {
+                                ScrollView {Text(model.transcript).font(.system(size:10,design:.monospaced)).textSelection(.enabled).frame(maxWidth:.infinity,alignment:.leading)}.frame(height:150)
+                                Button(model.text("Copiar diagnóstico")){NSPasteboard.general.clearContents();NSPasteboard.general.setString(model.transcript,forType:.string)}
+                            }.padding(.top,8)
+                        }.font(.system(size:12)).foregroundStyle(.secondary)
+                    }
+                }.padding(28)
             }
-        }.frame(minWidth:820,minHeight:680).preferredColorScheme(.dark)
+        }.frame(minWidth:760,minHeight:530).preferredColorScheme(.dark)
         .sheet(isPresented:$model.showCatalog) {GameCatalogView(model:model)}
         .onReceive(NotificationCenter.default.publisher(for:NSApplication.willTerminateNotification)) {_ in model.cancel()}
     }
@@ -297,17 +319,17 @@ struct GameCatalogView: View {
                     Text(model.text("Todos los juegos")).font(.system(size:26,weight:.bold,design:.rounded))
                     HStack(spacing:5) {
                         Text("\(results.count) / \(model.catalog.count)").monospacedDigit()
-                        Text(model.text("perfiles incluidos en esta copia"))
+                        Text(model.text("juegos en la lista"))
                     }.font(.system(size:12)).foregroundStyle(.secondary)
                 }
                 Spacer()
                 Button(model.text("Cerrar")) {model.showCatalog=false}.keyboardShortcut(.cancelAction)
             }
-            Text(model.text("Son perfiles del repositorio, no una prueba de funcionamiento en tu dispositivo. Consulta la ficha para ver plataformas, versiones y límites."))
+            Text(model.text("Juegos del repositorio. Consulta cada ficha para ver dispositivos probados y versiones."))
                 .font(.system(size:12)).foregroundStyle(.secondary).fixedSize(horizontal:false,vertical:true)
             HStack {
                 Image(systemName:"magnifyingglass").foregroundStyle(lime)
-                TextField(model.text("Buscar por nombre, versión o Title ID"),text:$query)
+                TextField(model.text("Buscar un juego"),text:$query)
                     .textFieldStyle(.plain).focused($searchFocused).accessibilityIdentifier("game-search")
                 if !query.isEmpty {Button {query=""} label: {Image(systemName:"xmark.circle.fill")}.buttonStyle(.plain).accessibilityLabel(model.text("Limpiar búsqueda"))}
             }.padding(12).background(Color.white.opacity(0.06),in:RoundedRectangle(cornerRadius:10))
@@ -327,9 +349,8 @@ struct GameCatalogView: View {
                                 Image(systemName:"gamecontroller").font(.system(size:20)).foregroundStyle(lime).frame(width:36)
                                 VStack(alignment:.leading,spacing:5) {
                                     Text(game.name).font(.system(size:14,weight:.semibold)).fixedSize(horizontal:false,vertical:true)
-                                    Text(game.id).font(.system(size:10,design:.monospaced)).foregroundStyle(.secondary).textSelection(.enabled)
                                     if !game.versions.isEmpty {
-                                        Text(model.text("Versiones del perfil")+": "+game.versions.joined(separator:", "))
+                                        Text(model.text("Versiones")+": "+game.versions.joined(separator:", "))
                                             .font(.system(size:11)).foregroundStyle(.secondary)
                                     }
                                 }
@@ -348,6 +369,6 @@ struct GameCatalogView: View {
 @main struct NxNativeEasyApp: App {
     var body: some Scene {
         WindowGroup("nxnative Easy") {ContentView()}
-            .defaultSize(width:920,height:780)
+            .defaultSize(width:820,height:650)
     }
 }

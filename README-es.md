@@ -25,9 +25,9 @@ La app inicia en **English**. Cambia a **Español** con el selector de la esquin
 ## Abre la app y elige tu juego
 
 1. Abre **nxnative.app**.
-2. Pulsa **Elegir juego**, selecciona su carpeta y pulsa **Preparar para iPhone**.
+2. Elige la **Carpeta del juego**, selecciona tu **Carpeta de llaves** una vez y pulsa **Preparar juego**.
 
-La app prepara las herramientas, compila y deja lista la **IPA ligera**. Verás el avance en la ventana. Al terminar, pulsa **Mostrar IPA** y **Abrir Sideloadly**.
+La app prepara las herramientas, compila y deja lista la **IPA ligera**. Verás el avance en la ventana. Al terminar aparecen los dos pasos para instalar. **Enviar a Sideloadly** abre allí la IPA preparada; si Sideloadly no está instalado, el botón ofrece descargarlo.
 
 **En nuestro Mac:** la app está disponible como `nxnative.app` en Descargas. Recuerda tu última carpeta y permite volver a mostrar la IPA ya preparada.
 
@@ -41,11 +41,11 @@ Los símbolos de la interfaz son genéricos del sistema; no se usan imágenes ni
 
 ## Instalar: Sideloadly + Finder
 
-1. Conecta tu iPhone al Mac y abre [Sideloadly](https://sideloadly.io).
-2. Arrastra la **IPA ligera** y pulsa **Start** con tu cuenta Apple **personal**.
-3. La primera vez, pulsa **Mostrar datos romfs** en nuestra app y copia la carpeta `romfs` completa por **Finder → iPhone → Archivos → tu juego**.
+1. Con la IPA lista, conecta tu iPhone y pulsa **Enviar a Sideloadly**. La app abre allí el archivo preparado.
+2. Dentro de Sideloadly pulsa **Start** con tu cuenta Apple **personal**. Si hace falta buscar el archivo manualmente, usa **Mostrar IPA**.
+3. La primera vez, pulsa **Mostrar datos del juego** y copia la carpeta `romfs` completa por **Finder → iPhone → Archivos → tu juego**.
 
-Para actualizar, usa la misma cuenta y el mismo bundle ID efectivo de Sideloadly. **Instala encima; no desinstales la app**, para conservar tus partidas. Si los datos del juego no cambiaron, puedes reutilizar el `romfs` existente. La firma e instalación siguen siendo pasos de Sideloadly; nuestra app prepara el archivo sin firmar.
+Para actualizar, usa la misma cuenta y el mismo bundle ID efectivo de Sideloadly. **Instala encima; no desinstales la app**, para conservar tus partidas. Si los datos del juego no cambiaron, puedes reutilizar el `romfs` existente. La app instala las herramientas de compilación que falten después de tener Xcode y Homebrew, pero **no firma ni instala el juego en el iPhone**. Esos pasos los hace Sideloadly. La app los explica cuando la IPA está lista.
 
 ## Juegos incluidos
 
