@@ -378,6 +378,23 @@ def free_gb(p):
     return shutil.disk_usage(p).free / 2**30
 
 
+def configure_dotnet(env):
+    """Let standalone .NET apphosts find the runtime used by dotnet (Homebrew installs it outside the registered locations)."""
+    if env.get('DOTNET_ROOT'): return
+    dn = shutil.which('dotnet', path=env['PATH'])
+    if not dn: return
+    try:
+        out = subprocess.run([dn, '--list-runtimes'], env=env, capture_output=True, text=True, check=True, timeout=10).stdout
+    except (OSError, subprocess.SubprocessError): return
+    for line in out.splitlines():
+        m = re.fullmatch(r'Microsoft\.NETCore\.App\s+\S+\s+\[(.+)/shared/Microsoft\.NETCore\.App\]', line.strip())
+        if m:
+            # A Homebrew command can be a wrapper in bin, so its resolved directory is not a runtime root.
+            # Extraction steps without env= inherit os.environ; shader steps receive env explicitly.
+            env['DOTNET_ROOT'] = os.environ['DOTNET_ROOT'] = m[1]
+            return
+
+
 # ---- NSP identification ----
 def pfs0_names(path):   # NSP = PFS0: list the file names inside
     with open(path, 'rb') as f:
@@ -1756,6 +1773,7 @@ def main(args=None):
     if not want_lang: raise BuildError(f'unknown game language {lang_in!r}; give one of {language_list([c for c, _ in nacp.LANGUAGES])}, by code or by name')
     env = dict(os.environ, PATH=os.pathsep.join(TOOL_PATHS + [os.environ.get('PATH', '/usr/bin:/bin:/usr/sbin:/sbin')]))
     env.setdefault('USER', getpass.getuser())   # xcodegen fails without USER (Couldn't find current username)
+    configure_dotnet(env)
     env.setdefault('J', str(os.cpu_count() or 8))   # shader_split.py's and dmsh_build.py's workers (their default is 8)
     py = sys.executable
     app, fam = scan_nsps(nsp_dir)

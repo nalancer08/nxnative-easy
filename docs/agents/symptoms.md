@@ -4,6 +4,7 @@ One line per symptom in the [subsystem references](../reference/): what you see 
 
 ## Packing
 
+- the first extraction stops with `nx_extract exit code 131` and `.NET location: Not found`, even though `dotnet` is on `PATH`. The shader translator can fail the same way. → [Homebrew .NET is on PATH but apphosts cannot find the runtime](../reference/packing.md#homebrew-net-is-on-path-but-apphosts-cannot-find-the-runtime)
 - `decompress NSZ` stops immediately with `nsz: error: unrecognized arguments: --keys …`. → [NSZ decompression rejects `--keys`](../reference/packing.md#nsz-decompression-rejects---keys)
 - clicking Prepare game stops before any build tools start, with `PermissionError: [Errno 1] Operation not permitted` at `build_session.py` `os.setsid()`. → [Prepare game fails at `os.setsid()`](../reference/packing.md#prepare-game-fails-at-ossetsid)
 
