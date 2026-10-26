@@ -28,11 +28,11 @@ When the app opens:
 
 **Mac:** creates one complete game `.app`, with its game data included inside; click **Open game**. No separate RomFS folder to copy. No Sideloadly or iPhone needed. Saves stay in `~/Library/Application Support/nxnative/<title ID>/`.
 
-**iPhone / iPad:** creates an unsigned lightweight IPA; install it with Sideloadly, then copy the game data as shown in the app. [See the iPhone/iPad preparation screen](docs/images/nxnative-ios.png).
+**iPhone / iPad:** creates an unsigned lightweight IPA; install it with Sideloadly, then copy the game data as shown in the app. [See the iPhone/iPad preparation screen](docs/images/nxnative-ios-v1.4.png).
 
 **Required:** an Apple silicon Mac (M1 or newer), macOS 26+ and Xcode 26+. The command installs the other tools. You must provide your own games and keys. Compilation can take time, especially for the first game.
 
-![The nxnative Easy desktop app](docs/images/nxnative-mac-v1.3.png)
+![The nxnative Easy desktop app](docs/images/nxnative-mac-v1.4.png)
 
 ## What this version adds
 

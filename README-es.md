@@ -28,11 +28,11 @@ Cuando abra la app:
 
 **Mac:** crea una sola `.app` completa, con todos los datos del juego dentro; pulsa **Abrir juego**. No necesitas copiar una carpeta RomFS aparte. No necesitas Sideloadly ni un iPhone. Las partidas quedan en `~/Library/Application Support/nxnative/<title ID>/`.
 
-**iPhone / iPad:** crea una IPA ligera sin firmar. Instálala con Sideloadly y copia los datos del juego como te indica la app. [Ver pantalla de preparación para iPhone/iPad](docs/images/nxnative-ios-es.png).
+**iPhone / iPad:** crea una IPA ligera sin firmar. Instálala con Sideloadly y copia los datos del juego como te indica la app. [Ver pantalla de preparación para iPhone/iPad](docs/images/nxnative-ios-es-v1.4.png).
 
 **Necesitas:** Mac con Apple silicon (M1 o posterior), macOS 26+ y Xcode 26+. El comando instala las otras herramientas. Los juegos y las llaves los aportas tú. La primera compilación puede tardar.
 
-![Nuestra app para preparar juegos](docs/images/nxnative-mac-es-v1.3.png)
+![Nuestra app para preparar juegos](docs/images/nxnative-mac-es-v1.4.png)
 
 ## Qué aporta esta versión
 
@@ -55,6 +55,8 @@ La app inicia en **English**. Cambia a **Español** con el selector de la esquin
 Desde la **versión 1.4**, la app busca versiones nuevas al abrirse y cada seis horas mientras está abierta. Cuando haya una, pulsa **Actualizar ahora**. Descarga el código y los perfiles nuevos, compila y verifica la interfaz y la reinicia. Verás el avance dentro de la ventana. También puedes usar **nxnative Easy → Buscar actualizaciones…**.
 
 La actualización usa una carpeta separada y guarda la app anterior como respaldo. No restablece tu checkout ni modifica tus juegos, llaves o partidas. No se puede actualizar mientras se prepara un juego. Para aplicar cambios del motor o de un perfil a un juego que ya habías preparado, vuelve a prepararlo.
+
+![Aviso de actualización dentro de la app](docs/images/nxnative-update-es-v1.4.png)
 
 **La app vieja de tu amigo todavía no tiene actualizador:** que ejecute una vez el comando de arriba o abra **START-HERE.command** para recibir esta versión. Las siguientes actualizaciones ya aparecerán dentro de la app.
 
@@ -82,7 +84,7 @@ Para actualizar, usa la misma cuenta y el mismo bundle ID efectivo de Sideloadly
 
 El carrusel muestra los perfiles de esta copia; no proporciona ni descarga juegos. Debes añadir tus propios archivos del juego. Pulsa **Ver todos** arriba a la derecha para consultar la lista completa de soporte. Busca por nombre, versión o Title ID; cada resultado enlaza a su ficha. El catálogo vuelve a leer los perfiles locales cada vez que lo abres. El carrusel rota automáticamente y se pausa al colocar el cursor encima.
 
-![Buscador de perfiles de juegos](docs/images/nxnative-catalog-es-v1.3.png)
+![Buscador de perfiles de juegos](docs/images/nxnative-catalog-es-v1.4.png)
 
 **Las pruebas propias cubren compilación y empaquetado en Mac, no una verificación automática de juego en iPhone.** Los perfiles y reportes de juego proceden de upstream; revisa [la ficha de tu juego](dm/games/README.md#games) antes de prepararlo. Un perfil no garantiza que cualquier versión funcione en cualquier iPhone.
 

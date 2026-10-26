@@ -248,3 +248,11 @@ prepared games require a normal rebuild to incorporate newer engine/profile code
 Profile artwork is mapped by title ID in `desktop/NxNativeEasy/game-artwork.json`.
 All 70 current profiles use existing repository screenshots, including the shared
 13 Sentinels image for its Asia profile; no network image search is performed.
+
+Validation on 2026-10-26 completed an actual in-app update to public commit
+`86793e23d67cdb035405996d3fa6d79acc9586a8`: download, staged compilation,
+signature verification, backup, replacement and automatic relaunch all passed.
+The resulting app reported version 1.4/build 5 and only one launcher process
+remained. The manual check then reported it was up to date. The 24 script tests
+and four documentation checks passed. No game preparation or gameplay was part
+of this updater validation.
