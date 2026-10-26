@@ -184,7 +184,6 @@ struct ContentView: View {
                             Text("English").tag(EasyLanguage.english)
                             Text("Español").tag(EasyLanguage.spanish)
                         }.labelsHidden().frame(width:130).accessibilityIdentifier("interface-language")
-                        Text(model.text("HECHO PARA TU IPHONE")).font(.system(size:10,weight:.medium,design:.monospaced)).tracking(2).foregroundStyle(.gray)
                     }
                     VStack(alignment:.leading,spacing:8) {
                         Text(model.text("Del juego a tu iPhone.")).font(.system(size:42,weight:.bold,design:.rounded)).foregroundStyle(ink)

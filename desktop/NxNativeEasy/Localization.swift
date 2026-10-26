@@ -60,7 +60,6 @@ struct EasyStrings {
         "Preparando los gráficos del juego…": "Preparing game graphics…",
         "Preparando los archivos del juego…": "Preparing game files…",
         "Cancelando…": "Cancelling…",
-        "HECHO PARA TU IPHONE": "MADE FOR YOUR IPHONE",
         "Del juego a tu iPhone.": "From game to iPhone.",
         "Elige una carpeta. Prepara tu juego. A jugar.": "Choose a folder. Prepare your game. Play.",
         "Juegos con perfiles incluidos; consulta la ficha de cada juego para compatibilidad": "Games with included profiles; check each game note for compatibility",
