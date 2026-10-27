@@ -253,7 +253,11 @@ See Apple's [Xbox pairing guide](https://support.apple.com/en-us/111101) and [Pl
 
 ## Make the controls your own
 
-Inside the game, tap **Edit controls**. Move buttons, adjust their size and opacity, then tap **Save**. **Cancel** discards edits; **Reset control / Reset all** restores defaults. Each game keeps separate 2D and 3D layouts. The game continues running while you edit. The desktop language selector does not translate this in-game editor.
+Inside the game, tap **Edit controls**. Move buttons, adjust their size and opacity, then tap **Save**. **Cancel** discards edits; **Reset control / Reset all** restores defaults. Each game has **four named profiles**, each with separate 2D and 3D layouts. Use the profile menu to switch or rename one (for example iPhone, iPad or Large), and **Save as…** to copy both layouts into another slot. Switching warns before discarding unsaved edits; replacing a profile asks first. Your previous layout is preserved in Profile 1. Profiles are stored locally on each device. The game continues running while you edit. The desktop language selector does not translate this in-game editor.
+
+## Cloud-save API prototype
+
+A separate [portable API prototype](dm/cloud/README.md) supports private snapshot versions, upload conflicts and expiring/revocable sharing. **Native cloud login, upload and restore are not connected yet**; no server or identity-provider account has been deployed. Game saves and control profiles continue to stay on your device. This is unrelated to online multiplayer.
 
 <details>
 <summary>Guides, commands and technical details</summary>

@@ -19,6 +19,7 @@
 #include <pthread.h>
 #include "dm.h"
 #import "DmPadGeometry.h"
+#import "DmPadProfiles.h"
 #include "dm_input.h"
 #include "front.h"
 #include "game_profile.h"
@@ -114,11 +115,12 @@ static __weak DmGamepad *g_view;
     CALayer *_controls;                            // holds every control layer: hidden while a physical controller is connected (the view itself stays, for game touches)
     BOOL _padOff;                                  // a physical controller is connected: every touch goes to the game
     NSMutableDictionary *_custom;
+    DmPadProfiles *_profiles;
     BOOL _editing, _editWasTap;
     int _selected;
     UITouch *_dragTouch; CGPoint _dragStart, _dragHome;
     CGRect _lastSafe;
-    UIButton *_editButton, *_chooseButton;
+    UIButton *_editButton, *_chooseButton, *_profileButton, *_saveAsButton;
     UIView *_tools;
     UISlider *_sizeSlider, *_alphaSlider;
     UILabel *_editInfo;
@@ -169,6 +171,7 @@ static BOOL fullOnly(int b) { return b == B_LS || b == B_RS || b >= B_LEFT; }   
         int l = saved ? (int)saved.integerValue : DM_GAME_PAD_LAYOUT;
         if (l == 2 && dm_opmode() != 0) l = 0;   // Tap only in handheld mode (env.txt's DM_OPMODE may have changed it)
         _full = l == 1; _tap = l == 2;
+        _profiles=[[DmPadProfiles alloc] initWithDefaults:NSUserDefaults.standardUserDefaults game:@DM_GAME_ID];
         [self loadControls];
         [self setupEditor];
         [self applyLayout];
@@ -396,7 +399,7 @@ static void placeLabel(CATextLayer *t, CGPoint c, CGFloat fs) {
     CGRect safe = self.safe;
     if (!CGRectEqualToRect(safe, _lastSafe)) { _lastSafe = safe; [self reset]; }
     _editButton.frame = CGRectMake(CGRectGetMidX(safe)-65, CGRectGetMinY(safe)+46, 130, 32);
-    _tools.frame = CGRectMake(CGRectGetMidX(safe)-160, CGRectGetMidY(safe)-90, 320, 180);
+    _tools.frame = CGRectMake(CGRectGetMidX(safe)-160, CGRectGetMidY(safe)-112, 320, 224);
     [CATransaction begin]; [CATransaction setDisableActions:YES];
     _controls.frame = self.layer.bounds;
     for (int b = B_A; b <= B_Y; b++) { CGPoint c = [self facePos:b]; setPath(_key[b], circlePath(c, [self faceRadius:b])); placeLabel(_label[b], c, 20 * u * [self scale:b]); }
@@ -438,19 +441,11 @@ static void placeLabel(CATextLayer *t, CGPoint c, CGFloat fs) {
 
 
 // Versioned per-app preferences: invalid controls fall back independently.
-- (NSString *)controlsKey { return _full ? @"DmPadControls.v1.3D" : @"DmPadControls.v1.2D"; }
+- (NSString *)controlsLayout { return _full ? @"3D" : @"2D"; }
 - (NSString *)controlID:(int)b {
     return @[@"A",@"B",@"X",@"Y",@"L3",@"R3",@"L",@"R",@"ZL",@"ZR",@"Plus",@"Minus",@"unused12",@"unused13",@"unused14",@"unused15",@"Stick",@"Dpad"][b];
 }
-- (void)loadControls {
-    _custom = [NSMutableDictionary dictionary];
-    id saved = [NSUserDefaults.standardUserDefaults objectForKey:self.controlsKey];
-    if (![saved isKindOfClass:NSDictionary.class]) return;
-    for (int b = 0; b < 18; b++) {
-        id v = saved[[self controlID:b]];
-        if (dm_pad_entry_valid(v)) _custom[[self controlID:b]] = [v copy];
-    }
-}
+- (void)loadControls { _custom=[[_profiles controls:self.controlsLayout slot:_profiles.selected] mutableCopy]; }
 - (CGFloat)scale:(int)b { NSNumber *n = _custom[[self controlID:b]][@"scale"]; return n ? n.doubleValue : 1; }
 - (float)opacity:(int)b { NSNumber *n = _custom[[self controlID:b]][@"alpha"]; float a = n ? n.floatValue : 1; return _editing ? fmaxf(a, 0.35) : a; }
 - (CGPoint)position:(int)b base:(CGPoint)p {
@@ -483,18 +478,22 @@ static void placeLabel(CATextLayer *t, CGPoint c, CGFloat fs) {
 - (void)setupEditor {
     _editButton = [self editorButton:@"Edit controls" action:@selector(toggleEditor) frame:CGRectZero parent:self];
     _tools = [UIView new]; _tools.backgroundColor = [UIColor colorWithWhite:0 alpha:0.9]; _tools.layer.cornerRadius = 10; [self addSubview:_tools]; _tools.hidden = YES;
-    [self editorButton:@"Save" action:@selector(saveEdit) frame:CGRectMake(8,8,90,32) parent:_tools];
-    [self editorButton:@"Cancel" action:@selector(cancelEdit) frame:CGRectMake(110,8,90,32) parent:_tools];
-    [self editorButton:@"Reset all" action:@selector(resetAllControls) frame:CGRectMake(212,8,100,32) parent:_tools];
-    _chooseButton = [self editorButton:@"A ▾" action:NULL frame:CGRectMake(8,46,145,30) parent:_tools];
-    [self editorButton:@"Reset control" action:@selector(resetControl) frame:CGRectMake(163,46,149,30) parent:_tools];
-    _sizeSlider = [[UISlider alloc] initWithFrame:CGRectMake(78,80,230,30)]; _sizeSlider.minimumValue = 0.5; _sizeSlider.maximumValue = 2;
-    _alphaSlider = [[UISlider alloc] initWithFrame:CGRectMake(78,112,230,30)]; _alphaSlider.maximumValue = 1;
+    _profileButton=[self editorButton:@"Profile" action:NULL frame:CGRectMake(8,8,192,32) parent:_tools];
+    _profileButton.titleLabel.adjustsFontSizeToFitWidth=YES;_profileButton.titleLabel.minimumScaleFactor=0.75;
+    _saveAsButton=[self editorButton:@"Save as…" action:NULL frame:CGRectMake(208,8,104,32) parent:_tools];
+    [self editorButton:@"Save" action:@selector(saveEdit) frame:CGRectMake(8,48,90,32) parent:_tools];
+    [self editorButton:@"Cancel" action:@selector(cancelEdit) frame:CGRectMake(110,48,90,32) parent:_tools];
+    [self editorButton:@"Reset all" action:@selector(resetAllControls) frame:CGRectMake(212,48,100,32) parent:_tools];
+    _chooseButton = [self editorButton:@"A ▾" action:NULL frame:CGRectMake(8,86,145,30) parent:_tools];
+    [self editorButton:@"Reset control" action:@selector(resetControl) frame:CGRectMake(163,86,149,30) parent:_tools];
+    _sizeSlider = [[UISlider alloc] initWithFrame:CGRectMake(78,120,230,30)]; _sizeSlider.minimumValue = 0.5; _sizeSlider.maximumValue = 2;
+    _alphaSlider = [[UISlider alloc] initWithFrame:CGRectMake(78,152,230,30)]; _alphaSlider.maximumValue = 1;
     for (UISlider *slider in @[_sizeSlider,_alphaSlider]) { [slider addTarget:self action:@selector(adjustControl) forControlEvents:UIControlEventValueChanged]; [_tools addSubview:slider]; }
-    for (int i=0;i<2;i++) { UILabel *l=[[UILabel alloc] initWithFrame:CGRectMake(8,80+32*i,70,30)]; l.text=i?@"Opacity":@"Size"; l.textColor=UIColor.whiteColor; l.font=[UIFont systemFontOfSize:13]; [_tools addSubview:l]; }
-    _editInfo = [[UILabel alloc] initWithFrame:CGRectMake(8,144,304,32)]; _editInfo.numberOfLines=2; _editInfo.font=[UIFont systemFontOfSize:11]; _editInfo.textColor=UIColor.whiteColor; [_tools addSubview:_editInfo];
+    for (int i=0;i<2;i++) { UILabel *l=[[UILabel alloc] initWithFrame:CGRectMake(8,120+32*i,70,30)]; l.text=i?@"Opacity":@"Size"; l.textColor=UIColor.whiteColor; l.font=[UIFont systemFontOfSize:13]; [_tools addSubview:l]; }
+    _editInfo = [[UILabel alloc] initWithFrame:CGRectMake(8,184,304,32)]; _editInfo.numberOfLines=2; _editInfo.font=[UIFont systemFontOfSize:11]; _editInfo.textColor=UIColor.whiteColor; [_tools addSubview:_editInfo];
 }
 - (void)updateEditor {
+    [self updateProfileMenu];
     [_chooseButton setTitle:[NSString stringWithFormat:@"%@ ▾",[self controlID:_selected]] forState:UIControlStateNormal];
     _sizeSlider.value = [self scale:_selected]; NSNumber *a = _custom[[self controlID:_selected]][@"alpha"]; _alphaSlider.value = a ? a.floatValue : 1;
     _editInfo.text = [NSString stringWithFormat:@"Size %.0f%% · Opacity %.0f%% · Game is running\nDrag outside tools. 0%% still receives touches.",_sizeSlider.value*100,_alphaSlider.value*100];
@@ -505,6 +504,58 @@ static void placeLabel(CATextLayer *t, CGPoint c, CGFloat fs) {
     _chooseButton.menu = [UIMenu menuWithTitle:@"Select control" children:actions]; _chooseButton.showsMenuAsPrimaryAction=YES;
     [self setNeedsLayout];
 }
+- (UIViewController *)editorPresenter {
+    UIResponder *r=self;
+    while (r && ![r isKindOfClass:UIViewController.class]) r=r.nextResponder;
+    UIViewController *parent=(UIViewController *)r;
+    while (parent.presentedViewController) parent=parent.presentedViewController;
+    return parent;
+}
+- (void)confirm:(NSString *)message actionTitle:(NSString *)title action:(void (^)(void))done {
+    UIAlertController *alert=[UIAlertController alertControllerWithTitle:message message:nil preferredStyle:UIAlertControllerStyleAlert];
+    [alert addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
+    [alert addAction:[UIAlertAction actionWithTitle:title style:UIAlertActionStyleDefault handler:^(__unused UIAlertAction *a) { done(); }]];
+    [self.editorPresenter presentViewController:alert animated:YES completion:nil];
+}
+- (void)selectProfile:(NSInteger)slot {
+    if (slot==_profiles.selected) return;
+    void (^change)(void)=^{ [self reset]; self->_dragTouch=nil; [self->_profiles select:slot]; [self loadControls]; [self updateEditor]; };
+    if (![_custom isEqual:[_profiles controls:self.controlsLayout slot:_profiles.selected]])
+        [self confirm:@"Discard unsaved changes?" actionTitle:@"Switch profile" action:change];
+    else change();
+}
+- (void)renameProfile {
+    UIAlertController *alert=[UIAlertController alertControllerWithTitle:@"Name this profile" message:@"For example: iPhone, iPad or Large buttons (up to 32 characters)." preferredStyle:UIAlertControllerStyleAlert];
+    [alert addTextFieldWithConfigurationHandler:^(UITextField *field) { field.text=[self->_profiles name:self->_profiles.selected]; field.clearButtonMode=UITextFieldViewModeWhileEditing; }];
+    [alert addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
+    __weak UIAlertController *weakAlert=alert;
+    [alert addAction:[UIAlertAction actionWithTitle:@"Rename" style:UIAlertActionStyleDefault handler:^(__unused UIAlertAction *a) {
+        if (![self->_profiles rename:self->_profiles.selected name:weakAlert.textFields.firstObject.text ?: @""])
+            UIAccessibilityPostNotification(UIAccessibilityAnnouncementNotification,@"Use a name between 1 and 32 characters.");
+        [self updateEditor];
+    }]];
+    [self.editorPresenter presentViewController:alert animated:YES completion:nil];
+}
+- (void)updateProfileMenu {
+    [_profileButton setTitle:[NSString stringWithFormat:@"%@ ▾",[_profiles name:_profiles.selected]] forState:UIControlStateNormal];
+    NSMutableArray *profiles=[NSMutableArray array], *copies=[NSMutableArray array];
+    for (NSInteger slot=0;slot<4;slot++) {
+        NSInteger target=slot;
+        UIAction *pick=[UIAction actionWithTitle:[_profiles name:slot] image:nil identifier:nil handler:^(__unused UIAction *a) { [self selectProfile:target]; }];
+        pick.state=slot==_profiles.selected ? UIMenuElementStateOn : UIMenuElementStateOff;[profiles addObject:pick];
+        if (slot!=_profiles.selected) [copies addObject:[UIAction actionWithTitle:[_profiles name:slot] image:nil identifier:nil handler:^(__unused UIAction *a) {
+            NSString *message=[NSString stringWithFormat:@"Replace %@ with this profile?",[self->_profiles name:target]];
+            [self confirm:message actionTitle:@"Save copy" action:^{
+                [self reset];self->_dragTouch=nil;
+                [self->_profiles copySlot:self->_profiles.selected to:target draft:self->_custom layout:self.controlsLayout];
+                [self loadControls];[self updateEditor];
+            }];
+        }]];
+    }
+    [profiles addObject:[UIMenu menuWithTitle:@"" image:nil identifier:nil options:UIMenuOptionsDisplayInline children:@[[UIAction actionWithTitle:@"Rename…" image:nil identifier:nil handler:^(__unused UIAction *a) { [self renameProfile]; }]]]];
+    _profileButton.menu=[UIMenu menuWithTitle:@"Control profiles" children:profiles];_profileButton.showsMenuAsPrimaryAction=YES;
+    _saveAsButton.menu=[UIMenu menuWithTitle:@"Save a copy to" children:copies];_saveAsButton.showsMenuAsPrimaryAction=YES;
+}
 - (void)toggleEditor {
     if (_editing) { _tools.hidden = !_tools.hidden; return; }
     _editWasTap = _tap;
@@ -513,7 +564,7 @@ static void placeLabel(CATextLayer *t, CGPoint c, CGFloat fs) {
     [_editButton setTitle:@"Show / hide tools" forState:UIControlStateNormal]; [self updateEditor];
 }
 - (void)finishEdit { [self reset]; _editing=NO; if (_editWasTap) { _tap=YES; [self applyLayout]; } _tools.hidden=YES; _controls.hidden=_padOff; [_editButton setTitle:@"Edit controls" forState:UIControlStateNormal]; [self setNeedsLayout]; }
-- (void)saveEdit { [NSUserDefaults.standardUserDefaults setObject:[_custom copy] forKey:self.controlsKey]; [self finishEdit]; }
+- (void)saveEdit { [_profiles save:_custom layout:self.controlsLayout slot:_profiles.selected]; [self finishEdit]; }
 - (void)cancelEdit { [self loadControls]; [self finishEdit]; }
 - (void)resetAllControls { [_custom removeAllObjects]; [self updateEditor]; }
 - (void)resetControl { [_custom removeObjectForKey:[self controlID:_selected]]; [self updateEditor]; }

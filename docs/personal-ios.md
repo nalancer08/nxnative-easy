@@ -124,8 +124,15 @@ its center; drag outside the tools to move it. **Show / hide tools** exposes are
 behind the panel. Adjust **Size** (50–200%) and **Opacity** (0–100%). At 0% its hit
 area remains active; editing keeps an invisible control findable. **Save** commits,
 **Cancel** reloads saved preferences, **Reset control** and **Reset all** restore
-original geometry and need **Save** to confirm. Each app stores independent 2D
-and 3D layouts. The game keeps running during editing. Controller connection changes
+original geometry and need **Save** to confirm. Each game now stores four named
+profiles under `DmPadProfiles.v2.<Title ID>` in UserDefaults; every profile has
+independent 2D/3D maps and the selected slot survives relaunch. The first profile
+migrates both legacy `DmPadControls.v1.*` maps without deleting them. Names can be
+changed from the profile menu; **Save as…** copies both maps plus the visible
+draft into another slot after confirmation, preserving the source. Switching
+profiles releases touches and asks before discarding a dirty draft. Cancel reloads
+the current saved profile; reset affects only its current layout after Save.
+Profiles are local to the device, not uploaded as game progress. The game keeps running during editing. Controller connection changes
 cancel unsaved edits. Actual iPhone multitouch and controller behavior still need
 user validation after signing/installing.
 
@@ -302,3 +309,26 @@ The clean-install check above did not start game preparation. A later user repor
 exposed a Foundation worker-launch failure, fixed and reproduced in 1.4.2; see
 [Prepare game fails at os.setsid](reference/packing.md#prepare-game-fails-at-ossetsid).
 The regression suite now exercises the actual Foundation launch mechanism.
+
+## Cloud-save investigation and API foundation
+
+The separate [save API prototype](../dm/cloud/README.md) records the current save
+layout, transaction/case-alias constraints, portable snapshot envelope, identity
+provider requirements and remaining native restore work. It stores immutable
+versions with optimistic concurrency and authenticated, expiring/revocable copy
+sharing; it does not access game files or modify game saves. No native cloud
+controls are exposed before login, export and journaled restore are integrated.
+
+On 2026-10-26, upstream main was checked and still matched our integrated
+`40e6baede556acd454169ac75b33d1686063f528`. No open PR or new engine/shader change
+was imported for the control-profile/API work. The shared profile storage's native
+Foundation tests and unsigned production iOS compile/link passed; actual touch
+menus on physical iPhone/iPad still need device validation after sideloading.
+
+The focused profile/geometry/API checks passed (9 tests, including real RSA JWT
+validation and loopback HTTP); the script suite passed 50 tests (one optional
+JWT test skipped without the API dependency), and Python lint had no new
+findings. A final iOS compile check compiled 178 sources with zero failures.
+The gameplay regression harness was invoked but found no registered Mac build
+for the local Dread folder (its `tools/dmhost` is absent); it did not run a
+save/gameplay comparison. Existing game packages and save folders were untouched.

@@ -255,7 +255,11 @@ Guías de Apple para [conectar Xbox](https://support.apple.com/en-us/111101) y [
 
 ## Controles a tu gusto
 
-En el juego pulsa **Edit controls**. Mueve los botones, ajusta tamaño y opacidad y pulsa **Save**. **Cancel** descarta y **Reset control / Reset all** restaura. Cada juego guarda su acomodo 2D y 3D. El juego sigue corriendo mientras editas. El selector de idioma de la app de Mac no traduce este editor dentro del juego.
+En el juego pulsa **Edit controls**. Mueve los botones, ajusta tamaño y opacidad y pulsa **Save**. **Cancel** descarta y **Reset control / Reset all** restaura. Cada juego tiene **cuatro perfiles con nombre**, cada uno con su acomodo 2D y 3D. Usa el menú de perfiles para cambiar o renombrar uno (por ejemplo iPhone, iPad o Grande), y **Save as…** para copiar ambos acomodos a otro espacio. Se avisa antes de descartar cambios sin guardar o sustituir un perfil. Tu acomodo anterior se conserva en Profile 1. Los perfiles se guardan localmente en cada dispositivo. El juego sigue corriendo mientras editas. El selector de idioma de la app de Mac no traduce este editor dentro del juego.
+
+## Prototipo de API para partidas en la nube
+
+Hay una [API portable de prueba](dm/cloud/README.md) con versiones privadas de partidas, detección de conflictos y enlaces para compartir con caducidad y revocación. **Todavía falta conectar el inicio de sesión, la subida y la restauración dentro del juego**; no se ha desplegado un servidor ni creado una cuenta de proveedor. Tus partidas y perfiles de controles siguen en tu dispositivo. Esto es independiente del multijugador en línea.
 
 <details>
 <summary>Guías, comandos y detalles técnicos</summary>
