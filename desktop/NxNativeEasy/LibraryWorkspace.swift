@@ -21,6 +21,14 @@ struct LibraryWorkspace:View {
     private var results:[OwnedGameOutput] {library.games.filter {query.isEmpty || (name($0)+" "+($0.titleID ?? "")+" "+$0.item.folder).localizedCaseInsensitiveContains(query)}}
     private var selectedResult:OwnedGameOutput? {results.first(where:{$0.id==selectedGameID}) ?? results.first}
     private func needsRebuild(_ game:OwnedGameOutput)->Bool {["Mac","iPhone / iPad"].contains {rebuildAdvice[game.id+$0]=="rebuild"}}
+    private func libraryStatus(_ game:OwnedGameOutput)->String {
+        let observations=sideload.observations(titleID:game.titleID,originalID:game.originalBundleID)
+        if let item=observations.first(where:sideload.isVerified) {return model.text("Instalado en")+" "+item.deviceName}
+        if let item=observations.first {return model.text(item.checkedAt==nil ? "Instalación registrada en" : "Última vez en")+" "+item.deviceName}
+        if game.macApp != nil && game.iosIPA != nil {return model.text("Mac listo · IPA lista")}
+        if game.macApp != nil {return model.text("Listo para jugar en Mac")}
+        return model.text(game.iosIPA != nil ? "IPA lista para instalar" : "Sin preparar")
+    }
     private func configure(_ game:OwnedGameOutput) {
         guard !occupied else {return}
         model.folder=game.folder;model.defaults.set(game.item.folder,forKey:"lastGameFolder")
@@ -123,7 +131,7 @@ struct LibraryWorkspace:View {
                                                     HStack(spacing:9) {
                                                         if let image=GameArtworkCache.image(model.catalog.first(where:{$0.id==game.titleID})?.artworkURL) {Image(nsImage:image).resizable().scaledToFill().frame(width:42,height:42).clipped().clipShape(RoundedRectangle(cornerRadius:6))}
                                                         else {Image(systemName:"gamecontroller").frame(width:42,height:42)}
-                                                        VStack(alignment:.leading,spacing:3) {Text(name(game)).font(.system(size:12,weight:.semibold)).lineLimit(2);Text(model.text(needsRebuild(game) ? "Conviene recompilar" : game.ready ? "Preparado" : "Sin preparar")).font(.caption2).foregroundStyle(needsRebuild(game) ? Color.orange : .secondary)}
+                                                        VStack(alignment:.leading,spacing:3) {Text(name(game)).font(.system(size:12,weight:.semibold)).lineLimit(2);Text(libraryStatus(game)).font(.caption2).foregroundStyle(.secondary).lineLimit(2);if needsRebuild(game) {Text(model.text("Conviene recompilar")).font(.caption2).foregroundStyle(.orange)}}
                                                         Spacer(minLength:0)
                                                     }.padding(8).background(selectedResult?.id==game.id ? accent.opacity(0.12) : .clear,in:RoundedRectangle(cornerRadius:8))
                                                 }.buttonStyle(.plain)
@@ -153,9 +161,9 @@ struct LibraryWorkspace:View {
                     Button(model.text("Cancelar")){sideload.cancel()}
                 }.padding(.horizontal,24).padding(.vertical,12)
             }
-            if model.running || model.failed || !model.activity.history.isEmpty {
+            if model.running || (!model.buildDockDismissed && (model.failed || !model.activity.history.isEmpty)) {
                 Divider()
-                BuildDock(model:model,show:{page = .prepare;model.showDetails=true})
+                BuildDock(model:model,completion:sideload.completedInstallation && sideload.gameFolder?.path==model.folder?.path ? model.text("Instalación completada en")+" "+(sideload.devices.first(where:{$0.id==sideload.device})?.name ?? "iPhone / iPad") : nil,show:{page = .prepare;model.installingInline=false;model.preparationStep=model.running || model.failed || model.output==nil ? 4 : 5;model.showDetails=true})
             }
         }.frame(minWidth:1000,minHeight:640).tint(accent).background(Color(red:0.065,green:0.075,blue:0.07)).preferredColorScheme(.dark)
         .task {
@@ -172,7 +180,7 @@ struct LibraryWorkspace:View {
         .onReceive(NotificationCenter.default.publisher(for:Notification.Name("nxnative.openSettings"))){_ in page = .settings}
         .onChange(of:model.installingInline){_,inline in if inline {page = .prepare}}
         .onReceive(NotificationCenter.default.publisher(for:Notification.Name("nxnative.showLibrary"))){_ in page = .library;if !sideload.busy {model.showSideload=false};library.refresh()}
-        .onReceive(NotificationCenter.default.publisher(for:Notification.Name("nxnative.showBuildActivity"))){_ in page = .prepare;model.preparationStep=4;model.showDetails=true}
+        .onReceive(NotificationCenter.default.publisher(for:Notification.Name("nxnative.showBuildActivity"))){_ in page = .prepare;model.installingInline=false;model.preparationStep=model.running || model.failed || model.output==nil ? 4 : 5;model.showDetails=true}
         .onChange(of:model.showCatalog){_,show in if show {page = .compatibility;model.showCatalog=false}}
         .onChange(of:model.showDeviceLibrary){_,show in if show {page = .devices;model.showDeviceLibrary=false}}
         .onReceive(library.$games){games in checkBuildAdvice(games);sideload.preparedFolders=Dictionary(games.compactMap {game in game.titleID.map {($0,game.folder)}},uniquingKeysWith:{first,_ in first});sideload.preparedIdentifiers=games.compactMap {game in game.originalBundleID ?? game.titleID.map {"org.nxnative."+$0.lowercased()}}}
@@ -276,8 +284,8 @@ struct GameLibraryDetail:View {
                     Text(title).font(.system(size:28,weight:.bold,design:.rounded)).lineLimit(2)
                 }.padding(20).foregroundStyle(.white)
             }.frame(height:240).clipped().clipShape(RoundedRectangle(cornerRadius:14))
-            if let device=observations.first {
-                Label(text(isVerified(device) ? "Instalación verificada" : "Última instalación observada")+" · "+device.deviceName,systemImage:isVerified(device) ? "checkmark.circle.fill" : "clock").font(.callout.weight(.semibold)).foregroundStyle(isVerified(device) ? Color.green : .secondary)
+            if let device=observations.first(where:isVerified) ?? observations.first {
+                Label(text(isVerified(device) ? "Instalación verificada" : device.checkedAt==nil ? "Instalación registrada" : "Última instalación observada")+" · "+device.deviceName,systemImage:isVerified(device) ? "checkmark.circle.fill" : "clock").font(.callout.weight(.semibold)).foregroundStyle(isVerified(device) ? Color.green : .secondary)
             }
             if needsRebuild {Label(text("Conviene recompilar: cambiaron herramientas o el perfil de este juego."),systemImage:"arrow.triangle.2.circlepath").font(.callout).foregroundStyle(.orange)}
             HStack(spacing:12) {
@@ -292,8 +300,8 @@ struct GameLibraryDetail:View {
                 } label:{Image(systemName:"ellipsis")}.menuStyle(.borderlessButton).fixedSize().accessibilityLabel(text("Acciones del juego"))
             }
             HStack(spacing:18) {
-                Label(text(game.macApp != nil ? "Mac listo" : "Mac sin preparar"),systemImage:"desktopcomputer")
-                Label(text(game.iosIPA != nil ? "IPA preparada en este Mac" : "iPhone / iPad sin preparar"),systemImage:"iphone")
+                Label(text(game.macApp != nil ? "Mac: listo para jugar" : "Mac: sin app creada"),systemImage:"desktopcomputer")
+                Label(text(game.iosIPA != nil ? "Archivo IPA: listo para instalar" : "Archivo IPA: sin crear"),systemImage:"iphone")
             }.font(.caption).foregroundStyle(.secondary)
             VStack(alignment:.leading,spacing:10) {
                 HStack {Text(text("En tus dispositivos")).font(.headline);Spacer();Button(text("Comprobar dispositivos"),action:checkDevices).disabled(disabled)}
@@ -303,14 +311,15 @@ struct GameLibraryDetail:View {
                         Image(systemName:isVerified(item) ? "checkmark.circle.fill" : "clock").foregroundStyle(isVerified(item) ? Color.green : .secondary)
                         VStack(alignment:.leading,spacing:4) {
                             Text(item.deviceName).font(.callout.bold())
-                            Text(text(isVerified(item) ? "Instalación verificada" : "Última instalación observada")+" · "+item.checkedAt.formatted(date:.abbreviated,time:.shortened)).font(.caption).foregroundStyle(.secondary)
-                            if !item.version.isEmpty {Text(text("Versión del juego")+" · "+item.version).font(.caption).foregroundStyle(.secondary)}
+                            Text(text(isVerified(item) ? "Instalación verificada" : item.checkedAt==nil ? "Instalación registrada" : "Última instalación observada")+(item.checkedAt.map {" · "+$0.formatted(date:.abbreviated,time:.shortened)} ?? "")).font(.caption).foregroundStyle(.secondary)
+                            if !item.version.isEmpty {Text(text("Versión instalada")+" · "+item.version).font(.caption).foregroundStyle(.secondary)}
+                            if item.checkedAt==nil {Text(text("Hay un registro de instalación. Conecta el dispositivo para comprobar su estado actual.")).font(.caption).foregroundStyle(.secondary)}
                         }
                     }
                 }
             }.padding(14).frame(maxWidth:.infinity,alignment:.leading).background(.white.opacity(0.035),in:RoundedRectangle(cornerRadius:12))
             ForEach(advice,id:\.self) {note in Label(note,systemImage:"arrow.triangle.2.circlepath").font(.caption).foregroundStyle(.secondary)}
-            if let version=game.version {Text(text("Versión del juego")+" · "+version).font(.callout).foregroundStyle(.secondary)}
+            if let version=game.version {Text(text("Versión preparada")+" · "+version).font(.callout).foregroundStyle(.secondary)}
             if game.missing {Label(text("Carpeta no disponible"),systemImage:"externaldrive.badge.exclamationmark").foregroundStyle(.orange)}
             Divider()
             Button(text("Preparar o actualizar"),action:prepare).disabled(disabled || game.missing)
@@ -321,12 +330,13 @@ struct GameLibraryDetail:View {
 
 struct BuildDock:View {
     @ObservedObject var model:BuildModel
+    var completion:String?=nil
     let show:()->Void
     var body:some View {
         HStack(spacing:20) {
             VStack(alignment:.leading,spacing:5) {
                 HStack {Image(systemName:model.failed ? "exclamationmark.triangle" : "hammer");Text(model.gameName).font(.headline);Text(model.isMac ? "Mac" : "iPhone / iPad").font(.caption).foregroundStyle(.secondary)}
-                Text(!model.running ? model.text(model.phase) : [model.activity.stage,model.activity.step,model.activity.count].filter{!$0.isEmpty}.joined(separator:" · ")).font(.caption).lineLimit(1).foregroundStyle(.secondary)
+                Text(!model.running ? (completion ?? model.text(model.phase)) : [model.activity.stage,model.activity.step,model.activity.count].filter{!$0.isEmpty}.joined(separator:" · ")).font(.caption).lineLimit(1).foregroundStyle(.secondary)
             }.frame(maxWidth:.infinity,alignment:.leading)
             if model.running {
                 VStack(alignment:.leading,spacing:5) {
@@ -336,6 +346,7 @@ struct BuildDock:View {
             }
             Button(model.text("Ver actividad"),action:show)
             if model.running {Button(model.text("Cancelar")){model.cancel()}}
+            else {Button {model.dismissBuildDock()} label:{Image(systemName:"xmark")}.buttonStyle(EasySecondaryStyle()).accessibilityLabel(model.text("Cerrar aviso de actividad")).help(model.text("Cerrar aviso de actividad"))}
         }.padding(.horizontal,24).padding(.vertical,16)
     }
 }

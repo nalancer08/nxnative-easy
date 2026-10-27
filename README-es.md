@@ -130,7 +130,7 @@ controles, ni los archivos JSON de preparación. [Guía detallada de partidas y 
 4. Si ya tienes el juego instalado, elige esa app existente para conservar su identidad. Pulsa **Firmar y actualizar**; no desinstales el juego anterior.
 5. Mantén cerrado el juego hasta que termine la firma, instalación y copia de datos. La renovación opcional recuerda la sesión en el Llavero.
 
-**Firmar e instalar** queda visible durante la revisión y explica qué falta. Si instalas después desde la biblioteca, se abre el mismo instalador guiado como modal. La sesión global del Mac está en **Configuración → Cuenta Apple**. El registro completo está en **Actividad**, cerrado por defecto.
+**Firmar e instalar** queda visible durante la revisión y explica qué falta. Si instalas después desde la biblioteca, se abre el mismo instalador guiado como modal. La sesión global del Mac está en **Configuración → Cuenta Apple**. El registro completo está en **Actividad**, cerrado por defecto. **IPA lista para instalar** se refiere al archivo del Mac; **Instalado en…**, a una instalación comprobada en el dispositivo. Los registros antiguos se distinguen de una comprobación actual. Puedes cerrar el aviso al terminar sin borrar los logs.
 
 ![Selección guiada del dispositivo](docs/images/nxnative-install-es-v1.17.png)
 

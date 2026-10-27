@@ -124,7 +124,7 @@ RomFS and control profiles. [Save locations and backup limits](docs/saves.md).
 4. If the game is already installed, select that existing app to retain its identity. Choose **Sign and update**; keep the previous app installed.
 5. Keep the game closed while signing, installation and game-data copying finish. Optional refresh remembers the session in Keychain.
 
-The final **Sign and install** action stays visible during review and tells you what is missing. Installing later from your library opens the same guided installer in a modal. Manage the shared Mac session in **Settings → Apple Account**. Full logs are available under **Activity**, collapsed by default.
+The final **Sign and install** action stays visible during review and tells you what is missing. Installing later from your library opens the same guided installer in a modal. Manage the shared Mac session in **Settings → Apple Account**. Full logs are available under **Activity**, collapsed by default. **IPA ready to install** refers to the file on your Mac; **Installed on…** refers to a verified device installation. Historical records are labelled separately. You can dismiss the finished activity notice without deleting its logs.
 
 ![Guided device selection](docs/images/nxnative-install-en-v1.17.png)
 

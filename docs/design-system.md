@@ -60,3 +60,9 @@ A success illustration appears only after a **validated `installed` event matchi
 Compile the whole desktop target and run the synthetic client/workflow fixtures. Render at least: empty and selected device; password form in English and Spanish; saved-session recovery; 2FA; authenticated team/slots; new-device review; progress; verified success and failure. Check the minimum desktop content width (760 points), long names, scrolling, focus, one primary action and collapsed log history. Keep decorative artwork static so reduced-motion settings need no exception.
 
 Use fake accounts, helper messages and devices for screenshots/tests. Do not initiate real account login, registration, signing or installation during agent validation. Real-device testing remains a separate user action.
+
+## Library status and completed activity
+
+A local IPA is **ready to install**, not proof of device installation. A local Mac app is **ready to play on Mac**. Show per-device installation/version separately and update it immediately from the validated receipt. Persist observations; after restart distinguish historical evidence from a current device query. Older signing records may be displayed as recorded installations without invented dates or versions. A fresh scoped query that reports absence overrides a historical receipt. Rebuild advice is a separate line and must not replace the installation state.
+
+Completed preparation notices have a labelled dismiss action that hides only the notice. Retain logs, timeline, source files and outputs. Do not allow dismissal to obscure a running build; the next actual build resets the dismissal. Viewing completed activity must not label the job as still building.

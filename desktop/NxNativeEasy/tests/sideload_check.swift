@@ -20,7 +20,7 @@ import Foundation
             if value['op']=='devices':emit({'event':'devices','items':[{'udid':'SYNTHETIC-DEVICE','name':'Test iPad','model':'iPad-test','os':'26.0','connections':['Wi-Fi']},{'udid':'SYNTHETIC-DEVICE','name':'Test iPad','model':'iPad-test','os':'26.0','connections':['USB','Wi-Fi']}]})
             elif value['op']=='installed_apps':
                 assert value.get('original_ids') and 'known_ids' in value
-                emit({'event':'installed_apps','items':[{'id':'org.game.custom','name':'Test game','version':'2.1.0'},{'id':'com.unrelated.private','name':'Test game'},{'id':'org.game.customevil','name':'Test game'}]})
+                emit({'event':'installed_apps','items':[] if os.path.exists(os.path.join(os.path.dirname(__file__),'absent')) else [{'id':'org.game.custom','name':'Test game','version':'2.1.0'},{'id':'com.unrelated.private','name':'Test game'},{'id':'org.game.customevil','name':'Test game'}]})
             elif value['op']=='login':
                 assert value['password']=='synthetic-password-only'
                 emit({'event':'two_factor'})
@@ -151,6 +151,11 @@ import Foundation
         model.setRefresh(job,enabled:false);assert(!model.jobs[0].enabled)
         let reloaded=SideloadModel(stateURL:root.appendingPathComponent("jobs.json"),defaults:defaults,helperURL:helper)
         assert(reloaded.jobs.count==2 && !reloaded.jobs[0].enabled)
+        let legacy=SideloadModel(stateURL:root.appendingPathComponent("legacy/jobs.json"),defaults:defaults,helperURL:helper)
+        legacy.jobs=[job]
+        let historical=legacy.observations(titleID:nil,originalID:"org.game")
+        assert(historical.count==1 && historical[0].checkedAt==nil && !legacy.isVerified(historical[0]))
+        assert(reloaded.observations(titleID:nil,originalID:"org.unrelated").isEmpty)
         model.email="different@example.org";model.renew(job);assert(!model.busy && model.error != nil)
         model.email="test@example.org";defaults.set(model.email,forKey:"sideloadEmail")
         model.restoreSession();try await wait {model.authenticated && !model.busy}
@@ -183,6 +188,17 @@ import Foundation
         model.inspectAccountDevices();try await wait {!model.busy};assert(model.estimatedDeviceSlots==2)
         model.install(autoRefresh:false,includeContent:false,approveRegistration:true);try await wait {!model.busy};assert(model.error==nil && model.completedInstallation)
         assert(model.estimatedDeviceSlots==1 && model.registrationState == .registered)
+        let installed=model.observations(titleID:"010093801237C000",originalID:"org.game")
+        assert(installed.count==1 && installed[0].bundleID=="org.game.custom" && installed[0].version=="2.1.0" && model.isVerified(installed[0]))
+        model.device="another-device";assert(!model.completedInstallation);model.device="SYNTHETIC-DEVICE"
+        let persistedPresence=SideloadModel(stateURL:root.appendingPathComponent("jobs.json"),defaults:defaults,helperURL:helper)
+        let offline=persistedPresence.observations(titleID:"010093801237C000",originalID:"org.game")
+        assert(offline.count==1 && offline[0].version=="2.1.0" && offline[0].checkedAt != nil && !persistedPresence.isVerified(offline[0]))
+        let absence=root.appendingPathComponent("absent");try Data().write(to:absence)
+        model.inspectApps();try await wait {!model.busy && model.apps.isEmpty}
+        assert(model.observations(titleID:"010093801237C000",originalID:"org.game").isEmpty) // A fresh negative query overrides old receipts.
+        try FileManager.default.removeItem(at:absence)
+        model.inspectApps();try await wait {!model.busy && model.apps.count==1}
         let backup=root.appendingPathComponent("progress.zip")
         model.exportSaves(selected,destination:backup,confirmedClosed:true);try await wait {!model.busy && model.exportedSaves != nil};assert(model.exportedSaves==backup)
         model.copyData(selected,confirmedClosed:true);try await wait {!model.busy};assert(model.fraction==1 && model.error==nil)

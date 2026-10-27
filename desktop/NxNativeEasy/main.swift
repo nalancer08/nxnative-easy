@@ -245,6 +245,8 @@ struct PackageIdentityView:View {
     @Published var showDeviceLibrary = false
     @Published var installerReady = false
     @Published var installingInline=false
+    @Published var buildDockDismissed=false
+    func dismissBuildDock() {if !running {buildDockDismissed=true}}
     @Published var catalog: [CatalogGame] = []
     @Published var catalogFailed = false
     private var process: Process?
@@ -398,7 +400,7 @@ struct PackageIdentityView:View {
         buildRevision=BuildProvenance.head(repo)
         BuildCompletionNotice.requestIfEnabled(defaults:defaults)
         preparationStep=4
-        installingInline=false;installerReady=false;running=true;cancelled=false;failed=false;showDetails=true;output=nil;assets=nil;transcript=""
+        buildDockDismissed=false;installingInline=false;installerReady=false;running=true;cancelled=false;failed=false;showDetails=true;output=nil;assets=nil;transcript=""
         phase="Preparando herramientas…";detail="Puedes dejar esta ventana abierta. No necesitas usar Terminal."
         pipe.fileHandleForReading.readabilityHandler={ [weak self] handle in
             let data=handle.availableData

@@ -60,7 +60,7 @@ struct DeviceGameObservation:Codable,Identifiable {
     let bundleID:String
     let titleID:String?
     let version:String
-    let checkedAt:Date
+    let checkedAt:Date?
 }
 
 struct RefreshJob:Codable,Identifiable {
@@ -112,9 +112,10 @@ enum RefreshPolicy {
     private var pendingUpdate:(device:String,id:String)?
     private var loggedPhase=""
     private var loggedBucket = -1
-    @Published var device=""
+    @Published var device="" {didSet {if device != oldValue {completedInstallation=false}}}
     @Published var team="" {
         didSet {
+            if team != oldValue {completedInstallation=false}
             if authenticated,hasRememberedSession,teams.contains(where:{$0.id==team}) {defaults.set(team,forKey:"sideloadTeam."+RefreshPolicy.account(email))}
         }
     }
@@ -180,9 +181,21 @@ enum RefreshPolicy {
         connect();listDevices()
     }
     func observations(titleID:String?,originalID:String?)->[DeviceGameObservation] {
-        deviceGames.filter {item in (titleID != nil && item.titleID==titleID) || (originalID != nil && item.bundleID==originalID)}.sorted {$0.checkedAt>$1.checkedAt}
+        let related=jobs.filter {job in
+            (originalID != nil && job.originalID==originalID) || (titleID != nil && SaveLocations.titleID(folder:URL(fileURLWithPath:job.gameFolder))==titleID)
+        }
+        let known=Set(related.map {$0.effectiveID})
+        var result=deviceGames.filter {item in (titleID != nil && item.titleID==titleID) || (originalID != nil && item.bundleID==originalID) || known.contains(item.bundleID)}
+        // Older releases persisted receipts but not presence. Keep these historical,
+        // without inventing an installation date/version or overriding a fresh negative query.
+        for job in related where job.sha256.count==64 && !verifiedDevices.contains(job.udid) {
+            guard !result.contains(where:{$0.device==job.udid && $0.bundleID==job.effectiveID}) else {continue}
+            let name=devices.first(where:{$0.id==job.udid})?.name ?? deviceGames.first(where:{$0.device==job.udid})?.deviceName ?? "iPhone / iPad"
+            result.append(DeviceGameObservation(device:job.udid,deviceName:name,bundleID:job.effectiveID,titleID:titleID,version:"",checkedAt:nil))
+        }
+        return result.sorted {($0.checkedAt ?? .distantPast)>($1.checkedAt ?? .distantPast)}
     }
-    func isVerified(_ item:DeviceGameObservation)->Bool {verifiedDevices.contains(item.device) && devices.contains(where:{$0.id==item.device})}
+    func isVerified(_ item:DeviceGameObservation)->Bool {item.checkedAt != nil && verifiedDevices.contains(item.device) && devices.contains(where:{$0.id==item.device})}
     private func savePresence() {
         guard presenceWritable else {return}
         let file=stateURL.deletingLastPathComponent().appendingPathComponent("device-games.json")
@@ -419,6 +432,18 @@ enum RefreshPolicy {
                 error="No pudimos verificar el resultado de la instalación. Revisa el dispositivo antes de continuar.";busy=false;activeRefresh=nil;installIntent=nil;return
             }
             job.expires=Date(timeIntervalSince1970:expiry);job.sha256=hash;job.retryAfter=nil;job.needsLogin=false;jobs.removeAll {$0.id==job.id};jobs.append(job);error=nil;saveJobs();existing=actual
+            // A validated install receipt is presence evidence immediately, before any later refresh.
+            let installedFolder=URL(fileURLWithPath:job.gameFolder)
+            let installedVersion=PreviousPreparation.load(folder:installedFolder,target:"ios")?.version ?? ""
+            let installedTitle=SaveLocations.titleID(folder:installedFolder)
+            let installedName=devices.first(where:{$0.id==job.udid})?.name ?? "iPhone / iPad"
+            deviceGames.removeAll {$0.device==job.udid && $0.bundleID==actual}
+            deviceGames.append(DeviceGameObservation(device:job.udid,deviceName:installedName,bundleID:actual,titleID:installedTitle,version:installedVersion,checkedAt:Date()))
+            verifiedDevices.insert(job.udid);savePresence()
+            if device==job.udid {
+                apps.removeAll {$0.id==actual}
+                apps.append(InstalledGame(id:actual,name:installedFolder.lastPathComponent,version:installedVersion))
+            }
             let confirmsCurrentInstall=activeRefresh==nil && job.ipa==ipa?.path && job.gameFolder==gameFolder?.path && job.originalID==originalID && job.udid==device && job.team==team
             installIntent=nil;activeRefresh=nil;refreshAuthenticated=false;busy=false;fraction=1;completedInstallation=confirmsCurrentInstall;phase="Instalado. Tus partidas se conservan en el dispositivo.";record(phase)
         case "error":
@@ -468,6 +493,7 @@ enum RefreshPolicy {
     // This is an opt-in marker, not proof that Keychain or Apple will accept the saved session.
     var hasRememberedSession:Bool {defaults.string(forKey:"sideloadEmail")==email && !email.isEmpty}
     func select(_ job:RefreshJob) {
+        completedInstallation=false
         guard !busy else {return}
         ipa=URL(fileURLWithPath:job.ipa);gameFolder=URL(fileURLWithPath:job.gameFolder);romfs=nil
         originalID=job.originalID;device=job.udid;team=job.team;existing=job.effectiveID

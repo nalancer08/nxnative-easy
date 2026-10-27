@@ -12,6 +12,23 @@ enum EasyLanguage: String, CaseIterable {
 
 struct EasyStrings {
     static let english: [String:String] = [
+        "Instalación registrada en":"Installation recorded on",
+        "Instalación registrada":"Recorded installation",
+        "Hay un registro de instalación. Conecta el dispositivo para comprobar su estado actual.":"An installation was recorded. Connect the device to check its current status.",
+        "Instalado en":"Installed on",
+        "Última vez en":"Last seen on",
+        "Mac listo · IPA lista":"Mac ready · IPA ready",
+        "Listo para jugar en Mac":"Ready to play on Mac",
+        "IPA lista para instalar":"IPA ready to install",
+        "Mac: listo para jugar":"Mac: ready to play",
+        "Mac: sin app creada":"Mac: app not built",
+        "Archivo IPA: listo para instalar":"IPA file: ready to install",
+        "Archivo IPA: sin crear":"IPA file: not created",
+        "Versión preparada":"Prepared version",
+        "Versión instalada":"Installed version",
+        "Instalación completada en":"Installation completed on",
+        "Cerrar aviso de actividad":"Dismiss activity notice",
+
         "Revisa la instalación":"Review the installation",
         "La instalación no terminó. Revisa lo ocurrido antes de volver a intentarlo.":"Installation did not finish. Review what happened before trying again.",
         "Vuelve a iniciar sesión para continuar.":"Sign in again to continue.",
