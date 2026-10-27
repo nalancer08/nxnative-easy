@@ -32,6 +32,7 @@ import Darwin
     @Published var showAnalysis = false
     @Published var showSaves = false
     @Published var showSideload = false
+    @Published var showDeviceLibrary = false
     @Published var catalog: [CatalogGame] = []
     @Published var catalogFailed = false
     private var process: Process?
@@ -150,8 +151,8 @@ import Darwin
                 } else if status==0 {
                     self.restoreOutput()
                     self.failed=self.output==nil
-                    self.phase=self.output == nil ? "Terminó, pero no encontramos la app." : (self.isMac ? "Tu juego está listo para Mac." : "Tu juego está listo para Sideloadly.")
-                    self.detail=self.output == nil ? "Usa Ver error para revisar lo que ocurrió." : "Abre la IPA y arrástrala a Sideloadly. La firma se hace con tu cuenta personal."
+                    self.phase=self.output == nil ? "Terminó, pero no encontramos la app." : (self.isMac ? "Tu juego está listo para Mac." : "Tu juego está listo para instalar en iPhone / iPad.")
+                    self.detail=self.output == nil ? "Usa Ver error para revisar lo que ocurrió." : "Pulsa Instalar en iPhone / iPad. Inicia sesión con tu cuenta personal para firmar e instalar el juego y sus datos."
                 } else {
                     self.failed=true;self.showDetails=true;self.phase="No pudimos preparar el juego."
                     let log=self.transcript.lowercased()
@@ -312,6 +313,7 @@ struct ContentView: View {
                             Text("nxnative easy").font(.system(size:15,weight:.semibold)).foregroundStyle(lime)
                         }
                         Spacer()
+                        Button(model.text("Mis iPhones y iPads")){model.showDeviceLibrary=true}.disabled(model.running || updater.busy || sideload.busy)
                         Picker(model.text("Idioma de la interfaz"),selection:$model.language) {
                             Text("English").tag(EasyLanguage.english)
                             Text("Español").tag(EasyLanguage.spanish)
@@ -349,7 +351,7 @@ struct ContentView: View {
                         HStack {
                             Text(model.text(sideload.error ?? sideload.phase)).font(.system(size:12)).textSelection(.enabled)
                             Spacer()
-                            if !sideload.busy {Button(model.text("Revisar renovación")){sideload.reviewRefresh();model.showSideload=true}}
+                            if !sideload.busy {Button(model.text("Revisar renovación")){model.showDeviceLibrary=true}}
                         }.padding(14).background(Color.orange.opacity(0.08),in:RoundedRectangle(cornerRadius:12))
                     }
                     VStack(alignment:.leading,spacing:6) {
@@ -455,7 +457,7 @@ struct ContentView: View {
                         if model.previous != nil && !model.running {
                             Label(model.text("Ya preparaste este juego antes"),systemImage:"arrow.triangle.2.circlepath").font(.system(size:13,weight:.medium))
                             if let version=model.previous?.version {Text(model.text("Versión anterior")+": "+version).font(.system(size:12)).foregroundStyle(.secondary)}
-                            Text(model.text(model.isMac ? "Crearás una app nueva. Tus partidas siguen en este Mac, fuera de la app. Cierra el juego antes de abrir la versión nueva." : "Crearás una IPA para actualizar tu app. Usa la misma cuenta e identificador en Sideloadly e instala encima, sin desinstalar. La preparación no comprueba qué está instalado en tu iPhone."))
+                            Text(model.text(model.isMac ? "Crearás una app nueva. Tus partidas siguen en este Mac, fuera de la app. Cierra el juego antes de abrir la versión nueva." : "Crearás una IPA para actualizar tu app. En Instalar en iPhone / iPad, elige la app existente y su misma cuenta. No desinstales el juego. La preparación no comprueba qué está instalado en tu iPhone."))
                                 .font(.system(size:12)).foregroundStyle(.secondary)
                         }
                         if !model.running && (model.output == nil || model.failed) {
@@ -525,6 +527,7 @@ struct ContentView: View {
         }.frame(minWidth:760,minHeight:530).background(CompactWindow(height:(model.isMac ? 740 : 680)+(updater.visible ? 95 : 0)+(sideload.showsRefreshNotice ? 70 : 0))).preferredColorScheme(.dark)
         .onReceive(NotificationCenter.default.publisher(for:Notification.Name("nxnative.openAnalysis"))) {_ in if !model.running && !updater.busy {model.showAnalysis=true}}
         .sheet(isPresented:$model.showSaves) {SavesHelpView(folder:model.folder,isMac:model.isMac,text:model.text,language:model.language)}
+        .sheet(isPresented:$model.showDeviceLibrary) {SideloadLibraryView(model:sideload,text:model.text,canInstall:!model.running && !updater.busy)}
         .sheet(isPresented:$model.showSideload) {SideloadView(model:sideload,text:model.text)}
         .sheet(isPresented:$model.showAnalysis) {if let game=model.folder {GameAnalysisView(repo:model.repo,game:game,text:model.text)} else {Text(model.text("Primero selecciona la carpeta de un juego preparado.")).padding(24)}}
         .sheet(isPresented:$model.showCatalog) {GameCatalogView(model:model)}

@@ -139,3 +139,26 @@ system-library linkage checks. The native CI job performs no Apple login,
 Keychain credential creation, signing of game IPAs or device installation.
 Cloud-save work remains separate and inactive until native backup/restore is
 implemented and validated.
+
+## Installation library (1.8.1)
+
+**My iPhones and iPads** is available independently of the current preparation.
+It lists all our recorded installations, their devices, exact effective IDs,
+actual expiry dates and per-game refresh toggles. It does not import another
+installer's private credentials or claim to discover all its scheduled jobs.
+For a previously Sideloadly-installed game, prepare the same game and select its
+actual installed app in our installer; retain the same Apple account/team.
+
+Manual **Refresh now** preserves the recorded IPA hash and identity, checks the
+account and connected device, signs/installs the unchanged app and omits RomFS.
+It can reuse an authenticated session or restore a remembered Keychain session.
+Save and close the game before manual refresh; automated refresh retains its
+fail-closed running-process guard. Manual refresh does not enable a previously
+paused schedule. Record removal only changes local scheduling metadata, never
+uninstalls an app or deletes source game files. Login, expiry and USB/AFC behavior
+remain subject to the physical validation boundary above.
+
+The implementation covers our prepared-game installation lifecycle. It is not a
+full binary/source migration of Sideloadly: no proprietary code is available to
+port, and arbitrary IPA injection/plugins and all of its advanced options are
+not implemented. Intel Sideloadly is not required by the native code path.

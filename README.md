@@ -38,7 +38,7 @@ When the app opens:
 
 Built on [seedds/nxnative](https://github.com/seedds/nxnative). The original project provides the engine, game profiles and compatibility work. **nxnative Easy** adds:
 
-- **Native Mac app:** game-folder selection, progress, cancellation, and buttons for the IPA, RomFS data and Sideloadly.
+- **Native Mac app:** game preparation, progress, cancellation and an integrated iPhone/iPad installer with device/game management.
 - **Editable iPhone touch controls:** position, size and opacity, saved per game and 2D/3D layout.
 - **Lightweight IPA export for iPhone/iPad only:** RomFS data live separately; existing outputs and valid caches are preserved.
 - **Your own keys:** explicitly select the external folder containing your `prod.keys`. No games or keys are included, downloaded or distributed.
@@ -66,13 +66,13 @@ The update uses a separate source folder and keeps the previous app as a backup.
 
 ## What happens after Prepare game?
 
-The app prepares the tools and builds for your chosen device. **Mac** produces a game app with **Open game** and **Show app** buttons. **iPhone / iPad** produces a lightweight IPA and shows the Sideloadly and Finder steps when ready. Your own files and previous outputs stay in the game folder.
+The app prepares the tools and builds for your chosen device. **Mac** produces a game app with **Open game** and **Show app** buttons. **iPhone / iPad** produces a lightweight IPA and offers **Install on iPhone / iPad**, including game-data transfer. Your own files and previous outputs stay in the game folder.
 
 Setup keeps a separate source checkout and preserves local edits. Developers can still use [`scripts/Abrir-interfaz.command`](scripts/Abrir-interfaz.command).
 
 ## How the Mac app is built
 
-The launcher uses Xcode's Swift compiler. The desktop app is explicitly **ad-hoc signed**, locally, with no Apple account, certificate or team (`TeamIdentifier` is unset). No company account is used. You enter your personal Apple account separately in Sideloadly when signing the **iPhone IPA**.
+The launcher uses Xcode's Swift compiler. The desktop app is explicitly **ad-hoc signed**, locally, with no Apple account, certificate or team (`TeamIdentifier` is unset). No company account is used. You enter your personal Apple account in the integrated installer when signing the **iPhone/iPad IPA**. Sideloadly remains an alternative.
 
 The app has an original phone-and-controller icon. Game cards use the existing upstream screenshots in this repository as a support reference; they do not provide or download games.
 
@@ -91,27 +91,47 @@ paired device. Keep the original IPA. [Implementation and current limits](docs/s
 iPhone/iPad Finder instructions. Progress is local to the device, separate from
 RomFS and control profiles. [Save locations and backup limits](docs/saves.md).
 
-## Install with Sideloadly and Finder
+## Put your game on iPhone or iPad
+
+1. Prepare your game, then choose **Install on iPhone / iPad**.
+2. Connect and unlock your device. Trust the Mac and enable Developer Mode when iOS asks.
+3. Sign in with your own Apple account, enter the verification code and choose your personal team.
+4. If the game is already installed, select that existing app to retain its identity. Choose **Sign and update**; keep the previous app installed.
+5. Keep the game closed while signing, installation and game-data copying finish. Optional refresh remembers the session in Keychain.
+
+**My iPhones and iPads**, at the top of the main window, lists our recorded
+installations and actual signature expiry dates. Use **Refresh now** without
+recompiling or copying RomFS again, or pause automatic renewal per game.
+**Review account and installation** restores that game's original device/team/ID;
+**Use Keychain session** signs back in without entering the password again when
+the remembered session is still valid. Removing a record stops its renewal;
+it does not uninstall the game or remove saves.
+
+This native flow still requires real-account/device validation. This is a
+replacement workflow for our prepared games, not a copy of all proprietary
+Sideloadly features. The fallback below remains available.
+
+## Alternative: Sideloadly and Finder
 
 1. When the IPA is ready, connect your iPhone and click **Send to Sideloadly**. The app opens the prepared IPA there.
 2. In Sideloadly, click **Start** using your **personal** Apple account. If needed, use **Show IPA** to find the file manually.
 3. On the first installation, click **Show game data** and copy the complete `romfs` folder using **Finder → iPhone → Files → your game**.
 
-For updates, keep the same Apple account and effective bundle ID used in Sideloadly. **Install over the existing app; do not uninstall it**, to retain its saves. Reuse the existing `romfs` only when the game data have not changed. The app installs missing build dependencies after Xcode and Homebrew are available, but **does not sign or install the iPhone game**. Those steps happen in Sideloadly. The app explains them only when the IPA is ready. See the [official Sideloadly FAQ](https://sideloadly.io/faq).
+For updates, keep the same Apple account and effective bundle ID used in Sideloadly. **Install over the existing app; do not uninstall it**, to retain its saves. Reuse the existing `romfs` only when the game data have not changed. When using this alternative, signing happens in Sideloadly and copying happens in Finder; the integrated installer performs those operations itself. See the [official Sideloadly FAQ](https://sideloadly.io/faq).
 
 ## Updating a prepared game
 
 Add your own update files to the same game folder and prepare it again. The app
-recognizes its previous preparation and explains that this is an update; it
-cannot inspect what is installed on an iPhone. A new game version still needs
+recognizes its previous preparation and explains that this is an update; preparation itself
+does not inspect the phone; the connected-device installer lists existing apps. A new game version still needs
 compatible engine/profile support.
 
 - **Mac:** a new complete `.app` is created; the previous app remains available.
   Close the old game and open the new app. The Title ID and bundle identity are
   retained; saves stay outside the app in Application Support.
 - **iPhone / iPad:** install the new IPA over the existing app using the same
-  Sideloadly account and effective identifier. For a game-content update, replace
-  only `romfs` with the newly prepared data via Finder. Keep `save`, `save_device`
+  Apple account/team and effective identifier. The integrated installer copies the
+  updated RomFS with staging/recovery; the Sideloadly alternative uses Finder. Keep `save`, `save_device`
   and the installed app; do not delete them.
 
 Optional developer analysis is under **Analysis tools → Analyze with REA**.

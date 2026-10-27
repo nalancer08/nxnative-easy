@@ -65,6 +65,7 @@ enum RefreshPolicy {
     private var installIntent:RefreshJob?
     private var activeRefresh:RefreshJob?
     private var refreshAuthenticated=false
+    private var manualRefresh=false
     private var pendingRemember:Bool?
     var showsRefreshNotice:Bool {jobs.contains(where:{$0.enabled}) && (busy || error != nil)}
     private let stateURL:URL
@@ -137,7 +138,7 @@ enum RefreshPolicy {
         guard FileManager.default.isReadableFile(atPath:job.ipa) else {error="No encontramos la IPA original. Conserva los archivos de preparación para renovarla.";activeRefresh=nil;return}
         if let content,!FileManager.default.fileExists(atPath:content.path) {error="Faltan los datos romfs. Prepara el juego de nuevo antes de instalarlo.";activeRefresh=nil;return}
         installIntent=job;busy=true;error=nil;startedAt=Date();phase="Firmando e instalando…";fraction=nil
-        var value:[String:Any]=["op":"install","ipa":job.ipa,"original_id":job.originalID,"team":job.team,"udid":job.udid,"work":URL(fileURLWithPath:job.gameFolder).appendingPathComponent("nxnative-tools/sideloading").path,"update":updating,"automatic":activeRefresh != nil]
+        var value:[String:Any]=["op":"install","ipa":job.ipa,"original_id":job.originalID,"team":job.team,"udid":job.udid,"work":URL(fileURLWithPath:job.gameFolder).appendingPathComponent("nxnative-tools/sideloading").path,"update":updating,"automatic":activeRefresh != nil && !manualRefresh]
         if updating {value["expected_id"]=job.effectiveID}
         if !job.sha256.isEmpty {value["sha256"]=job.sha256}
         if let content {value["romfs"]=content.path}
@@ -204,6 +205,33 @@ enum RefreshPolicy {
             try FileManager.default.setAttributes([.posixPermissions:0o600],ofItemAtPath:stateURL.path)
         } catch {self.error="La instalación terminó, pero no pudimos guardar su renovación automática."}
     }
+    func restoreSession() {
+        guard !busy,!email.isEmpty,defaults.string(forKey:"sideloadEmail")==email else {return}
+        busy=true;error=nil;startedAt=Date();phase="Renovando sesión guardada…"
+        send(["op":"restore","email":email,"anisette_url":anisette])
+    }
+    var hasRememberedSession:Bool {defaults.string(forKey:"sideloadEmail")==email && !email.isEmpty}
+    func select(_ job:RefreshJob) {
+        guard !busy else {return}
+        ipa=URL(fileURLWithPath:job.ipa);gameFolder=URL(fileURLWithPath:job.gameFolder);romfs=nil
+        originalID=job.originalID;device=job.udid;team=job.team;existing=job.effectiveID
+    }
+    func setRefresh(_ job:RefreshJob,enabled:Bool) {
+        guard !busy,let index=jobs.firstIndex(where:{$0.id==job.id}) else {return}
+        jobs[index].enabled=enabled;saveJobs()
+    }
+    func forget(_ job:RefreshJob) {
+        guard !busy else {return}
+        jobs.removeAll {$0.id==job.id};saveJobs()
+    }
+    func renew(_ job:RefreshJob) {
+        guard !busy,canRefresh() else {return}
+        guard job.account==RefreshPolicy.account(email) else {error="Inicia sesión con la cuenta que instaló este juego para renovarlo.";return}
+        guard hasRememberedSession || authenticated else {error="Inicia sesión para renovar este juego.";return}
+        guard job.sha256.count==64 else {error="Falta el registro de la IPA. Prepara y aprueba la actualización antes de renovarla.";return}
+        select(job);activeRefresh=job;manualRefresh=true;refreshAuthenticated=authenticated
+        error=nil;startedAt=Date();listDevices()
+    }
     func reviewRefresh() {
         guard !busy,let job=jobs.first(where:{$0.enabled}) else {return}
         ipa=URL(fileURLWithPath:job.ipa);gameFolder=URL(fileURLWithPath:job.gameFolder);romfs=nil;originalID=job.originalID;device=job.udid;team=job.team;existing=job.effectiveID
@@ -212,11 +240,11 @@ enum RefreshPolicy {
     func checkRefresh() {
         guard !busy,activeRefresh==nil,canRefresh(),!email.isEmpty,defaults.string(forKey:"sideloadEmail") != nil else {return}
         guard let job=jobs.first(where:{RefreshPolicy.due($0,now:Date(),account:RefreshPolicy.account(email))}) else {return}
-        activeRefresh=job;refreshAuthenticated=false;listDevices()
+        activeRefresh=job;manualRefresh=false;refreshAuthenticated=false;listDevices()
     }
     private func continueRefresh(_ job:RefreshJob) {
-        guard devices.contains(where:{$0.id==job.udid}) else {activeRefresh=nil;return}
-        guard teams.contains(where:{$0.id==job.team}) || !refreshAuthenticated else {activeRefresh=nil;return}
+        guard devices.contains(where:{$0.id==job.udid}) else {if manualRefresh {error="Conecta y desbloquea el dispositivo donde instalaste este juego."};activeRefresh=nil;return}
+        guard teams.contains(where:{$0.id==job.team}) || !refreshAuthenticated else {error="La cuenta actual no tiene el equipo original de este juego. No cambiamos su identidad.";activeRefresh=nil;return}
         if !refreshAuthenticated {busy=true;phase="Renovando sesión guardada…";send(["op":"restore","email":email,"anisette_url":anisette])}
         else {startInstall(job,updating:true,content:nil)}
     }
@@ -253,6 +281,7 @@ struct SideloadView:View {
                         Text(text("La contraseña y el código se envían a Apple. El servicio anisette recibe los datos técnicos que requiere la autenticación, no tu contraseña.")) .font(.caption)
                         TextField("Anisette HTTPS",text:$model.anisette).disabled(model.busy)
                     }
+                    if model.hasRememberedSession {Button(text("Usar sesión del Llavero")){model.restoreSession()}.disabled(model.busy)}
                     Button(text("Iniciar sesión")){model.signIn(password:password,remember:remember);password=""}.disabled(model.busy || model.email.isEmpty || password.isEmpty)
                 } else {
                     Label(text("Sesión iniciada"),systemImage:"person.crop.circle.badge.checkmark")
@@ -276,5 +305,64 @@ struct SideloadView:View {
                 if let error=model.error {Text(text(error)).foregroundStyle(.orange).textSelection(.enabled)}
             }.padding(24)
         }.frame(width:720,height:690).interactiveDismissDisabled(model.busy)
+    }
+}
+
+
+struct SideloadLibraryView:View {
+    @ObservedObject var model:SideloadModel
+    let text:(String)->String
+    let canInstall:Bool
+    @Environment(\.dismiss) private var dismiss
+    @State private var showInstaller=false
+    @State private var forgotten:RefreshJob?
+    var body:some View {
+        ScrollView {
+            VStack(alignment:.leading,spacing:18) {
+                HStack {Text(text("Mis iPhones y iPads")).font(.title2.bold());Spacer();Button(text("Cerrar")){dismiss()}.disabled(model.busy)}
+                Text(text("Administra los juegos instalados desde esta app. Renovar la firma no recompila el juego ni copia sus datos otra vez."))
+                    .font(.callout).foregroundStyle(.secondary)
+                HStack {
+                    Label(text(model.devices.isEmpty ? "Conecta tu iPhone o iPad" : "Dispositivos disponibles"),systemImage:"iphone.and.ipad")
+                    Spacer();Button(text("Buscar dispositivos")){model.listDevices()}.disabled(model.busy || !canInstall)
+                }
+                ForEach(model.devices) {device in Label(device.name,systemImage:"checkmark.circle").font(.callout)}
+                if model.jobs.isEmpty {
+                    Text(text("Aún no hay juegos registrados. Prepara tu juego y pulsa Instalar en iPhone / iPad. Para una app de Sideloadly, elige su instalación existente y conserva su identidad."))
+                        .foregroundStyle(.secondary)
+                }
+                ForEach(model.jobs.sorted {$0.expires<$1.expires}) {job in
+                    VStack(alignment:.leading,spacing:10) {
+                        Text(URL(fileURLWithPath:job.ipa).deletingPathExtension().lastPathComponent).font(.headline)
+                        Text(job.effectiveID).font(.caption).textSelection(.enabled)
+                        HStack {
+                            Text(text("Dispositivo")+": "+(model.devices.first(where:{$0.id==job.udid})?.name ?? String(job.udid.suffix(8))))
+                            Spacer()
+                            Text(text(job.expires<=Date() ? "Firma vencida" : "La firma vence")+" "+job.expires.formatted(date:.abbreviated,time:.shortened))
+                        }.font(.caption).foregroundStyle(job.expires<=Date() ? .orange : .secondary)
+                        if job.needsLogin {Text(text("Inicia sesión para renovar este juego.")).foregroundStyle(.orange)}
+                        Toggle(text("Renovar automáticamente antes de que caduque"),isOn:Binding(get:{model.jobs.first(where:{$0.id==job.id})?.enabled ?? false},set:{model.setRefresh(job,enabled:$0)}))
+                        HStack {
+                            Button(text("Renovar ahora")){model.renew(job)}.buttonStyle(.borderedProminent)
+                            Button(text("Revisar cuenta e instalación")){model.select(job);showInstaller=true}
+                            Spacer();Button(text("Quitar de esta lista")){forgotten=job}
+                        }
+                    }.padding(16).background(.white.opacity(0.045),in:RoundedRectangle(cornerRadius:12)).disabled(model.busy || !canInstall)
+                }
+                Text(text("Guarda y cierra el juego antes de renovar manualmente. La renovación automática requiere este Mac despierto, la app abierta, Internet y el dispositivo accesible."))
+                    .font(.caption).foregroundStyle(.secondary)
+                if model.busy {
+                    if let fraction=model.fraction {ProgressView(value:fraction)}else{ProgressView().progressViewStyle(.linear)}
+                    Text(text(model.phase));Button(text("Cancelar")){model.cancel()}
+                }
+                if let error=model.error {Text(text(error)).foregroundStyle(.orange).textSelection(.enabled)}
+            }.padding(24)
+        }.frame(width:760,height:650).interactiveDismissDisabled(model.busy)
+        .task {if canInstall && !model.busy {model.listDevices()}}
+        .sheet(isPresented:$showInstaller){SideloadView(model:model,text:text)}
+        .alert(text("¿Quitar este registro?"),isPresented:Binding(get:{forgotten != nil},set:{if !$0 {forgotten=nil}})) {
+            Button(text("Cancelar"),role:.cancel){forgotten=nil}
+            Button(text("Quitar de esta lista"),role:.destructive){if let job=forgotten {model.forget(job)};forgotten=nil}
+        } message:{Text(text("Sólo detiene la renovación y quita el registro de este Mac. El juego, sus archivos y sus partidas siguen en tu dispositivo."))}
     }
 }

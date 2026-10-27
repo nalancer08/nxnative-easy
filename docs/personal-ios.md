@@ -419,3 +419,19 @@ harness could not discover a registered Mac Dread build (`tools/dmhost` absent),
 so no gameplay comparison is claimed. Runtime and shader chain are unchanged.
 Real account authentication, signing, installation, AFC recovery and scheduled
 renewal still require physical-device validation.
+
+## Device/game installation library (1.8.1)
+
+The main window now opens My iPhones and iPads independently of preparation.
+Recorded installations expose actual expiry, per-game schedule controls, manual
+renewal, Keychain session reuse and metadata-only removal. Manual renewal retains
+the original source hash and identity, does not recopy RomFS or enable a paused
+schedule, and refuses a different account. Both player READMEs describe the native
+flow first and retain the Sideloadly fallback and physical-validation boundary.
+
+The expanded compiled Swift IPC fixture passed with synthetic login/2FA/restore
+and installation events, multi-game metadata persistence, manual-refresh protocol
+assertions, account rejection and non-destructive record removal. The production
+ARM64 bundle compiled and its signature verified; localization, documentation and
+78-profile catalog checks passed. No runtime, shader or Rust helper change was
+needed. No real account login, signing or physical-device install was performed.
