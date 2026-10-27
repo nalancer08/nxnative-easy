@@ -292,3 +292,8 @@ tools and system build dependencies were already installed; initial installation
 of those system components, browser quarantine prompts, a fresh macOS user
 account and game compilation/gameplay were not exercised by this check. No
 game packages, keys or saves were used or modified.
+
+The clean-install check above did not start game preparation. A later user report
+exposed a Foundation worker-launch failure, fixed and reproduced in 1.4.2; see
+[Prepare game fails at os.setsid](reference/packing.md#prepare-game-fails-at-ossetsid).
+The regression suite now exercises the actual Foundation launch mechanism.

@@ -5,6 +5,7 @@ One line per symptom in the [subsystem references](../reference/): what you see 
 ## Packing
 
 - `decompress NSZ` stops immediately with `nsz: error: unrecognized arguments: --keys …`. → [NSZ decompression rejects `--keys`](../reference/packing.md#nsz-decompression-rejects---keys)
+- clicking Prepare game stops before any build tools start, with `PermissionError: [Errno 1] Operation not permitted` at `build_session.py` `os.setsid()`. → [Prepare game fails at `os.setsid()`](../reference/packing.md#prepare-game-fails-at-ossetsid)
 
 ## Rewriter
 
