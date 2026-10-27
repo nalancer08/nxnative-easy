@@ -3,7 +3,7 @@
 Each game the port knows has a folder `dm/games/<id>/`, named after the base game's title ID: Mario's is `010015100B514000`, Engage's `0100A6301214E000`. The folder holds:
 
 - **`game.tsv`**: the game's constants, one `key<TAB>value` row each, with comments on their own lines.
-- **The shader tables** that `shader_split.py` writes: `shader_map.tsv` (+ `.conflicts.tsv`), `shader_facts.tsv`, `shader_pairs.tsv`, and `pso_pairs.tsv` (the pairs of agl BAHS program variations, read only by the pipeline prebuild; a profile without it still packs).
+- **The shader tables** that `shader_split.py` writes: `shader_map.tsv` (+ `.conflicts.tsv`), `shader_facts.tsv`, `shader_pairs.tsv`, and `pso_pairs.tsv` (agl BAHS program variations). Both pair tables feed vertex output padding and the pipeline prebuild; for a profile without `pso_pairs.tsv`, the NSP script keeps the generated table beside the shader package.
 - **`shader_facts_manual.tsv`** (optional): hand-written translation facts in `shader_facts.tsv`'s row format, for what the machine code cannot tell (Link's Awakening: a vertex input the integer-input guess gets wrong; Breath of the Wild and Tears of the Kingdom: integer fragment outputs, which a game without a PC version has no other source for). `shader_split.py` merges it over the generated rows; since the table is on the chain, changing it changes only that profile's chain version.
 - **`pso_manifest.tsv`**: the prewarm seed list.
 - **`bench.tsv`** (optional): benchmark routes for `scripts/bench.py` ([A benchmark on the Mac](../../docs/development.md#a-benchmark-on-the-mac)): a name, the scripted input (`DM_KEYS`), the measured window and a description, one route per line.
@@ -61,6 +61,8 @@ One row per profile; the notes are each profile's `README.md`.
 | [Cuphead](0100A5C00D162000/README.md) | `0100A5C00D162000` | 1.3.7 | 5.5.0 | Unity 2017.4.9f1 IL2CPP | NVN |
 | [DARK SOULS: REMASTERED](01004AB00A260000/README.md) | `01004AB00A260000` | 1.0.3 | 4.5.0 | FromSoftware's engine | NVN |
 | [Digimon Story Cyber Sleuth: Complete Edition](010014E00DB56000/README.md) | `010014E00DB56000` | 1.0.3 | 6.4.0 | Media.Vision MVGL | OpenGL |
+| [Donkey Kong Country Returns HD](01009D901BC56000/README.md) | `01009D901BC56000` | 1.1.0 | 18.3.5 | Unity 6000.0.28f1 IL2CPP | NVN |
+| [Donkey Kong Country: Tropical Freeze](0100C1F0051B6000/README.md) | `0100C1F0051B6000` | 1.0.2 | 4.4.0 | Retro Studios' engine | NVN |
 | [DRAGON QUEST VII Reimagined](0100A9D01C446000/README.md) | `0100A9D01C446000` | 1.2.0 | 19.3.1 | Unreal Engine 4.27 | NVN |
 | [DRAGON QUEST XI S: Echoes of an Elusive Age – Definitive Edition](01006C300E9F0000/README.md) | `01006C300E9F0000` | 1.0.4 | 7.3.2 | Unreal Engine 4.18 | NVN |
 | [FINAL FANTASY RESONANCE](0100606026F12000/README.md) | `0100606026F12000` | 1.0.1 | 20.5.17 | Unreal Engine 5.6.1 | NVN |
@@ -72,13 +74,16 @@ One row per profile; the notes are each profile's `README.md`.
 | [Hades II](0100A00019DE0000/README.md) | `0100A00019DE0000` | base game | 19.3.9 | Supergiant Games' engine | NVN |
 | [Hollow Knight: Silksong](010013C00E930000/README.md) | `010013C00E930000` | 1.0.30000 | 20.5.8 | Unity 6000.0.50f1 IL2CPP | NVN |
 | [Hyrule Warriors: Age of Calamity](01002B00111A2000/README.md) | `01002B00111A2000` | 1.3.0 | 9.6.0 | Koei Tecmo's KTGL | NVN |
+| [Kirby and the Forgotten Land](01004D300C5AE000/README.md) | `01004D300C5AE000` | 1.1.0 | 11.4.0 | HAL Laboratory's engine (NintendoWare) | NVN |
 | [Luigi's Mansion 3](0100DCA0064A6000/README.md) | `0100DCA0064A6000` | 1.4.0 | 7.3.2 | Next Level Games' engine | NVN |
 | [Mario Kart 8 Deluxe](0100152000022000/README.md) | `0100152000022000` | 4.0.0 | 4.4.0 | Nintendo (sead / agl / gsys, NintendoWare, Pia) | NVN |
+| [Mario + Rabbids Sparks of Hope](0100317013770000/README.md) | `0100317013770000` | 1.6.2225577 | 13.3.5 | Ubisoft Snowdrop | NVN |
 | [Mario vs. Donkey Kong](0100B99019412000/README.md) | `0100B99019412000` | 1.0.1 (cartridge base) | 15.3.0 | Nintendo (sead / agl / gsys) | NVN |
 | [Metroid Dread](010093801237C000/README.md) | `010093801237C000` | 2.1.0 | 11.4.3 | MercurySteam's engine | NVN |
 | [Monster Hunter Rise](0100B04011742000/README.md) | `0100B04011742000` | 16.0.2 | 11.4.3 | Capcom's RE Engine | NVN |
 | [Monster Train 2](010051701FB46000/README.md) | `010051701FB46000` | 1.1.1 | 18.3.5 | Unity 2022.3.54f1 IL2CPP | NVN |
 | [NieR:Automata The End of YoRHa Edition](010056B015FE8000/README.md) | `010056B015FE8000` | 1.0.3 | 12.3.9 | PlatinumGames' engine | NVN |
+| [OCTOPATH TRAVELER](010057D006492000/README.md) | `010057D006492000` | 1.0.5 | 3.5.1 | Unreal Engine 4.18 | NVN |
 | [Octopath Traveler 0](01005270232F2000/README.md) | `01005270232F2000` | 1.0.5 | 19.3.13 | Unreal Engine 5 | NVN |
 | [OCTOPATH TRAVELER II](0100A3501946E000/README.md) | `0100A3501946E000` | 1.1.1 | 12.3.2 | Unreal Engine 4.27 | NVN |
 | [Paper Mario: The Thousand-Year Door](0100ECD018EBE000/README.md) | `0100ECD018EBE000` | 1.0.1 | 15.3.2 | Intelligent Systems' engine on NintendoWare | NVN |
@@ -93,6 +98,8 @@ One row per profile; the notes are each profile's `README.md`.
 | [Raging Loop](010020400E1C2000/README.md) | `010020400E1C2000` | 1.0.0 (base) | 7.3.2 | Unity 2018.3.10f1 IL2CPP | NVN |
 | [Rhythm Heaven Groove](0100D9F01D474000/README.md) | `0100D9F01D474000` | 1.0.0 (base) | 21.4.0 | Nintendo's own 2D engine | NVN |
 | [ROMANCE OF THE THREE KINGDOMS 8 REMAKE](0100C2A01A730000/README.md) | `0100C2A01A730000` | 1.1.3 | 17.5.3 | Koei Tecmo's KTGL | NVN |
+| [Sea of Stars](01008C0016544000/README.md) | `01008C0016544000` | 2.0.59001 | 16.2.0 | Unity 2021.3.25f1 IL2CPP | NVN |
+| [SHIN MEGAMI TENSEI V: Vengeance](010069C01AB82000/README.md) | `010069C01AB82000` | 1.0.3 | 15.3.2 | Unreal Engine 4.27 | NVN |
 | [STEINS;GATE RE:BOOT](01008BC024FDE000/README.md) | `01008BC024FDE000` | 1.0.3 | 20.5.17 | M2's ADV engine | NVN |
 | [Stardew Valley](0100E65002BB8000/README.md) | `0100E65002BB8000` | 1.6.15.13 | 20.5.27 | MonoGame (C# → C++ by BRUTE) | NVN |
 | [Super Mario 3D World + Bowser's Fury](010028600EBDA000/README.md) | `010028600EBDA000` | 1.2.2 | 10.4.0 | Nintendo EPD (sead / agl, NintendoWare) | NVN |
@@ -108,6 +115,7 @@ One row per profile; the notes are each profile's `README.md`.
 | [The Legend of Zelda: Link's Awakening](01006BB00C6F0000/README.md) | `01006BB00C6F0000` | 1.1.0 | 8.2.0 | Grezzo's engine on NintendoWare | NVN |
 | [The Legend of Zelda: Tears of the Kingdom](0100F2C0115B6000/README.md) | `0100F2C0115B6000` | 1.4.3 | 20.5.22 | Nintendo EPD (sead / agl / gsys) | NVN |
 | [Unicorn Overlord](010069401ADB8000/README.md) | `010069401ADB8000` | 1.05 | 16.2.4 | Vanillaware's engine | NVN |
+| [Xenoblade Chronicles 3](010074F013262000/README.md) | `010074F013262000` | 2.2.1 | 12.3.9 | Monolith's engine | NVN |
 
 ## Keys
 

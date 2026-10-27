@@ -1,11 +1,31 @@
 // Common header of the native Switch host (multi-module).
 #pragma once
 #include <pthread.h>
+#include <errno.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "game_profile.h"   // constants of the current game profile (generated from dm/games/<id>/game.tsv, chosen by the Makefile's GAME)
+
+// Explicit host work does not occupy a guest core (Metal submission, or a blocked native codec lock). A contended host mutex must count as blocked: a signal's same-core handoff
+// can otherwise wait forever for a peer that needs the signaller's native lock. Uncontended locks retain guest ordering; the counter nests inside existing host work.
+extern __thread _Atomic int dm_host_work;
+static inline int dm_host_mutex_lock(pthread_mutex_t *mutex) {
+    int r = pthread_mutex_trylock(mutex);
+    if (r != EBUSY) return r;
+    dm_host_work++;
+    r = pthread_mutex_lock(mutex);
+    dm_host_work--;
+    return r;
+}
+// Joining a native helper releases the guest core while that helper finishes; preserve any enclosing host-work scope.
+static inline int dm_host_thread_join(pthread_t thread, void **result) {
+    dm_host_work++;
+    int r = pthread_join(thread, result);
+    dm_host_work--;
+    return r;
+}
 
 #define MAX_MOD 128   // the profile's modules (up to 8) and the NROs a game loads at run time (Super Smash Bros. Ultimate: 98)
 #define LOG(...) do { fprintf(stderr, "[dm] " __VA_ARGS__); fputc('\n', stderr); } while (0)
@@ -94,7 +114,7 @@ uint64_t crash_watch_progress_count(void);
 void crash_dump_now(const char *why);   // Dump state on demand (threads + graphics wait points), without exiting
 // Diagnostic switches: read once from environment variables when main starts (getenv takes the libc global environment lock, and on a hot path it would make all guest threads queue up)
 extern uint64_t g_t0_ns;   // Host start time (now_ns), used for relative times in the log
-extern struct dm_flags { int thr, svc, fs, movie, dbg, imports, bootprof; } g_flag;
+extern struct dm_flags { int thr, svc, fs, dbg, imports, bootprof; } g_flag;
 void *objmap_get(const void *guest); void objmap_put(const void *guest, void *host); void *objmap_del(const void *guest);
 void hle_signal_system_event(void *g);   // hle_thread.c: signal a service-layer SystemEvent (any thread)
 void hle_bind_system_event(void *g, int autoclear);   // On a guest thread, bind a guest SystemEvent to a kernel event

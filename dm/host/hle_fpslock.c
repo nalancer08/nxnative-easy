@@ -49,6 +49,11 @@ static const struct { const char *build, *what; uint64_t ptr_off; uint32_t field
     // +0x10) and main+0x134d380 (int, AsVariableInt at +0x10)
     { "0d9649011312f62e93f6a5673a09d7e9", "Unreal t.MaxFPS", 0x76fef58 + 0x10, 0, FPS_F32, 2 },
     { "0d9649011312f62e93f6a5673a09d7e9", "Unreal rhi.SyncInterval", 0x75ad0d0 + 0x10, 0, VSYNCS_I32, 2 },
+    // SHIN MEGAMI TENSEI V: Vengeance 1.0.3: its Switch profile sets Project.FrameRateLimit=30 and rhi.syncinterval=2. The project variable (registered at +0xdd8624)
+    // feeds GameUserSettings.FrameRateLimit at +0xb4 (+0xdd7d24 / +0xdd7f94), which applies it to t.MaxFPS. Write this source value so settings changes keep the target.
+    // rhi.SyncInterval is registered at +0x2aa0754. Both use the same TAutoConsoleVariable value pointer at +0x10 and consecutive game/render-thread copies.
+    { "0a4f14a5c12f470a4d3168a8f2ae6005", "Unreal Project.FrameRateLimit", 0x6d6d5d0 + 0x10, 0, FPS_F32, 2 },
+    { "0a4f14a5c12f470a4d3168a8f2ae6005", "Unreal rhi.SyncInterval", 0x796de10 + 0x10, 0, VSYNCS_I32, 2 },
     // Luigi's Mansion 3 1.4.0: Next Level Games' frame limiter. At the end of each frame the main thread calls the frame callbacks (main+0xb7c308) with the milliseconds since the frame
     // started; the limiter (main+0x7a3e70) runs jobs or sleeps until 33.333 ms have passed, the float at main+0x13c94dc (read only there, at main+0x7a3ea8 and main+0x7a3f18), and the game
     // steps by the time that really passed. The game asks for present interval 2 too, which the profile's present_interval display ignores; both are needed

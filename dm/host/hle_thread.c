@@ -60,6 +60,7 @@ typedef struct thr {
     _Atomic uint64_t hand_epoch;   // this thread's current handoff: threads it makes runnable belong to it until its next thread SVC returns (svc_thread)
     struct { struct thr *by; uint64_t epoch; } hand[4]; int nhand;   // the handoffs this thread was made runnable for (its waker's, then those the waker belonged to), until it blocks (note_runnable / hand_leave)
     _Atomic int *host_work;    // points at the thread's dm_host_work (registered when the thread starts)
+    int native_wait;          // nesting depth of a blocking native HLE wait (G held)
     int host_owned;            // a guest thread the host created itself (dm_guest_thread_spawn): it waits in host code and is not one of the game's threads
     uint64_t wseq;             // Sequence number of wait registration: at equal priority first come, first woken (same order as the Horizon kernel's KThread wait tree)
     struct thr *next;          // Wait chain
@@ -124,9 +125,9 @@ static thr_t *cur(void) {
 // svc_thread calls it after waking such a thread. Wait for guest blocking, not a host dispatch snapshot or a wall-clock deadline: neither establishes that the work has finished.
 void dm_thread_mark_host(void) { thr_t *t = pthread_getspecific(g_keythr); if (t) t->host_owned = 1; }
 // Holding G. wake() clears wkind before the pthread resumes; it must already count as runnable in that window, even if Mach still reports WAITING / STOPPED.
-// Explicit host GPU work does not occupy a guest core. Ordinary host dispatch delays and HLE calls do, until a guest wait / sleep / exit says otherwise.
+// Explicit host GPU work and contended native codec locks do not occupy a guest core. Ordinary host dispatch delays and HLE calls do, until a guest wait / sleep / exit says otherwise.
 static int thr_runnable(const thr_t *t) {
-    return !t->wkind && !t->sleeping && !t->pause_req && !(t->host_work && *t->host_work);
+    return !t->wkind && !t->sleeping && !t->native_wait && !t->pause_req && !(t->host_work && *t->host_work);
 }
 // Holding G. Whether t was made runnable for self's current handoff (by self, or by a thread that was) and has not blocked since
 static int thr_in_handoff(const thr_t *t, const thr_t *self) {
@@ -135,6 +136,19 @@ static int thr_in_handoff(const thr_t *t, const thr_t *self) {
 }
 // Holding G. t blocked (a guest wait, a timed sleep, YieldToAnyThread): it gave its core back, so it no longer holds the threads whose handoff made it runnable
 static void hand_leave(thr_t *t) { t->nhand = 0; }
+// A native HLE condition wait is a guest blocking boundary, like a kernel wait.
+// Called with the HLE's condition mutex held: the waiter cannot miss a signal
+// between publishing its blocked state and pthread_cond_wait releasing that
+// mutex. On return it is runnable before it goes back to guest code.
+void dm_thread_native_wait(int entering) {
+    thr_t *t = pthread_getspecific(g_keythr);
+    if (!t) return;
+    pthread_mutex_lock(&G);
+    if (entering) { t->native_wait++; hand_leave(t); }
+    else { if (!t->native_wait) die("unbalanced native HLE wait"); t->native_wait--; }
+    pthread_mutex_unlock(&G);
+}
+
 // The peers a handoff waits for are the ones it made runnable, not every runnable higher-priority thread of the core. The host runs a
 // lower-priority thread beside busy higher-priority threads of its core all the time (it has no per-core scheduler; core_preempt aside),
 // and waiting for those threads at a wake had no bound: Tears of the Kingdom's BootupBackgroundWorkThread (priority 58) waited at each
@@ -152,6 +166,16 @@ int dm_yield_to_core_peers(int all) {
         if (!busy) return waited;
         { struct timespec ts = {0, 50000}; nanosleep(&ts, 0); } waited = 1;
     }
+}
+// Take a host lock that an HLE call holds while it runs guest code. A guest thread waiting for it is in a native HLE wait (dm_thread_native_wait), blocked as it would be
+// on the guest-visible lock the SDK's own code uses there, so it does not hold a same-core handoff: Kirby and the Forgotten Land's guide movies froze the game when the movie decoder's decode lock was held across the
+// "input available" SignalEvent, the signal woke the priority-44 movie threads of core 0, and the signaller (a priority-46 job worker) waited for its woken input thread,
+// which was itself waiting for that lock (hle_movie.c md_pump)
+void dm_host_lock(pthread_mutex_t *m) {
+    if (!pthread_mutex_trylock(m)) return;
+    dm_thread_native_wait(1);
+    pthread_mutex_lock(m);
+    dm_thread_native_wait(0);
 }
 
 // ---------- Wait primitives (called holding G) ----------

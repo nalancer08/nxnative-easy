@@ -192,29 +192,114 @@ static void *scope_any_yield(void *arg) {   // waits on event 1, then yields to 
     while (!atomic_load(&scope_release)) { uint64_t r[32] = {(uint64_t)-2}; svc_thread(0x0B, r); }
     thread_exit(t); return NULL;
 }
+static pthread_mutex_t scope_mu = PTHREAD_MUTEX_INITIALIZER;   // a host lock the signaller holds across its signal (hle_movie.c: the decoder's dmu)
+static void *scope_host_lock(void *arg) {   // waits on event 1, then waits for the host lock, finishes its payload and exits
+    thr_t *t = arg; pthread_setspecific(g_keythr, t);
+    scope_wait(1);
+    atomic_store(&scope_payload, 1);
+    dm_host_lock(&scope_mu); atomic_store(&scope_payload, 2); pthread_mutex_unlock(&scope_mu);
+    thread_exit(t); return NULL;
+}
 static void scope_until_waiting(thr_t *t) {
     for (;;) { pthread_mutex_lock(&G); int w = t->wkind == 4; pthread_mutex_unlock(&G); if (w) break; usleep(100); }
 }
-// kind 0: a busy unrelated peer and one woken worker; 1: a dispatcher that wakes the worker; 2: a woken thread that yields to any thread
+// kind 0: a busy unrelated peer and one woken worker; 1: a dispatcher that wakes the worker; 2: a woken thread that yields to any thread;
+// 3: a woken thread that waits for a host lock the signaller holds (it never returned before that wait counted as blocked)
 static int handoff_scope(int kind) {
     for (int e = 0; e < 2; e++) { uint64_t r[32] = {0}; svc_thread(0x45, r); assert(r[0] == 0); scope_ev[e][0] = r[1]; scope_ev[e][1] = r[2]; }
     atomic_store(&scope_payload, 0); atomic_store(&scope_release, 0);
     thr_t *busy = scope_new(&scope_peer[0], 30);   // runnable in guest code the whole time, woken by nobody
     thr_t *w = scope_new(&scope_peer[1], 30), *d = kind == 1 ? scope_new(&scope_peer[2], 30) : NULL;
     pthread_t pw, pd;
-    assert(!pthread_create(&pw, NULL, kind == 2 ? scope_any_yield : scope_worker, w)); scope_until_waiting(w);
+    assert(!pthread_create(&pw, NULL, kind == 2 ? scope_any_yield : kind == 3 ? scope_host_lock : scope_worker, w)); scope_until_waiting(w);
     if (d) { assert(!pthread_create(&pd, NULL, scope_dispatcher, d)); scope_until_waiting(d); }
+    if (kind == 3) pthread_mutex_lock(&scope_mu);
     scope_signal(d ? 0 : 1);
     pthread_mutex_lock(&G); int payload = atomic_load(&scope_payload), done = w->exited; pthread_mutex_unlock(&G);
+    if (kind == 3) pthread_mutex_unlock(&scope_mu);
     atomic_store(&scope_release, 1);
     pthread_join(pw, NULL); if (d) pthread_join(pd, NULL);
     if (d) scope_free(d);
     scope_free(w); scope_free(busy);
     for (int e = 0; e < 2; e++) for (int i = 0; i < 2; i++) { uint64_t r[32] = {scope_ev[e][i]}; svc_thread(0x16, r); }
-    int ok = kind == 2 ? payload == 1 : payload == 2 && done;
-    static const char *what[] = {"woken worker beside a busy unrelated peer", "worker woken by the woken dispatcher", "woken thread yielding to any thread"};
+    int ok = kind >= 2 ? payload == 1 : payload == 2 && done;
+    static const char *what[] = {"woken worker beside a busy unrelated peer", "worker woken by the woken dispatcher", "woken thread yielding to any thread",
+                                 "woken thread waiting for the signaller's host lock"};
     printf("%s: handoff scope, %s: signaller returned, payload %d, worker exited %d\n", ok ? "PASS" : "FAIL", what[kind], payload, done);
     return ok;
+}
+static pthread_mutex_t native_mutex = PTHREAD_MUTEX_INITIALIZER;
+static void *native_wait_worker(void *arg) {
+    thr_t *t = arg; pthread_setspecific(g_keythr, t); t->host_work = &dm_host_work;
+    scope_wait(1);
+    atomic_store(&scope_payload, 1);
+    assert(!dm_host_mutex_lock(&native_mutex));
+    assert(dm_host_work == 0);
+    atomic_store(&scope_payload, 2);
+    pthread_mutex_unlock(&native_mutex);
+    thread_exit(t); return NULL;
+}
+static int native_wait_handoff(void) {
+    uint64_t r[32] = {0}; svc_thread(0x45, r); assert(r[0] == 0);
+    scope_ev[1][0] = r[1]; scope_ev[1][1] = r[2];
+    atomic_store(&scope_payload, 0);
+    thr_t *w = scope_new(&scope_peer[1], 30);
+    pthread_mutex_lock(&native_mutex);
+    pthread_t pw; assert(!pthread_create(&pw, NULL, native_wait_worker, w)); scope_until_waiting(w);
+    scope_signal(1);   // must return when the higher-priority peer blocks on this caller's native mutex
+    int blocked = atomic_load(&scope_payload) == 1;
+    pthread_mutex_unlock(&native_mutex);
+    pthread_join(pw, NULL); int finished = atomic_load(&scope_payload) == 2;
+    scope_free(w);
+    for (int i = 0; i < 2; i++) { r[0] = scope_ev[1][i]; svc_thread(0x16, r); }
+    printf("%s: native mutex wait releases the signaller, then the worker finishes after unlock\n", blocked && finished ? "PASS" : "FAIL");
+    return blocked && finished;
+}
+static pthread_t native_join_target;
+static _Atomic int native_join_release;
+static void *native_join_helper(void *arg) {
+    (void)arg;
+    while (!atomic_load(&native_join_release)) usleep(100);
+    return &native_join_release;
+}
+static void *native_join_worker(void *arg) {
+    thr_t *t = arg; pthread_setspecific(g_keythr, t); t->host_work = &dm_host_work;
+    scope_wait(1);
+    atomic_store(&scope_payload, 1);
+    void *result = NULL;
+    assert(!dm_host_thread_join(native_join_target, &result));
+    assert(result == &native_join_release && dm_host_work == 0);
+    atomic_store(&scope_payload, 2);
+    thread_exit(t); return NULL;
+}
+static void *native_join_nested_helper(void *arg) {
+    _Atomic int *depth = arg;
+    while (atomic_load(depth) != 2) usleep(100);
+    return arg;
+}
+static int native_join_handoff(void) {
+    uint64_t r[32] = {0}; svc_thread(0x45, r); assert(r[0] == 0);
+    scope_ev[1][0] = r[1]; scope_ev[1][1] = r[2];
+    atomic_store(&scope_payload, 0); atomic_store(&native_join_release, 0);
+    assert(!pthread_create(&native_join_target, NULL, native_join_helper, NULL));
+    thr_t *w = scope_new(&scope_peer[1], 30);
+    pthread_t pw; assert(!pthread_create(&pw, NULL, native_join_worker, w)); scope_until_waiting(w);
+    scope_signal(1);   // must return while the higher-priority peer joins a native helper gated by this caller
+    int blocked = atomic_load(&scope_payload) == 1 && atomic_load(w->host_work) == 1;
+    atomic_store(&native_join_release, 1);
+    pthread_join(pw, NULL); int finished = atomic_load(&scope_payload) == 2;
+    scope_free(w);
+    for (int i = 0; i < 2; i++) { r[0] = scope_ev[1][i]; svc_thread(0x16, r); }
+    // The native helper observes the nested depth while join blocks; returning must retain the caller's outer scope.
+    pthread_t nested; void *result = NULL;
+    assert(dm_host_work == 0);
+    dm_host_work++;
+    assert(!pthread_create(&nested, NULL, native_join_nested_helper, &dm_host_work));
+    assert(!dm_host_thread_join(nested, &result));
+    int nesting = result == &dm_host_work && dm_host_work == 1;
+    dm_host_work--;
+    printf("%s: native join releases the signaller, returns the helper result and preserves nested host work\n", blocked && finished && nesting ? "PASS" : "FAIL");
+    return blocked && finished && nesting;
 }
 int main(int argc, char **argv) {
     (void)argv;
@@ -224,7 +309,9 @@ int main(int argc, char **argv) {
     main_handle = svc_thread_main_init();
     condition_order();
     int ok = 1;
-    if (argc == 1) for (int kind = 0; kind <= 2; kind++) ok &= handoff_scope(kind);   // with every runnable peer checked (core_preempt), the busy peer holds the signaller by design
+    ok &= native_wait_handoff();
+    ok &= native_join_handoff();
+    if (argc == 1) for (int kind = 0; kind <= 3; kind++) ok &= handoff_scope(kind);   // with every runnable peer checked (core_preempt), the busy peer holds the signaller by design
     for (int kind = 0; kind <= 4; kind++) if (kind != 3) {
         ok &= delayed_wake(1000, kind, 0);
         ok &= delayed_wake(20000, kind, 0);

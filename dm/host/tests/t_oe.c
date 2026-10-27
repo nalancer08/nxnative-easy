@@ -6,6 +6,7 @@
 #include HLE_OE_SOURCE
 #include <signal.h>
 #include <sys/wait.h>
+void dm_thread_native_wait(int entering) { (void)entering; } // queue-only test, without the guest scheduler
 uint64_t now_ns(void) { return 0; }
 void dm_audio_suspend(int on) { (void)on; }   // stubs for the bg item of DM_OE_SCRIPT (hle_audio.c / hle_os.c / hle_nvn.c)
 void guest_clock_freeze_for(int reason, int on) { (void)reason; (void)on; }
@@ -58,6 +59,13 @@ static int child_burst(int kind) {
 }
 int main(void) {
     unsetenv("DM_OE_SCRIPT"); reset();
+    CHECK(h_oe_InactivityMode() == 0 && !h_oe_InactivityExtQ(), "inactivity extension starts disabled");
+    h_oe_InactivityExtSafe(1);
+    CHECK(h_oe_InactivityMode() == 1 && h_oe_InactivityExtQ(), "normal inactivity extension is mode 1");
+    h_oe_InactivityExt(1);
+    CHECK(h_oe_InactivityMode() == 2 && h_oe_InactivityExtQ(), "unsafe inactivity extension is mode 2");
+    h_oe_InactivityExtSafe(0x100);
+    CHECK(h_oe_InactivityMode() == 0 && !h_oe_InactivityExtQ(), "clearing the extension restores mode 0");
     CHECK(empty(), "empty queue at start: returns false and leaves the output alone");
     dm_focus_set(1); dm_set_opmode(1); CHECK(empty(), "same state sends no notification");
     dm_focus_set(3); CHECK(h_oe_GetFocus() == 3, "background state 3 can be queried before popping");
