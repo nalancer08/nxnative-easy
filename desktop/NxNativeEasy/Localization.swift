@@ -12,6 +12,10 @@ enum EasyLanguage: String, CaseIterable {
 
 struct EasyStrings {
     static let english: [String:String] = [
+        "Cuenta Apple · Todos tus dispositivos":"Apple Account · All your devices",
+        "Sin sesión iniciada":"Not signed in",
+        "Sólo para firmar, instalar y renovar apps. Exportar partidas y copiar romfs no requieren iniciar sesión.":"Only needed to sign, install and renew apps. Exporting saves and copying romfs do not require signing in.",
+        "Una cuenta para todos tus dispositivos en este Mac. Sólo se necesita para firmar, instalar y renovar apps.":"One account for all your devices on this Mac. Only needed to sign, install and renew apps.",
         "Exportar partidas":"Export saves",
         "Copiar datos del juego":"Copy game data",
         "Exportando partidas…":"Exporting saves…",

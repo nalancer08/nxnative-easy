@@ -417,6 +417,7 @@ enum RefreshPolicy {
 struct SideloadView:View {
     @ObservedObject var model:SideloadModel
     let text:(String)->String
+    var accountOnly=false
     @Environment(\.dismiss) private var dismiss
     @State private var password=""
     @State private var code=""
@@ -426,7 +427,8 @@ struct SideloadView:View {
     var body:some View {
         ScrollView {
             VStack(alignment:.leading,spacing:16) {
-                HStack {Text(text(model.ipa==nil ? "Tu cuenta Apple" : "Instalar en iPhone / iPad")).font(.title2.bold());Spacer();Button(text("Cerrar")){dismiss()}.disabled(model.busy)}
+                HStack {Text(text(accountOnly || model.ipa==nil ? "Tu cuenta Apple" : "Instalar en iPhone / iPad")).font(.title2.bold());Spacer();Button(text("Cerrar")){dismiss()}.disabled(model.busy)}
+                if !accountOnly {
                 HStack(spacing:18) {
                     Label(text("1 · Dispositivo"),systemImage:model.device.isEmpty ? "circle" : "checkmark.circle.fill")
                     Label(text("2 · Cuenta Apple"),systemImage:model.authenticated ? "checkmark.circle.fill" : "circle")
@@ -439,6 +441,8 @@ struct SideloadView:View {
                 if let selected=model.devices.first(where:{$0.id==model.device}),!selected.detail.isEmpty {Text(selected.detail).font(.caption).foregroundStyle(.secondary)}
                 Button(text("Buscar dispositivos")){model.listDevices()}.disabled(model.busy)
                 Text(text("Desbloquea el dispositivo, confía en este Mac y activa Modo de desarrollador si iOS lo pide.")) .font(.caption).foregroundStyle(.secondary)
+                }
+                if accountOnly {Text(text("Una cuenta para todos tus dispositivos en este Mac. Sólo se necesita para firmar, instalar y renovar apps.")).foregroundStyle(.secondary)}
                 if !model.authenticated {
                     LabeledContent(text("Cuenta Apple personal")){TextField("name@example.com",text:$model.email).textFieldStyle(.roundedBorder).disabled(model.busy)}
                     LabeledContent(text("Contraseña de Apple")){SecureField(text("Contraseña de Apple"),text:$password).textFieldStyle(.roundedBorder).disabled(model.busy)}
@@ -460,7 +464,7 @@ struct SideloadView:View {
                         ForEach(model.accountDevices) {item in Text(item.name+" · …"+String(item.id.suffix(8))+" · "+item.status).font(.caption)}
                     }
                     Text(text("Cuenta gratuita: Apple indica hasta 3 dispositivos y perfiles de 7 días. Esta lista muestra registros reales; no calcula cupos libres ni elimina dispositivos.")).font(.caption).foregroundStyle(.secondary)
-                    if model.ipa != nil {
+                    if !accountOnly && model.ipa != nil {
                     Picker(text("App existente que actualizarás"),selection:$model.existing) {Text(text("Primera instalación")).tag("");ForEach(model.apps){Text($0.name+" · "+$0.id).tag($0.id)}}.disabled(model.busy)
                     Text(text("Se conserva el identificador efectivo. Si no corresponde al juego y equipo, la instalación se detiene; no se desinstala la app anterior.")) .font(.caption).foregroundStyle(.secondary)
                     Toggle(text("Renovar automáticamente antes de que caduque"),isOn:$autoRefresh).disabled(model.busy || !remember)
@@ -468,7 +472,7 @@ struct SideloadView:View {
                     Text(text("La renovación necesita este Mac encendido, nxnative Easy abierto, conexión a Internet y el dispositivo accesible. Conserva la IPA original.")) .font(.caption).foregroundStyle(.secondary)
                     Button(text(model.existing.isEmpty ? "Firmar e instalar" : "Firmar y actualizar")){model.install(autoRefresh:autoRefresh)}.buttonStyle(.borderedProminent).disabled(model.busy || model.device.isEmpty || model.team.isEmpty || model.originalID.isEmpty)
                     }
-                    if model.canUpdateAppOnly {
+                    if !accountOnly && model.canUpdateAppOnly {
                         Button(text("Actualizar sólo la app; conservar romfs")){model.install(autoRefresh:autoRefresh,includeContent:false)}.disabled(model.busy)
                         Text(text("Para cambios de controles o de la app con la misma versión del juego. Si cambió el juego o DLC, usa la instalación con datos nuevos.")).font(.caption).foregroundStyle(.secondary)
                     }
@@ -480,7 +484,7 @@ struct SideloadView:View {
                     Button(text("Enviar a mis dispositivos")){model.sendToDevices()}
                     ForEach(model.smsNumbers) {number in Button("SMS · …"+number.digits){model.sendSMS(number.id)}}
                 }
-                Text(text("Guarda y cierra el juego antes de instalar. Firma, copia y renovación nativas aún requieren validación completa con una cuenta y dispositivo reales.")).font(.caption).foregroundStyle(.secondary)
+                if !accountOnly {Text(text("Guarda y cierra el juego antes de instalar. Firma, copia y renovación nativas aún requieren validación completa con una cuenta y dispositivo reales.")).font(.caption).foregroundStyle(.secondary)}
                 InstallActivityView(model:model,text:text)
                 if !model.busy {Text(text(model.phase)).font(.callout)}
             }.padding(24)
@@ -498,6 +502,7 @@ struct SideloadLibraryView:View {
     var artwork:(InstalledGame)->NSImage?={_ in nil}
     @Environment(\.dismiss) private var dismiss
     @State private var showInstaller=false
+    @State private var accountOnly=false
     private enum Confirmation {case export(InstalledGame),copy(InstalledGame),forget(RefreshJob)}
     @State private var confirmation:Confirmation?
     @State private var search=""
@@ -524,6 +529,19 @@ struct SideloadLibraryView:View {
                 }
                 Spacer();if !embedded {Button(text("Cerrar")){dismiss()}.disabled(model.busy)}
             }.padding(24)
+            VStack(alignment:.leading,spacing:8) {
+                HStack(spacing:12) {
+                    Image(systemName:model.authenticated ? "person.crop.circle.badge.checkmark" : "person.crop.circle").font(.title2).foregroundStyle(accent)
+                    VStack(alignment:.leading,spacing:4) {
+                        Text(text("Cuenta Apple · Todos tus dispositivos")).font(.headline)
+                        if model.authenticated {Text(model.email).textSelection(.enabled)}
+                        else {Text(text("Sin sesión iniciada")).foregroundStyle(.secondary)}
+                    }
+                    Spacer()
+                    Button(text(model.authenticated ? "Ver cuenta y equipos" : "Iniciar sesión")){accountOnly=true;showInstaller=true}.disabled(model.busy || !canInstall)
+                }
+                Text(text("Sólo para firmar, instalar y renovar apps. Exportar partidas y copiar romfs no requieren iniciar sesión.")).font(.callout).foregroundStyle(.secondary)
+            }.padding(.horizontal,24).padding(.bottom,20)
             Divider()
             ScrollView {
                 VStack(alignment:.leading,spacing:20) {
@@ -547,18 +565,11 @@ struct SideloadLibraryView:View {
                             }.padding(16).background(model.device==device.id ? accent.opacity(0.08) : .white.opacity(0.035),in:RoundedRectangle(cornerRadius:14))
                         }.buttonStyle(.plain).disabled(model.busy || !canInstall)
                     }
-                    HStack(alignment:.top,spacing:16) {
-                        VStack(alignment:.leading,spacing:10) {
-                            Label(text("Tu cuenta Apple"),systemImage:model.authenticated ? "person.crop.circle.badge.checkmark" : "person.crop.circle").font(.headline)
-                            Text(text(model.authenticated ? "Sesión iniciada" : "Inicia sesión aquí para firmar e instalar.")).foregroundStyle(.secondary)
-                            Button(text(model.authenticated ? "Ver cuenta y equipos" : "Iniciar sesión")){showInstaller=true}.disabled(model.busy || !canInstall)
-                        }.padding(18).frame(maxWidth:.infinity,minHeight:136,alignment:.topLeading).background(.white.opacity(0.04),in:RoundedRectangle(cornerRadius:14))
                         VStack(alignment:.leading,spacing:10) {
                             Label(text("Instalar otro juego"),systemImage:"plus.app").font(.headline)
                             Text(text("Elige tus archivos; prepararemos el juego y abriremos el instalador al terminar.")).foregroundStyle(.secondary)
                             Button(text("Elegir carpeta de juego")){model.cancelPendingUpdate();prepare()}.disabled(model.busy || !canInstall)
                         }.padding(18).frame(maxWidth:.infinity,minHeight:136,alignment:.topLeading).background(.white.opacity(0.04),in:RoundedRectangle(cornerRadius:14))
-                    }
                     if !model.device.isEmpty {
                         HStack {Label(text("Tus juegos instalados"),systemImage:"square.grid.2x2").font(.headline);Spacer();Text(String(model.apps.count)).foregroundStyle(.secondary)}
                         TextField(text("Buscar por nombre o identificador"),text:$search).textFieldStyle(.roundedBorder)
@@ -591,7 +602,7 @@ struct SideloadLibraryView:View {
                                 Text(text(job.expires<=Date() ? "Firma vencida" : "La firma vence")+" "+job.expires.formatted(date:.abbreviated,time:.shortened)).font(.caption)
                                 if job.needsLogin {Text(text("Inicia sesión para renovar este juego.")).foregroundStyle(.orange)}
                                 Toggle(text("Renovar automáticamente antes de que caduque"),isOn:Binding(get:{model.jobs.first(where:{$0.id==job.id})?.enabled ?? false},set:{model.setRefresh(job,enabled:$0)}))
-                                HStack {Button(text("Renovar ahora")){model.renew(job)};Button(text("Revisar cuenta e instalación")){model.select(job);showInstaller=true};Spacer();Button(text("Quitar de esta lista")){confirmation = .forget(job)}}
+                                HStack {Button(text("Renovar ahora")){model.renew(job)};Button(text("Revisar cuenta e instalación")){model.select(job);accountOnly=false;showInstaller=true};Spacer();Button(text("Quitar de esta lista")){confirmation = .forget(job)}}
                             }.padding(16).background(.white.opacity(0.04),in:RoundedRectangle(cornerRadius:14)).disabled(model.busy || !canInstall)
                         }
                     }
@@ -602,7 +613,7 @@ struct SideloadLibraryView:View {
         .onChange(of:search){_,_ in appLimit=8}
         .onChange(of:model.device){_,_ in appLimit=8}
         .task {if canInstall && !model.busy {model.listDevices()}}
-        .sheet(isPresented:$showInstaller){SideloadView(model:model,text:text)}
+        .sheet(isPresented:$showInstaller){SideloadView(model:model,text:text,accountOnly:accountOnly)}
         .alert(text(confirmationTitle),isPresented:Binding(get:{confirmation != nil},set:{if !$0 {confirmation=nil}}),presenting:confirmation) {action in
             Button(text("Cancelar"),role:.cancel){confirmation=nil}
             switch action {

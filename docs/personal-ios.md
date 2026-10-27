@@ -546,3 +546,18 @@ for protected data, freeing approximately 35.7 GB before final build-cache
 cleanup. Original XCI/update NSP, the lightweight unsigned IPA, RomFS, source
 checkout and exported saves remain outside that deletion. A private cleanup
 receipt records paths, available space and the IPA hash beside the game tools.
+
+## Global Apple account placement (1.11.1)
+
+Devices now has a persistent account header above the device list, showing the
+signed-in email or an explicit signed-out state. Its account window does not
+show device selection or installation actions. Installation records still bind
+the original account/team to each device and app; authentication semantics have
+not changed. The header explains in English and Spanish that exporting saves
+and copying RomFS do not require Apple sign-in. These actions retain their
+existing pairing, known-game scope and closed-game requirements.
+
+Validation: compiled Swift client/localization fixtures and whole-app Swift
+type checking passed. This change is UI-only; the existing native helper is
+reused byte-for-byte in the local bundle. No real Apple login, signing, device
+installation or game/save mutation was performed.
