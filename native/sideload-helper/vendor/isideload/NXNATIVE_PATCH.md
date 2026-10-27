@@ -16,3 +16,11 @@ was changed. The helper explicitly refuses automatic certificate revocation.
 When updating this dependency, compare this patch with the new upstream source,
 retain identity checks and rerun the helper/device tests. The parent Cargo.lock
 pins all remaining dependencies. Source is retained here with the MIT license.
+
+## Optional team membership metadata
+
+The team decoder retains optional membership names for free-team classification.
+Individual alone does not establish a free account. The helper emits only the
+derived optional free-policy limit; membership/provider payloads remain private.
+No account credentials, certificate policy or team selection behavior changes.
+New-device consent and the fresh registration check live in the helper itself.

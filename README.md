@@ -44,7 +44,7 @@ Built on [seedds/nxnative](https://github.com/seedds/nxnative). The original pro
 
 - **Guided preparation:** platform → files → keys → review → live build progress, with drag/drop that leaves originals in place.
 - **A library that explains readiness:** local Mac/IPA outputs, verified device installations and clearly dated last-seen devices.
-- **Rebuild advice, redacted diagnostics and background completion notifications.** Apple Account is shared across the app; device registration counts are not presented as remaining quotas.
+- **Rebuild advice, redacted diagnostics and background completion notifications.** Apple Account is shared across the app; free-team device slots are clearly labelled estimates, with a registration warning before installing on a new device.
 - **Editable iPhone touch controls:** position, size and opacity, saved per game and 2D/3D layout.
 - **Lightweight IPA export for iPhone/iPad only:** RomFS data live separately; existing outputs and valid caches are preserved.
 - **Your own keys:** explicitly select the external folder containing your `prod.keys`. No games or keys are included, downloaded or distributed.

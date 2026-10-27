@@ -24,7 +24,10 @@ appear everywhere without being forgotten. No recurring schedule is implied.
    redacted diagnostics and background completion notices with OS permission.
    Keep per-platform source provenance/rebuild advice and scoped device-presence
    history; never present cached presence or unknown history as current proof.
-   Do not infer remaining Apple device slots from registration counts.
+   Show only labelled slot estimates for explicitly identified free memberships
+   using the reviewed Apple policy and distinct returned registrations. Individual
+   is not proof of free membership. Keep new-device consent bound to team/device,
+   fresh helper-side checks and automatic-refresh refusal to register a new device.
    Keep Apple Account in the application sidebar, independent of Devices;
    show the signed-in email and retain account-free save export/content copy.
    Preserve the collection list/detail, personal folder library, both-platform output discovery and

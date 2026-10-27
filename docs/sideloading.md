@@ -319,3 +319,50 @@ or requesting another delivery and is never persisted or logged. No password,
 provider/session, request transport or delivery behavior changed. Generic busy
 activity and the installer Continue button do not compete with a pending code.
 The update does not restart a running launcher or interrupt its in-memory login.
+
+## Registration capacity and explicit new-device consent (1.14.0)
+
+The team type `Individual` does not distinguish a paid membership from a free
+one. The vendored team decoder now retains optional membership names. A single
+explicit free membership on an Individual team enables the reviewed free-policy
+limit of three devices. Missing, ambiguous or paid membership data stays unknown;
+it never inherits three slots simply because a team is named Individual.
+
+Apple's [personal-team documentation](https://developer.apple.com/help/account/basics/about-your-developer-account),
+reviewed 2026-10-27, states the free-team device limit and seven-day expiration.
+The membership interpretation was cross-checked against
+[AltSign's team decoder](https://github.com/rileytestut/AltSign/blob/master/AltSign/Model/Apple%20API/ALTTeam.m);
+no AltSign code was imported. Paid memberships have different
+[device registration rules](https://developer.apple.com/help/account/devices/devices-overview).
+We do not assume an annual paid quota or infer paid eligibility from absent data.
+
+The account page labels `max(0, 3 - distinct returned iOS registrations)` as an
+**estimate** for an explicitly identified free team. It is not a server-provided
+remaining-capacity value: expired/disabled records, other registrations, changes
+from another Mac, and Apple's final eligibility checks can affect availability.
+Unknown membership shows an explanation instead of an invented counter. The
+connected device name replaces synthetic `device-<UDID>` names when matched;
+unrecognized status letters are not presented as meaningful readiness claims.
+
+The install review fetches the selected team's registrations and accepts client
+snapshots for at most five minutes. It distinguishes unknown, already registered
+and new devices using exact case-insensitive UDID equality. An already registered
+device uses no additional device slot for another game/update; application-ID and
+app/profile limits remain separate. A new device shows the estimated before/after
+count when available and requires an explicit acceptance checkbox. Changing team
+or device clears that acceptance. Refreshing the query is read-only.
+
+The helper advertises `registration-consent-v1`. New clients reject older helpers
+for native installs rather than falling back around the guard. Immediately before
+registration, the helper queries Apple again. It registers only a new device with
+explicit manual approval; automatic refresh may reuse an existing registration
+but cannot create one, even if an approval flag is supplied. A failed read stops
+the operation. No certificate is automatically revoked, registration removed or
+existing game uninstalled. The protocol returns only a derived free-team limit
+and known registration IDs/names, never raw membership/provider/session payloads.
+
+After successful registration, a narrow team/device event updates the local
+inventory even if signing later fails: registering happens before installation
+and can consume the slot independently of install success. The UI explains this
+before confirmation. Apple remains authoritative when registration is attempted.
+Agent validation never logs into a real account or registers a device.

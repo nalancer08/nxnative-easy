@@ -41,6 +41,26 @@ struct Session {
     loader: Loader,
 }
 
+// A team labelled Individual may be either paid or free. Missing membership is unknown.
+fn free_device_limit(team: &DeveloperTeam) -> Option<u64> {
+    let memberships = team.memberships.as_ref()?;
+    if team.r#type.as_deref() != Some("Individual") || memberships.len() != 1 {
+        return None;
+    }
+    let name = memberships[0].name.as_deref()?.to_ascii_lowercase();
+    if name
+        .split(|c: char| !c.is_ascii_alphabetic())
+        .any(|part| part == "free")
+    {
+        Some(3)
+    } else {
+        None
+    }
+}
+fn registration_allowed(registered: bool, automatic: bool, approved: bool) -> bool {
+    registered || (!automatic && approved)
+}
+
 fn emit(value: Value) {
     let mut output = io::stdout().lock();
     let _ = writeln!(output, "{value}");
@@ -244,7 +264,7 @@ async fn login(request: &mut Value, restore: bool) -> Result<Session, Report> {
     .build();
     let choices: Vec<_> = teams
         .iter()
-        .map(|t| json!({"id":t.team_id,"name":t.name,"kind":t.r#type,"status":t.status}))
+        .map(|t| json!({"id":t.team_id,"name":t.name,"kind":t.r#type,"status":t.status,"free_device_limit":free_device_limit(t)}))
         .collect();
     emit(json!({"event":"signed_in","teams":choices}));
     Ok(Session {
@@ -476,12 +496,29 @@ async fn install(session: &mut Session, request: &Value) -> Result<(), Report> {
             bail!("Selected installed app does not match this game")
         }
     }
-    emit(json!({"event":"progress","phase":"Registering device"}));
-    session
+    let registered = session
         .loader
         .get_dev_session()
-        .ensure_device_registered(&team, &info.name, &info.udid, None)
-        .await?;
+        .list_devices(&team, None)
+        .await?
+        .iter()
+        .any(|d| d.device_number.eq_ignore_ascii_case(&info.udid));
+    if !registration_allowed(
+        registered,
+        request["automatic"].as_bool() == Some(true),
+        request["approve_registration"].as_bool() == Some(true),
+    ) {
+        bail!("New device registration requires explicit approval")
+    }
+    if !registered {
+        emit(json!({"event":"progress","phase":"Registering device"}));
+        session
+            .loader
+            .get_dev_session()
+            .ensure_device_registered(&team, &info.name, &info.udid, None)
+            .await?;
+        emit(json!({"event":"device_registered","team":team.team_id,"udid":info.udid}));
+    }
     let progress = |fraction: f32| async move {
         emit(json!({"event":"progress","phase":"Signing app","fraction":fraction}));
     };
@@ -570,7 +607,7 @@ async fn main() {
     let _ = rustls::crypto::ring::default_provider().install_default();
     let _ = isideload::init();
     emit(
-        json!({"event":"hello","protocol":1,"architecture":std::env::consts::ARCH,"capabilities":["scoped-games-v1","save-export-v1","romfs-copy-v1"]}),
+        json!({"event":"hello","protocol":1,"architecture":std::env::consts::ARCH,"capabilities":["scoped-games-v1","save-export-v1","romfs-copy-v1","registration-consent-v1"]}),
     );
     let mut session: Option<Session> = None;
     while let Ok(mut request) = read_request() {
@@ -605,7 +642,7 @@ async fn main() {
                     let id=text(&request,"team")?;
                     let team=value.teams.iter().find(|t|t.team_id==id).cloned().ok_or_else(||report!("Select your team"))?;
                     let items=value.loader.get_dev_session().list_devices(&team,None).await?;
-                    emit(json!({"event":"account_devices","team":id,"items":items.iter().map(|d|json!({"udid":d.device_number,"name":d.name,"status":d.status})).collect::<Vec<_>>()}));
+                    emit(json!({"event":"account_devices","team":id,"free_device_limit":free_device_limit(&team),"items":items.iter().map(|d|json!({"udid":d.device_number,"name":d.name,"status":d.status})).collect::<Vec<_>>()}));
                     Ok(())
                 }.await,
                 None => Err(report!("Sign in first")),
@@ -665,6 +702,8 @@ async fn main() {
                 "not_installed"
             } else if detail.contains("does not match this game") {
                 "wrong_app"
+            } else if detail.contains("registration requires explicit approval") {
+                "registration_consent"
             } else if detail.contains("storage") {
                 "storage"
             } else if detail.contains("IPA changed") {
@@ -681,6 +720,40 @@ async fn main() {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn registration_requires_explicit_manual_consent() {
+        assert!(registration_allowed(true, true, false));
+        assert!(registration_allowed(true, false, false));
+        assert!(!registration_allowed(false, false, false));
+        assert!(!registration_allowed(false, true, true));
+        assert!(registration_allowed(false, false, true));
+    }
+    #[test]
+    fn individual_is_not_proof_of_free_membership() {
+        let decode = |v: Value| serde_json::from_value::<DeveloperTeam>(v).unwrap();
+        assert_eq!(
+            free_device_limit(&decode(json!({"teamId":"TEST","type":"Individual"}))),
+            None
+        );
+        assert_eq!(
+            free_device_limit(&decode(
+                json!({"teamId":"TEST","type":"Individual","memberships":[{"name":"Free Provisioning"}]})
+            )),
+            Some(3)
+        );
+        assert_eq!(
+            free_device_limit(&decode(
+                json!({"teamId":"TEST","type":"Individual","memberships":[{"name":"Apple Developer Program"}]})
+            )),
+            None
+        );
+        assert_eq!(
+            free_device_limit(&decode(
+                json!({"teamId":"TEST","type":"Individual","memberships":[{"name":"Free Provisioning"},{"name":"Apple Developer Program"}]})
+            )),
+            None
+        );
+    }
     #[test]
     fn usb_and_wifi_are_one_device_with_usb_preferred() {
         let usb = UsbmuxdDevice {

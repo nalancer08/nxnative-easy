@@ -618,3 +618,32 @@ screenshots cover library, platform selection/review and build activity. Python
 lint retained 414 baseline findings, with none added. The game regression harness
 was invoked with the local root but found no registered Mac Dread build. No new
 gameplay or real-account signing validation is claimed; host/shaders are unchanged.
+
+## New-device registration review and free-team estimates (1.14.0)
+
+Team membership metadata now distinguishes an explicit free membership from the
+ambiguous Individual type. Only known free teams show a policy-based, labelled
+slot estimate; missing/paid/ambiguous metadata remains unknown. Source policy and
+limitations are documented in sideloading.md. Account device names use connected
+metadata when possible and omit unexplained raw status letters.
+
+Installation review refreshes registrations, reports whether the selected device
+already exists and requires acceptance for a new registration. The helper checks
+again before adding any device and refuses new registrations during automatic
+renewal. Older helpers cannot bypass the new consent capability. Confirmation is
+bound to the chosen team/device; registration success updates local counts even
+if a later signing/install step fails. Existing game files and saves are untouched
+by review and lookup. No real-account login/registration/install was performed.
+
+Validation uses compiled synthetic client fixtures for case-insensitive matches,
+team mismatch, stale snapshots, distinct registration counts, unknown limits,
+zero clamping and explicit approval transport. Rust fixtures cover unknown/paid/
+free/ambiguous membership and the manual/automatic registration-consent matrix.
+The existing original-identity, RomFS, save-export and device-scope checks remain.
+
+Final checks: 20 Rust cases passed. All 68 script cases completed with one
+optional JWT dependency skip; compiled consent/capacity client checks, complete
+SwiftUI compilation and synthetic new/existing registration renders passed.
+Documentation and the 78-profile catalog passed. The production native helper
+was rebuilt with the pinned toolchain; real-account registration/signing remains
+unexecuted. No games or save data were accessed or modified by these tests.

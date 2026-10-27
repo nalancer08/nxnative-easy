@@ -12,6 +12,13 @@ pub struct DeveloperTeam {
     pub team_id: String,
     pub r#type: Option<String>,
     pub status: Option<String>,
+    #[serde(default)]
+    pub memberships: Option<Vec<DeveloperMembership>>,
+}
+
+#[derive(Deserialize, Debug, Clone)]
+pub struct DeveloperMembership {
+    pub name: Option<String>,
 }
 
 #[cfg_attr(feature = "wasm", async_trait::async_trait(?Send))]

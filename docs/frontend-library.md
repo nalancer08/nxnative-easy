@@ -132,8 +132,9 @@ For iOS, the resulting IPA is passed to the installer directly: select the paire
 device, use the global Apple account if needed, choose its team, review the
 existing app identity and confirm installation. Reading the team's registered
 devices is separate from physical connection. The response does not expose a
-reliable remaining-slot count; the UI explicitly says so rather than subtracting
-from an assumed free-account quota. Signing/install execution remains subject
+guaranteed remaining-slot count. Since 1.14, explicitly identified free memberships
+show a labelled estimate from the reviewed policy and distinct returned records;
+unknown membership never inherits an assumed free-account quota. Signing/install execution remains subject
 to the existing validation limits in sideloading.md.
 
 The library separates a prepared local IPA from an observed device installation.

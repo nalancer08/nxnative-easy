@@ -22,7 +22,18 @@ struct SideloadDevice:Identifiable {
 struct AccountDevice:Identifiable {let id:String;let name:String;let status:String}
 struct InstallLog:Identifiable {let id=UUID();let date=Date();let message:String;var progress:Double?=nil}
 struct TrustedSMS:Identifiable {let id:Int;let digits:String}
-struct SideloadTeam:Identifiable {let id:String;let name:String;var kind:String=""}
+struct SideloadTeam:Identifiable {let id:String;let name:String;var kind:String="";var freeDeviceLimit:Int?}
+enum DeviceRegistrationState {case unknown,registered,new}
+enum AccountRegistrationPolicy {
+    static func remaining(limit:Int?,devices:[AccountDevice])->Int? {
+        guard limit==3 else {return nil}
+        return max(0,3-Set(devices.map{$0.id.lowercased()}).count)
+    }
+    static func state(team:String,loadedTeam:String,checkedAt:Date?,device:String,devices:[AccountDevice],now:Date=Date())->DeviceRegistrationState {
+        guard !team.isEmpty,team==loadedTeam,!device.isEmpty,let checkedAt,now.timeIntervalSince(checkedAt)>=0,now.timeIntervalSince(checkedAt)<=300 else {return .unknown}
+        return devices.contains(where:{$0.id.caseInsensitiveCompare(device) == .orderedSame}) ? .registered : .new
+    }
+}
 struct InstalledGame:Identifiable {let id:String;let name:String;var version:String=""}
 
 struct GameAppScope {
@@ -94,6 +105,8 @@ enum RefreshPolicy {
     private var scopedDiscovery=false
     @Published var accountDevices:[AccountDevice]=[]
     @Published var accountDeviceTeam=""
+    @Published var accountDeviceLimit:Int?
+    @Published var accountDevicesCheckedAt:Date?
     @Published var logs:[InstallLog]=[]
     @Published var logURL:URL?
     private var pendingUpdate:(device:String,id:String)?
@@ -215,9 +228,16 @@ enum RefreshPolicy {
         guard !busy else {return}
         device=id;existing="";apps=[];inspectApps()
     }
+    var estimatedDeviceSlots:Int? {accountDeviceTeam==team ? AccountRegistrationPolicy.remaining(limit:accountDeviceLimit,devices:accountDevices) : nil}
+    var registrationState:DeviceRegistrationState {AccountRegistrationPolicy.state(team:team,loadedTeam:accountDeviceTeam,checkedAt:accountDevicesCheckedAt,device:device,devices:accountDevices)}
+    func accountDeviceName(_ item:AccountDevice)->String {
+        if let known=devices.first(where:{$0.id.caseInsensitiveCompare(item.id) == .orderedSame}) {return known.name}
+        if item.name.hasPrefix("device-") || item.name==item.id {return "iPhone / iPad · …"+String(item.id.suffix(6))}
+        return item.name
+    }
     func inspectAccountDevices() {
         guard !busy,authenticated,!team.isEmpty else {return}
-        busy=true;error=nil;startedAt=Date();fraction=nil;phase="Consultando dispositivos registrados en Apple…";accountDevices=[];accountDeviceTeam="";record(phase)
+        busy=true;error=nil;startedAt=Date();fraction=nil;phase="Consultando dispositivos registrados en Apple…";accountDevices=[];accountDeviceTeam="";accountDeviceLimit=nil;accountDevicesCheckedAt=nil;record(phase)
         send(["op":"account_devices","team":team])
     }
     func copyLogs(text:(String)->String) {
@@ -294,19 +314,21 @@ enum RefreshPolicy {
               let app=apps.first(where:{$0.id==existing}) else {return false}
         return app.version==version && romfs != nil
     }
-    func install(autoRefresh:Bool,includeContent:Bool=true) {
+    func install(autoRefresh:Bool,includeContent:Bool=true,approveRegistration:Bool=false) {
         guard !busy,authenticated,let ipa,let gameFolder,!originalID.isEmpty,!device.isEmpty,!team.isEmpty else {return}
         if !includeContent && !canUpdateAppOnly {error="La versión del juego cambió o no está verificada. Instala la app con sus datos nuevos.";return}
         if autoRefresh && defaults.string(forKey:"sideloadEmail") != email {error="Para renovar al reiniciar, inicia sesión recordándola en el Llavero, o desactiva la renovación.";return}
         guard let effective=RefreshPolicy.identity(original:originalID,team:team,existing:existing) else {error="Ese identificador no corresponde al equipo elegido. Detenido para conservar la app anterior.";return}
         let job=RefreshJob(id:device+":"+effective,ipa:ipa.path,gameFolder:gameFolder.path,originalID:originalID,effectiveID:effective,team:team,udid:device,account:RefreshPolicy.account(email),sha256:"",expires:Date(),enabled:autoRefresh)
-        startInstall(job,updating:!existing.isEmpty,content:includeContent ? romfs : nil,appOnly:!includeContent)
+        startInstall(job,updating:!existing.isEmpty,content:includeContent ? romfs : nil,appOnly:!includeContent,approveRegistration:approveRegistration)
     }
-    private func startInstall(_ job:RefreshJob,updating:Bool,content:URL?,appOnly:Bool=false) {
+    private func startInstall(_ job:RefreshJob,updating:Bool,content:URL?,appOnly:Bool=false,approveRegistration:Bool=false) {
+        guard helperCapabilities.contains("registration-consent-v1") else {error="Actualiza el instalador para comprobar el registro del dispositivo.";activeRefresh=nil;return}
         guard FileManager.default.isReadableFile(atPath:job.ipa) else {error="No encontramos la IPA original. Conserva los archivos de preparación para renovarla.";activeRefresh=nil;return}
         if let content,!FileManager.default.fileExists(atPath:content.path) {error="Faltan los datos romfs. Prepara el juego de nuevo antes de instalarlo.";activeRefresh=nil;return}
         installIntent=job;loggedPhase="";loggedBucket = -1;logURL=nil;record("Firmando e instalando…");busy=true;error=nil;startedAt=Date();phase="Firmando e instalando…";fraction=nil
         var value:[String:Any]=["op":"install","ipa":job.ipa,"original_id":job.originalID,"team":job.team,"udid":job.udid,"work":URL(fileURLWithPath:job.gameFolder).appendingPathComponent("nxnative-tools/sideloading").path,"update":updating,"automatic":activeRefresh != nil && !manualRefresh]
+        value["approve_registration"]=approveRegistration && activeRefresh==nil
         if appOnly {value["app_only"]=true}
         if updating {value["expected_id"]=job.effectiveID}
         if !job.sha256.isEmpty {value["sha256"]=job.sha256}
@@ -341,19 +363,25 @@ enum RefreshPolicy {
             record("Lista de tus juegos actualizada.")
             let matches=apps.filter {$0.id.hasPrefix(originalID)};if existing.isEmpty,matches.count==1 {existing=matches[0].id}
             busy=false
+        case "device_registered":
+            guard event["team"] as? String==team,event["udid"] as? String==device else {return}
+            if accountDeviceTeam==team,!accountDevices.contains(where:{$0.id.caseInsensitiveCompare(device) == .orderedSame}) {
+                accountDevices.append(AccountDevice(id:device,name:devices.first(where:{$0.id==device})?.name ?? "iPhone / iPad",status:"registered"));accountDevicesCheckedAt=Date()
+            }
         case "account_devices":
             accountDeviceTeam=event["team"] as? String ?? ""
+            accountDeviceLimit=(event["free_device_limit"] as? Int)==3 ? 3 : nil;accountDevicesCheckedAt=Date()
             accountDevices=((event["items"] as? [[String:Any]]) ?? []).compactMap {item in guard let id=item["udid"] as? String else {return nil};return AccountDevice(id:id,name:item["name"] as? String ?? String(id.suffix(8)),status:item["status"] as? String ?? "")}
             busy=false;record("Dispositivos registrados consultados.")
         case "two_factor":record("Introduce el código de Apple.");codeRequired=true;phase="Introduce el código de Apple.";smsNumbers=((event["numbers"] as? [[String:Any]]) ?? []).compactMap {number in guard let id=number["id"] as? Int,let digits=number["last_digits"] as? String else {return nil};return TrustedSMS(id:id,digits:digits)}
         case "signed_in":
             record("Sesión iniciada. Elige tu equipo personal.");authenticated=true;busy=false;codeRequired=false;error=nil;phase="Sesión iniciada. Elige tu equipo personal."
             if let remember=pendingRemember {if remember {defaults.set(email,forKey:"sideloadEmail");defaults.set(anisette,forKey:"sideloadAnisette")}else{defaults.removeObject(forKey:"sideloadEmail")};pendingRemember=nil}
-            teams=((event["teams"] as? [[String:Any]]) ?? []).compactMap {item in guard let id=item["id"] as? String else {return nil};return SideloadTeam(id:id,name:item["name"] as? String ?? id,kind:item["kind"] as? String ?? "")}
+            teams=((event["teams"] as? [[String:Any]]) ?? []).compactMap {item in guard let id=item["id"] as? String else {return nil};return SideloadTeam(id:id,name:item["name"] as? String ?? id,kind:item["kind"] as? String ?? "",freeDeviceLimit:(item["free_device_limit"] as? Int)==3 ? 3 : nil)}
             if !teams.contains(where:{$0.id==team}) {team=""}
             for index in jobs.indices where jobs[index].account==RefreshPolicy.account(email) {jobs[index].needsLogin=false};saveJobs()
             if let refresh=activeRefresh {refreshAuthenticated=true;continueRefresh(refresh)}
-        case "signed_out":authenticated=false;accountDevices=[];accountDeviceTeam="";teams=[];team="";busy=false
+        case "signed_out":authenticated=false;accountDevices=[];accountDeviceTeam="";accountDeviceLimit=nil;accountDevicesCheckedAt=nil;teams=[];team="";busy=false
         case "progress":
             let phases=["Exporting saves":"Exportando partidas…","Verifying saves":"Verificando el respaldo…","Registering device":"Registrando el dispositivo con Apple…","Verifying signature":"Verificando firma y vencimiento…","Preparing IPA":"Preparando IPA…","Signing app":"Firmando la app…","Installing app":"Instalando la app…","Copying game data":"Copiando datos del juego…","Game data ready":"Datos del juego listos."]
             phase=phases[event["phase"] as? String ?? ""] ?? phase;if let value=event["fraction"] as? Double,value.isFinite,value>=0,value<=1 {fraction=value}else{fraction=nil}
@@ -374,7 +402,7 @@ enum RefreshPolicy {
         case "error":
             record("La operación se detuvo. Revisa el mensaje de error.")
             let op=event["operation"] as? String
-            let codes=["version_changed":"La versión del juego cambió o no está verificada. Instala la app con sus datos nuevos.","game_running":"El juego sigue abierto. La renovación espera para no interrumpir tu partida.","idle_unknown":"No pudimos comprobar si el juego está abierto. Guarda, ciérralo y renueva manualmente.","identity_mismatch":"Ese identificador no corresponde al equipo elegido. Detenido para conservar la app anterior.","not_installed":"No encontramos esa app instalada. Revisa el identificador antes de actualizar.","wrong_app":"La app elegida no corresponde a este juego. No se instaló encima.","storage":"No hay espacio suficiente para preparar los datos nuevos sin borrar los anteriores.","ipa_changed":"La IPA cambió. Prepara y aprueba la actualización antes de renovarla."]
+            let codes=["registration_consent":"Este dispositivo necesita registro. Revisa el consumo de un cupo y confirma antes de instalar.","version_changed":"La versión del juego cambió o no está verificada. Instala la app con sus datos nuevos.","game_running":"El juego sigue abierto. La renovación espera para no interrumpir tu partida.","idle_unknown":"No pudimos comprobar si el juego está abierto. Guarda, ciérralo y renueva manualmente.","identity_mismatch":"Ese identificador no corresponde al equipo elegido. Detenido para conservar la app anterior.","not_installed":"No encontramos esa app instalada. Revisa el identificador antes de actualizar.","wrong_app":"La app elegida no corresponde a este juego. No se instaló encima.","storage":"No hay espacio suficiente para preparar los datos nuevos sin borrar los anteriores.","ipa_changed":"La IPA cambió. Prepara y aprueba la actualización antes de renovarla."]
             error=codes[event["code"] as? String ?? ""] ?? ((op=="login" || op=="restore") ? "No pudimos iniciar sesión o la sesión guardada caducó. Vuelve a iniciar sesión." : "No pudimos completar la instalación. Revisa el dispositivo, equipo y permisos. No se revocaron certificados automáticamente.")
             if op=="export_saves" || op=="copy_romfs" {
                 let failures=["game_running":"Guarda y cierra el juego desde el selector de apps antes de continuar.","idle_unknown":"No pudimos verificar que el juego esté cerrado. Guárdalo y ciérralo antes de continuar.","no_saves":"Todavía no encontramos archivos de partida guardados en este juego.","save_changed":"La partida cambió durante la exportación. Cierra el juego y vuelve a intentar.","save_metadata":"Este guardado usa metadatos que la exportación no puede conservar. Usa un respaldo completo del dispositivo.","save_destination":"Elige un ZIP nuevo; no sobrescribimos respaldos.","version_changed":"Actualiza primero la app con la misma versión que los datos preparados.","save_limits":"El guardado supera el límite de exportación de 512 MB u 8192 entradas."]
@@ -456,6 +484,7 @@ struct SideloadView:View {
     var accountOnly=false
     var embedded=false
     @Environment(\.dismiss) private var dismiss
+    @State private var approveRegistration=false
     @State private var installStep=0
     @State private var password=""
     @State private var remember=true
@@ -500,13 +529,17 @@ struct SideloadView:View {
                     Label(text("Sesión iniciada"),systemImage:"person.crop.circle.badge.checkmark")
                     Text(model.email).font(.caption).textSelection(.enabled)
                     Picker(text("Tu equipo personal"),selection:$model.team) {Text(text("Selecciona tu equipo")).tag("");ForEach(model.teams){Text($0.name+" · "+$0.id).tag($0.id)}}.disabled(model.busy)
-                    if let selected=model.teams.first(where:{$0.id==model.team}),!selected.kind.isEmpty {Text(text("Tipo de equipo según Apple")+": "+selected.kind).font(.caption).foregroundStyle(.secondary)}
+                    if let selected=model.teams.first(where:{$0.id==model.team}),!selected.kind.isEmpty {Text(text("Tipo de equipo según Apple")+": "+(selected.freeDeviceLimit==3 ? text("Cuenta gratuita") : selected.kind)).font(.caption).foregroundStyle(.secondary)}
                     Button(text("Leer dispositivos de mi cuenta Apple")){model.inspectAccountDevices()}.disabled(model.busy || model.team.isEmpty)
                     if model.accountDeviceTeam==model.team {
                         Text(text("Dispositivos registrados en el equipo")+": "+String(model.accountDevices.count)).font(.headline)
-                        ForEach(model.accountDevices) {item in Text(item.name+" · …"+String(item.id.suffix(8))+" · "+item.status).font(.caption)}
+                        if let remaining=model.estimatedDeviceSlots {
+                            Label(text("Cupos disponibles estimados")+": "+String(remaining)+" / 3",systemImage:"iphone").font(.title3.bold())
+                            Text(text("Cuenta gratuita confirmada por su membresía. Estimación basada en los registros devueltos; Apple confirma la disponibilidad al registrar.")).font(.caption).foregroundStyle(.secondary)
+                        } else {Text(text("No pudimos confirmar un límite para esta membresía. No asumimos que Individual significa cuenta gratuita.")).font(.caption).foregroundStyle(.secondary)}
+                        ForEach(model.accountDevices) {item in Label(model.accountDeviceName(item),systemImage:"checkmark.circle").font(.callout)}
                     }
-                    Text(text("Apple no informa los cupos restantes en esta consulta. Mostramos los dispositivos registrados, sin inventar disponibilidad ni eliminar registros.")).font(.caption).foregroundStyle(.secondary)
+                    Text(text("El cupo corresponde al dispositivo, no a cada juego. Actualizar en un dispositivo ya registrado no consume otro cupo de dispositivo.")).font(.caption).foregroundStyle(.secondary)
                     Button(text("Cerrar sesión")){model.signOut()}.disabled(model.busy)
                 }
                 if model.codeRequired {AppleVerificationView(model:model,text:text)}
@@ -517,16 +550,17 @@ struct SideloadView:View {
                     Text(model.devices.first(where:{$0.id==model.device})?.name ?? "iPhone / iPad").font(.headline)
                     Text(model.email).font(.callout).foregroundStyle(.secondary)
                     if let folder=model.gameFolder {Text(folder.lastPathComponent).font(.headline)}
+                    RegistrationReviewView(model:model,text:text,approved:$approveRegistration)
                     if model.ipa != nil {
                     Picker(text("App existente que actualizarás"),selection:$model.existing) {Text(text("Primera instalación")).tag("");ForEach(model.apps){Text($0.name+" · "+$0.id).tag($0.id)}}.disabled(model.busy)
                     Text(text("Se conserva el identificador efectivo. Si no corresponde al juego y equipo, la instalación se detiene; no se desinstala la app anterior.")) .font(.caption).foregroundStyle(.secondary)
                     Toggle(text("Renovar automáticamente antes de que caduque"),isOn:$autoRefresh).disabled(model.busy || !remember)
                     Toggle(text("Abrir nxnative Easy al iniciar sesión"),isOn:$loginItem).onChange(of:loginItem){_,value in model.setLoginItem(value)}.disabled(model.busy)
                     Text(text("La renovación necesita este Mac encendido, nxnative Easy abierto, conexión a Internet y el dispositivo accesible. Conserva la IPA original.")) .font(.caption).foregroundStyle(.secondary)
-                    Button(text(model.existing.isEmpty ? "Firmar e instalar" : "Firmar y actualizar")){installStep=3;model.install(autoRefresh:autoRefresh)}.buttonStyle(.borderedProminent).disabled(model.busy || model.device.isEmpty || model.team.isEmpty || model.originalID.isEmpty)
+                    Button(text(model.existing.isEmpty ? "Firmar e instalar" : "Firmar y actualizar")){installStep=3;model.install(autoRefresh:autoRefresh,approveRegistration:approveRegistration)}.buttonStyle(.borderedProminent).disabled(model.busy || model.device.isEmpty || model.team.isEmpty || model.originalID.isEmpty || model.registrationState == .unknown || (model.registrationState == .new && !approveRegistration))
                     }
                     if model.canUpdateAppOnly {
-                        Button(text("Actualizar sólo la app; conservar romfs")){installStep=3;model.install(autoRefresh:autoRefresh,includeContent:false)}.disabled(model.busy)
+                        Button(text("Actualizar sólo la app; conservar romfs")){installStep=3;model.install(autoRefresh:autoRefresh,includeContent:false,approveRegistration:approveRegistration)}.disabled(model.busy || model.registrationState == .unknown || (model.registrationState == .new && !approveRegistration))
                         Text(text("Para cambios de controles o de la app con la misma versión del juego. Si cambió el juego o DLC, usa la instalación con datos nuevos.")).font(.caption).foregroundStyle(.secondary)
                     }
                 }
@@ -536,8 +570,37 @@ struct SideloadView:View {
                 if !model.busy {Text(text(model.phase)).font(.callout)}
             }.padding(24)
         }
-        .onChange(of:model.team){_,value in if !value.isEmpty && model.authenticated && !model.busy {model.inspectAccountDevices()}}
+        .onChange(of:model.device){_,_ in approveRegistration=false}
+        .onChange(of:installStep){_,step in if step==2 {approveRegistration=false;if !model.busy {model.inspectAccountDevices()}}}
+        .onChange(of:model.team){_,value in approveRegistration=false;if !value.isEmpty && model.authenticated && !model.busy {model.inspectAccountDevices()}}
         .frame(maxWidth:.infinity,maxHeight:.infinity).frame(width:embedded ? nil : 760,height:embedded ? nil : 720).tint(Color(red:0.79,green:0.95,blue:0.37)).preferredColorScheme(.dark).interactiveDismissDisabled(model.busy)
+    }
+}
+
+
+struct RegistrationReviewView:View {
+    @ObservedObject var model:SideloadModel
+    let text:(String)->String
+    @Binding var approved:Bool
+    var body:some View {
+        VStack(alignment:.leading,spacing:12) {
+            switch model.registrationState {
+            case .registered:
+                Label(text("Este dispositivo ya está registrado"),systemImage:"checkmark.seal.fill").font(.headline).foregroundStyle(.green)
+                Text(text("Instalar o actualizar aquí no consume otro cupo de dispositivo.")).font(.callout)
+            case .new:
+                Label(text("Este dispositivo usará un cupo nuevo"),systemImage:"plus.circle.fill").font(.headline).foregroundStyle(.orange)
+                Text(text("Al confirmar la instalación, registraremos este dispositivo con tu equipo Apple y consumirá un cupo.")).font(.callout)
+                if let remaining=model.estimatedDeviceSlots {Text(text("Disponibles estimados antes de instalar")+": "+String(remaining)+" · "+text("Después")+": "+String(max(0,remaining-1))).font(.callout.bold())}
+                Text(text("El registro puede consumir el cupo aunque la instalación falle después.")).font(.caption).foregroundStyle(.secondary)
+                Toggle(text("Acepto registrar este dispositivo y usar un cupo"),isOn:$approved).disabled(model.busy)
+            case .unknown:
+                Label(text("Comprueba el registro antes de instalar"),systemImage:"questionmark.circle").font(.headline)
+                Button(text("Consultar mi cuenta Apple")){model.inspectAccountDevices()}.disabled(model.busy)
+            }
+            if model.registrationState != .unknown {Button(text("Actualizar consulta")){approved=false;model.inspectAccountDevices()}.disabled(model.busy)}
+            Text(text("La consulta no registra ni elimina dispositivos. Apple confirma la disponibilidad al instalar.")).font(.caption).foregroundStyle(.secondary)
+        }.padding(18).frame(maxWidth:.infinity,alignment:.leading).background(.white.opacity(0.04),in:RoundedRectangle(cornerRadius:14))
     }
 }
 

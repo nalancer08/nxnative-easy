@@ -44,7 +44,7 @@ Partimos de [seedds/nxnative](https://github.com/seedds/nxnative): el motor, los
 
 - **Preparación guiada:** destino → archivos → llaves → revisión → compilación con avance y registro. Arrastrar archivos no mueve tus originales.
 - **Biblioteca con estados claros:** app/IPA preparada, instalaciones verificadas y última comprobación de dispositivos desconectados.
-- **Avisos para recompilar, diagnósticos sin datos sensibles y notificaciones al terminar.** La cuenta Apple es global; los dispositivos registrados no se presentan como cupos restantes.
+- **Avisos para recompilar, diagnósticos sin datos sensibles y notificaciones al terminar.** La cuenta Apple es global; los cupos de cuentas gratuitas son estimaciones identificadas, con aviso antes de registrar un dispositivo nuevo.
 - **Controles editables en iPhone:** posición, tamaño y opacidad, guardados por juego y layout.
 - **IPA ligera sólo para iPhone/iPad:** los datos `romfs` van aparte; se conservan salidas y cachés válidas.
 - **Llaves del usuario:** debes seleccionar la carpeta de tus propias `prod.keys`. No incluimos, descargamos ni distribuimos llaves o juegos.

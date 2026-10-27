@@ -12,6 +12,26 @@ enum EasyLanguage: String, CaseIterable {
 
 struct EasyStrings {
     static let english: [String:String] = [
+        "Cuenta gratuita":"Free account",
+        "Cupos disponibles estimados":"Estimated available slots",
+        "Cuenta gratuita confirmada por su membresía. Estimación basada en los registros devueltos; Apple confirma la disponibilidad al registrar.":"Free team confirmed by membership. Estimate based on returned registrations; Apple confirms availability when registering.",
+        "No pudimos confirmar un límite para esta membresía. No asumimos que Individual significa cuenta gratuita.":"We could not confirm a limit for this membership. Individual does not necessarily mean a free account.",
+        "El cupo corresponde al dispositivo, no a cada juego. Actualizar en un dispositivo ya registrado no consume otro cupo de dispositivo.":"The slot is for the device, not each game. Updating on an already registered device does not use another device slot.",
+        "Este dispositivo ya está registrado":"This device is already registered",
+        "Instalar o actualizar aquí no consume otro cupo de dispositivo.":"Installing or updating here does not use another device slot.",
+        "Este dispositivo usará un cupo nuevo":"This device will use a new slot",
+        "Al confirmar la instalación, registraremos este dispositivo con tu equipo Apple y consumirá un cupo.":"When you confirm installation, we will register this device with your Apple team and use one slot.",
+        "Disponibles estimados antes de instalar":"Estimated available before installation",
+        "Después":"After",
+        "Acepto registrar este dispositivo y usar un cupo":"I agree to register this device and use one slot",
+        "Comprueba el registro antes de instalar":"Check registration before installing",
+        "Consultar mi cuenta Apple":"Check my Apple account",
+        "Actualizar consulta":"Refresh check",
+        "La consulta no registra ni elimina dispositivos. Apple confirma la disponibilidad al instalar.":"Checking does not register or remove devices. Apple confirms availability during installation.",
+        "Actualiza el instalador para comprobar el registro del dispositivo.":"Update the installer to check device registration.",
+        "Este dispositivo necesita registro. Revisa el consumo de un cupo y confirma antes de instalar.":"This device needs registration. Review the device slot and confirm before installing.",
+        "El registro puede consumir el cupo aunque la instalación falle después.":"Registration can use the slot even if installation fails afterwards.",
+
         "Verificando código…":"Verifying code…",
         "Solicitando un nuevo código…":"Requesting a new code…",
         "Verifica tu cuenta":"Verify your account",

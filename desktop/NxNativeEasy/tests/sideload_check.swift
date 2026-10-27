@@ -13,7 +13,7 @@ import Foundation
         #!/usr/bin/python3
         import sys,json,time,zipfile,os
         def emit(value):print(json.dumps(value),flush=True)
-        emit({'event':'hello','protocol':1,'architecture':'aarch64','capabilities':['scoped-games-v1','save-export-v1','romfs-copy-v1']})
+        emit({'event':'hello','protocol':1,'architecture':'aarch64','capabilities':['scoped-games-v1','save-export-v1','romfs-copy-v1','registration-consent-v1']})
         for line in sys.stdin:
             value=json.loads(line)
             if value['op']=='devices':emit({'event':'devices','items':[{'udid':'SYNTHETIC-DEVICE','name':'Test iPad','model':'iPad-test','os':'26.0','connections':['Wi-Fi']},{'udid':'SYNTHETIC-DEVICE','name':'Test iPad','model':'iPad-test','os':'26.0','connections':['USB','Wi-Fi']}]})
@@ -29,6 +29,10 @@ import Foundation
             elif value['op']=='restore':emit({'event':'signed_in','teams':[{'id':'ABCDE12345','name':'Personal test team'}]})
             elif value['op']=='install':
                 assert value['automatic']==False and value['update']==True
+                assert value.get('approve_registration') in (False,True)
+                if value['approve_registration']:
+                    assert value['udid']=='SYNTHETIC-DEVICE' and value['team']=='ABCDE12345'
+                    emit({'event':'device_registered','team':value['team'],'udid':value['udid']})
                 assert value['expected_id']=='org.game.custom'
                 assert 'romfs' not in value
                 if not value.get('app_only'):assert value['sha256']=='a'*64
@@ -43,7 +47,7 @@ import Foundation
                 emit({'event':'content_copied','effective_id':value['effective_id']})
             elif value['op']=='account_devices':
                 assert value['team']=='ABCDE12345'
-                emit({'event':'account_devices','team':value['team'],'items':[{'udid':'REGISTERED-DEVICE','name':'Synthetic iPhone','status':'a'}]})
+                emit({'event':'account_devices','team':value['team'],'free_device_limit':3,'items':[{'udid':'REGISTERED-DEVICE','name':'Synthetic iPhone','status':'a'}]})
             elif value['op']=='logout':emit({'event':'signed_out'})
             elif value['op']=='quit':break
         """.write(to:helper,atomically:true,encoding:.utf8)
@@ -69,7 +73,15 @@ import Foundation
         assert(defaults.string(forKey:"sideloadEmail")==nil)
         model.inspectAccountDevices();assert(!model.busy && model.accountDevices.isEmpty)
         model.team="ABCDE12345";model.inspectAccountDevices();try await wait {!model.busy && model.accountDevices.count==1}
-        assert(model.accountDeviceTeam==model.team)
+        assert(model.accountDeviceTeam==model.team && model.estimatedDeviceSlots==2)
+        assert(model.registrationState == .new)
+        let registered=[AccountDevice(id:"PHONE",name:"Test",status:"c"),AccountDevice(id:"phone",name:"duplicate",status:"c")]
+        assert(AccountRegistrationPolicy.remaining(limit:3,devices:registered)==2)
+        assert(AccountRegistrationPolicy.remaining(limit:nil,devices:registered)==nil)
+        assert(AccountRegistrationPolicy.state(team:"A",loadedTeam:"A",checkedAt:Date(),device:"phone",devices:registered) == .registered)
+        assert(AccountRegistrationPolicy.state(team:"B",loadedTeam:"A",checkedAt:Date(),device:"phone",devices:registered) == .unknown)
+        assert(AccountRegistrationPolicy.state(team:"A",loadedTeam:"A",checkedAt:Date().addingTimeInterval(-301),device:"phone",devices:registered) == .unknown)
+        assert(AccountRegistrationPolicy.remaining(limit:3,devices:(0..<4).map {AccountDevice(id:String($0),name:"Test",status:"c")})==0)
         assert(!model.logs.map(\.message).joined().contains("synthetic-password-only"))
         assert(!model.logs.map(\.message).joined().contains("123456"))
         assert(!model.logs.map(\.message).joined().contains("test@example.org"))
@@ -126,6 +138,9 @@ import Foundation
         assert(model.dataFolder(for:selected)?.path==model.romfs?.path)
         assert(model.canUpdateAppOnly)
         model.install(autoRefresh:false,includeContent:false);try await wait {!model.busy}
+        model.inspectAccountDevices();try await wait {!model.busy};assert(model.estimatedDeviceSlots==2)
+        model.install(autoRefresh:false,includeContent:false,approveRegistration:true);try await wait {!model.busy};assert(model.error==nil)
+        assert(model.estimatedDeviceSlots==1 && model.registrationState == .registered)
         let backup=root.appendingPathComponent("progress.zip")
         model.exportSaves(selected,destination:backup,confirmedClosed:true);try await wait {!model.busy && model.exportedSaves != nil};assert(model.exportedSaves==backup)
         model.copyData(selected,confirmedClosed:true);try await wait {!model.busy};assert(model.fraction==1 && model.error==nil)
