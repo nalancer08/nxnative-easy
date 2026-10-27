@@ -2,7 +2,7 @@
   "schema": 1,
   "repository": "seedds/nxnative",
   "baseline": "ecbeae164c0b419d1ba1031248fe1402050a3eb0",
-  "reviewed_head": "15805ef52578afe54196504e3f98e15a22221664",
+  "reviewed_head": "40e6baede556acd454169ac75b33d1686063f528",
   "integrated": [
     {
       "upstream_sha": "4639c5114cbb8a8f250645941fa3a25c1ba08cc6",
@@ -21,5 +21,45 @@
       "title": "Make repeated IPA and Mac app builds incremental (#279)"
     }
   ],
-  "note": "Selective tooling imports, not a merge of all upstream history. Runtime and translation chain remain at the baseline."
+  "note": "Full upstream main integrated through integrated_head. Earlier selective imports are retained for provenance. Future comparisons start at integrated_head; all fork features and game catalog gates remain required.",
+  "integrated_head": "40e6baede556acd454169ac75b33d1686063f528",
+  "latest_full_integration": {
+    "from_fork": "f23448d216e2806650c0e6728830fe1328333b0e",
+    "upstream_head": "40e6baede556acd454169ac75b33d1686063f528",
+    "added_games": [
+      {
+        "id": "0100317013770000",
+        "name": "Mario + Rabbids® Sparks of Hope"
+      },
+      {
+        "id": "01004D300C5AE000",
+        "name": "Kirby and the Forgotten Land"
+      },
+      {
+        "id": "010057D006492000",
+        "name": "OCTOPATH TRAVELER"
+      },
+      {
+        "id": "010069C01AB82000",
+        "name": "SHIN MEGAMI TENSEI V: Vengeance"
+      },
+      {
+        "id": "010074F013262000",
+        "name": "Xenoblade Chronicles 3"
+      },
+      {
+        "id": "01008C0016544000",
+        "name": "Sea of Stars"
+      },
+      {
+        "id": "01009D901BC56000",
+        "name": "Donkey Kong Country Returns HD"
+      },
+      {
+        "id": "0100C1F0051B6000",
+        "name": "Donkey Kong Country: Tropical Freeze"
+      }
+    ],
+    "translation_chain": "7fbca6dd477d"
+  }
 }

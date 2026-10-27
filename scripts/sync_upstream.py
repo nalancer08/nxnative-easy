@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 import json
 from pathlib import Path
 import subprocess
+import re
 import sys
 
 ROOT=Path(__file__).resolve().parents[1]
@@ -50,6 +51,33 @@ def stage(root,destination,head,selected,integrated):
     subprocess.run(['git','-C',str(destination),'cherry-pick','-x',*resolved],check=True)
 
 
+def merge_main(root,destination,head):
+    if git(root,'status','--porcelain'):raise ValueError('Commit or stash local edits before staging; nothing was changed.')
+    git(root,'worktree','add','--detach',str(destination),'HEAD')
+    subprocess.run(['git','-C',str(destination),'merge','--no-edit',head],check=True)
+
+
+def profile_changes(root,head):
+    def profiles(revision):
+        found={}
+        for row in git(root,'ls-tree','-r',revision,'--','dm/games').splitlines():
+            metadata,path=row.split('\t',1)
+            match=re.fullmatch(r'dm/games/([0-9A-Fa-f]{16})/game.tsv',path)
+            if match:found[match[1].upper()]=(metadata.split()[2],path)
+        return found
+    def summary(revision,title,path):
+        name=title;versions=[]
+        for line in git(root,'show',revision+':'+path).splitlines():
+            fields=line.split('\t')
+            if fields[0]=='name' and len(fields)>1:name=fields[1]
+            if fields[0]=='build' and len(fields)>2 and fields[2] not in versions:versions.append(fields[2])
+        return dict(id=title,name=name,versions=versions)
+    old,new=profiles('HEAD'),profiles(head)
+    return dict(added=[summary(head,i,new[i][1]) for i in sorted(new.keys()-old.keys())],
+                updated=[summary(head,i,new[i][1]) for i in sorted(old.keys()&new.keys()) if old[i][0]!=new[i][0]],
+                removed=[summary('HEAD',i,old[i][1]) for i in sorted(old.keys()-new.keys())])
+
+
 def build_python():
     candidates=[Path(sys.executable),ROOT.parent/'venv/bin/python',
                 Path.home()/'Library/Application Support/nxnative Easy/Tools/nxnative-tools/venv/bin/python']
@@ -63,6 +91,7 @@ def build_python():
 def validate(candidate,output,python):
     env=__import__('os').environ.copy();env.setdefault('DM_GAME','010015100B514000')
     logs=output/'checks';logs.mkdir()
+    subprocess.run([python,str(candidate/'scripts/sync_game_catalog.py'),'--check'],check=True)
     suites=['scripts/tests','dm/tools/tests','dm/ios/tests','dm/gfx/tests']
     for suite in suites:
         for test in sorted((candidate/suite).glob('test_*.py')):
@@ -76,7 +105,9 @@ def validate(candidate,output,python):
 def main(argv=None):
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output',required=True,type=Path,help='new directory outside this checkout')
-    parser.add_argument('--stage',nargs='+',metavar='SHA',help='explicitly reviewed commits, in dependency order; stage and run synthetic checks')
+    mode=parser.add_mutually_exclusive_group()
+    mode.add_argument('--stage',nargs='+',metavar='SHA',help='explicitly reviewed commits, in dependency order; stage and run synthetic checks')
+    mode.add_argument('--merge-main',action='store_true',help='merge pinned upstream main into a detached candidate, synchronize game lists and run checks')
     args=parser.parse_args(argv)
     output=args.output.expanduser().resolve()
     if output==ROOT or ROOT in output.parents or output.exists():parser.error('Choose a new folder outside the source checkout.')
@@ -87,9 +118,11 @@ def main(argv=None):
     git(ROOT,'fetch','upstream','main')
     head=git(ROOT,'rev-parse','FETCH_HEAD')
     integrated={item['upstream_sha'] for item in policy['integrated']}
-    rows=commits(ROOT,policy['baseline'],head,integrated)
+    base=policy.get('integrated_head',policy['baseline'])
+    rows=commits(ROOT,base,head,integrated)
+    games=profile_changes(ROOT,head)
     output.mkdir(parents=True)
-    report=dict(reviewed_at=datetime.now(timezone.utc).isoformat(),upstream_head=head,baseline=policy['baseline'],
+    report=dict(reviewed_at=datetime.now(timezone.utc).isoformat(),upstream_head=head,baseline=base,game_changes=games,
                 local_head=git(ROOT,'rev-parse','HEAD'),commits=rows,candidate_status='not staged')
     report_path=output/'report.json'
     def save():report_path.write_text(json.dumps(report,indent=2)+'\n')
@@ -99,22 +132,27 @@ def main(argv=None):
     for row in rows:
         title=row['title'].replace('|','/').replace('\n',' ')
         lines.append(f"| `{row['sha'][:12]}` | {row['status']} | {', '.join(row['areas'])} | {title} |")
+    lines+=['','## Game profile changes','']
+    for status,items in games.items():
+        lines += [f"- {status}: {g['name']} (`{g['id']}`), versions {', '.join(g['versions'])}" for g in items]
     (output/'report.md').write_text('\n'.join(lines)+'\n')
     print('Review:',output/'report.md',flush=True)
-    if args.stage:
-        report['requested_commits']=args.stage;report['candidate_status']='staging';save()
+    if args.stage or args.merge_main:
+        report['requested_commits']=args.stage;report['mode']='merge-main' if args.merge_main else 'selected commits';report['candidate_status']='staging';save()
         try:
             python=build_python()
-            stage(ROOT,output/'candidate',head,args.stage,integrated)
+            if args.merge_main:merge_main(ROOT,output/'candidate',head)
+            else:stage(ROOT,output/'candidate',head,args.stage,integrated)
+            subprocess.run([python,str(output/'candidate/scripts/sync_game_catalog.py'),'--write','--upstream-ref',head],check=True)
             report['candidate_status']='checking';save()
-            validate(output/'candidate',output)
+            validate(output/'candidate',output,python)
             report['candidate_status']='synthetic checks passed; gameplay and release review still required';save()
         except Exception:
             report['candidate_status']='failed; inspect candidate and checks, active checkout preserved';save();raise
         print('Candidate:',output/'candidate')
         print('Inspect changes, compile affected targets and test games before integration.')
     else:
-        print('To evaluate selected commits, run again with a new --output folder and --stage SHA [SHA ...].')
+        print('To evaluate selected commits, run again with a new --output folder and --merge-main, or --stage SHA [SHA ...].')
     return 0
 
 

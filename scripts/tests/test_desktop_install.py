@@ -10,6 +10,7 @@ from unittest.mock import patch
 
 ROOT=Path(__file__).resolve().parents[2]
 spec=importlib.util.spec_from_file_location('desktop_builder',ROOT/'scripts/build_desktop_app.py')
+assert spec is not None and spec.loader is not None
 builder=importlib.util.module_from_spec(spec);spec.loader.exec_module(builder)
 
 class DesktopInstall(unittest.TestCase):
@@ -33,7 +34,7 @@ class DesktopInstall(unittest.TestCase):
                 root=Path(temporary);app=self.old_app(root);staged=root/'New.app';staged.mkdir()
                 (staged/'marker').write_text('new')
                 replace=builder.os.replace
-                def swap(source,destination):
+                def swap(source,destination,fail=fail,staged=staged,replace=replace):
                     if fail and source==staged:raise OSError('simulated swap failure')
                     return replace(source,destination)
                 with patch.object(builder.os,'replace',side_effect=swap):

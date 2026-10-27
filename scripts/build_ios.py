@@ -26,8 +26,8 @@ def build_lock():
     with open(Path(tempfile.gettempdir()) / ('nxnative-ios-'+digest+'.lock'),'a') as lock:
         try:
             fcntl.flock(lock,fcntl.LOCK_EX | fcntl.LOCK_NB)
-        except BlockingIOError:
-            raise ValueError('Another build is using this checkout; wait for it to finish.')
+        except BlockingIOError as error:
+            raise ValueError('Another build is using this checkout; wait for it to finish.') from error
         try:
             yield
         finally:
@@ -36,6 +36,7 @@ def build_lock():
 
 def load_builder():
     spec = importlib.util.spec_from_file_location('nxnative_builder', REPO / 'scripts/build_ipa_from_nsp.py')
+    assert spec is not None and spec.loader is not None
     builder = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = builder
     spec.loader.exec_module(builder)
@@ -205,7 +206,7 @@ if __name__ == '__main__':
     try:
         raise SystemExit(main())
     except KeyboardInterrupt:
-        raise SystemExit(130)
+        raise SystemExit(130) from None
     except (OSError,ValueError,subprocess.SubprocessError,zipfile.BadZipFile) as error:
         print('Error:',error,file=sys.stderr)
-        raise SystemExit(1)
+        raise SystemExit(1) from error

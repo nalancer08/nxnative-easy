@@ -25,9 +25,11 @@ Cancellation signals the entire build process group.
 
 This branch retains nxnative's MIT license and attribution. It starts from
 upstream `ecbeae164c0b419d1ba1031248fe1402050a3eb0`, includes the shared iOS touch
-editor and the tested #277 extraction-space fix, and keeps the working Dread shader
-chain. Selective upstream packaging/.NET/cache/regression-check imports are tracked
-in [the PR review and repeatable sync flow](personal-pr-review.md).
+editor and the tested #277 extraction-space fix. Release 1.5 integrates upstream
+main through the SHA in [upstream-sync.json](upstream-sync.json); the previous
+working game apps/caches remain untouched. The new chain has a separate validated
+Dread shader build. See [the integration review](personal-pr-review.md) and the
+[standing agent procedure](agents/07-upstream-maintenance.md).
 
 ## One command, including lightweight export
 

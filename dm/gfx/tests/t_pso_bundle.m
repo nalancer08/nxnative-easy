@@ -55,8 +55,9 @@ int main(void) { @autoreleasepool {
     NSString *gpu = g_dev.architecture.name;
     // the archive as build_ipa.sh makes it (the tool's own folder: this file is dm/gfx/tests/t_pso_bundle.m)
     NSString *tool = [[@(__FILE__) stringByDeletingLastPathComponent] stringByAppendingPathComponent:@"../tools/pso_offline.py"];
-    if (sh([NSString stringWithFormat:@"python3 %@ --platform macos --gpu %@ --msl %@ --pairs %@/shader_pairs.tsv --out %@ --work %@/work > %@/pso_offline.log 2>&1",
-            tool, gpu, msl, tables, bundle, root, root])) {
+    NSOperatingSystemVersion hostOS = NSProcessInfo.processInfo.operatingSystemVersion;
+    if (sh([NSString stringWithFormat:@"python3 %@ --platform macos --os-min %ld.0 --gpu %@ --msl %@ --pairs %@/shader_pairs.tsv --out %@ --work %@/work > %@/pso_offline.log 2>&1",
+            tool, (long)hostOS.majorVersion, gpu, msl, tables, bundle, root, root])) {
         NSString *log = [NSString stringWithContentsOfFile:[root stringByAppendingPathComponent:@"pso_offline.log"] encoding:NSUTF8StringEncoding error:nil];
         if ([log containsString:@"metal-tt is not available"]) { printf("t_pso_bundle: no metal-tt (xcodebuild -downloadComponent MetalToolchain), GPU checks not run; %d file checks failed\n", failed); return failed != 0; }
         fprintf(stderr, "pso_offline.py failed:\n%s\n", log.UTF8String); return 1;
@@ -165,7 +166,8 @@ int main(void) { @autoreleasepool {
         EXPECT("off: none opened", 0, list.count);
         g_arch_bundle = real;
     }
-    [NSFileManager.defaultManager removeItemAtPath:root error:nil];
+    if (!failed) [NSFileManager.defaultManager removeItemAtPath:root error:nil];
+    else fprintf(stderr, "failed fixture retained at %s\n", root.UTF8String);
     printf("t_pso_bundle: %d checks, %d failed\n", checks, failed);
     return failed != 0;
 } }

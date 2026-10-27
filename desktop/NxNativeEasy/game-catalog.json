@@ -1,0 +1,787 @@
+{
+  "schema": 1,
+  "games": [
+    {
+      "id": "01003FC01670C000",
+      "name": "13 Sentinels: Aegis Rim",
+      "versions": [
+        "1.10"
+      ],
+      "notes": "dm/games/01003FC01670C000/README.md",
+      "artwork": "docs/images/13-sentinels.jpg",
+      "caption": "~5 GB"
+    },
+    {
+      "id": "01008D7016438000",
+      "name": "13 Sentinels: Aegis Rim (Asia)",
+      "versions": [
+        "1.00"
+      ],
+      "notes": "dm/games/01008D7016438000/README.md",
+      "artwork": "docs/images/13-sentinels.jpg",
+      "caption": "~5 GB"
+    },
+    {
+      "id": "0100A83022A22000",
+      "name": "Absolum",
+      "versions": [
+        "1.1.1"
+      ],
+      "notes": "dm/games/0100A83022A22000/README.md",
+      "artwork": "docs/images/absolum.jpg",
+      "caption": "~2 GB"
+    },
+    {
+      "id": "010005501E68C000",
+      "name": "Ace Attorney Investigations Collection",
+      "versions": [
+        "1.0.0.2"
+      ],
+      "notes": "dm/games/010005501E68C000/README.md",
+      "artwork": "docs/images/ace-attorney-investigations.jpg",
+      "caption": "~7 GB"
+    },
+    {
+      "id": "0100300012F2A000",
+      "name": "Advance Wars 1+2: Re-Boot Camp",
+      "versions": [
+        "1.0.0"
+      ],
+      "notes": "dm/games/0100300012F2A000/README.md",
+      "artwork": "docs/images/advance-wars-1-2-re-boot-camp.jpg",
+      "caption": "~7.1 GB"
+    },
+    {
+      "id": "010089B00D09C000",
+      "name": "AI: THE SOMNIUM FILES",
+      "versions": [
+        "1.0.1"
+      ],
+      "notes": "dm/games/010089B00D09C000/README.md",
+      "artwork": "docs/images/ai-the-somnium-files.jpg",
+      "caption": "~8.3 GB"
+    },
+    {
+      "id": "0100713016CCC000",
+      "name": "AI: THE SOMNIUM FILES - nirvanA Initiative",
+      "versions": [
+        "1.0.2"
+      ],
+      "notes": "dm/games/0100713016CCC000/README.md",
+      "artwork": "docs/images/ai-the-somnium-files-nirvana-initiative.jpg",
+      "caption": "~11.6 GB"
+    },
+    {
+      "id": "01006F8002326000",
+      "name": "Animal Crossing: New Horizons",
+      "versions": [
+        "3.0.3"
+      ],
+      "notes": "dm/games/01006F8002326000/README.md",
+      "artwork": "docs/images/animal-crossing-new-horizons.jpg",
+      "caption": "~10.5 GB"
+    },
+    {
+      "id": "010020D01AD24000",
+      "name": "ANIMAL WELL",
+      "versions": [
+        "1.0.10"
+      ],
+      "notes": "dm/games/010020D01AD24000/README.md",
+      "artwork": "docs/images/animal-well.png",
+      "caption": "~54 MB"
+    },
+    {
+      "id": "01007300020FA000",
+      "name": "ASTRAL CHAIN",
+      "versions": [
+        "1.0.1"
+      ],
+      "notes": "dm/games/01007300020FA000/README.md",
+      "artwork": "docs/images/astral-chain.png",
+      "caption": "~9.7 GB · 60 fps target with 1.0.1"
+    },
+    {
+      "id": "0100CD801CE5E000",
+      "name": "Balatro",
+      "versions": [
+        "1.1.3"
+      ],
+      "notes": "dm/games/0100CD801CE5E000/README.md",
+      "artwork": "docs/images/balatro.jpg",
+      "caption": "~82 MB · played by touch"
+    },
+    {
+      "id": "010086A022444000",
+      "name": "BALL x PIT",
+      "versions": [
+        "1.293"
+      ],
+      "notes": "dm/games/010086A022444000/README.md",
+      "artwork": "docs/images/ball-x-pit.jpg",
+      "caption": "~1.1 GB"
+    },
+    {
+      "id": "010076F0049A2000",
+      "name": "Bayonetta",
+      "versions": [
+        "1.1"
+      ],
+      "notes": "dm/games/010076F0049A2000/README.md",
+      "artwork": "docs/images/bayonetta.jpg",
+      "caption": "~8.8 GB"
+    },
+    {
+      "id": "01007960049A0000",
+      "name": "Bayonetta 2",
+      "versions": [
+        "1.2"
+      ],
+      "notes": "dm/games/01007960049A0000/README.md",
+      "artwork": "docs/images/bayonetta-2.jpg",
+      "caption": "~12.5 GB"
+    },
+    {
+      "id": "01004A4010FEA000",
+      "name": "Bayonetta 3",
+      "versions": [
+        "1.2.0"
+      ],
+      "notes": "dm/games/01004A4010FEA000/README.md",
+      "artwork": "docs/images/bayonetta-3.jpg",
+      "caption": "~14.2 GB"
+    },
+    {
+      "id": "0100620012D6E000",
+      "name": "Big Brain Academy: Brain vs. Brain",
+      "versions": [
+        "1.2.0"
+      ],
+      "notes": "dm/games/0100620012D6E000/README.md",
+      "artwork": "docs/images/big-brain-academy-brain-vs-brain.jpg",
+      "caption": "~0.8 GB"
+    },
+    {
+      "id": "0100F5D01DA3A000",
+      "name": "Brain Memory Training Academy",
+      "versions": [
+        "1.0.0"
+      ],
+      "notes": "dm/games/0100F5D01DA3A000/README.md",
+      "artwork": "docs/images/brain-memory-training-academy.jpg",
+      "caption": "~0.1 GB"
+    },
+    {
+      "id": "01009BF0072D4000",
+      "name": "Captain Toad: Treasure Tracker",
+      "versions": [
+        "1.4.2"
+      ],
+      "notes": "dm/games/01009BF0072D4000/README.md",
+      "artwork": "docs/images/captain-toad-treasure-tracker.jpg",
+      "caption": "~2 GB"
+    },
+    {
+      "id": "0100BF00112C0000",
+      "name": "Catherine: Full Body",
+      "versions": [
+        "1.0.1a"
+      ],
+      "notes": "dm/games/0100BF00112C0000/README.md",
+      "artwork": "docs/images/catherine-full-body.jpg",
+      "caption": "~14 GB"
+    },
+    {
+      "id": "01002B30028F6000",
+      "name": "Celeste",
+      "versions": [
+        "1.4.1.1"
+      ],
+      "notes": "dm/games/01002B30028F6000/README.md",
+      "artwork": "docs/images/celeste.jpg",
+      "caption": "~0.9 GB"
+    },
+    {
+      "id": "0100A5C00D162000",
+      "name": "Cuphead",
+      "versions": [
+        "1.3.7"
+      ],
+      "notes": "dm/games/0100A5C00D162000/README.md",
+      "artwork": "docs/images/cuphead.jpg",
+      "caption": "~5 GB"
+    },
+    {
+      "id": "01004AB00A260000",
+      "name": "DARK SOULS: REMASTERED",
+      "versions": [
+        "1.0.3"
+      ],
+      "notes": "dm/games/01004AB00A260000/README.md",
+      "artwork": "docs/images/dark-souls-remastered-creation.jpg",
+      "caption": "~4 GB · 60 fps with 1.0.3"
+    },
+    {
+      "id": "010014E00DB56000",
+      "name": "Digimon Story Cyber Sleuth: Complete Edition",
+      "versions": [
+        "1.0.3"
+      ],
+      "notes": "dm/games/010014E00DB56000/README.md",
+      "artwork": "docs/images/digimon-story-cyber-sleuth.jpg",
+      "caption": "~5 GB"
+    },
+    {
+      "id": "01009D901BC56000",
+      "name": "Donkey Kong Country Returns HD",
+      "versions": [
+        "1.1.0"
+      ],
+      "notes": "dm/games/01009D901BC56000/README.md",
+      "artwork": "docs/images/donkey-kong-country-returns-hd.png",
+      "caption": "~11.6 GB"
+    },
+    {
+      "id": "0100C1F0051B6000",
+      "name": "Donkey Kong Country: Tropical Freeze",
+      "versions": [
+        "1.0.2"
+      ],
+      "notes": "dm/games/0100C1F0051B6000/README.md",
+      "artwork": "docs/images/donkey-kong-country-tropical-freeze.jpg",
+      "caption": "~7.3 GB"
+    },
+    {
+      "id": "0100A9D01C446000",
+      "name": "DRAGON QUEST VII Reimagined",
+      "versions": [
+        "1.2.0"
+      ],
+      "notes": "dm/games/0100A9D01C446000/README.md",
+      "artwork": "docs/images/dragon-quest-vii-reimagined.jpg",
+      "caption": "~5.9 GB"
+    },
+    {
+      "id": "01006C300E9F0000",
+      "name": "DRAGON QUEST XI S: Echoes of an Elusive Age – Definitive Edition",
+      "versions": [
+        "1.0.4"
+      ],
+      "notes": "dm/games/01006C300E9F0000/README.md",
+      "artwork": "docs/images/dragon-quest-xi-s.jpg",
+      "caption": "~15 GB · 60 fps with 1.0.4"
+    },
+    {
+      "id": "0100606026F12000",
+      "name": "FINAL FANTASY RESONANCE",
+      "versions": [
+        "1.0.1"
+      ],
+      "notes": "dm/games/0100606026F12000/README.md",
+      "artwork": "docs/images/final-fantasy-resonance.jpg",
+      "caption": "~10 GB · 60 fps with 1.0.1"
+    },
+    {
+      "id": "010038B015560000",
+      "name": "FINAL FANTASY TACTICS - The Ivalice Chronicles",
+      "versions": [
+        "1.4.0"
+      ],
+      "notes": "dm/games/010038B015560000/README.md",
+      "artwork": "docs/images/final-fantasy-tactics.jpg",
+      "caption": "~11 GB"
+    },
+    {
+      "id": "0100A6301214E000",
+      "name": "Fire Emblem Engage",
+      "versions": [
+        "2.0.0"
+      ],
+      "notes": "dm/games/0100A6301214E000/README.md",
+      "artwork": "docs/images/fire-emblem-engage.jpg",
+      "caption": "~15 GB · 60 fps with 2.0.0"
+    },
+    {
+      "id": "010055D009F78000",
+      "name": "Fire Emblem: Three Houses",
+      "versions": [
+        "1.2.0"
+      ],
+      "notes": "dm/games/010055D009F78000/README.md",
+      "artwork": "docs/images/fire-emblem-three-houses.jpg",
+      "caption": "~13 GB · 60 fps with 1.2.0"
+    },
+    {
+      "id": "010029B018432000",
+      "name": "Ghost Trick: Phantom Detective",
+      "versions": [
+        "1.0.0"
+      ],
+      "notes": "dm/games/010029B018432000/README.md",
+      "artwork": "docs/images/ghost-trick-phantom-detective.jpg",
+      "caption": "~3 GB"
+    },
+    {
+      "id": "0100535012974000",
+      "name": "Hades",
+      "versions": [
+        "1.0.38233"
+      ],
+      "notes": "dm/games/0100535012974000/README.md",
+      "artwork": "docs/images/hades.jpg",
+      "caption": "~4 GB"
+    },
+    {
+      "id": "0100A00019DE0000",
+      "name": "Hades II",
+      "versions": [
+        "0.0.126424"
+      ],
+      "notes": "dm/games/0100A00019DE0000/README.md",
+      "artwork": "docs/images/hades-ii.jpg",
+      "caption": "~4 GB"
+    },
+    {
+      "id": "010013C00E930000",
+      "name": "Hollow Knight: Silksong",
+      "versions": [
+        "1.0.30000"
+      ],
+      "notes": "dm/games/010013C00E930000/README.md",
+      "artwork": "docs/images/hollow-knight-silksong.jpg",
+      "caption": "~6.4 GB"
+    },
+    {
+      "id": "01002B00111A2000",
+      "name": "Hyrule Warriors: Age of Calamity",
+      "versions": [
+        "1.3.0"
+      ],
+      "notes": "dm/games/01002B00111A2000/README.md",
+      "artwork": "docs/images/hyrule-warriors-age-of-calamity.jpg",
+      "caption": "~15 GB · 60 fps with 1.3.0"
+    },
+    {
+      "id": "01004D300C5AE000",
+      "name": "Kirby and the Forgotten Land",
+      "versions": [
+        "1.1.0"
+      ],
+      "notes": "dm/games/01004D300C5AE000/README.md",
+      "artwork": "docs/images/kirby-and-the-forgotten-land.jpg",
+      "caption": "~6.4 GB"
+    },
+    {
+      "id": "0100DCA0064A6000",
+      "name": "Luigi's Mansion 3",
+      "versions": [
+        "1.4.0"
+      ],
+      "notes": "dm/games/0100DCA0064A6000/README.md",
+      "artwork": "docs/images/luigis-mansion-3.jpg",
+      "caption": "~7.5 GB · 60 fps with 1.4.0"
+    },
+    {
+      "id": "0100152000022000",
+      "name": "Mario Kart 8 Deluxe",
+      "versions": [
+        "4.0.0"
+      ],
+      "notes": "dm/games/0100152000022000/README.md",
+      "artwork": "docs/images/mario-kart-8-deluxe.jpg",
+      "caption": "~11.9 GB · no Mii heads"
+    },
+    {
+      "id": "0100317013770000",
+      "name": "Mario + Rabbids® Sparks of Hope",
+      "versions": [
+        "1.6.2225577"
+      ],
+      "notes": "dm/games/0100317013770000/README.md",
+      "artwork": "docs/images/mario-rabbids-sparks-of-hope.jpg",
+      "caption": "~9.8 GB"
+    },
+    {
+      "id": "0100B99019412000",
+      "name": "Mario vs. Donkey Kong",
+      "versions": [
+        "1.0.1"
+      ],
+      "notes": "dm/games/0100B99019412000/README.md",
+      "artwork": "docs/images/mario-vs-donkey-kong.jpg",
+      "caption": "~1.6 GB"
+    },
+    {
+      "id": "010093801237C000",
+      "name": "Metroid Dread",
+      "versions": [
+        "2.1.0"
+      ],
+      "notes": "dm/games/010093801237C000/README.md",
+      "artwork": "docs/images/metroid-dread.jpg",
+      "caption": "~5 GB"
+    },
+    {
+      "id": "0100B04011742000",
+      "name": "Monster Hunter Rise",
+      "versions": [
+        "16.0.2"
+      ],
+      "notes": "dm/games/0100B04011742000/README.md",
+      "artwork": "docs/images/monster-hunter-rise.jpg",
+      "caption": "~22 GB · 60 fps with 16.0.2"
+    },
+    {
+      "id": "010051701FB46000",
+      "name": "Monster Train 2",
+      "versions": [
+        "1.1.1"
+      ],
+      "notes": "dm/games/010051701FB46000/README.md",
+      "artwork": "docs/images/monster-train-2.jpg",
+      "caption": "~1.6 GB · 60 fps with 1.1.1"
+    },
+    {
+      "id": "010056B015FE8000",
+      "name": "NieR:Automata The End of YoRHa Edition",
+      "versions": [
+        "1.0.3"
+      ],
+      "notes": "dm/games/010056B015FE8000/README.md",
+      "artwork": "docs/images/nier-automata.png",
+      "caption": "~10.9 GB · 60 fps with 1.0.3"
+    },
+    {
+      "id": "010057D006492000",
+      "name": "OCTOPATH TRAVELER",
+      "versions": [
+        "1.0.5"
+      ],
+      "notes": "dm/games/010057D006492000/README.md",
+      "artwork": "docs/images/octopath-traveler.jpg",
+      "caption": "~3.6 GB"
+    },
+    {
+      "id": "01005270232F2000",
+      "name": "OCTOPATH TRAVELER 0",
+      "versions": [
+        "1.0.5"
+      ],
+      "notes": "dm/games/01005270232F2000/README.md",
+      "artwork": "docs/images/octopath-traveler-0.jpg",
+      "caption": "~4 GB · 60 fps with 1.0.5"
+    },
+    {
+      "id": "0100A3501946E000",
+      "name": "OCTOPATH TRAVELER II",
+      "versions": [
+        "1.1.1"
+      ],
+      "notes": "dm/games/0100A3501946E000/README.md",
+      "artwork": "docs/images/octopath-traveler-ii.jpg",
+      "caption": "~5.9 GB · 60 fps with 1.1.1"
+    },
+    {
+      "id": "0100ECD018EBE000",
+      "name": "Paper Mario: The Thousand-Year Door",
+      "versions": [
+        "1.0.1"
+      ],
+      "notes": "dm/games/0100ECD018EBE000/README.md",
+      "artwork": "docs/images/paper-mario-the-thousand-year-door.jpg",
+      "caption": "~5 GB · 60 fps with 1.0.1"
+    },
+    {
+      "id": "0100E44016C22000",
+      "name": "Patrick's Parabox",
+      "versions": [
+        "1.0.1"
+      ],
+      "notes": "dm/games/0100E44016C22000/README.md",
+      "artwork": "docs/images/patricks-parabox.jpg",
+      "caption": "~0.2 GB"
+    },
+    {
+      "id": "01005CA01580E000",
+      "name": "Persona 5 Royal",
+      "versions": [
+        "1.0.2"
+      ],
+      "notes": "dm/games/01005CA01580E000/README.md",
+      "artwork": "docs/images/persona-5-royal.jpg",
+      "caption": "~14.9 GB"
+    },
+    {
+      "id": "0100B7C00933A000",
+      "name": "Pikmin 4",
+      "versions": [
+        "1.1.1"
+      ],
+      "notes": "dm/games/0100B7C00933A000/README.md",
+      "artwork": "docs/images/pikmin-4.jpg",
+      "caption": "~10.8 GB"
+    },
+    {
+      "id": "0100000011D90000",
+      "name": "Pokémon Brilliant Diamond",
+      "versions": [
+        "1.3.0"
+      ],
+      "notes": "dm/games/0100000011D90000/README.md",
+      "artwork": "docs/images/pokemon-brilliant-diamond.jpg",
+      "caption": "~4.6 GB · 60 fps with 1.3.0"
+    },
+    {
+      "id": "0100F43008C44000",
+      "name": "Pokémon Legends: Z-A",
+      "versions": [
+        "2.0.2"
+      ],
+      "notes": "dm/games/0100F43008C44000/README.md",
+      "artwork": "docs/images/pokemon-legends-z-a.jpg",
+      "caption": "~6 GB"
+    },
+    {
+      "id": "01008DB008C2C000",
+      "name": "Pokémon Shield",
+      "versions": [
+        "1.3.2"
+      ],
+      "notes": "dm/games/01008DB008C2C000/README.md",
+      "artwork": "docs/images/pokemon-shield.jpg",
+      "caption": "~12.4 GB"
+    },
+    {
+      "id": "0100ABF008968000",
+      "name": "Pokémon Sword",
+      "versions": [
+        "1.3.2"
+      ],
+      "notes": "dm/games/0100ABF008968000/README.md",
+      "artwork": "docs/images/pokemon-sword.jpg",
+      "caption": "~12.4 GB"
+    },
+    {
+      "id": "01007BB017812000",
+      "name": "Portal",
+      "versions": [
+        "1.0.3"
+      ],
+      "notes": "dm/games/01007BB017812000/README.md",
+      "artwork": "docs/images/portal.jpg",
+      "caption": "~2.6 GB"
+    },
+    {
+      "id": "010020400E1C2000",
+      "name": "Raging Loop",
+      "versions": [
+        "1.0.0"
+      ],
+      "notes": "dm/games/010020400E1C2000/README.md",
+      "artwork": "docs/images/raging-loop.jpg",
+      "caption": "~0.9 GB"
+    },
+    {
+      "id": "0100D9F01D474000",
+      "name": "Rhythm Heaven Groove",
+      "versions": [
+        "1.0.0"
+      ],
+      "notes": "dm/games/0100D9F01D474000/README.md",
+      "artwork": "docs/images/rhythm-heaven-groove.jpg",
+      "caption": "~3 GB"
+    },
+    {
+      "id": "0100C2A01A730000",
+      "name": "ROMANCE OF THE THREE KINGDOMS 8 REMAKE",
+      "versions": [
+        "1.1.3"
+      ],
+      "notes": "dm/games/0100C2A01A730000/README.md",
+      "artwork": "docs/images/romance-of-the-three-kingdoms-8-remake.jpg",
+      "caption": "~16.8 GB · controller only"
+    },
+    {
+      "id": "01008C0016544000",
+      "name": "Sea of Stars",
+      "versions": [
+        "2.0.59001"
+      ],
+      "notes": "dm/games/01008C0016544000/README.md",
+      "artwork": "docs/images/sea-of-stars.jpg",
+      "caption": "~5.1 GB"
+    },
+    {
+      "id": "010069C01AB82000",
+      "name": "SHIN MEGAMI TENSEI V: Vengeance",
+      "versions": [
+        "1.0.3"
+      ],
+      "notes": "dm/games/010069C01AB82000/README.md",
+      "artwork": "docs/images/shin-megami-tensei-v-vengeance.jpg",
+      "caption": "~14.6 GB · 60 fps with 1.0.3"
+    },
+    {
+      "id": "0100E65002BB8000",
+      "name": "Stardew Valley",
+      "versions": [
+        "1.6.15.13"
+      ],
+      "notes": "dm/games/0100E65002BB8000/README.md",
+      "artwork": "docs/images/stardew-valley.jpg",
+      "caption": "~0.6 GB"
+    },
+    {
+      "id": "01008BC024FDE000",
+      "name": "STEINS;GATE RE:BOOT",
+      "versions": [
+        "1.0.3"
+      ],
+      "notes": "dm/games/01008BC024FDE000/README.md",
+      "artwork": "docs/images/steins-gate-reboot.jpg",
+      "caption": "~6 GB"
+    },
+    {
+      "id": "010028600EBDA000",
+      "name": "Super Mario 3D World + Bowser's Fury",
+      "versions": [
+        "1.2.2"
+      ],
+      "notes": "dm/games/010028600EBDA000/README.md",
+      "artwork": "docs/images/super-mario-3d-world.jpg",
+      "caption": "~3 GB"
+    },
+    {
+      "id": "010015100B514000",
+      "name": "Super Mario Bros. Wonder",
+      "versions": [
+        "1.0.0",
+        "1.0.1",
+        "1.2.1"
+      ],
+      "notes": "dm/games/010015100B514000/README.md",
+      "artwork": "docs/images/super-mario-bros-wonder.jpg",
+      "caption": "~4 GB"
+    },
+    {
+      "id": "010099C022B96000",
+      "name": "Super Mario Galaxy",
+      "versions": [
+        "1.3.1"
+      ],
+      "notes": "dm/games/010099C022B96000/README.md",
+      "artwork": "docs/images/super-mario-galaxy.jpg",
+      "caption": "~3 GB"
+    },
+    {
+      "id": "0100FD8022DAA000",
+      "name": "Super Mario Galaxy 2",
+      "versions": [
+        "1.4.0"
+      ],
+      "notes": "dm/games/0100FD8022DAA000/README.md",
+      "artwork": "docs/images/super-mario-galaxy-2.jpg",
+      "caption": "~3 GB"
+    },
+    {
+      "id": "0100000000010000",
+      "name": "Super Mario Odyssey",
+      "versions": [
+        "1.4.1"
+      ],
+      "notes": "dm/games/0100000000010000/README.md",
+      "artwork": "docs/images/super-mario-odyssey.jpg",
+      "caption": "~6 GB"
+    },
+    {
+      "id": "01006A800016E000",
+      "name": "Super Smash Bros. Ultimate",
+      "versions": [
+        "13.0.5"
+      ],
+      "notes": "dm/games/01006A800016E000/README.md",
+      "artwork": "docs/images/super-smash-bros-ultimate.jpg",
+      "caption": "~17.5 GB · offline"
+    },
+    {
+      "id": "0100346017304000",
+      "name": "Taiko Risshiden V DX",
+      "versions": [
+        "1.1.1"
+      ],
+      "notes": "dm/games/0100346017304000/README.md",
+      "artwork": "docs/images/taiko-risshiden-v-dx.jpg",
+      "caption": "~3.3 GB · Japanese · played by touch"
+    },
+    {
+      "id": "010036E00FB20000",
+      "name": "The Great Ace Attorney Chronicles",
+      "versions": [
+        "1.0.0"
+      ],
+      "notes": "dm/games/010036E00FB20000/README.md",
+      "artwork": "docs/images/the-great-ace-attorney-chronicles.jpg",
+      "caption": "~4 GB"
+    },
+    {
+      "id": "01007EF00011E000",
+      "name": "The Legend of Zelda: Breath of the Wild",
+      "versions": [
+        "1.9.0"
+      ],
+      "notes": "dm/games/01007EF00011E000/README.md",
+      "artwork": "docs/images/zelda-breath-of-the-wild.jpg",
+      "caption": "~16 GB · 60 fps with 1.9.0"
+    },
+    {
+      "id": "01008CF01BAAC000",
+      "name": "The Legend of Zelda: Echoes of Wisdom",
+      "versions": [
+        "1.1.0"
+      ],
+      "notes": "dm/games/01008CF01BAAC000/README.md",
+      "artwork": "docs/images/zelda-echoes-of-wisdom.jpg",
+      "caption": "~7.8 GB"
+    },
+    {
+      "id": "01006BB00C6F0000",
+      "name": "The Legend of Zelda: Link's Awakening",
+      "versions": [
+        "1.1.0"
+      ],
+      "notes": "dm/games/01006BB00C6F0000/README.md",
+      "artwork": "docs/images/zelda-links-awakening.jpg",
+      "caption": "~6 GB"
+    },
+    {
+      "id": "0100F2C0115B6000",
+      "name": "The Legend of Zelda: Tears of the Kingdom",
+      "versions": [
+        "1.4.3"
+      ],
+      "notes": "dm/games/0100F2C0115B6000/README.md",
+      "artwork": "docs/images/zelda-tears-of-the-kingdom.jpg",
+      "caption": "~17 GB · 60 fps with 1.4.3"
+    },
+    {
+      "id": "010069401ADB8000",
+      "name": "Unicorn Overlord",
+      "versions": [
+        "1.05"
+      ],
+      "notes": "dm/games/010069401ADB8000/README.md",
+      "artwork": "docs/images/unicorn-overlord.jpg",
+      "caption": "~4 GB"
+    },
+    {
+      "id": "010074F013262000",
+      "name": "Xenoblade Chronicles 3",
+      "versions": [
+        "2.2.1"
+      ],
+      "notes": "dm/games/010074F013262000/README.md",
+      "artwork": "docs/images/xenoblade-chronicles-3.jpg",
+      "caption": "~19.2 GB"
+    }
+  ]
+}

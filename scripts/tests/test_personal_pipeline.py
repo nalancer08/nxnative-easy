@@ -1,5 +1,4 @@
 """Exercise the wrapper and archive splitter with synthetic packages, never game data."""
-import importlib.util
 import json
 from pathlib import Path
 import plistlib

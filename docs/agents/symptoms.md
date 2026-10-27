@@ -8,6 +8,8 @@ One line per symptom in the [subsystem references](../reference/): what you see 
 - packing succeeds, but `unzip -t` or Python's `ZipFile.testzip()` reports a bad CRC for a large deflated file. → [A streamed file changes size and the IPA fails its CRC check](../reference/packing.md#a-streamed-file-changes-size-and-the-ipa-fails-its-crc-check)
 - `decompress NSZ` stops immediately with `nsz: error: unrecognized arguments: --keys …`. → [NSZ decompression rejects `--keys`](../reference/packing.md#nsz-decompression-rejects---keys)
 - clicking Prepare game stops before any build tools start, with `PermissionError: [Errno 1] Operation not permitted` at `build_session.py` `os.setsid()`. → [Prepare game fails at `os.setsid()`](../reference/packing.md#prepare-game-fails-at-ossetsid)
+- `check_t_transform_feedback` reports `Code/.../t_transform_feedback: No such file or directory` before running its checks. → [Graphics regression command fails in a workspace path containing spaces](../reference/packing.md#graphics-regression-command-fails-in-a-workspace-path-containing-spaces)
+- `t_pso_bundle` builds an archive but reports ten failures after Metal rejects its deployment target. → [Bundled-pipeline regression fixture targets a newer macOS than the host](../reference/packing.md#bundled-pipeline-regression-fixture-targets-a-newer-macos-than-the-host)
 
 ## Rewriter
 

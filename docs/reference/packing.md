@@ -35,3 +35,17 @@
 - **Cause:** Foundation `Process` already launches the worker as its own process-group leader on macOS. POSIX rejects `setsid()` for a group leader. A normal Python subprocess launch did not expose this difference, so the original regression test missed the GUI path.
 - **Fix:** reuse the existing group when `os.getpgrp() == os.getpid()`; call `setsid()` only for a worker that still shares its parent's group. Cancellation still signals the worker's separate group. Do not suppress unrelated permission failures. Added regression coverage for Foundation `Process`, an existing group leader, an existing session leader and a normal subprocess launch, including cancellation.
 - **Found on:** a user's clean desktop installation, before game detection; reproduced locally with a Swift Foundation launcher. Applies to every Mac/iPhone game preparation, independent of the game, keys or saves. Released in 1.4.2/build 7.
+
+### Graphics regression command fails in a workspace path containing spaces
+
+- **Symptom:** `check_t_transform_feedback` reports `Code/.../t_transform_feedback: No such file or directory` before running its checks.
+- **Cause:** the Makefile passed `$(CURDIR)` into a shell environment assignment without quoting; the space split the executable path into a command.
+- **Fix:** quote the complete `DM_TEST_TRANSFORM_FEEDBACK` value.
+- **Found on:** the full upstream-main integration in this fork's `Claude Code/ios_games` workspace; independent of game data.
+
+### Bundled-pipeline regression fixture targets a newer macOS than the host
+
+- **Symptom:** `t_pso_bundle` builds an archive but reports ten failures after Metal rejects its deployment target.
+- **Cause:** the fixture used `pso_offline.py`'s SDK-major default (27) on a Mac running macOS 26.6. Production intentionally falls back to compiling bases on-device when it cannot load such an archive.
+- **Fix:** the native fixture explicitly passes the current macOS major as `--os-min`, so it tests archive reuse on the system actually running it; keep its scratch fixture on failure for diagnostics. Production fallback remains intact.
+- **Found on:** full-main GPU validation with Xcode 27.1 on macOS 26.6.1, Apple M2 Max.

@@ -10,6 +10,7 @@ import zipfile
 
 ROOT=Path(__file__).resolve().parents[2]
 spec=importlib.util.spec_from_file_location('desktop_update',ROOT/'desktop/NxNativeEasy/update_app.py')
+assert spec is not None and spec.loader is not None
 update=importlib.util.module_from_spec(spec);spec.loader.exec_module(update)
 REVISION='a'*40
 PREFIX='nxnative-easy-'+REVISION+'/'

@@ -1,3 +1,50 @@
+# Full upstream main integration and permanent catalog maintenance
+
+Current release: **1.5.0 / build 9**. Our main now incorporates the complete upstream
+history through `40e6baede556acd454169ac75b33d1686063f528`, replacing the selective-only state documented below.
+All earlier reviews remain historical evidence, not the current integration state.
+The next update starts from `integrated_head` in [upstream-sync.json](upstream-sync.json).
+
+Eight upstream profiles are now included with their existing screenshots, notes,
+versions and required core changes: Mario + Rabbids® Sparks of Hope, Kirby and the Forgotten Land, OCTOPATH TRAVELER, SHIN MEGAMI TENSEI V: Vengeance, Xenoblade Chronicles 3, Sea of Stars, Donkey Kong Country Returns HD, Donkey Kong Country: Tropical Freeze.
+There are 78 installed profiles. Both README galleries, the generated inventory
+and artwork map are synchronized; the app's live carousel, View all and search
+read these profiles. No independent iPhone-playability claim was added for the
+new games; upstream platform-specific evidence stays in each game note.
+
+The standing agent procedure is [07-upstream-maintenance.md](agents/07-upstream-maintenance.md),
+linked directly from root AGENTS.md. `sync_upstream.py --merge-main` creates a
+separate candidate, reports added/updated/removed profiles, synchronizes catalog
+outputs and runs synthetic checks. Conflicts remain isolated for agent review.
+`sync_game_catalog.py --check` is also a required CI gate: missing notes, images,
+version updates, manifest entries or bilingual gallery rows fail the check.
+
+The merge retains our Spanish/English interface, updater, controller test, touch
+editor, lightweight unsigned iOS output, complete Mac apps and explicit own-key
+selection. Working game packages and saves were not changed. The new translation
+chain is `7fbca6dd477d`: all 1,010 Dread shaders and their variants/pulling libraries
+were rebuilt for macOS and iOS in separate scratch directories, then the new host
+was built. The production build's own-compilers wrapper was used because this
+Mac's spirv-cross binary fingerprint differs from the maintainer's lock; the
+locked translator was retained, and no mismatch was concealed by editing the lock.
+An unsigned production iOS project with synthetic Dread-profile modules compiled
+and linked, including our touch controls. Host tests passed. Full native GPU regression checks passed. The initial full Python run passed
+61 test files (441 cases, 19 skipped optional fixtures); final fork checks
+were rerun after maintenance/lint fixes. The pinned lint ratchet reports zero
+new findings, without expanding its existing upstream baseline. Compilation and
+synthetic checks are not a new physical iPhone gameplay test.
+
+Two native test fixture issues were corrected during integration: an unquoted
+workspace path in the transform-feedback Makefile, and an offline-pipeline test
+that targeted the SDK's macOS 27 default while running on macOS 26.6. The fixture
+now requests the running OS major and retains failed artifacts for diagnostics;
+production's archive fallback is unchanged. The newly imported Python lint gate
+also exposed small pre-existing fork issues; these were fixed without expanding
+the upstream baseline. This included a missing interpreter argument in the sync
+command's validation call, now covered by a full command-path regression test.
+
+---
+
 # Upstream maintenance: latest selective integration
 
 Snapshot captured on 2026-10-26 (America/Mexico_City), pinned to upstream
