@@ -332,3 +332,29 @@ findings. A final iOS compile check compiled 178 sources with zero failures.
 The gameplay regression harness was invoked but found no registered Mac build
 for the local Dread folder (its `tools/dmhost` is absent); it did not run a
 save/gameplay comparison. Existing game packages and save folders were untouched.
+
+## Upstream Metal front-end update after the profile work
+
+A final remote check found a newly published main commit, `8334fdfb50a9900d8a5fc950d099fde46d85135f`.
+It was reviewed and merged in a detached candidate, retaining the fork and all
+four-profile/API changes. It changes Mac/iOS Metal front-end optimization to
+`-O1` and the coherent shader chain to `d374e783beec`; no profiles were added,
+removed or changed. The catalog gate still covers 78 profiles/artwork mappings.
+
+Validation passed: the candidate's 451 Python cases across 63 suites (optional
+checks retain their documented skips), the tool suite (301 cases, 16 skipped),
+native Metal graphics suite, Dread Mac host build and unsigned production iOS
+compile/link with synthetic game modules. A full separate Dread shader rebuild
+produced 1,010 successful shaders plus 359 pulling variants for Mac and iOS with
+no compile failures, stamped with game inputs `d2ce2b7a20f2`. The existing
+`own_compilers.py` flow explicitly reported this Mac's spirv-cross fingerprint
+`242d2c694be3ec91`, differing from upstream's tested `d9dc197f061b42a5`; the
+locked translator matched and no tool lock or chain was falsified.
+
+All shader/build outputs are in the external `upstream-o1-validation-20261026`
+folder. The gameplay regression harness was invoked again but could not discover
+a registered Dread Mac build (`tools/dmhost` absent); no real gameplay/image or
+physical iPhone/iPad comparison was performed. Existing installed games, working
+caches, keys and saves were not changed. Preparing a game again builds against
+the new chain and includes the control profiles; sideload over the same bundle
+identity rather than deleting the game to retain its local data.

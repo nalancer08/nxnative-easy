@@ -15,9 +15,12 @@ appear everywhere without being forgotten. No recurring schedule is implied.
    `--stage`. Never reset our main to upstream or replace it with their README.
    Conflicts stay in the candidate until deliberately resolved.
 3. Retain English/Spanish UI and documentation, automatic app updates, Mac/iPhone
-   target selection, controller detection/test, shared touch editor, explicit
+   target selection, controller detection/test, shared touch editor and its four named per-game profiles, explicit
    external key selection, unsigned/lightweight iOS output and complete Mac apps.
    Keep personal commit attribution, original upstream authors and licensing.
+   Keep local saves and control preferences separate from the optional save API;
+   cloud login/export/restore must not be advertised until native integration and
+   recovery are configured and device-tested. Never package a private save database.
    Preserve saves, bundle identities and working game packages. Never sign with
    an Apple account or ship games/keys. Do not carry unrelated open PRs into a
    main merge without their own review and dependencies.

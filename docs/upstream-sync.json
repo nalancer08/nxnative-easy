@@ -2,7 +2,7 @@
   "schema": 1,
   "repository": "seedds/nxnative",
   "baseline": "ecbeae164c0b419d1ba1031248fe1402050a3eb0",
-  "reviewed_head": "40e6baede556acd454169ac75b33d1686063f528",
+  "reviewed_head": "8334fdfb50a9900d8a5fc950d099fde46d85135f",
   "integrated": [
     {
       "upstream_sha": "4639c5114cbb8a8f250645941fa3a25c1ba08cc6",
@@ -22,14 +22,14 @@
     }
   ],
   "note": "Full upstream main integrated through integrated_head. Earlier selective imports are retained for provenance. Future comparisons start at integrated_head; all fork features and game catalog gates remain required.",
-  "integrated_head": "40e6baede556acd454169ac75b33d1686063f528",
+  "integrated_head": "8334fdfb50a9900d8a5fc950d099fde46d85135f",
   "latest_full_integration": {
     "from_fork": "f23448d216e2806650c0e6728830fe1328333b0e",
     "upstream_head": "40e6baede556acd454169ac75b33d1686063f528",
     "added_games": [
       {
         "id": "0100317013770000",
-        "name": "Mario + Rabbids® Sparks of Hope"
+        "name": "Mario + Rabbids\u00ae Sparks of Hope"
       },
       {
         "id": "01004D300C5AE000",
@@ -61,5 +61,13 @@
       }
     ],
     "translation_chain": "7fbca6dd477d"
+  },
+  "latest_incremental_integration": {
+    "upstream_head": "8334fdfb50a9900d8a5fc950d099fde46d85135f",
+    "previous_integrated_head": "40e6baede556acd454169ac75b33d1686063f528",
+    "title": "Compile translated shaders with the Metal front end at -O1",
+    "translation_chain": "d374e783beec",
+    "added_games": [],
+    "validation_note": "See docs/personal-ios.md; existing game caches, packages and saves are preserved."
   }
 }
