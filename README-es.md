@@ -78,6 +78,25 @@ El acceso de apertura usa el compilador Swift de tu Xcode. La firma de la app es
 
 El icono del teléfono con controles es original. Las tarjetas usan las capturas de upstream que ya están en este repositorio como referencia de soporte; no proporcionan ni descargan juegos.
 
+## Instalar y renovar desde la app (experimental)
+
+La versión 1.8 agrega **Instalar en iPhone / iPad**: inicio de sesión y 2FA de tu
+cuenta Apple, selección explícita del equipo y app existente, firma/instalación
+nativa ARM64, copia de `romfs` y renovación opcional antes de que caduque el perfil.
+Este flujo usa un motor abierto y no necesita la app de Sideloadly. **Todavía
+falta validarlo con una cuenta y dispositivo reales**; conservamos la alternativa
+con Sideloadly que ya funciona. La contraseña no se guarda; la sesión opcional y
+las claves de firma usan el Llavero de macOS.
+
+La renovación necesita el Mac encendido, nxnative Easy abierto, Internet y el
+dispositivo emparejado accesible. Conserva la IPA original. Puedes optar por abrir
+nxnative Easy al iniciar sesión. [Qué está implementado y qué falta validar](docs/sideloading.md).
+
+**Tus partidas** en la pantalla de resultado explica dónde están: `save` y, en
+ciertos juegos, `save_device`. En Mac están fuera de la `.app`; en iPhone/iPad,
+dentro de cada juego en ese dispositivo. No son `romfs`, ni los perfiles de
+controles, ni los archivos JSON de preparación. [Guía detallada de partidas y respaldos](docs/saves-es.md).
+
 ## Instalar: Sideloadly + Finder
 
 1. Con la IPA lista, conecta tu iPhone y pulsa **Enviar a Sideloadly**. La app abre allí el archivo preparado.

@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "method": "REA 6.8.0 inspect-macho, read-only native metadata inspection",
+  "binary_name": "Sideloadly",
+  "version": "0.71.1",
+  "sha256": "98379820ea451484ba27e375de1b7a8be4a0aafe59e781ef878560241406cd91",
+  "architectures": [
+    "x86_64"
+  ],
+  "public_source_status": "No official Sideloadly source distribution identified; no proprietary source or assets copied.",
+  "implementation_base": "isideload 0.5.0 (MIT), native ARM64 helper",
+  "reference": "https://github.com/nab138/isideload",
+  "limits": [
+    "Native headers/imports inspected; complete decompilation and source recovery were not performed.",
+    "No Apple credentials, device signing or installation used during static inspection."
+  ]
+}

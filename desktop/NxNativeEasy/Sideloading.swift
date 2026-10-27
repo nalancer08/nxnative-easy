@@ -1,0 +1,280 @@
+import SwiftUI
+import AppKit
+import Combine
+import CryptoKit
+import ServiceManagement
+import Darwin
+
+struct SideloadDevice:Identifiable {let id:String;let name:String}
+struct TrustedSMS:Identifiable {let id:Int;let digits:String}
+struct SideloadTeam:Identifiable {let id:String;let name:String}
+struct InstalledGame:Identifiable {let id:String;let name:String}
+struct RefreshJob:Codable,Identifiable {
+    var id:String
+    var ipa:String
+    var gameFolder:String
+    var originalID:String
+    var effectiveID:String
+    var team:String
+    var udid:String
+    var account:String
+    var sha256:String
+    var expires:Date
+    var enabled:Bool
+    var retryAfter:Date?
+    var needsLogin:Bool=false
+}
+enum RefreshPolicy {
+    static func account(_ email:String)->String {SHA256.hash(data:Data(email.trimmingCharacters(in:.whitespacesAndNewlines).lowercased().utf8)).map {String(format:"%02x",$0)}.joined()}
+    static func due(_ job:RefreshJob,now:Date,account:String)->Bool {job.enabled && !job.needsLogin && job.account==account && job.expires.timeIntervalSince(now)<=48*3600 && (job.retryAfter==nil || job.retryAfter!<=now)}
+    static func identity(original:String,team:String,existing:String)->String? {
+        guard team.count==10,team.allSatisfy({$0.isASCII && ($0.isLetter || $0.isNumber)}) else {return nil}
+        if existing.isEmpty {return original+"."+team}
+        return existing.count<=255 && existing.allSatisfy({$0.isASCII && ($0.isLetter || $0.isNumber || $0=="." || $0=="-")}) ? existing : nil
+    }
+}
+
+@MainActor final class SideloadModel:ObservableObject {
+    @Published var devices:[SideloadDevice]=[]
+    @Published var teams:[SideloadTeam]=[]
+    @Published var apps:[InstalledGame]=[]
+    @Published var device=""
+    @Published var team=""
+    @Published var existing=""
+    @Published var email=""
+    @Published var anisette="https://ani.iloader.app"
+    @Published var authenticated=false
+    @Published var busy=false
+    @Published var codeRequired=false
+    @Published var smsNumbers:[TrustedSMS]=[]
+    @Published var error:String?
+    @Published var phase="Conecta y desbloquea tu iPhone/iPad."
+    @Published var fraction:Double?
+    @Published var startedAt:Date?
+    @Published var jobs:[RefreshJob]=[]
+    var canRefresh:()->Bool={true}
+    var ipa:URL?
+    var gameFolder:URL?
+    var romfs:URL?
+    var originalID=""
+    private var process:Process?
+    private var input:FileHandle?
+    private var pending=Data()
+    private var timer:AnyCancellable?
+    private var terminationObserver:NSObjectProtocol?
+    private var installIntent:RefreshJob?
+    private var activeRefresh:RefreshJob?
+    private var refreshAuthenticated=false
+    private var pendingRemember:Bool?
+    var showsRefreshNotice:Bool {jobs.contains(where:{$0.enabled}) && (busy || error != nil)}
+    private let stateURL:URL
+    private let defaults:UserDefaults
+    private let helperURL:URL?
+    init(stateURL:URL?=nil,defaults:UserDefaults = .standard,helperURL:URL?=nil) {
+        self.defaults=defaults;self.helperURL=helperURL
+        email=defaults.string(forKey:"sideloadEmail") ?? "";anisette=defaults.string(forKey:"sideloadAnisette") ?? "https://ani.iloader.app"
+        self.stateURL=stateURL ?? FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Library/Application Support/nxnative Easy/refresh-jobs.json")
+        if let data=try? Data(contentsOf:self.stateURL),let saved=try? JSONDecoder().decode([RefreshJob].self,from:data) {jobs=saved}
+        terminationObserver=NotificationCenter.default.addObserver(forName:NSApplication.willTerminateNotification,object:nil,queue:.main) { [weak self] _ in MainActor.assumeIsolated {self?.cancel()} }
+        timer=Timer.publish(every:1800,on:.main,in:.common).autoconnect().sink { [weak self] _ in Task {@MainActor in self?.checkRefresh()}}
+    }
+    func configure(ipa:URL,folder:URL,romfs:URL?) {
+        self.ipa=ipa;gameFolder=folder;self.romfs=romfs
+        originalID=PreviousPreparation.load(folder:folder,target:"ios")?.bundleID ?? ""
+        existing=""
+        if let known=jobs.first(where:{$0.originalID==originalID && $0.gameFolder==folder.path && $0.account==RefreshPolicy.account(email)}) {
+            if device.isEmpty {device=known.udid};if team.isEmpty {team=known.team}
+            if device==known.udid {existing=known.effectiveID}
+        }
+        connect();listDevices()
+    }
+    func connect() {
+        if let process,process.isRunning {return}
+        process=nil;input=nil
+        guard let root=Bundle.main.executableURL?.deletingLastPathComponent() else {return}
+        let helper=helperURL ?? root.appendingPathComponent("nxnative-sideload")
+        guard FileManager.default.isExecutableFile(atPath:helper.path) else {error="Falta el instalador nativo. Actualiza nxnative Easy.";return}
+        let task=Process(),pipe=Pipe(),requests=Pipe();task.executableURL=helper
+        task.standardOutput=pipe;task.standardError=FileHandle.nullDevice;task.standardInput=requests
+        var environment=ProcessInfo.processInfo.environment;environment.removeValue(forKey:"RUST_LOG");environment.removeValue(forKey:"RUST_BACKTRACE");task.environment=environment
+        input=requests.fileHandleForWriting;pending=Data()
+        pipe.fileHandleForReading.readabilityHandler={ [weak self] handle in
+            let data=handle.availableData;if data.isEmpty {handle.readabilityHandler=nil;return}
+            Task {@MainActor in self?.receive(data)}
+        }
+        task.terminationHandler={ [weak self] finished in Task {@MainActor in guard let self,self.process === finished else {return};self.process=nil;self.input=nil;self.authenticated=false;self.codeRequired=false;if self.busy {self.error="Instalación detenida. Vuelve a intentar; las partidas no se tocaron."};self.busy=false;self.activeRefresh=nil;self.installIntent=nil;self.refreshAuthenticated=false}}
+        do {process=task;try task.run()}
+        catch {process=nil;input=nil;self.error="No pudimos iniciar el instalador nativo."}
+    }
+    private func send(_ value:[String:Any]) {
+        connect();guard let input,let process,process.isRunning else {busy=false;return}
+        do {var data=try JSONSerialization.data(withJSONObject:value);data.append(10);try input.write(contentsOf:data)}
+        catch {self.error="No pudimos comunicarnos con el instalador.";busy=false}
+    }
+    func listDevices() {guard !busy else {return};busy=true;send(["op":"devices"])}
+    func inspectApps() {guard !busy,!device.isEmpty else {return};busy=true;send(["op":"installed_apps","udid":device])}
+    func signIn(password:String,remember:Bool) {
+        guard !busy,!email.isEmpty,!password.isEmpty else {return}
+        email=email.trimmingCharacters(in:.whitespacesAndNewlines).lowercased()
+        busy=true;error=nil;startedAt=Date();phase="Iniciando sesión con Apple…"
+        pendingRemember=remember
+        send(["op":"login","email":email,"password":password,"remember":remember,"anisette_url":anisette])
+    }
+    func submitCode(_ code:String) {codeRequired=false;send(["op":"code","code":code])}
+    func sendToDevices() {codeRequired=false;send(["op":"send_to_devices"])}
+    func sendSMS(_ number:Int) {codeRequired=false;send(["op":"sms","number":number])}
+    func resend() {codeRequired=false;send(["op":"resend"])}
+    func signOut() {guard !busy else {return};send(["op":"logout","email":email]);defaults.removeObject(forKey:"sideloadEmail");for index in jobs.indices {jobs[index].enabled=false};saveJobs()}
+    func cancel() {if let refresh=activeRefresh,let index=jobs.firstIndex(where:{$0.id==refresh.id}) {jobs[index].retryAfter=Date().addingTimeInterval(6*3600);saveJobs()};if let process,process.isRunning {if kill(-process.processIdentifier,SIGTERM) != 0 {process.terminate()}}}
+    func install(autoRefresh:Bool) {
+        guard !busy,authenticated,let ipa,let gameFolder,!originalID.isEmpty,!device.isEmpty,!team.isEmpty else {return}
+        if autoRefresh && defaults.string(forKey:"sideloadEmail") != email {error="Para renovar al reiniciar, inicia sesión recordándola en el Llavero, o desactiva la renovación.";return}
+        guard let effective=RefreshPolicy.identity(original:originalID,team:team,existing:existing) else {error="Ese identificador no corresponde al equipo elegido. Detenido para conservar la app anterior.";return}
+        let job=RefreshJob(id:device+":"+effective,ipa:ipa.path,gameFolder:gameFolder.path,originalID:originalID,effectiveID:effective,team:team,udid:device,account:RefreshPolicy.account(email),sha256:"",expires:Date(),enabled:autoRefresh)
+        startInstall(job,updating:!existing.isEmpty,content:romfs)
+    }
+    private func startInstall(_ job:RefreshJob,updating:Bool,content:URL?) {
+        guard FileManager.default.isReadableFile(atPath:job.ipa) else {error="No encontramos la IPA original. Conserva los archivos de preparación para renovarla.";activeRefresh=nil;return}
+        if let content,!FileManager.default.fileExists(atPath:content.path) {error="Faltan los datos romfs. Prepara el juego de nuevo antes de instalarlo.";activeRefresh=nil;return}
+        installIntent=job;busy=true;error=nil;startedAt=Date();phase="Firmando e instalando…";fraction=nil
+        var value:[String:Any]=["op":"install","ipa":job.ipa,"original_id":job.originalID,"team":job.team,"udid":job.udid,"work":URL(fileURLWithPath:job.gameFolder).appendingPathComponent("nxnative-tools/sideloading").path,"update":updating,"automatic":activeRefresh != nil]
+        if updating {value["expected_id"]=job.effectiveID}
+        if !job.sha256.isEmpty {value["sha256"]=job.sha256}
+        if let content {value["romfs"]=content.path}
+        send(value)
+    }
+    private func receive(_ data:Data) {
+        pending.append(data);guard pending.count<=2*1024*1024 else {cancel();return}
+        while let index=pending.firstIndex(of:10) {
+            let line=Data(pending[..<index]);pending.removeSubrange(...index)
+            if let event=(try? JSONSerialization.jsonObject(with:line)) as? [String:Any] {handle(event)}
+        }
+    }
+    private func handle(_ event:[String:Any]) {
+        switch event["event"] as? String {
+        case "hello":if (event["protocol"] as? Int) != 1 || event["architecture"] as? String != "aarch64" {error="El instalador debe compilarse para Apple silicon.";cancel()}
+        case "devices":
+            devices=((event["items"] as? [[String:Any]]) ?? []).compactMap {item in guard let id=item["udid"] as? String,let name=item["name"] as? String else {return nil};return SideloadDevice(id:id,name:name)}
+            busy=false
+            if let refresh=activeRefresh {continueRefresh(refresh)}
+            else {
+                if !devices.contains(where:{$0.id==device}) {device="";apps=[];existing=""}
+                if device.isEmpty,devices.count==1 {device=devices[0].id}
+                if !device.isEmpty {inspectApps()}
+            }
+        case "installed_apps":
+            apps=((event["items"] as? [[String:Any]]) ?? []).compactMap {item in guard let id=item["id"] as? String,let name=item["name"] as? String else {return nil};return InstalledGame(id:id,name:name)}.sorted {$0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending}
+            let matches=apps.filter {$0.id.hasPrefix(originalID)};if existing.isEmpty,matches.count==1 {existing=matches[0].id}
+            busy=false
+        case "two_factor":codeRequired=true;phase="Introduce el código de Apple.";smsNumbers=((event["numbers"] as? [[String:Any]]) ?? []).compactMap {number in guard let id=number["id"] as? Int,let digits=number["last_digits"] as? String else {return nil};return TrustedSMS(id:id,digits:digits)}
+        case "signed_in":
+            authenticated=true;busy=false;codeRequired=false;error=nil;phase="Sesión iniciada. Elige tu equipo personal."
+            if let remember=pendingRemember {if remember {defaults.set(email,forKey:"sideloadEmail");defaults.set(anisette,forKey:"sideloadAnisette")}else{defaults.removeObject(forKey:"sideloadEmail")};pendingRemember=nil}
+            teams=((event["teams"] as? [[String:Any]]) ?? []).compactMap {item in guard let id=item["id"] as? String else {return nil};return SideloadTeam(id:id,name:item["name"] as? String ?? id)}
+            if !teams.contains(where:{$0.id==team}) {team=""}
+            for index in jobs.indices where jobs[index].account==RefreshPolicy.account(email) {jobs[index].needsLogin=false};saveJobs()
+            if let refresh=activeRefresh {refreshAuthenticated=true;continueRefresh(refresh)}
+        case "signed_out":authenticated=false;teams=[];team="";busy=false
+        case "progress":
+            let phases=["Preparing IPA":"Preparando IPA…","Signing app":"Firmando la app…","Installing app":"Instalando la app…","Copying game data":"Copiando datos del juego…","Game data ready":"Datos del juego listos."]
+            phase=phases[event["phase"] as? String ?? ""] ?? phase;if let value=event["fraction"] as? Double,value.isFinite,value>=0,value<=1 {fraction=value}else{fraction=nil}
+        case "installed":
+            guard var job=installIntent,let actual=event["effective_id"] as? String,actual==job.effectiveID,let expiry=event["expires"] as? Double,expiry>Date().timeIntervalSince1970,let hash=event["sha256"] as? String,hash.count==64 else {
+                error="No pudimos verificar el resultado de la instalación. Revisa el dispositivo antes de continuar.";busy=false;activeRefresh=nil;installIntent=nil;return
+            }
+            job.expires=Date(timeIntervalSince1970:expiry);job.sha256=hash;job.retryAfter=nil;job.needsLogin=false;jobs.removeAll {$0.id==job.id};jobs.append(job);error=nil;saveJobs();existing=actual
+            installIntent=nil;activeRefresh=nil;refreshAuthenticated=false;busy=false;fraction=1;phase="Instalado. Tus partidas se conservan en el dispositivo."
+        case "error":
+            let op=event["operation"] as? String
+            let codes=["game_running":"El juego sigue abierto. La renovación espera para no interrumpir tu partida.","idle_unknown":"No pudimos comprobar si el juego está abierto. Guarda, ciérralo y renueva manualmente.","identity_mismatch":"Ese identificador no corresponde al equipo elegido. Detenido para conservar la app anterior.","not_installed":"No encontramos esa app instalada. Revisa el identificador antes de actualizar.","wrong_app":"La app elegida no corresponde a este juego. No se instaló encima.","storage":"No hay espacio suficiente para preparar los datos nuevos sin borrar los anteriores.","ipa_changed":"La IPA cambió. Prepara y aprueba la actualización antes de renovarla."]
+            error=codes[event["code"] as? String ?? ""] ?? ((op=="login" || op=="restore") ? "No pudimos iniciar sesión o la sesión guardada caducó. Vuelve a iniciar sesión." : "No pudimos completar la instalación. Revisa el dispositivo, equipo y permisos. No se revocaron certificados automáticamente.")
+            if let code=event["apple_code"] as? Int {error=(error ?? "")+" · Apple: \(code)"}
+            if op=="login" || op=="restore" {authenticated=false;pendingRemember=nil}
+            if let refresh=activeRefresh,let index=jobs.firstIndex(where:{$0.id==refresh.id}) {jobs[index].retryAfter=Date().addingTimeInterval((event["code"] as? String)=="game_running" ? 600 : 6*3600);jobs[index].needsLogin=(op=="restore");saveJobs()}
+            activeRefresh=nil;installIntent=nil;refreshAuthenticated=false;codeRequired=false;busy=false
+        default:break
+        }
+    }
+    private func saveJobs() {
+        do {
+            let parent=stateURL.deletingLastPathComponent()
+            try FileManager.default.createDirectory(at:parent,withIntermediateDirectories:true,attributes:[.posixPermissions:0o700])
+            try FileManager.default.setAttributes([.posixPermissions:0o700],ofItemAtPath:parent.path)
+            try JSONEncoder().encode(jobs).write(to:stateURL,options:.atomic)
+            try FileManager.default.setAttributes([.posixPermissions:0o600],ofItemAtPath:stateURL.path)
+        } catch {self.error="La instalación terminó, pero no pudimos guardar su renovación automática."}
+    }
+    func reviewRefresh() {
+        guard !busy,let job=jobs.first(where:{$0.enabled}) else {return}
+        ipa=URL(fileURLWithPath:job.ipa);gameFolder=URL(fileURLWithPath:job.gameFolder);romfs=nil;originalID=job.originalID;device=job.udid;team=job.team;existing=job.effectiveID
+        listDevices()
+    }
+    func checkRefresh() {
+        guard !busy,activeRefresh==nil,canRefresh(),!email.isEmpty,defaults.string(forKey:"sideloadEmail") != nil else {return}
+        guard let job=jobs.first(where:{RefreshPolicy.due($0,now:Date(),account:RefreshPolicy.account(email))}) else {return}
+        activeRefresh=job;refreshAuthenticated=false;listDevices()
+    }
+    private func continueRefresh(_ job:RefreshJob) {
+        guard devices.contains(where:{$0.id==job.udid}) else {activeRefresh=nil;return}
+        guard teams.contains(where:{$0.id==job.team}) || !refreshAuthenticated else {activeRefresh=nil;return}
+        if !refreshAuthenticated {busy=true;phase="Renovando sesión guardada…";send(["op":"restore","email":email,"anisette_url":anisette])}
+        else {startInstall(job,updating:true,content:nil)}
+    }
+    func setLoginItem(_ enabled:Bool) {
+        do {if enabled {try SMAppService.mainApp.register();if SMAppService.mainApp.status == .requiresApproval {SMAppService.openSystemSettingsLoginItems()}}else{try SMAppService.mainApp.unregister()}}
+        catch {self.error="Revisa Elementos de inicio en Ajustes del Sistema para permitir la renovación al iniciar sesión."}
+    }
+}
+
+struct SideloadView:View {
+    @ObservedObject var model:SideloadModel
+    let text:(String)->String
+    @Environment(\.dismiss) private var dismiss
+    @State private var password=""
+    @State private var code=""
+    @State private var remember=true
+    @State private var autoRefresh=true
+    @State private var loginItem=SMAppService.mainApp.status == .enabled
+    var body:some View {
+        ScrollView {
+            VStack(alignment:.leading,spacing:16) {
+                HStack {Text(text("Instalar en iPhone / iPad")).font(.title2.bold());Spacer();Button(text("Cerrar")){dismiss()}.disabled(model.busy)}
+                if let folder=model.gameFolder {Text(folder.lastPathComponent).font(.headline)}
+                Text(text("Instalación nativa en Apple silicon. Cierra el juego y no lo abras hasta terminar. La firma e instalación con tu cuenta aún necesitan validación en un dispositivo."))
+                Picker(text("Dispositivo"),selection:$model.device) {Text(text("Elige tu iPhone/iPad")).tag("");ForEach(model.devices){Text($0.name).tag($0.id)}}.disabled(model.busy)
+                    .onChange(of:model.device) {_,_ in model.existing="";model.inspectApps()}
+                Button(text("Buscar dispositivos")){model.listDevices()}.disabled(model.busy)
+                Text(text("Desbloquea el dispositivo, confía en este Mac y activa Modo de desarrollador si iOS lo pide.")) .font(.caption).foregroundStyle(.secondary)
+                if !model.authenticated {
+                    TextField(text("Cuenta Apple personal"),text:$model.email).disabled(model.busy)
+                    SecureField(text("Contraseña de Apple"),text:$password).disabled(model.busy)
+                    Toggle(text("Recordar sesión en el Llavero; no guardar la contraseña"),isOn:$remember).disabled(model.busy).onChange(of:remember){_,value in if !value {autoRefresh=false}}
+                    DisclosureGroup(text("Servicio de autenticación")) {
+                        Text(text("La contraseña y el código se envían a Apple. El servicio anisette recibe los datos técnicos que requiere la autenticación, no tu contraseña.")) .font(.caption)
+                        TextField("Anisette HTTPS",text:$model.anisette).disabled(model.busy)
+                    }
+                    Button(text("Iniciar sesión")){model.signIn(password:password,remember:remember);password=""}.disabled(model.busy || model.email.isEmpty || password.isEmpty)
+                } else {
+                    Label(text("Sesión iniciada"),systemImage:"person.crop.circle.badge.checkmark")
+                    Picker(text("Tu equipo personal"),selection:$model.team) {Text(text("Selecciona tu equipo")).tag("");ForEach(model.teams){Text($0.name+" · "+$0.id).tag($0.id)}}.disabled(model.busy)
+                    Picker(text("App existente que actualizarás"),selection:$model.existing) {Text(text("Primera instalación")).tag("");ForEach(model.apps){Text($0.name+" · "+$0.id).tag($0.id)}}.disabled(model.busy)
+                    Text(text("Se conserva el identificador efectivo. Si no corresponde al juego y equipo, la instalación se detiene; no se desinstala la app anterior.")) .font(.caption).foregroundStyle(.secondary)
+                    Toggle(text("Renovar automáticamente antes de que caduque"),isOn:$autoRefresh).disabled(model.busy || !remember)
+                    Toggle(text("Abrir nxnative Easy al iniciar sesión"),isOn:$loginItem).onChange(of:loginItem){_,value in model.setLoginItem(value)}.disabled(model.busy)
+                    Text(text("La renovación necesita este Mac encendido, nxnative Easy abierto, conexión a Internet y el dispositivo accesible. Conserva la IPA original.")) .font(.caption).foregroundStyle(.secondary)
+                    Button(text(model.existing.isEmpty ? "Firmar e instalar" : "Firmar y actualizar")){model.install(autoRefresh:autoRefresh)}.buttonStyle(.borderedProminent).disabled(model.busy || model.device.isEmpty || model.team.isEmpty || model.originalID.isEmpty)
+                    Button(text("Cerrar sesión")){model.signOut()}.disabled(model.busy)
+                }
+                if model.codeRequired {
+                    TextField(text("Código de verificación"),text:$code)
+                    HStack {Button(text("Confirmar código")){model.submitCode(code);code=""};Button(text("Reenviar código")){model.resend()}}
+                    Button(text("Enviar a mis dispositivos")){model.sendToDevices()}
+                    ForEach(model.smsNumbers) {number in Button("SMS · …"+number.digits){model.sendSMS(number.id)}}
+                }
+                if model.busy {TimelineView(.periodic(from:.now,by:1)){context in Text(text("Tiempo transcurrido")+" "+String(Int(context.date.timeIntervalSince(model.startedAt ?? context.date)))+" s").font(.caption)};if let fraction=model.fraction {ProgressView(value:fraction)}else{ProgressView().progressViewStyle(.linear)};Button(text("Cancelar")){model.cancel()}}
+                Text(text(model.phase)).font(.callout)
+                if let error=model.error {Text(text(error)).foregroundStyle(.orange).textSelection(.enabled)}
+            }.padding(24)
+        }.frame(width:720,height:690).interactiveDismissDisabled(model.busy)
+    }
+}

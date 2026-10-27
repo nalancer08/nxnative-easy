@@ -28,7 +28,7 @@ When the app opens:
 
 **Mac:** creates one complete game `.app`, with its game data included inside; click **Open game**. No separate RomFS folder to copy. No Sideloadly or iPhone needed. Saves stay in `~/Library/Application Support/nxnative/<title ID>/`.
 
-**iPhone / iPad:** creates an unsigned lightweight IPA; install it with Sideloadly, then copy the game data as shown in the app. [See the iPhone/iPad preparation screen](docs/images/nxnative-ios-v1.4.png).
+**iPhone / iPad:** creates an unsigned lightweight IPA. The experimental in-app installer can sign/install it and transfer game data; Sideloadly remains the validated alternative while native device testing is pending. [See the iPhone/iPad preparation screen](docs/images/nxnative-ios-v1.4.png).
 
 **Required:** an Apple silicon Mac (M1 or newer), macOS 26+ and Xcode 26+. The command installs the other tools. You must provide your own games and keys. Compilation can take time, especially for the first game. The window shows the current stage, real counters when available, elapsed time and a live log. **Show saved logs** keeps the session output accessible; **Show compiler logs** opens the original tool logs.
 
@@ -44,7 +44,7 @@ Built on [seedds/nxnative](https://github.com/seedds/nxnative). The original pro
 - **Your own keys:** explicitly select the external folder containing your `prod.keys`. No games or keys are included, downloaded or distributed.
 - **Local preparation:** no Apple account or company certificate is used to build the desktop app.
 
-We provide **source code, a preparation interface and build tools**. The output is a local Mac game app, or an unsigned iPhone/iPad IPA that you sign and install yourself with Sideloadly. Games, console keys, Apple signing and universal game compatibility are not provided.
+We provide **source code, a preparation interface and build tools**. The output is a local Mac game app, or an unsigned iPhone/iPad IPA that you sign/install with your own account using the experimental integrated installer or Sideloadly. Games, console keys, shared Apple accounts/certificates and universal game compatibility are not provided.
 
 ## Engine updates and multiplayer
 
@@ -75,6 +75,21 @@ Setup keeps a separate source checkout and preserves local edits. Developers can
 The launcher uses Xcode's Swift compiler. The desktop app is explicitly **ad-hoc signed**, locally, with no Apple account, certificate or team (`TeamIdentifier` is unset). No company account is used. You enter your personal Apple account separately in Sideloadly when signing the **iPhone IPA**.
 
 The app has an original phone-and-controller icon. Game cards use the existing upstream screenshots in this repository as a support reference; they do not provide or download games.
+
+## Integrated installation and refresh (experimental)
+
+Version 1.8 adds **Install on iPhone / iPad**: personal Apple login/2FA, explicit
+team and existing-app selection, native ARM64 signing/install, RomFS transfer and
+opt-in renewal before the actual provisioning profile expires. It uses an open
+source engine; no Sideloadly app is needed for this path. **Real-account/device
+validation is still pending**; the tested Sideloadly route remains available.
+The password is not stored; optional session and signing keys use macOS Keychain.
+Auto-refresh needs this Mac awake, the app running, Internet and a reachable
+paired device. Keep the original IPA. [Implementation and current limits](docs/sideloading.md).
+
+**Saves:** use **Your saves** in the result screen for the correct Mac path or
+iPhone/iPad Finder instructions. Progress is local to the device, separate from
+RomFS and control profiles. [Save locations and backup limits](docs/saves.md).
 
 ## Install with Sideloadly and Finder
 

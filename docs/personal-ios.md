@@ -391,3 +391,31 @@ baseline findings and introduced none. `scripts/regress.py` was invoked, but no
 registered Dread Mac build was discoverable (`tools/dmhost` absent); no gameplay
 comparison or physical Mac/iPhone update was performed. The shader chain and
 runtime were not changed by this release.
+
+## Native installation and save-location guidance (1.8)
+
+The [native sideloading implementation](sideloading.md) uses an ARM64 helper with
+isideload/idevice and an exact-identifier patch. REA read-only inspection of the
+installed Sideloadly 0.71.1 found an x86_64-only executable; it did not recover
+source. No Sideloadly proprietary resources are distributed. Helper/build source,
+checksums, licenses, Keychain/stdio policy and runtime validation limits are
+recorded in the linked guide. Existing game outputs remain unsigned and intact.
+
+The player-facing [save guide](saves.md) and [Spanish guide](saves-es.md) distinguish
+Mac Application Support, iOS Documents, account/device saves, transient journals,
+RomFS, app preferences and the limits of manual copies. A Your saves sheet links
+those guides and can reveal the default Mac folder by Title ID. Cloud sync is
+still inactive. No real Apple login, game signing or device installation was
+performed during development; physical validation is required before promoting
+the integrated installer over the retained Sideloadly route.
+
+Validation: all 10 Rust unit tests passed, including exact app/extension identity,
+restricted RomFS access and fail-closed idle detection. All 62 script tests passed
+with one optional API dependency skip; the Swift client tests use a simulated
+helper, not Apple services. The ARM64 production bundle compiled and verified
+with an ad-hoc signature; its helper links only system libraries. Catalog and
+documentation checks passed, with no new Python lint findings. The gameplay
+harness could not discover a registered Mac Dread build (`tools/dmhost` absent),
+so no gameplay comparison is claimed. Runtime and shader chain are unchanged.
+Real account authentication, signing, installation, AFC recovery and scheduled
+renewal still require physical-device validation.

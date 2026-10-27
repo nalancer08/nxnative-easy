@@ -193,3 +193,23 @@ jobs:
           python-version: '3.13'
       - run: python -m pip install -r dm/cloud/requirements.txt
       - run: python -m unittest scripts.tests.test_save_api
+
+  native-sideload:
+    name: ARM64 sideload helper and redacted IPC (no account or device)
+    runs-on: macos-26
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Install checksum-pinned isolated Rust toolchain
+        run: python3 scripts/build_sideload_helper.py --cache "$RUNNER_TEMP/native-tools" --toolchain-only
+      - name: Test helper policies, recovery and archive boundaries
+        run: |
+          export PATH="$RUNNER_TEMP/native-tools/rust-1.99.1/bin:$PATH"
+          export CARGO_HOME="$RUNNER_TEMP/native-tools/cargo"
+          export CARGO_TARGET_DIR="$RUNNER_TEMP/native-tools/target"
+          export CARGO_BUILD_JOBS=2
+          cargo test --locked --manifest-path native/sideload-helper/Cargo.toml
+          cargo build --locked --manifest-path native/sideload-helper/Cargo.toml
+          NXE_SIDELOAD_TEST_HELPER="$CARGO_TARGET_DIR/debug/nxnative-sideload" python3 -m unittest scripts.tests.test_sideload_protocol

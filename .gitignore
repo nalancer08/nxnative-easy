@@ -31,3 +31,6 @@ Payload/
 nxnative-ios.json
 
 nxnative-mac.json
+
+# Native helper outputs are built in an external cache.
+/native/sideload-helper/target/

@@ -16,9 +16,15 @@ appear everywhere without being forgotten. No recurring schedule is implied.
    Conflicts stay in the candidate until deliberately resolved.
 3. Retain English/Spanish UI and documentation, automatic app updates, Mac/iPhone
    target selection, controller detection/test, shared touch editor and its four named per-game profiles, live build
-   progress/persistent logs and optional original-code REA analysis, explicit
+   progress/persistent logs and optional original-code REA analysis, the native
+   ARM64 signing/install helper and explicit personal-team selection, explicit
    external key selection, unsigned/lightweight iOS output and complete Mac apps.
    Keep personal commit attribution, original upstream authors and licensing.
+   Preserve the isideload exact-identifier patch, signed/profile identity checks,
+   Keychain session storage, redacted stdio and RomFS-only transfer capability.
+   Never add automatic certificate revocation, account/team changes, save-folder
+   writes or password logging. Helper tests use synthetic credentials and no device;
+   compilation never counts as successful Apple login or physical installation.
    Keep local saves and control preferences separate from the optional save API;
    cloud login/export/restore must not be advertised until native integration and
    recovery are configured and device-tested. Never package a private save database.

@@ -29,7 +29,7 @@
 
   The translator is `dm/gfx/tools/dmsh_xlate_bin`, which matches `dmsh_chain.lock`; a fresh `dotnet publish` does not.
 - A change to the chain, host or tools runs `scripts/regress.py` over the local games, and its report goes into the PR ([06-dev-loop.md](docs/agents/06-dev-loop.md)).
-- iOS builds are unsigned IPAs that the user sideloads and tests; diagnostics come back as the app's `Documents/log.txt`. Do not sign or install builds on the user's devices.
+- Build outputs remain unsigned IPAs. The user may sign/install through our native helper or Sideloadly. Agent tests never sign/install on user devices; diagnostics: the app's `Documents/log.txt`.
 - Commit only when requested or as part of an authorized repository upload. Personal commits use the repository owner: `Erick Sanchez <7268597+nalancer08@users.noreply.github.com>`. Never attribute personal changes to seedds; retain original upstream authors.
 
 - Desktop functionality releases must increment `desktop/release.json` version/build. The updater offers newer builds only. Preserve existing checkouts and games; test updates with an external cache.

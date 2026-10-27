@@ -11,6 +11,8 @@ One line per symptom in the [subsystem references](../reference/): what you see 
 - `check_t_transform_feedback` reports `Code/.../t_transform_feedback: No such file or directory` before running its checks. → [Graphics regression command fails in a workspace path containing spaces](../reference/packing.md#graphics-regression-command-fails-in-a-workspace-path-containing-spaces)
 - `t_pso_bundle` builds an archive but reports ten failures after Metal rejects its deployment target. → [Bundled-pipeline regression fixture targets a newer macOS than the host](../reference/packing.md#bundled-pipeline-regression-fixture-targets-a-newer-macos-than-the-host)
 - preparation appears stuck; the player cannot inspect compilation output until a failure. → [Desktop preparation shows a spinner with no build activity](../reference/packing.md#desktop-preparation-shows-a-spinner-with-no-build-activity)
+- the official Rust component shell installer rejects part of `--prefix` as an unknown option; a partial LLVM setup can also make `rust-objcopy` fail to load `libLLVM.dylib`. → [Native sideload toolchain install rejects a workspace path with spaces](../reference/packing.md#native-sideload-toolchain-install-rejects-a-workspace-path-with-spaces)
+- a replacement signer can append a second team suffix or produce another app identifier, separating the user from the existing app container. → [A sideload signer changes an existing game's bundle identifier](../reference/packing.md#a-sideload-signer-changes-an-existing-games-bundle-identifier)
 
 ## Rewriter
 

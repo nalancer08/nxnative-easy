@@ -56,3 +56,17 @@
 - **Cause:** the UI hid its transcript unless `failed` was true, parsed only coarse text fragments, and did not surface the compiler logs that the upstream builder intentionally writes separately.
 - **Fix:** request upstream JSON progress through the wrappers, frame complete UTF-8 records in the native model, and show stage counters/fractions only when reported. The group-preserving worker streams console output and bounded tails of changed regular per-tool logs, retains a private session log and preserves the original complete compiler files. The UI exposes both log locations, elapsed time, a quiet-output notice and error details; preview truncation never deletes the original logs. Mac rebuilds retain bundle/Title ID metadata; a previous preparation is not evidence of an iPhone installation.
 - **Found on:** desktop builds reported by the repository owner; validated with synthetic streaming/rotation/failure/cancellation fixtures and the production Swift model. See [personal desktop workflow](../personal-ios.md#live-preparation-logs-and-game-updates).
+
+### Native sideload toolchain install rejects a workspace path with spaces
+
+- **Symptom:** the official Rust component shell installer rejects part of `--prefix` as an unknown option; a partial LLVM setup can also make `rust-objcopy` fail to load `libLLVM.dylib`.
+- **Cause:** the installer splits a prefix containing spaces, while the new compiler's object tool requires its matching LLVM-tools component.
+- **Fix:** install checksum-pinned official component manifests directly in an external cache, including LLVM-tools; validate archive paths/links and use an explicit ARM64 Cargo target. Keep the system Rust installation unchanged. Synthetic archive tests cover spaces, reuse and traversal refusal.
+- **Found on:** the [native helper build](../sideloading.md#build-and-test) in this fork's workspace; no game or Apple account required.
+
+### A sideload signer changes an existing game's bundle identifier
+
+- **Symptom:** a replacement signer can append a second team suffix or produce another app identifier, separating the user from the existing app container.
+- **Cause:** isideload 0.5.0 unconditionally appended the team ID to the supplied bundle ID, even when the caller already knows the effective installed identifier.
+- **Fix:** the small vendored MIT patch preserves the caller's exact final ID. Our helper selects an actual existing device app, checks that it matches the game, verifies the signed/provisioned identity and never uninstalls the previous app to force an update. Original preparation IPAs stay unsigned. Tests cover custom identifiers and mismatch refusal; real-account/device migration still requires validation.
+- **Found on:** source review and synthetic tests for the [integrated installer](../sideloading.md#user-flow), with no existing user installation modified.

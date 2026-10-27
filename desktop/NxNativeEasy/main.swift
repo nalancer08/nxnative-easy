@@ -30,6 +30,8 @@ import Darwin
     @Published var showDetails = false
     @Published var showCatalog = false
     @Published var showAnalysis = false
+    @Published var showSaves = false
+    @Published var showSideload = false
     @Published var catalog: [CatalogGame] = []
     @Published var catalogFailed = false
     private var process: Process?
@@ -292,6 +294,7 @@ enum AppArtwork {
 
 struct ContentView: View {
     @ObservedObject var updater: AppUpdater
+    @ObservedObject var sideload:SideloadModel
     @StateObject private var model=BuildModel()
     @StateObject private var controllerMonitor=ControllerMonitor()
     @State private var showControllerTest=false
@@ -329,7 +332,7 @@ struct ContentView: View {
                                 if !updater.busy {
                                     if updater.available != nil {
                                         Button(model.text(updater.error == nil ? "Actualizar ahora" : "Intentar de nuevo")){updater.start()}
-                                            .disabled(model.running || updater.busy).accessibilityIdentifier("install-update")
+                                            .disabled(model.running || updater.busy || sideload.busy).accessibilityIdentifier("install-update")
                                     } else {
                                         Button(model.text("Intentar de nuevo")){Task {await updater.check(manual:true)}}
                                     }
@@ -341,6 +344,13 @@ struct ContentView: View {
                                 else {ProgressView().progressViewStyle(.linear).tint(lime)}
                             }
                         }.padding(16).background(lime.opacity(0.07),in:RoundedRectangle(cornerRadius:12))
+                    }
+                    if sideload.showsRefreshNotice {
+                        HStack {
+                            Text(model.text(sideload.error ?? sideload.phase)).font(.system(size:12)).textSelection(.enabled)
+                            Spacer()
+                            if !sideload.busy {Button(model.text("Revisar renovación")){sideload.reviewRefresh();model.showSideload=true}}
+                        }.padding(14).background(Color.orange.opacity(0.08),in:RoundedRectangle(cornerRadius:12))
                     }
                     VStack(alignment:.leading,spacing:6) {
                         Text(model.text("Prepara tu juego.")).font(.system(size:32,weight:.bold,design:.rounded)).foregroundStyle(ink)
@@ -371,7 +381,7 @@ struct ContentView: View {
                                         .font(.system(size:13,weight:.semibold)).padding(.horizontal,16).padding(.vertical,9)
                                         .foregroundStyle(model.target == target ? Color.black : ink)
                                         .background(model.target == target ? lime : Color.white.opacity(0.06),in:RoundedRectangle(cornerRadius:9))
-                                }.buttonStyle(.plain).disabled(model.running || updater.busy).accessibilityIdentifier("target-"+target)
+                                }.buttonStyle(.plain).disabled(model.running || updater.busy || sideload.busy).accessibilityIdentifier("target-"+target)
                             }
                         }
                         if model.isMac {
@@ -391,7 +401,7 @@ struct ContentView: View {
                             }
                             Spacer()
                             Button(model.text("Probar control")){showControllerTest=true}
-                                .disabled(model.running || updater.busy).accessibilityIdentifier("test-controller")
+                                .disabled(model.running || updater.busy || sideload.busy).accessibilityIdentifier("test-controller")
                         }.accessibilityIdentifier("controller-status")
                         }
                         HStack(spacing:12) {
@@ -404,7 +414,7 @@ struct ContentView: View {
                                 }
                             }
                             Spacer()
-                            Button(model.folder == nil ? model.text("Elegir") : model.text("Cambiar")) {model.chooseFolder()}.disabled(model.running || updater.busy).accessibilityLabel(model.text("Carpeta de tu juego"))
+                            Button(model.folder == nil ? model.text("Elegir") : model.text("Cambiar")) {model.chooseFolder()}.disabled(model.running || updater.busy || sideload.busy).accessibilityLabel(model.text("Carpeta de tu juego"))
                         }
                         HStack(spacing:12) {
                             Image(systemName:"key.horizontal").font(.system(size:19)).foregroundStyle(lime).frame(width:24)
@@ -414,7 +424,7 @@ struct ContentView: View {
                                     .font(.system(size:12)).foregroundStyle(.secondary)
                             }
                             Spacer()
-                            Button(model.keysFolder == nil ? model.text("Elegir") : model.text("Cambiar")) {model.chooseKeysFolder()}.disabled(model.running || updater.busy).accessibilityLabel(model.text("Carpeta de llaves"))
+                            Button(model.keysFolder == nil ? model.text("Elegir") : model.text("Cambiar")) {model.chooseKeysFolder()}.disabled(model.running || updater.busy || sideload.busy).accessibilityLabel(model.text("Carpeta de llaves"))
                         }
                         if model.running {
                             Divider().overlay(Color.white.opacity(0.08))
@@ -445,7 +455,7 @@ struct ContentView: View {
                         if model.previous != nil && !model.running {
                             Label(model.text("Ya preparaste este juego antes"),systemImage:"arrow.triangle.2.circlepath").font(.system(size:13,weight:.medium))
                             if let version=model.previous?.version {Text(model.text("Versión anterior")+": "+version).font(.system(size:12)).foregroundStyle(.secondary)}
-                            Text(model.text(model.isMac ? "Crearás una app nueva. Tus partidas siguen en este Mac, fuera de la app. Cierra el juego antes de abrir la versión nueva." : "Crearás una IPA para actualizar tu app. Usa la misma cuenta e identificador en Sideloadly e instala encima, sin desinstalar. No podemos comprobar lo instalado en tu iPhone."))
+                            Text(model.text(model.isMac ? "Crearás una app nueva. Tus partidas siguen en este Mac, fuera de la app. Cierra el juego antes de abrir la versión nueva." : "Crearás una IPA para actualizar tu app. Usa la misma cuenta e identificador en Sideloadly e instala encima, sin desinstalar. La preparación no comprueba qué está instalado en tu iPhone."))
                                 .font(.system(size:12)).foregroundStyle(.secondary)
                         }
                         if !model.running && (model.output == nil || model.failed) {
@@ -456,7 +466,7 @@ struct ContentView: View {
                                     Image(systemName:"arrow.right")
                                 }.font(.system(size:15,weight:.bold)).padding(15).foregroundStyle(Color.black)
                                     .background(model.folder == nil || model.target.isEmpty ? Color.gray : lime,in:RoundedRectangle(cornerRadius:10))
-                            }.buttonStyle(.plain).disabled(model.folder == nil || model.target.isEmpty || updater.busy)
+                            }.buttonStyle(.plain).disabled(model.folder == nil || model.target.isEmpty || updater.busy || sideload.busy)
                         }
                     }.padding(22).background(Color.white.opacity(0.045),in:RoundedRectangle(cornerRadius:16))
                     if model.output != nil && !model.running && !model.failed {
@@ -476,19 +486,24 @@ struct ContentView: View {
                             } else {
                             Label(model.text("Listo. Instálalo en tu iPhone / iPad."),systemImage:"checkmark.circle.fill")
                                 .font(.system(size:20,weight:.semibold)).foregroundStyle(lime)
-                            Text(model.text("1. Envía la IPA a Sideloadly y pulsa Start con tu cuenta personal."))
+                            Text(model.text("Instala y copia los datos desde aquí con tu cuenta personal, o usa Sideloadly como alternativa."))
                                 .font(.system(size:13))
-                            HStack {
-                                Button(model.text(model.sideloadlyURL == nil ? "Descargar Sideloadly" : "Enviar a Sideloadly")){model.openSideloadly()}.buttonStyle(.borderedProminent).tint(lime).foregroundStyle(.black)
-                                Button(model.text("Mostrar IPA")){model.revealIPA()}
+                            Button(model.text("Instalar en iPhone / iPad")){if let ipa=model.output,let folder=model.folder {sideload.configure(ipa:ipa,folder:folder,romfs:model.assets);model.showSideload=true}}
+                                .disabled(updater.busy || sideload.busy).buttonStyle(.borderedProminent).tint(lime).foregroundStyle(.black)
+                            DisclosureGroup(model.text("Alternativa: Sideloadly")) {
+                                VStack(alignment:.leading,spacing:10) {
+                                    HStack {
+                                        Button(model.text("Usar Sideloadly")){model.openSideloadly()}
+                                        Button(model.text("Mostrar IPA")){model.revealIPA()}
+                                    }
+                                    Text(model.text("2. Copia el nuevo romfs por Finder → iPhone → Archivos → tu juego. Reemplaza sólo romfs; conserva save y save_device.")).font(.system(size:12))
+                                    Button(model.text("Mostrar datos del juego")){model.revealAssets()}
+                                    Text(model.text("Para actualizar: misma cuenta e identificador de Sideloadly. Instala encima, sin desinstalar.")).font(.system(size:11)).foregroundStyle(.secondary)
+                                }.padding(.top,8)
+                            }.font(.system(size:12))
                             }
-                            Text(model.text("2. Copia el nuevo romfs por Finder → iPhone → Archivos → tu juego. Reemplaza sólo romfs; conserva save y save_device."))
-                                .font(.system(size:13))
-                            Button(model.text("Mostrar datos del juego")){model.revealAssets()}
-                            Text(model.text("Para actualizar: misma cuenta e identificador de Sideloadly. Instala encima, sin desinstalar."))
-                                .font(.system(size:11)).foregroundStyle(.secondary)
-                            }
-                            Button(model.text(model.previous == nil ? "Preparar de nuevo" : "Preparar actualización")){model.build()}.buttonStyle(.link).disabled(updater.busy)
+                            Button(model.text("Tus partidas")){model.showSaves=true}
+                            Button(model.text(model.previous == nil ? "Preparar de nuevo" : "Preparar actualización")){model.build()}.buttonStyle(.link).disabled(updater.busy || sideload.busy)
                         }.padding(22).frame(maxWidth:.infinity,alignment:.leading)
                             .background(lime.opacity(0.045),in:RoundedRectangle(cornerRadius:16))
                     }
@@ -507,12 +522,14 @@ struct ContentView: View {
                     }
                 }.padding(28)
             }
-        }.frame(minWidth:760,minHeight:530).background(CompactWindow(height:(model.isMac ? 740 : 680)+(updater.visible ? 95 : 0))).preferredColorScheme(.dark)
+        }.frame(minWidth:760,minHeight:530).background(CompactWindow(height:(model.isMac ? 740 : 680)+(updater.visible ? 95 : 0)+(sideload.showsRefreshNotice ? 70 : 0))).preferredColorScheme(.dark)
         .onReceive(NotificationCenter.default.publisher(for:Notification.Name("nxnative.openAnalysis"))) {_ in if !model.running && !updater.busy {model.showAnalysis=true}}
+        .sheet(isPresented:$model.showSaves) {SavesHelpView(folder:model.folder,isMac:model.isMac,text:model.text,language:model.language)}
+        .sheet(isPresented:$model.showSideload) {SideloadView(model:sideload,text:model.text)}
         .sheet(isPresented:$model.showAnalysis) {if let game=model.folder {GameAnalysisView(repo:model.repo,game:game,text:model.text)} else {Text(model.text("Primero selecciona la carpeta de un juego preparado.")).padding(24)}}
         .sheet(isPresented:$model.showCatalog) {GameCatalogView(model:model)}
         .sheet(isPresented:$showControllerTest) {ControllerTestView(text:model.text)}
-        .task {await updater.check()}
+        .task {sideload.canRefresh={ !model.running && !updater.busy };await updater.check();sideload.checkRefresh()}
         .onReceive(Timer.publish(every:21600,on:.main,in:.common).autoconnect()) {_ in Task {await updater.check()}}
         .alert(model.text("Ya tienes la versión más reciente."),isPresented:$updater.showNotice) {Button(model.text("Aceptar"),role:.cancel) {}}
         .onReceive(NotificationCenter.default.publisher(for:NSApplication.willTerminateNotification)) {_ in model.cancel()}
@@ -582,10 +599,11 @@ struct GameCatalogView: View {
 @main struct NxNativeEasyApp: App {
     @NSApplicationDelegateAdaptor(LauncherDelegate.self) private var delegate
     @StateObject private var updater=AppUpdater()
+    @StateObject private var sideload=SideloadModel()
     @AppStorage("interfaceLanguage") private var appLanguage="en"
     var body: some Scene {
         Window("nxnative Easy",id:"main") {
-            ContentView(updater:updater).onAppear {
+            ContentView(updater:updater,sideload:sideload).onAppear {
                 NSApplication.shared.applicationIconImage=AppArtwork.icon
             }
         }
@@ -599,7 +617,7 @@ struct GameCatalogView: View {
                 CommandGroup(after:.appInfo) {
                     Button(EasyStrings.text("Buscar actualizaciones…",language:EasyLanguage(rawValue:appLanguage) ?? .english)) {
                         Task {await updater.check(manual:true)}
-                    }.disabled(updater.busy)
+                    }.disabled(updater.busy || sideload.busy)
                 }
             }
     }

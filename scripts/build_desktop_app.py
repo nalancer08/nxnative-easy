@@ -49,9 +49,13 @@ def install_bundle(staged,output):
 def build_bundle(output):
     contents=output/'Contents';macos=contents/'MacOS';macos.mkdir(parents=True,exist_ok=True)
     subprocess.run(['xcrun','swiftc','-parse-as-library','-swift-version','5',
-        str(REPO/'desktop/NxNativeEasy/main.swift'),str(REPO/'desktop/NxNativeEasy/Localization.swift'),str(REPO/'desktop/NxNativeEasy/BuildActivity.swift'),str(REPO/'desktop/NxNativeEasy/GameAnalysis.swift'),str(REPO/'desktop/NxNativeEasy/GameCatalog.swift'),str(REPO/'desktop/NxNativeEasy/ControllerMonitor.swift'),str(REPO/'desktop/NxNativeEasy/ControllerTest.swift'),str(REPO/'desktop/NxNativeEasy/UpdateRelease.swift'),str(REPO/'desktop/NxNativeEasy/AppUpdater.swift'),'-o',str(macos/'NxNativeEasy'),
+        str(REPO/'desktop/NxNativeEasy/main.swift'),str(REPO/'desktop/NxNativeEasy/Localization.swift'),str(REPO/'desktop/NxNativeEasy/BuildActivity.swift'),str(REPO/'desktop/NxNativeEasy/GameAnalysis.swift'),str(REPO/'desktop/NxNativeEasy/Sideloading.swift'),str(REPO/'desktop/NxNativeEasy/SavesHelp.swift'),str(REPO/'desktop/NxNativeEasy/GameCatalog.swift'),str(REPO/'desktop/NxNativeEasy/ControllerMonitor.swift'),str(REPO/'desktop/NxNativeEasy/ControllerTest.swift'),str(REPO/'desktop/NxNativeEasy/UpdateRelease.swift'),str(REPO/'desktop/NxNativeEasy/AppUpdater.swift'),'-o',str(macos/'NxNativeEasy'),
         '-framework','SwiftUI','-framework','AppKit','-framework','GameController'],check=True)
     resources=contents/'Resources';resources.mkdir(exist_ok=True)
+    from build_sideload_helper import build as build_helper
+    helper_cache=Path(os.environ.get('NXE_SIDELOAD_BUILD_CACHE',str(REPO.parent/'nxnative-sideload-tools')))
+    build_helper(macos/'nxnative-sideload',helper_cache)
+    shutil.move(str(macos/'sideload-licenses'),str(resources/'SideloadLicenses'))
     shutil.copy2(REPO/'desktop/NxNativeEasy/Assets/AppIcon.png',resources/'BrandIcon.png')
     with tempfile.TemporaryDirectory(prefix='nxnative-icon-') as temporary:
         iconset=Path(temporary)/'AppIcon.iconset';iconset.mkdir()
