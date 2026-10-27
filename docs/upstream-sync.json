@@ -1,0 +1,25 @@
+{
+  "schema": 1,
+  "repository": "seedds/nxnative",
+  "baseline": "ecbeae164c0b419d1ba1031248fe1402050a3eb0",
+  "reviewed_head": "15805ef52578afe54196504e3f98e15a22221664",
+  "integrated": [
+    {
+      "upstream_sha": "4639c5114cbb8a8f250645941fa3a25c1ba08cc6",
+      "title": "Pack shader pairs and the offline pipeline archive into Mac apps (#241, #260)"
+    },
+    {
+      "upstream_sha": "b117c913172120520f01028bd42e3b2d55d9f7af",
+      "title": "Check translation chain changes on games their author does not own (#272)"
+    },
+    {
+      "upstream_sha": "89744da75364ba1847dfbd25f5a82a57d8f1ccb1",
+      "title": "Discover Homebrew .NET runtimes for standalone build tools"
+    },
+    {
+      "upstream_sha": "09f3778c366fabc2b02b3bf4ae340bb7ce40c2d9",
+      "title": "Make repeated IPA and Mac app builds incremental (#279)"
+    }
+  ],
+  "note": "Selective tooling imports, not a merge of all upstream history. Runtime and translation chain remain at the baseline."
+}

@@ -1,3 +1,192 @@
+# Upstream maintenance: latest selective integration
+
+Snapshot captured on 2026-10-26 (America/Mexico_City), pinned to upstream
+`15805ef52578afe54196504e3f98e15a22221664`: 38 commits since our base and 85 open
+PRs. Commit inventories were compared and the four tooling changes below received
+source review and synthetic tests. Open PR metadata and file inventories are
+archived; this is not a line-by-line audit of all 85 proposals or their generated
+tables. The historical review below retains its original snapshot and limitations.
+The machine-readable latest review is in [personal-pr-review.json](personal-pr-review.json).
+
+## Integrated tooling
+
+| Upstream commit | Result |
+|---|---|
+| `4639c5114cbb` (#241/#260) | Pack shader/pipeline pair tables and optional GPU pipeline archive into complete Mac apps. |
+| `b117c9131721` (#272) | Compare shader build reports and stop when previously translated shaders regress. |
+| `89744da75364` (#284) | Discover Homebrew .NET runtimes correctly for standalone build tools. |
+| `09f3778c366f` (#279) | Incremental IPA and Mac packaging and derived-profile cache reuse, with atomic publication checks. |
+
+The runtime, shared touch editor, game profiles and translator/chain header remain
+at our working base. The current chain is `8393d85a4eae`. The two cherry-pick
+conflicts preserved our README and the existing FINAL FANTASY RESONANCE note:
+that note's later graphics claim depends on changes we did not import.
+No game files, keys, installed game identities or saves were changed.
+
+Incremental final packaging needs the same output path. Our simple wrappers still
+produce separate dated outputs to preserve previous builds; their intermediate
+profile/shader caches benefit, but do not promise that the final app/IPA is reused
+across those different names. Direct core builds with the same output reuse it.
+The upstream IPA index trusts unchanged APFS metadata; `--no-reuse` on the packer
+forces a fresh archive. It does not detect old archive corruption during reuse.
+Our lightweight export retains its CRC verification.
+
+## Validation of this batch
+
+The 100 focused .NET, Mac packaging, incremental IPA and shader-regression tests
+passed before integration. The final candidate passed 48 Python test files
+(352 test cases, 16 skipped for unavailable optional fixtures), using the prepared
+build environment. The production iOS project compiled and linked unsigned with
+synthetic Metroid Dread-profile modules; this exercises the shared touch editor
+and host linkage, not gameplay. The updated Mac launcher compiled with the macOS
+SDK. No prepared game was rebuilt, launched or installed during this audit.
+The fork owner's successful iPhone and Mac gameplay report preceded this batch;
+it is user-reported evidence, not a new automated device test.
+
+## Deferred work
+
+- Runtime changes: startup notification deadlock (`0963959`), save transaction
+  isolation (`a0841d6`), audio/device/layout (`40b643b`, `15805ef`), scripted versus
+  controller input (`583ae42`). Useful, but require the associated host tests and
+  fresh gameplay checks; not mixed into the validated engine automatically.
+- Graphics and new game series: image atomics, texture aliasing, display pacing,
+  pipeline padding, Unity/HAL extraction and eight new profiles. Those share a
+  translation chain and need coherent imports plus cross-game rendering checks.
+- Developer tooling: upstream regression/impact harness (#328/#329), compiler
+  pinning (#333/#337), base-NCA selection (#311), NSZ fallback (#327), faster
+  builds (#343/#344). Evaluate as separate batches with their dependencies.
+- Optional features: controller gyro (#351/#286/#296), cheats (#268), save sync
+  (#210/#255). Gyro needs hardware checks; cheats need exact-build/code-page
+  safeguards; sync needs destructive failure/conflict/recovery tests. Not enabled.
+- Networking remains offline in both our runtime and the reviewed upstream main;
+  no Jamboree profile was found. Local multiplayer controllers are different from
+  LAN/netplay or Nintendo's online service.
+
+## Repeatable flow
+
+Use the repository's existing installer once to prepare tools, then:
+
+```sh
+python3 scripts/sync_upstream.py --output "/Volumes/Games/review-next"
+```
+
+This fetches upstream, freezes its head SHA and writes a commit/file/risk report.
+It distinguishes the reviewed head from the actually integrated commits recorded
+in [upstream-sync.json](upstream-sync.json). It never merges the active branch.
+To test explicitly selected SHAs, in dependency order:
+
+```sh
+python3 scripts/sync_upstream.py --output "/Volumes/Games/candidate-next" --stage FULL_SHA [ANOTHER_SHA]
+```
+
+The second command rejects dirty source checkouts, integrated/non-upstream commits
+and creates a detached candidate worktree. Conflicts remain there for inspection;
+the active checkout stays intact. It finds the prepared Python environment and
+runs all synthetic personal, tool, iOS and graphics Python checks into `checks/`.
+Missing dependencies or failed checks stop the flow. Review logs, compile affected
+targets and test games/devices before integrating. A passed synthetic test suite
+is not a claim of gameplay compatibility or approval to publish a release.
+Register newly accepted upstream SHAs in the policy, then bump the desktop release
+manifest when distributing changed functionality through the in-app updater.
+
+For a separate archive of every open PR and its pinned patch, use:
+
+```sh
+python3 scripts/review_upstream.py --output "/Volumes/Games/pr-review-next"
+```
+
+## Latest open PR inventory
+
+| PR | Pinned head | Applicability |
+|---|---|---|
+| [#29](https://github.com/seedds/nxnative/pull/29) | `c117972a2513` | A16 BC decoding and rhythm-specific controls are bundled together; retain generic editor and separate bundle identity deliberately. Requires older iPhone texture, memory and touch testing. |
+| [#32](https://github.com/seedds/nxnative/pull/32) | `0c0d8f3d1709` | Alpha-test variants can fix foliage, but first-use draws are deliberately skipped while compilation runs. Requires scene comparisons and cold/warm cache tests before adoption. |
+| [#76](https://github.com/seedds/nxnative/pull/76) | `40460d2d4972` | BotW variable frame step and resolution changes require exact registered builds and timing tests. No established Dread benefit; higher caps also need thermal validation. |
+| [#102](https://github.com/seedds/nxnative/pull/102) | `36afdfa28893` | Xbox label preference is opt-in and overlaps Nintendo detection proposals #180/#295. Choose one mapping policy, then test real controllers. |
+| [#104](https://github.com/seedds/nxnative/pull/104) | `48c615d25dd4` | Mac app packaging, save locations and preferences overlap already-existing upstream Mac packaging. Reconcile save migration and current packer before considering it. |
+| [#126](https://github.com/seedds/nxnative/pull/126) | `309722488d99` | Same title ID overlaps #289/#304; compare builds and regenerated tables. Prefer the newer, smaller validated profile series rather than stacking all three. |
+| [#160](https://github.com/seedds/nxnative/pull/160) | `bdbf8eb2c854` | Xenoblade 2/Torna adds SDK 3.5, audio, movie and frame-step behavior. Mac evidence does not validate iOS memory or frame timing. |
+| [#167](https://github.com/seedds/nxnative/pull/167) | `e4dc169c7662` | CPU-written linear and unflushed sampled texture upload paths can help several games. Requires dirty-page, alias and CPU/GPU synchronization regressions before adoption. |
+| [#171](https://github.com/seedds/nxnative/pull/171) | `52c5daa90308` | Native SM/CSRNG transport can reduce SDK symbol interceptions. Large service-memory and handle-lifetime surface; run adversarial IPC and thread-safety tests before replacing working paths. |
+| [#173](https://github.com/seedds/nxnative/pull/173) | `f5e632cf5f89` | SMT V combines profile, sparse pools and iOS aspect modes; depends on #263. The aspect changes also touch the editor's coordinate assumptions and need device testing. |
+| [#176](https://github.com/seedds/nxnative/pull/176) | `887a4f058ebf` | Trails adds rewriter, scanner and NVN changes as well as a region-specific profile. Rebuild shader chain and check exact regional build; IPA build alone is not gameplay validation. |
+| [#179](https://github.com/seedds/nxnative/pull/179) | `f661323a779d` | Physical keyboard support changes control visibility and focus cleanup. Must retain editor access and test keyboard/controller connect, disconnect and stale callbacks together. |
+| [#180](https://github.com/seedds/nxnative/pull/180) | `fccf98362334` | Nintendo label detection is small and relevant on iOS, but overlaps #295 on Mac. Test Pro/Joy-Con and Xbox/PlayStation hardware before changing mappings. |
+| [#181](https://github.com/seedds/nxnative/pull/181) | `691dd43ef6d3` | Asian Unicorn Overlord has independent title/build IDs and reportedly identical shader data. Import only for that release, verify build registration and profile tests. |
+| [#186](https://github.com/seedds/nxnative/pull/186) | `bb517566f820` | Ninja Gaiden adds indexed Team Ninja archive parsing and ReadFile hook. Validate malformed archives, decompressed sizes and SDK ABI along with target-game playback. |
+| [#188](https://github.com/seedds/nxnative/pull/188) | `603a60b780c9` | Blasphemous offset-table fallback must remain uniquely bounded; Blasphemous 2 relies on the framed tail-call fix already in the base lineage. Run ambiguity regressions before import. |
+| [#189](https://github.com/seedds/nxnative/pull/189) | `e7d470c15244` | Intel translator launcher can help Intel build hosts, while runtime shader/Oodle capture still needs a native decoder. Do not treat universal launcher as universal game execution. |
+| [#192](https://github.com/seedds/nxnative/pull/192) | `2d5fd5b29e1e` | Wonder's two feedback snapshots can address flicker; only affects that profile. Compare affected scenes and GPU/attachment cost on the actual version. |
+| [#193](https://github.com/seedds/nxnative/pull/193) | `2c859258934d` | 3D All-Stars combines multi-program packaging, JIT, services and program switching. Major lifecycle and iOS changes; validate separately, including rejected 32-bit Galaxy path. |
+| [#194](https://github.com/seedds/nxnative/pull/194) | `e20c2a5f4dc3` | Fullscreen display-link workaround addresses Mac 60-to-30 drops, not demonstrated iPhone behavior. Test fullscreen, variable refresh and pacing regressions. |
+| [#209](https://github.com/seedds/nxnative/pull/209) | `acdd8dc6c873` | Converter manages dependencies and builds but also signing and engine selection. Preserve this private source checkout and unsigned-only policy if adopting any frontend. |
+| [#210](https://github.com/seedds/nxnative/pull/210) | `acf21eee2fb7` | Folder import is asynchronous around gameplay startup. Require proof that mounting/game writes cannot race import, plus fault injection and recovery on disposable saves. |
+| [#216](https://github.com/seedds/nxnative/pull/216) | `d70e4ac1ad3e` | Texture-level dumps, A2C fields and probe comparisons help bring-up. Not a speed feature; check dump boundaries and packaged-resource resolution. |
+| [#218](https://github.com/seedds/nxnative/pull/218) | `c5923f0ef378` | Yoshi needs sparse layouts and GPU writes into texture storage, with Mac evidence. Combine carefully with #300 and rebuild/test shader dependencies before iPhone use. |
+| [#221](https://github.com/seedds/nxnative/pull/221) | `f7c2f2f10543` | Steam controller adds HID, haptics, motion and player ownership. Requires the actual hardware plus multi-controller, reconnect and focus tests; no direct touch-editor benefit. |
+| [#227](https://github.com/seedds/nxnative/pull/227) | `2e835c72451d` | Persona 5 note explicitly distinguishes install acceptance from gameplay. Useful evidence, no runtime improvement and no reason to replace the existing recipe. |
+| [#231](https://github.com/seedds/nxnative/pull/231) | `69531352b9ee` | Secondary renderer advances at about 5 ms but its DeviceSink PCM is discarded. Verify this is intended for each game, and test close/join races before general use. |
+| [#233](https://github.com/seedds/nxnative/pull/233) | `36fc9b37baf8` | War in the North changes an event clear-mode instruction. Keep exact build-ID gate; verify worker wake behavior and absence of lost work in that title. |
+| [#234](https://github.com/seedds/nxnative/pull/234) | `75fd1b28b8ea` | Runtime shader dumping can recover variants missed offline. Validate guest control/code bounds and capture deduplication; keep captured game shaders outside Git. |
+| [#236](https://github.com/seedds/nxnative/pull/236) | `dffb26f608f4` | 30XX generalizes SDK discovery to subsdk modules and adds GL/EGL and sampler handling. Run GL shader, SDK discovery and existing NVN/Vulkan regressions before adoption. |
+| [#239](https://github.com/seedds/nxnative/pull/239) | `11e1ea583376` | Preferred-language discovery is Mac-only and explicit language wins. Our iOS wrapper persists the selected language already; no iOS benefit from importing this series. |
+| [#252](https://github.com/seedds/nxnative/pull/252) | `ebc3bc409d47` | Oodle GFPAKs, address-space cuts and dual-source blending may unlock Arceus/Z-A builds. Requires chain rebuild, precise build gates and visual/gameplay validation. |
+| [#255](https://github.com/seedds/nxnative/pull/255) | `988d765d4dbd` | Single-file archives and transaction hooks are a stronger starting point than mixing with #210. Still require interrupted-copy, rollback, conflict and unavailable-cloud tests on disposable saves. |
+| [#258](https://github.com/seedds/nxnative/pull/258) | `27339e1e3d4b` | Swipe camera/deadzone helpers have useful tests but the PR remains draft pending integrated device testing. Reconcile DmGamepad changes with our editor before any merge. |
+| [#263](https://github.com/seedds/nxnative/pull/263) | `46b6aa45112b` | Buffer-image type and unbound atomic scratch address concrete admission failures. Related fixes now also exist in later upstream commits; compare first to avoid duplicate or older implementations. |
+| [#265](https://github.com/seedds/nxnative/pull/265) | `633816faa76f` | HUD counters and system load can help measurements; overlap game profile and host state. Check sampling overhead and thread safety; no demonstrated iPhone FPS gain. |
+| [#268](https://github.com/seedds/nxnative/pull/268) | `c84153fbbbc3` | Adds memory writes, executable baking and a runtime menu. Separate from automated builds and compatibility; requires opcode bounds, build matching and pause/thread testing before opt-in adoption. |
+| [#269](https://github.com/seedds/nxnative/pull/269) | `0214c68bd3d1` | Violet profile includes Bluetooth service and rasterization stub. Mac opening evidence plus an acknowledged image-atomic warning does not establish correct iPhone gameplay. |
+| [#273](https://github.com/seedds/nxnative/pull/273) | `028f8b248add` | Jump-table reach, transform-feedback layout and MGFX tolerance can help several titles. Broad translator/binary changes require chain regeneration and cross-game regression comparisons. |
+| [#275](https://github.com/seedds/nxnative/pull/275) | `f0f966fecba3` | cache_outputs gates the entire mac group, including _b.json/_b.metal, when selecting ios only; downstream analysis still consumes those products. Reproduce clean-output cache-hit restoration and fix metadata caching first. |
+| [#277](https://github.com/seedds/nxnative/pull/277) | `841684012800` | Count unique archive paths instead of unique byte sizes. Exact source patch and three synthetic regressions adopted; no shader, game profile or runtime change. |
+| [#278](https://github.com/seedds/nxnative/pull/278) | `62d2085018f0` | Multi-platform CLI is stacked on #275 and carries its target-selection changes. Repair and validate target-specific cache restoration first, then test each platform combination. |
+| [#280](https://github.com/seedds/nxnative/pull/280) | `05715be61396` | Spanish GUI also includes scheduler, extraction and shader changes and device signing/install. Extract independent fixes; keep unsigned automation and editor base rather than import the whole application. |
+| [#282](https://github.com/seedds/nxnative/pull/282) | `48192496c829` | scan_file catches every Exception and returns an empty shader set, so a build may succeed with omitted shaders. Separate compiler-signal retry from scanner policy; require explicit incomplete-build reporting. |
+| [#285](https://github.com/seedds/nxnative/pull/285) | `e79692b58fa1` | Crystal Chronicles profile uses build-gated Unity memory-order cuts. Verify registered instruction bytes, worker stress and iPhone behavior; newer Unity TextAsset scanner changes are separately upstream. |
+| [#286](https://github.com/seedds/nxnative/pull/286) | `0cd0e1658246` | dm_motion_set writes g_mot_t under g_mot_mu, while mot_fresh reads it without that lock. Fix synchronized snapshots and run race/focus/disconnect tests before gyro adoption. |
+| [#289](https://github.com/seedds/nxnative/pull/289) | `7cc835f996f2` | Large FFR regional series overlaps #126/#304 and changes common extraction/allocator paths. Compare exact title/build IDs rather than relying on conflicting region labels. |
+| [#295](https://github.com/seedds/nxnative/pull/295) | `9a9500bbcb13` | Nintendo label detection plus override overlaps #180. Candidate for a unified mapping helper; reported Mac Pro Controller test does not validate iOS. |
+| [#296](https://github.com/seedds/nxnative/pull/296) | `f1a254912389` | Pro Controller HID supplies motion when GameController reports zero. Reconcile with #221/#286 instead of stacking alternate motion APIs; test calibration, axes, drift and ownership. |
+| [#297](https://github.com/seedds/nxnative/pull/297) | `7d8cfcee455e` | Leaving unlinkable pairs out can salvage an archive but does not restore missing vertex outputs. Prefer #298's padding fix; also verify cache stamp sensitivity to --leave changes. |
+| [#299](https://github.com/seedds/nxnative/pull/299) | `28fbf0af4f98` | Good Job combines profile, Unity timing and Mac launcher/window changes. Separate reusable UI from title-specific frame-step patches; Mac metrics do not validate iPhone. |
+| [#300](https://github.com/seedds/nxnative/pull/300) | `04d16458249b` | Sub-tile sparse textures must keep automatic block height. Has synthetic layout tests and a concrete Yoshi symptom; apply with the related sparse-layout series and cross-format tests. |
+| [#301](https://github.com/seedds/nxnative/pull/301) | `9a0563ccafd4` | BotW MetalFX interpolation is opt-in and adds latency, frame hooks and game assumptions. Not an iPhone FPS fix; isolate and compare UI/motion artifacts on supported hardware. |
+| [#302](https://github.com/seedds/nxnative/pull/302) | `ff9727c980c1` | DMG window/background automation is useful for Mac distribution, not IPA installation. Finder automation permissions and fallback need testing if Mac delivery becomes a goal. |
+| [#303](https://github.com/seedds/nxnative/pull/303) | `dbf0ab920f7d` | Pool high-water tracking can guide memory sizing. Static pool-pointer tracking needs concurrency/lifetime checks; it measures pages ever used, not current live allocations or FPS. |
+| [#304](https://github.com/seedds/nxnative/pull/304) | `3b32d7d6c3bd` | Newer FFR regional profile includes translator/host defects and claimed iPhone evidence. Avoid stacking #126/#289; chain binaries and tables require full reproducible regression builds. |
+| [#306](https://github.com/seedds/nxnative/pull/306) | `a957e6b73689` | Contribution templates are optional repository maintenance, independent of game support. |
+| [#307](https://github.com/seedds/nxnative/pull/307) | `15763f525640` | Graphics test discovery is useful maintenance; keep CI without GPU and local GPU tests distinct. |
+| [#310](https://github.com/seedds/nxnative/pull/310) | `c5bf5061bf57` | Older iOS/tvOS support is a separate platform effort; compilation is insufficient to claim device support. |
+| [#311](https://github.com/seedds/nxnative/pull/311) | `38915ee7e1f9` | Base Program NCA selection in cartridge dumps is an important next extraction candidate; exercise mixed base/update fixtures. |
+| [#314](https://github.com/seedds/nxnative/pull/314) | `adedb5f535d2` | Frame-step probe timing changes a performance/latency tradeoff; test affected iPhone/iPad models. |
+| [#317](https://github.com/seedds/nxnative/pull/317) | `acdd6e8ff45f` | Audio-device regression fixture depends on a newer host; import with that audio series. |
+| [#319](https://github.com/seedds/nxnative/pull/319) | `833c56641b17` | Unaligned vertex streams affect general rendering; validate buffer lifetime, bounds and visual output. |
+| [#320](https://github.com/seedds/nxnative/pull/320) | `63e294e709a7` | Overlaps the already integrated upstream Sparks of Hope port; prefer the coherent upstream main series. |
+| [#321](https://github.com/seedds/nxnative/pull/321) | `0e171b9b1472` | Texture tracking changes are core runtime work; run graphics and dirty-resource regressions first. |
+| [#322](https://github.com/seedds/nxnative/pull/322) | `639e2a97c9e8` | Dependency manifests and pinning are useful, but must match our installer and current translator. |
+| [#325](https://github.com/seedds/nxnative/pull/325) | `4a4769e0e4b3` | Diagnostic thread dumps can help debugging; assess signal/thread safety before importing runtime code. |
+| [#327](https://github.com/seedds/nxnative/pull/327) | `76eb68f88707` | Standalone NSZ/XCZ converter fallback is a useful next dependency-installation candidate. |
+| [#330](https://github.com/seedds/nxnative/pull/330) | `d7a95500248e` | Game-specific keyboard/mouse aiming; prefer a coherent input policy with real hardware checks. |
+| [#333](https://github.com/seedds/nxnative/pull/333) | `cee9b90e1ef9` | Pinning the tested Metal compiler is a reproducibility priority; coordinate with Xcode/chain requirements. |
+| [#335](https://github.com/seedds/nxnative/pull/335) | `af3e3a4fb96c` | Optional sampler filtering requires rendering and performance comparison. |
+| [#336](https://github.com/seedds/nxnative/pull/336) | `e188fe98c55f` | NieR pacing and dynamic resolution require exact-version gameplay and timing checks. |
+| [#337](https://github.com/seedds/nxnative/pull/337) | `c990da26aed3` | Pinning spirv-cross is a reproducibility priority; select binaries matching our retained translation chain. |
+| [#339](https://github.com/seedds/nxnative/pull/339) | `14e5d32fe051` | UE3 support spans extraction, allocation and timing; needs its own game and malformed-input regression checks. |
+| [#340](https://github.com/seedds/nxnative/pull/340) | `4d676160f85c` | Batman bring-up depends on other open rendering/UE3 proposals; not ready as an independent game profile. |
+| [#341](https://github.com/seedds/nxnative/pull/341) | `21870dcc5b5a` | Exact Mario Kart update profile; needs matching game files and shaders, not an automatic compatibility promise. |
+| [#343](https://github.com/seedds/nxnative/pull/343) | `b8afb5b78c1b` | Build/prewarm speed candidate with shader cache and pipeline dependencies; keep the chain coherent. |
+| [#344](https://github.com/seedds/nxnative/pull/344) | `379f147fedad` | Pipeline compiler time budgets can help stalls; verify fallback behavior and archive completeness first. |
+| [#345](https://github.com/seedds/nxnative/pull/345) | `c37381120a8f` | Optional presentation scaling and sharpening change GPU work and image quality; device validation required. |
+| [#351](https://github.com/seedds/nxnative/pull/351) | `f9dc8b4bb24c` | Motion control is relevant for future games; reconcile competing gyro proposals and test real Xbox/PlayStation/Nintendo/device sensors. |
+| [#352](https://github.com/seedds/nxnative/pull/352) | `576947788c58` | Mac launcher configuration and shader progress are useful next tooling candidates; reconcile our app and progress parser. |
+| [#354](https://github.com/seedds/nxnative/pull/354) | `27a31b57b429` | Per-game render scale ceilings affect GPU memory and image quality; need device comparisons. |
+| [#355](https://github.com/seedds/nxnative/pull/355) | `a2e9bf7803d9` | Conditional settings overlap our simpler UI. Evaluate backend settings independently. |
+| [#356](https://github.com/seedds/nxnative/pull/356) | `4dba64a0ec73` | Optional Mac keyboard camera; test focus loss and simultaneous controller input before adoption. |
+| [#357](https://github.com/seedds/nxnative/pull/357) | `07448091977a` | Launcher UI restructuring overlaps our simplified interface; do not replace our frontend wholesale. |
+
+---
+
 # Personal iOS branch: upstream review, 2026-10-26
 
 Scope: all 57 PRs open at the captured snapshot, plus the 20 upstream commits after

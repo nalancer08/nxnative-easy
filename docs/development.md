@@ -439,3 +439,42 @@ Each game's notes are in its profile folder, `dm/games/<id>/README.md`: what the
 | `nro_collect.py` | The NRO modules a game registers in its NRRs, found as loose files, among an indexed archive's current files (`data.arc`) or by a scan, written out for the rewriter with `nro.tsv`; online SDKs are listed as refused |
 | `nvn_slots_got.py` | Builds the NVN fetch table and call sites (GOT-indirect loaders) |
 | `loader_census.py` | Which of the functions a name loader fetches (glad's GL loader over `eglGetProcAddress`, NVN's C proc loader) the code really calls: the GOT slots or globals the loader stores, loaded by other code (followed through registers, relocated GOT entries and `csel`, for LÖVE's glad) |
+
+## Game binaries, mods and networking
+
+The builder does not recover a game's original source project. `patch_nso.py`
+rewrites ARM64 NSO images and emits `*.patched.bin` plus fixup/cut tables; the host
+loads those images, implements Horizon services and sends graphics through Metal.
+The host, launchers, tools and shader translator are editable source. The game
+modules remain compiled machine code; identifying Unity, Unreal or another engine
+in the survey does not reconstruct its editor project, C# classes, C++ sources,
+scene hierarchy or original authoring assets. Unity IL2CPP also compiles game
+logic to native code; see the per-game engine table in [dm/games](../dm/games/README.md#games).
+
+Mods can replace data in formats the game understands or patch instructions for
+a verified build ID. `hle_fs.c` already supports `DM_ROMFS_OVERLAY`, searching
+overlay roots before the base RomFS; `t_fs.c` exercises that mechanism. This is
+a low-level mechanism, not a desktop mod installer or a universal Unity/DLC editor.
+Metroid Dread uses MercurySteam's engine and Lua 5.1 bytecode `.lc` scripts, as
+recorded in [its game note](../dm/games/010093801237C000/README.md). A custom level,
+character or mechanic needs its own asset/script format work and game-version
+testing. Existing official DLC packing from the user's files is different from
+a user-authored mod; this tool does not publish official DLC or grant source access.
+
+Networking in this branch and upstream main at `15805ef` is offline: `hle_net.c`
+reports no available network and fails socket/SSL service operations;
+`hle_offline.c` fails LDN local-wireless initialization; `hle_account.c` provides
+a local user but no Nintendo Account/network-service authentication. A Nintendo
+Switch Online subscription alone does not implement these missing services.
+Mac local multiplayer controllers do not provide LAN, netplay or internet play.
+No Jamboree profile exists at that snapshot. Nintendo's [Jamboree multiplayer
+guide](https://www.nintendo.com/en-gb/Support/Purchases-Subscriptions/Games/How-to-Start-a-Multiplayer-Game-Super-Mario-Party-Jamboree--2681702.html)
+documents offline play on one console and its Nintendo online modes; do not infer
+a generic LAN workaround for it. Windows is not a runtime target of this project.
+
+Future private-room networking would require a deliberate transport/service
+implementation, a game supporting that mode, compatible peers, synchronization
+and device testing. Remote shared play could instead stream one host's screen
+and inputs for supported local-multiplayer games; that is a different project,
+not implemented here and not two independently running games joining Nintendo.
+Neither route is promised as an upcoming release.

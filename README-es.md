@@ -46,6 +46,12 @@ Partimos de [seedds/nxnative](https://github.com/seedds/nxnative): el motor, los
 
 Entregamos **código, una interfaz de preparación y herramientas de compilación**. El resultado es una app local para Mac o una IPA para iPhone/iPad sin firmar, que firmas e instalas con Sideloadly. No ofrecemos juegos, llaves, firma de Apple ni compatibilidad garantizada con cualquier juego.
 
+## Actualizaciones del motor y multijugador
+
+Registramos las mejoras del original en el [informe y flujo de mantenimiento](docs/personal-pr-review.md): detección de .NET, empaquetado de pipelines para Mac, reutilización de cachés y detección de regresiones de shaders. Evaluamos por separado los cambios de gráficos y del motor para conservar los juegos que funcionan.
+
+El motor actual funciona **sin conexión**. No admite los servicios en línea de Nintendo, LAN/netplay ni Windows. Una suscripción a Nintendo Switch Online no los activa aquí. Usar varios controles en un mismo Mac es una función distinta. [Cómo funcionan el código, los mods y la red](docs/development.md#game-binaries-mods-and-networking).
+
 ## Idioma
 
 La app inicia en **English**. Cambia a **Español** con el selector de la esquina superior; la elección se guarda en este Mac. Cambia el idioma de la interfaz, no el del juego. Los detalles técnicos se muestran en su idioma original.

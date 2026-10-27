@@ -46,6 +46,12 @@ Built on [seedds/nxnative](https://github.com/seedds/nxnative). The original pro
 
 We provide **source code, a preparation interface and build tools**. The output is a local Mac game app, or an unsigned iPhone/iPad IPA that you sign and install yourself with Sideloadly. Games, console keys, Apple signing and universal game compatibility are not provided.
 
+## Engine updates and multiplayer
+
+Selected upstream build improvements are recorded in the [review and maintenance flow](docs/personal-pr-review.md): .NET discovery, Mac pipeline packaging, cache reuse and shader regression checks. Graphics/runtime upgrades are evaluated separately to preserve working games.
+
+The current runtime plays **offline**. Nintendo online services, LAN/netplay and Windows are not supported. A Nintendo Switch Online subscription does not enable them here. Local controllers on one Mac are a separate feature. [How the game code, mods and networking work](docs/development.md#game-binaries-mods-and-networking).
+
 ## Language
 
 The app starts in **English**. Choose **Español** using the selector at the top; your selection is remembered on this Mac. This changes the interface language, not the game's language. Build diagnostics keep their original language.

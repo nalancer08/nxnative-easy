@@ -9,22 +9,25 @@ reported by upstream game notes, not detected from a build or device by this app
 
 # Desktop interface
 
-For daily use, open `nxnative.app`, choose a game folder and press **Preparar para iPhone**.
-The native macOS interface uses generic SF Symbols instead of game artwork and shows progress and provides buttons for the lightweight IPA,
-RomFS folder and Sideloadly. First-time setup still needs full Xcode, Homebrew and the
-user's game/key files. It never signs, installs or enters an Apple account.
+For daily use, open `~/Applications/nxnative Easy.app`, choose iPhone/iPad or Mac,
+select your own game and key folders, and press Prepare game. Cards use existing
+repository screenshots. The interface shows progress, cancellation and the output
+steps appropriate to the selected target.
 
-To create it on another Mac, double-click `scripts/Abrir-interfaz.command` from the
-checkout. Build outputs stay beside the repository, under `nxnative-easy/`; the local
-app points back to this checkout, so recreate it if the checkout is moved. The existing
-CLI remains available below. Cancellation signals the entire build process group.
+On another Mac, run the root `START-HERE.command` or the README's single-command
+installer. It keeps an independent checkout and prepared tools in Application
+Support, builds the launcher locally with ad-hoc signing and opens it. Full Xcode
+must already be installed and opened once. No Apple account is used for these
+builds. Source ZIPs can be deleted after setup; games and keys remain external.
+Cancellation signals the entire build process group.
 
 # Personal iOS builds
 
 This branch retains nxnative's MIT license and attribution. It starts from
 upstream `ecbeae164c0b419d1ba1031248fe1402050a3eb0`, includes the shared iOS touch
 editor and the tested #277 extraction-space fix, and keeps the working Dread shader
-chain. Upstream changes are reviewed in [the PR review](personal-pr-review.md).
+chain. Selective upstream packaging/.NET/cache/regression-check imports are tracked
+in [the PR review and repeatable sync flow](personal-pr-review.md).
 
 ## One command, including lightweight export
 
