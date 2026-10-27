@@ -33,7 +33,11 @@ appear everywhere without being forgotten. No recurring schedule is implied.
    credential/provider payloads. Full/light packaging must retain the bundled
    RomFS priority flag and legacy-record rebuild gate; never delete external
    content or saves to switch modes. Show actual registration results, not an
-   invented remaining free-account quota.
+   invented remaining free-account quota. Devices remains an in-window page.
+   Device game discovery requires local preparation IDs/exact install records;
+   no unrestricted app Lookup, display-name matching or broad inventory fallback.
+   Legacy discovery may read only the minimal identifier index before targeted
+   game metadata queries. Keep helper capability checks and client-side filtering.
    Never add automatic certificate revocation, account/team changes, save-folder
    writes or password logging. Helper tests use synthetic credentials and no device;
    compilation never counts as successful Apple login or physical installation.

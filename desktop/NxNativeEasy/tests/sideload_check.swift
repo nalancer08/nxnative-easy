@@ -13,11 +13,13 @@ import Foundation
         #!/usr/bin/python3
         import sys,json,time
         def emit(value):print(json.dumps(value),flush=True)
-        emit({'event':'hello','protocol':1,'architecture':'aarch64'})
+        emit({'event':'hello','protocol':1,'architecture':'aarch64','capabilities':['scoped-games-v1']})
         for line in sys.stdin:
             value=json.loads(line)
             if value['op']=='devices':emit({'event':'devices','items':[{'udid':'SYNTHETIC-DEVICE','name':'Test iPad','model':'iPad-test','os':'26.0','connections':['Wi-Fi']},{'udid':'SYNTHETIC-DEVICE','name':'Test iPad','model':'iPad-test','os':'26.0','connections':['USB','Wi-Fi']}]})
-            elif value['op']=='installed_apps':emit({'event':'installed_apps','items':[{'id':'org.game.custom','name':'Test game'}]})
+            elif value['op']=='installed_apps':
+                assert value.get('original_ids') and 'known_ids' in value
+                emit({'event':'installed_apps','items':[{'id':'org.game.custom','name':'Test game'},{'id':'com.unrelated.private','name':'Test game'},{'id':'org.game.customevil','name':'Test game'}]})
             elif value['op']=='login':
                 assert value['password']=='synthetic-password-only'
                 emit({'event':'two_factor'})
@@ -38,7 +40,10 @@ import Foundation
         """.write(to:helper,atomically:true,encoding:.utf8)
         try FileManager.default.setAttributes([.posixPermissions:0o700],ofItemAtPath:helper.path)
         let missing=SideloadModel(stateURL:root.appendingPathComponent("missing-jobs.json"),defaults:defaults,helperURL:root.appendingPathComponent("missing-helper"));missing.listDevices();assert(!missing.busy && missing.error != nil)
+        let emptyScope=SideloadModel(stateURL:root.appendingPathComponent("empty-scope.json"),defaults:defaults,helperURL:helper)
+        emptyScope.listDevices();try await wait {!emptyScope.busy && emptyScope.devices.count==1};assert(emptyScope.apps.isEmpty);emptyScope.cancel()
         let model=SideloadModel(stateURL:root.appendingPathComponent("jobs.json"),defaults:defaults,helperURL:helper)
+        model.preparedIdentifiers=["org.game.custom"]
         model.listDevices();try await wait { !model.busy && model.apps.count==1 }
         assert(model.device=="SYNTHETIC-DEVICE" && model.devices.count==1 && model.devices[0].model=="iPad-test" && model.devices[0].connections.contains("USB"))
         model.email=" TEST@example.org ";model.signIn(password:"synthetic-password-only",remember:false)
@@ -53,6 +58,11 @@ import Foundation
         assert(!model.logs.map(\.message).joined().contains("123456"))
         assert(!model.logs.map(\.message).joined().contains("test@example.org"))
         model.signOut();try await wait {!model.authenticated};model.cancel()
+        let scope=GameAppScope(originals:["org.nxnative.010093801237c000"],known:["org.old.custom"])
+        assert(scope.permits("org.nxnative.010093801237c000.ABCDE12345"))
+        assert(scope.permits("org.old.custom"))
+        for unrelated in ["com.private.app","org.nxnative.010093801237c000evil","org.nxnative.010093801237c000.news","org.nxnative.01007ef00011e000.ABCDE12345","org.nxnative.010093801237c000.ABCDE12345.extra"] {assert(!scope.permits(unrelated))}
+        assert(!GameAppScope().permits("org.nxnative.010093801237c000"))
         let now=Date();var job=RefreshJob(id:"test",ipa:"/synthetic.ipa",gameFolder:root.path,originalID:"org.game",effectiveID:"org.game.custom",team:"ABCDE12345",udid:"test",account:RefreshPolicy.account("Test@Example.org"),sha256:"test",expires:now.addingTimeInterval(24*3600),enabled:true)
         assert(RefreshPolicy.due(job,now:now,account:RefreshPolicy.account("test@example.org")))
         assert(!RefreshPolicy.due(job,now:now,account:"another-account"))

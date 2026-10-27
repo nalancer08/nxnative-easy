@@ -124,9 +124,11 @@ controles, ni los archivos JSON de preparación. [Guía detallada de partidas y 
 4. Si ya tienes el juego instalado, elige esa app existente para conservar su identidad. Pulsa **Firmar y actualizar**; no desinstales el juego anterior.
 5. Mantén cerrado el juego hasta que termine la firma, instalación y copia de datos. La renovación opcional recuerda la sesión en el Llavero.
 
-En **Mis iPhones y iPads**, arriba en la ventana principal, ves los dispositivos conectados (identificador de modelo, sistema y USB/Wi-Fi),
-las apps instaladas con buscador, el acceso a tu cuenta Apple y las firmas
-registradas. **Actualizar con mis archivos** inicia la preparación para una app
+En **Dispositivos**, en la barra lateral, abres una sección dentro de la ventana.
+Ves dispositivos conectados (identificador de modelo, sistema y USB/Wi-Fi), juegos
+reconocidos con buscador, cuenta Apple y firmas registradas. Las demás apps no se
+muestran; para reconocer instalaciones antiguas, añade la carpeta preparada del
+juego a tu biblioteca o conserva su registro de instalación. **Actualizar con mis archivos** inicia la preparación para una app
 existente. Pulsa **Renovar ahora**
 sin recompilar ni copiar RomFS otra vez; también puedes pausar la renovación
 por juego. **Leer dispositivos de mi cuenta Apple** consulta los registros del

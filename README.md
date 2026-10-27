@@ -118,8 +118,11 @@ RomFS and control profiles. [Save locations and backup limits](docs/saves.md).
 4. If the game is already installed, select that existing app to retain its identity. Choose **Sign and update**; keep the previous app installed.
 5. Keep the game closed while signing, installation and game-data copying finish. Optional refresh remembers the session in Keychain.
 
-**My iPhones and iPads**, at the top of the main window, shows connected devices (model identifier, OS and USB/Wi-Fi), searchable installed
-apps, your Apple-account sign-in and our recorded signature expiry dates. Choose
+**Devices** in the sidebar opens a page inside the main window. It shows connected
+devices (model identifier, OS and USB/Wi-Fi), searchable recognized game installations,
+your Apple-account sign-in and our recorded signature expiry dates. Other user
+apps are excluded; recognizing older installs requires the game’s prepared folder
+in your library or an existing installation record. Choose
 **Update using my files** on an installed app to begin a game update. Use **Refresh now** without
 recompiling or copying RomFS again, or pause automatic renewal per game.
 **Read my Apple account devices** queries registrations after sign-in/team selection;

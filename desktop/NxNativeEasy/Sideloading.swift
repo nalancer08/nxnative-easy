@@ -24,6 +24,24 @@ struct InstallLog:Identifiable {let id=UUID();let date=Date();let message:String
 struct TrustedSMS:Identifiable {let id:Int;let digits:String}
 struct SideloadTeam:Identifiable {let id:String;let name:String;var kind:String=""}
 struct InstalledGame:Identifiable {let id:String;let name:String;var version:String=""}
+
+struct GameAppScope {
+    var originals:Set<String>=[]
+    var known:Set<String>=[]
+    var isEmpty:Bool {originals.isEmpty && known.isEmpty}
+    func permits(_ id:String)->Bool {
+        guard id.range(of:"^[A-Za-z0-9.-]{1,255}$",options:.regularExpression) != nil else {return false}
+        if known.contains(id) || originals.contains(id) {return true}
+        return originals.contains {base in
+            guard base.range(of:"^org\\.nxnative\\.[0-9a-f]{16}$",options:[.regularExpression,.caseInsensitive]) != nil else {return false}
+            let prefix=base.lowercased()+"."
+            guard id.lowercased().hasPrefix(prefix) else {return false}
+            let suffix=id.dropFirst(prefix.count)
+            return suffix.count==10 && suffix.allSatisfy {$0.isASCII && ($0.isLetter || $0.isNumber)}
+        }
+    }
+}
+
 struct RefreshJob:Codable,Identifiable {
     var id:String
     var ipa:String
@@ -53,6 +71,9 @@ enum RefreshPolicy {
     @Published var devices:[SideloadDevice]=[]
     @Published var teams:[SideloadTeam]=[]
     @Published var apps:[InstalledGame]=[]
+    var preparedIdentifiers:[String]=[]
+    private var appQueryScope=GameAppScope()
+    private var scopedDiscovery=false
     @Published var accountDevices:[AccountDevice]=[]
     @Published var accountDeviceTeam=""
     @Published var logs:[InstallLog]=[]
@@ -143,7 +164,7 @@ enum RefreshPolicy {
     }
     func connect() {
         if let process,process.isRunning {return}
-        process=nil;input=nil
+        process=nil;input=nil;scopedDiscovery=false
         guard let root=Bundle.main.executableURL?.deletingLastPathComponent() else {return}
         let helper=helperURL ?? root.appendingPathComponent("nxnative-sideload")
         guard FileManager.default.isExecutableFile(atPath:helper.path) else {error="Falta el instalador nativo. Actualiza nxnative Easy.";return}
@@ -155,7 +176,7 @@ enum RefreshPolicy {
             let data=handle.availableData;if data.isEmpty {handle.readabilityHandler=nil;return}
             Task {@MainActor in self?.receive(data)}
         }
-        task.terminationHandler={ [weak self] finished in Task {@MainActor in guard let self,self.process === finished else {return};self.process=nil;self.input=nil;self.authenticated=false;self.codeRequired=false;if self.busy {self.error="Instalación detenida. Vuelve a intentar; las partidas no se tocaron."};self.busy=false;self.activeRefresh=nil;self.installIntent=nil;self.refreshAuthenticated=false}}
+        task.terminationHandler={ [weak self] finished in Task {@MainActor in guard let self,self.process === finished else {return};self.process=nil;self.input=nil;self.scopedDiscovery=false;self.authenticated=false;self.codeRequired=false;if self.busy {self.error="Instalación detenida. Vuelve a intentar; las partidas no se tocaron."};self.busy=false;self.activeRefresh=nil;self.installIntent=nil;self.refreshAuthenticated=false}}
         do {process=task;try task.run()}
         catch {process=nil;input=nil;self.error="No pudimos iniciar el instalador nativo."}
     }
@@ -165,7 +186,18 @@ enum RefreshPolicy {
         catch {self.error="No pudimos comunicarnos con el instalador.";busy=false}
     }
     func listDevices() {guard !busy else {return};error=nil;busy=true;startedAt=Date();fraction=nil;phase="Buscando dispositivos conectados…";record(phase);send(["op":"devices"])}
-    func inspectApps() {guard !busy,!device.isEmpty else {return};busy=true;startedAt=Date();fraction=nil;phase="Leyendo apps instaladas…";record(phase);send(["op":"installed_apps","udid":device])}
+    func inspectApps() {
+        guard !busy,!device.isEmpty else {return}
+        var originals=Set(preparedIdentifiers)
+        if !originalID.isEmpty {originals.insert(originalID)}
+        let scope=GameAppScope(originals:originals,known:Set(jobs.filter{$0.udid==device}.map(\.effectiveID)))
+        apps=[];appQueryScope=scope
+        guard !scope.isEmpty else {phase="Añade la carpeta preparada del juego para reconocer instalaciones anteriores.";return}
+        guard scopedDiscovery else {error="Actualiza la app para buscar juegos sin consultar otras aplicaciones.";return}
+        busy=true;startedAt=Date();fraction=nil;phase="Buscando tus juegos instalados…";record(phase)
+        send(["op":"installed_apps","udid":device,"original_ids":scope.originals.sorted(),"known_ids":scope.known.sorted()])
+    }
+
     func signIn(password:String,remember:Bool) {
         guard !busy,!email.isEmpty,!password.isEmpty else {return}
         email=email.trimmingCharacters(in:.whitespacesAndNewlines).lowercased()
@@ -206,7 +238,7 @@ enum RefreshPolicy {
     }
     private func handle(_ event:[String:Any]) {
         switch event["event"] as? String {
-        case "hello":if (event["protocol"] as? Int) != 1 || event["architecture"] as? String != "aarch64" {error="El instalador debe compilarse para Apple silicon.";cancel()}
+        case "hello":scopedDiscovery=(event["capabilities"] as? [String] ?? []).contains("scoped-games-v1");if (event["protocol"] as? Int) != 1 || event["architecture"] as? String != "aarch64" {error="El instalador debe compilarse para Apple silicon.";cancel()}
         case "devices":
             devices=SideloadDevice.decode((event["items"] as? [[String:Any]]) ?? []);record("Búsqueda de dispositivos terminada.")
             busy=false
@@ -217,8 +249,8 @@ enum RefreshPolicy {
                 if !device.isEmpty {inspectApps()}
             }
         case "installed_apps":
-            apps=((event["items"] as? [[String:Any]]) ?? []).compactMap {item in guard let id=item["id"] as? String,let name=item["name"] as? String else {return nil};return InstalledGame(id:id,name:name,version:item["version"] as? String ?? "")}.sorted {$0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending}
-            record("Lista de apps instalada actualizada.")
+            apps=((event["items"] as? [[String:Any]]) ?? []).compactMap {item in guard let id=item["id"] as? String,appQueryScope.permits(id),let name=item["name"] as? String else {return nil};return InstalledGame(id:id,name:name,version:item["version"] as? String ?? "")}.sorted {$0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending}
+            record("Lista de tus juegos actualizada.")
             let matches=apps.filter {$0.id.hasPrefix(originalID)};if existing.isEmpty,matches.count==1 {existing=matches[0].id}
             busy=false
         case "account_devices":
@@ -250,7 +282,7 @@ enum RefreshPolicy {
             let op=event["operation"] as? String
             let codes=["game_running":"El juego sigue abierto. La renovación espera para no interrumpir tu partida.","idle_unknown":"No pudimos comprobar si el juego está abierto. Guarda, ciérralo y renueva manualmente.","identity_mismatch":"Ese identificador no corresponde al equipo elegido. Detenido para conservar la app anterior.","not_installed":"No encontramos esa app instalada. Revisa el identificador antes de actualizar.","wrong_app":"La app elegida no corresponde a este juego. No se instaló encima.","storage":"No hay espacio suficiente para preparar los datos nuevos sin borrar los anteriores.","ipa_changed":"La IPA cambió. Prepara y aprueba la actualización antes de renovarla."]
             error=codes[event["code"] as? String ?? ""] ?? ((op=="login" || op=="restore") ? "No pudimos iniciar sesión o la sesión guardada caducó. Vuelve a iniciar sesión." : "No pudimos completar la instalación. Revisa el dispositivo, equipo y permisos. No se revocaron certificados automáticamente.")
-            if op=="installed_apps" {apps=[];error="No pudimos leer las apps. Desbloquea el dispositivo, confía en este Mac y vuelve a buscar."}
+            if op=="installed_apps" {apps=[];error=(event["code"] as? String)=="scope_unavailable" ? "No pudimos limitar la consulta a tus juegos. No mostramos otras aplicaciones." : "No pudimos leer tus juegos. Desbloquea el dispositivo, confía en este Mac y vuelve a buscar."}
             if op=="devices" {error="No pudimos buscar dispositivos. Revisa la conexión y vuelve a intentar."}
             if op=="account_devices" {accountDevices=[];accountDeviceTeam="";error="Apple no devolvió los dispositivos de este equipo. Revisa tu sesión y vuelve a consultar."}
             if let code=event["apple_code"] as? Int {error=(error ?? "")+" · Apple: \(code)"}
@@ -395,6 +427,7 @@ struct SideloadLibraryView:View {
     let text:(String)->String
     let canInstall:Bool
     var prepareGame:()->Void={}
+    var embedded=false
     @Environment(\.dismiss) private var dismiss
     @State private var showInstaller=false
     @State private var forgotten:RefreshJob?
@@ -402,6 +435,7 @@ struct SideloadLibraryView:View {
     @State private var appLimit=8
     private var matchingApps:[InstalledGame] {model.apps.filter {search.isEmpty || ($0.name+" "+$0.id).localizedCaseInsensitiveContains(search)}}
     private let accent=Color(red:0.79,green:0.95,blue:0.37)
+    private func prepare() {prepareGame();if !embedded {dismiss()}}
     var body:some View {
         VStack(spacing:0) {
             HStack(alignment:.top) {
@@ -409,7 +443,7 @@ struct SideloadLibraryView:View {
                     Label(text("Mis iPhones y iPads"),systemImage:"ipad.and.iphone").font(.title2.bold())
                     Text(text("Conecta. Elige tu juego. Instala o actualiza.")).foregroundStyle(.secondary)
                 }
-                Spacer();Button(text("Cerrar")){dismiss()}.disabled(model.busy)
+                Spacer();if !embedded {Button(text("Cerrar")){dismiss()}.disabled(model.busy)}
             }.padding(24)
             Divider()
             ScrollView {
@@ -443,26 +477,26 @@ struct SideloadLibraryView:View {
                         VStack(alignment:.leading,spacing:10) {
                             Label(text("Instalar otro juego"),systemImage:"plus.app").font(.headline)
                             Text(text("Elige tus archivos; prepararemos el juego y abriremos el instalador al terminar.")).foregroundStyle(.secondary)
-                            Button(text("Elegir carpeta de juego")){model.cancelPendingUpdate();prepareGame();dismiss()}.disabled(model.busy || !canInstall)
+                            Button(text("Elegir carpeta de juego")){model.cancelPendingUpdate();prepare()}.disabled(model.busy || !canInstall)
                         }.padding(18).frame(maxWidth:.infinity,minHeight:136,alignment:.topLeading).background(.white.opacity(0.04),in:RoundedRectangle(cornerRadius:14))
                     }
                     if !model.device.isEmpty {
-                        HStack {Label(text("Apps instaladas en este dispositivo"),systemImage:"square.grid.2x2").font(.headline);Spacer();Text(String(model.apps.count)).foregroundStyle(.secondary)}
+                        HStack {Label(text("Tus juegos instalados"),systemImage:"square.grid.2x2").font(.headline);Spacer();Text(String(model.apps.count)).foregroundStyle(.secondary)}
                         TextField(text("Buscar por nombre o identificador"),text:$search).textFieldStyle(.roundedBorder)
-                        if model.apps.isEmpty && !model.busy {Text(text("No se leyeron apps. Desbloquea el dispositivo y vuelve a buscar.")).foregroundStyle(.secondary)}
+                        if model.apps.isEmpty && !model.busy {Text(text("No encontramos juegos vinculados. Añade su carpeta preparada a la biblioteca y vuelve a buscar.")).foregroundStyle(.secondary)}
                         ForEach(Array(matchingApps.prefix(appLimit))) {app in
                             HStack {
                                 VStack(alignment:.leading,spacing:4) {Text(app.name).font(.headline);Text(app.id+(app.version.isEmpty ? "" : " · "+app.version)).font(.caption).foregroundStyle(.secondary).textSelection(.enabled)}
-                                Spacer();Button(text("Actualizar con mis archivos")){model.prepareUpdate(app);prepareGame();dismiss()}.disabled(model.busy || !canInstall)
+                                Spacer();Button(text("Actualizar con mis archivos")){model.prepareUpdate(app);prepare()}.disabled(model.busy || !canInstall)
                             }.padding(.vertical,6)
                             Divider()
                         }
-                        if matchingApps.count>appLimit {Button(text("Mostrar más apps")+" · "+String(min(appLimit,matchingApps.count))+" / "+String(matchingApps.count)){appLimit+=8}}
+                        if matchingApps.count>appLimit {Button(text("Mostrar más juegos")+" · "+String(min(appLimit,matchingApps.count))+" / "+String(matchingApps.count)){appLimit+=8}}
                         Text(text("Actualizar requiere tus archivos del mismo juego y la cuenta/equipo originales. No desinstalamos la app existente.")).font(.caption).foregroundStyle(.secondary)
                     }
                     if !model.jobs.isEmpty {
                         Label(text("Firmas y renovación"),systemImage:"arrow.clockwise.circle").font(.headline)
-                        ForEach(model.jobs.sorted {$0.expires<$1.expires}) {job in
+                        ForEach(model.jobs.filter {model.device.isEmpty || $0.udid==model.device}.sorted {$0.expires<$1.expires}) {job in
                             VStack(alignment:.leading,spacing:10) {
                                 Text(URL(fileURLWithPath:job.ipa).deletingPathExtension().lastPathComponent).font(.headline)
                                 Text(job.effectiveID).font(.caption).textSelection(.enabled)
@@ -476,7 +510,7 @@ struct SideloadLibraryView:View {
                     InstallActivityView(model:model,text:text)
                 }.padding(24)
             }
-        }.frame(width:850,height:730).background(Color(red:0.065,green:0.075,blue:0.07)).preferredColorScheme(.dark).interactiveDismissDisabled(model.busy)
+        }.frame(width:embedded ? nil : 850,height:embedded ? nil : 730).frame(maxWidth:.infinity,maxHeight:.infinity).background(Color(red:0.065,green:0.075,blue:0.07)).preferredColorScheme(.dark).interactiveDismissDisabled(model.busy)
         .onChange(of:search){_,_ in appLimit=8}
         .onChange(of:model.device){_,_ in appLimit=8}
         .task {if canInstall && !model.busy {model.listDevices()}}

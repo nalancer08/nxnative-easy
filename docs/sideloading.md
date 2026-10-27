@@ -171,12 +171,13 @@ The device workspace separates three different inventories:
   entries are merged by UDID, preferring USB for operations. Device cards show
   Apple's model identifier, OS version, available transports and trust/readiness.
   A model identifier is not a guessed marketing model name.
-- **Installed apps:** the selected device's actual installation-proxy user-app
-  list, with names, effective bundle IDs, versions and search. These do not need
-  an Apple-account login and include apps outside nxnative. **Update using my
-  files** retains that target/device, returns to game-folder preparation and
-  carries the target into installation. Matching game identity is checked again
-  before overwriting; selecting an unrelated app does not authorize replacing it.
+- **Installed games (scoped since 1.10.1):** only exact identifiers from local
+  preparations/our installation records, plus a strictly checked legacy team
+  suffix for the same known nxnative Title ID. Matching never uses display names.
+  First query explicit BundleIDs. If a known standard game is missing, legacy
+  discovery requests only CFBundleIdentifier, discards unrelated identifiers and
+  fetches names/versions only for matched games. Other app containers/files are
+  never opened. **Update using my files** carries that game/device into preparation.
 - **Apple-account devices:** after login and explicit team selection, **Read my
   Apple account devices** queries that team's actual registrations. This is not
   the same as a list of devices currently connected. A query failure is shown,
@@ -233,3 +234,34 @@ unattended background-daemon behavior are not implemented. Auto-renewal requires
 our launcher running. Real connected-device metadata and installed-app discovery
 were checked locally; account registrations, real provisioning/signing, physical
 RomFS recovery and unattended renewal remain unvalidated. Keep the fallback.
+
+## Inline Devices and restricted game discovery (1.10.1)
+
+**Devices** is an in-window workspace page with a selected sidebar state, not a
+sheet. Library/preparation state and background activity remain alive across all
+three pages. Opening account/signing forms is still an explicit separate action.
+Choosing game files from Devices changes to preparation without dismissing the
+main window. Renewal records are scoped to the selected device.
+
+The helper requires an explicit game scope: original IDs from folders in the
+personal library/current preparation, and exact effective IDs from our device's
+installation records. Empty scope returns an empty result without connecting to
+installation_proxy. No `Lookup` without BundleIDs remains. Exact lookups run
+first; missing standard `org.nxnative.<16-hex-title>` games may use a minimal
+identifier-only Browse to find one 10-character alphanumeric team suffix. Custom
+legacy IDs need an exact known preparation/installation record; names, loose
+prefixes, accepted-profile lists and all-app catalogs are not ownership evidence.
+
+This fallback necessarily sees an identifier index of user apps, but requests no
+names, versions, paths or files for unrelated apps. If the device ignores the
+requested attribute/scope restriction, stop instead of falling back to a broad
+inventory. The public [installation-proxy implementation](https://cgit.libimobiledevice.org/libimobiledevice.git/tree/src/installation_proxy.c?id=d87213038d0a428adb3e91432a1b7f6ae4817993)
+documents BundleIDs/ReturnAttributes behavior. The Swift client also filters
+returned rows independently, including an unrelated app with the same game name.
+Old helpers lacking `scoped-games-v1` cannot be asked for app discovery.
+
+Local read-only validation with the Metroid preparation scope returned only
+**Metroid Dread** from the connected phone, replacing the previous broad inventory.
+No app was installed, updated, uninstalled or accessed through HouseArrest during
+that check. Rust tests cover matching boundaries and empty-scope/no-device access;
+compiled Swift/protocol tests cover scope forwarding and unrelated-row rejection.

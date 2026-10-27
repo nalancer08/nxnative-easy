@@ -6,7 +6,9 @@ struct LibraryWorkspace:View {
     @ObservedObject var library:GameLibrary
     @ObservedObject var updater:AppUpdater
     @ObservedObject var sideload:SideloadModel
-    @State private var preparing=false
+    private enum Page {case library,prepare,devices}
+    @State private var page=Page.library
+    private var preparing:Bool {page == .prepare}
     @State private var query=""
     @State private var removing:OwnedGameOutput?
     @Environment(\.scenePhase) private var scenePhase
@@ -19,7 +21,7 @@ struct LibraryWorkspace:View {
         model.folder=game.folder;model.defaults.set(game.item.folder,forKey:"lastGameFolder")
         model.output=nil;model.assets=nil;model.target=game.macApp != nil ? "mac" : game.iosIPA != nil ? "ios" : ""
         if model.target=="ios" {model.splitIOS=game.romfs != nil}
-        model.restoreOutput();preparing=true
+        model.restoreOutput();page = .prepare
     }
     private func install(_ game:OwnedGameOutput) {
         guard !occupied,let ipa=game.iosIPA else {return}
@@ -27,7 +29,7 @@ struct LibraryWorkspace:View {
     }
     private func add() {
         guard !occupied else {return}
-        if model.chooseFolder() {remember();preparing=true}
+        if model.chooseFolder() {remember();page = .prepare}
     }
     private func remember() {
         guard let folder=model.folder else {return}
@@ -38,10 +40,10 @@ struct LibraryWorkspace:View {
             HStack(spacing:0) {
                 VStack(alignment:.leading,spacing:22) {
                     HStack(spacing:8) {Image(nsImage:AppArtwork.icon).resizable().frame(width:30,height:30);Text("nxnative\neasy").font(.headline).lineSpacing(-2)}.foregroundStyle(accent).padding(.bottom,12)
-                    nav("Mi biblioteca",icon:"square.grid.2x2",selected:!preparing){preparing=false}
-                    nav("Preparar juego",icon:"hammer",selected:preparing){preparing=true}
+                    nav("Mi biblioteca",icon:"square.grid.2x2",selected:page == .library){page = .library}
+                    nav("Preparar juego",icon:"hammer",selected:preparing){page = .prepare}
                     Divider()
-                    nav("Dispositivos",icon:"ipad.and.iphone",selected:false){model.showDeviceLibrary=true}.disabled(occupied)
+                    nav("Dispositivos",icon:"ipad.and.iphone",selected:page == .devices){page = .devices}
                     nav("Compatibilidad",icon:"checklist",selected:false){model.openCatalog()}
                     Spacer()
                     Picker(model.text("Idioma de la interfaz"),selection:$model.language){Text("English").tag(EasyLanguage.english);Text("Español").tag(EasyLanguage.spanish)}.labelsHidden()
@@ -53,7 +55,12 @@ struct LibraryWorkspace:View {
                     // update checks and sheets continue when browsing the library.
                     ContentView(updater:updater,sideload:sideload,model:model)
                         .opacity(preparing ? 1 : 0).allowsHitTesting(preparing).accessibilityHidden(!preparing)
-                    if !preparing {
+                    if page == .devices {
+                        SideloadLibraryView(model:sideload,text:model.text,canInstall:!model.running && !updater.busy,prepareGame:{
+                            page = .prepare;model.target="ios";if !model.chooseFolder() {sideload.cancelPendingUpdate()}
+                        },embedded:true)
+                    }
+                    if page == .library {
                         VStack(alignment:.leading,spacing:20) {
                             HStack(alignment:.top) {
                                 VStack(alignment:.leading,spacing:7) {Text(model.text("Mi biblioteca")).font(.system(size:30,weight:.bold,design:.rounded));Text(model.text("Tus juegos. Tus archivos. Todo en un lugar.")).foregroundStyle(.secondary)}
@@ -65,10 +72,10 @@ struct LibraryWorkspace:View {
                                 Button {library.refresh()} label:{Image(systemName:"arrow.clockwise")}.help(model.text("Actualizar biblioteca")).accessibilityLabel(model.text("Actualizar biblioteca"))
                             }
                             if updater.visible {
-                                Button {preparing=true} label:{Label(model.text(updater.busy ? updater.phaseText : "Hay una nueva versión"),systemImage:"arrow.down.circle")}.buttonStyle(.link)
+                                Button {page = .prepare} label:{Label(model.text(updater.busy ? updater.phaseText : "Hay una nueva versión"),systemImage:"arrow.down.circle")}.buttonStyle(.link)
                             }
                             if let error=library.error {Text(model.text(error)).font(.callout).foregroundStyle(.orange).textSelection(.enabled)}
-                            if sideload.showsRefreshNotice {Button(model.text("Revisar renovación")){model.showDeviceLibrary=true}.disabled(sideload.busy)}
+                            if sideload.showsRefreshNotice {Button(model.text("Revisar renovación")){page = .devices}.disabled(sideload.busy)}
                             if library.games.isEmpty {
                                 VStack(spacing:16) {
                                     Image(systemName:"square.stack.3d.up").font(.system(size:42,weight:.light)).foregroundStyle(accent)
@@ -98,10 +105,12 @@ struct LibraryWorkspace:View {
             }
             if model.running || model.failed || !model.activity.history.isEmpty {
                 Divider()
-                BuildDock(model:model,show:{preparing=true;model.showDetails=true})
+                BuildDock(model:model,show:{page = .prepare;model.showDetails=true})
             }
         }.frame(minWidth:1000,minHeight:640).tint(accent).background(Color(red:0.065,green:0.075,blue:0.07)).preferredColorScheme(.dark)
         .task {if model.folder != nil && library.games.isEmpty && library.error==nil {remember()}}
+        .onChange(of:model.showDeviceLibrary){_,show in if show {page = .devices;model.showDeviceLibrary=false}}
+        .onReceive(library.$games){games in sideload.preparedIdentifiers=games.compactMap {game in game.originalBundleID ?? game.titleID.map {"org.nxnative."+$0.lowercased()}}}
         .onChange(of:model.folder){_,_ in if model.folder != nil {remember()}}
         .onChange(of:model.running){old,new in if old && !new {library.refresh()}}
         .onChange(of:scenePhase){_,phase in if phase == .active {library.refresh()}}

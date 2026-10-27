@@ -12,6 +12,16 @@ enum EasyLanguage: String, CaseIterable {
 
 struct EasyStrings {
     static let english: [String:String] = [
+        "Tus juegos instalados":"Your installed games",
+        "No encontramos juegos vinculados. Añade su carpeta preparada a la biblioteca y vuelve a buscar.":"No linked games found. Add the prepared game folder to your library and search again.",
+        "Mostrar más juegos":"Show more games",
+        "Añade la carpeta preparada del juego para reconocer instalaciones anteriores.":"Add the prepared game folder to recognize previous installations.",
+        "Actualiza la app para buscar juegos sin consultar otras aplicaciones.":"Update the app to discover games without querying other applications.",
+        "Buscando tus juegos instalados…":"Looking for your installed games…",
+        "Lista de tus juegos actualizada.":"Your game list updated.",
+        "No pudimos limitar la consulta a tus juegos. No mostramos otras aplicaciones.":"Could not restrict the query to your games. Other applications were not displayed.",
+        "No pudimos leer tus juegos. Desbloquea el dispositivo, confía en este Mac y vuelve a buscar.":"Could not read your games. Unlock the device, trust this Mac and search again.",
+
         "Dispositivos":"Devices",
         "Compatibilidad":"Compatibility",
         "Juegos compatibles":"Compatible games",

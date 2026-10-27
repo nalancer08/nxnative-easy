@@ -485,3 +485,30 @@ and Python lint introduced no new findings. The game regression harness was
 invoked but found no registered Mac Dread build, so no new gameplay result is
 claimed. No host, shader-chain, game, key or save data was changed; native signing
 and cloud-sync validation limits remain unchanged.
+
+## Inline devices and known-game discovery (1.10.1)
+
+Devices now routes inside the main workspace, with no navigation sheet or Close
+button. Preparation remains mounted, and choosing update files switches pages
+without dismissing the main window. App discovery now accepts only an explicit
+local preparation/installation scope, tries exact BundleIDs first and requests
+only an ID index when finding a known standard game's legacy team suffix. It
+never matches app names or queries arbitrary app containers; the UI independently
+rejects unrelated rows and older helpers cannot issue unscoped discovery.
+
+Read-only validation with the existing Metroid preparation returned only Metroid
+Dread on the connected phone. The old 184-app inventory is superseded. Fourteen
+Rust cases passed, including identifier boundaries and empty-scope/no-connection;
+compiled Swift fixtures rejected unrelated/same-name app rows, and the compiled
+helper returned an empty result for a nonexistent device when scope was empty.
+No account login, install, uninstall, game-file access or save modification was
+performed. Existing signing/device-validation limitations are unchanged.
+
+Final checks: 66 script cases completed with one optional identity-dependency skip;
+scoped compiled-helper and Swift client checks passed, documentation passed,
+and Python lint retained 414 baseline findings with none added. Offscreen
+English/Spanish workspace renders asserted that device routing consumes the
+navigation request without attaching a sheet. The production ARM64 bundle
+compiled; signing/install execution on real devices was not part of this fix.
+The regression harness was invoked again but found no registered Mac Dread
+build; this release adds no gameplay validation claim.

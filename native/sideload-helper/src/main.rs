@@ -1,4 +1,5 @@
 //! Private stdio protocol. Never print requests, passwords, session tokens or provider responses.
+mod games;
 mod idle;
 mod romfs;
 use idevice::{
@@ -171,24 +172,6 @@ async fn devices() -> Result<(), Report> {
     }
     emit(json!({"event":"devices","items":result}));
     Ok(())
-}
-async fn installed(udid: &str) -> Result<Vec<Value>, Report> {
-    let p = provider(udid).await?;
-    let mut client = idevice::installation_proxy::InstallationProxyClient::connect(&p).await?;
-    let apps = client.get_apps(Some("User"), None).await?;
-    let result = apps
-        .into_iter()
-        .filter_map(|(id, app)| {
-            let app = app.as_dictionary()?;
-            let name = app
-                .get("CFBundleDisplayName")
-                .or_else(|| app.get("CFBundleName"))
-                .and_then(plist::Value::as_string)
-                .unwrap_or(&id);
-            Some(json!({"id":id,"name":name,"version":app.get("CFBundleShortVersionString").and_then(plist::Value::as_string).unwrap_or("")}))
-        })
-        .collect();
-    Ok(result)
 }
 async fn login(request: &mut Value, restore: bool) -> Result<Session, Report> {
     let email = text(request, "email")?.trim().to_lowercase();
@@ -410,7 +393,11 @@ async fn install(session: &mut Session, request: &Value) -> Result<(), Report> {
     {
         bail!("Prepared IPA changed; prepare and approve an update")
     };
-    let apps = installed(udid).await?;
+    let scope = games::Scope {
+        original_ids: vec![original.to_string()],
+        known_ids: expected.map(|id| vec![id.to_string()]).unwrap_or_default(),
+    };
+    let apps = games::installed(udid, &scope).await?;
     if request["update"].as_bool() == Some(true)
         && !apps.iter().any(|a| a["id"].as_str() == Some(&effective))
     {
@@ -524,14 +511,19 @@ async fn install(session: &mut Session, request: &Value) -> Result<(), Report> {
 async fn main() {
     let _ = rustls::crypto::ring::default_provider().install_default();
     let _ = isideload::init();
-    emit(json!({"event":"hello","protocol":1,"architecture":std::env::consts::ARCH}));
+    emit(
+        json!({"event":"hello","protocol":1,"architecture":std::env::consts::ARCH,"capabilities":["scoped-games-v1"]}),
+    );
     let mut session: Option<Session> = None;
     while let Ok(mut request) = read_request() {
         let op = request["op"].as_str().unwrap_or("").to_string();
         let result = match op.as_str() {
             "devices" => devices().await,
             "installed_apps" => match text(&request, "udid") {
-                Ok(udid) => match installed(udid).await {
+                Ok(udid) => match async {
+                    let scope:games::Scope=serde_json::from_value(request.clone())?;
+                    games::installed(udid,&scope).await
+                }.await {
                     Ok(items) => {
                         emit(json!({"event":"installed_apps","items":items}));
                         Ok(())
@@ -586,7 +578,9 @@ async fn main() {
                 }
             });
             let detail = error.to_string();
-            let code = if detail.contains("Game is running") {
+            let code = if detail.contains("discovery scope") {
+                "scope_unavailable"
+            } else if detail.contains("Game is running") {
                 "game_running"
             } else if detail.contains("Cannot verify game process") {
                 "idle_unknown"

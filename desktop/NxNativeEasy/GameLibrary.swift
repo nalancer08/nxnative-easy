@@ -18,6 +18,7 @@ struct OwnedGameOutput:Identifiable {
     let item:OwnedGame
     var id:String {item.id}
     var folder:URL {URL(fileURLWithPath:item.folder)}
+    var originalBundleID:String?
     var titleID:String?
     var macApp:URL?
     var iosIPA:URL?
@@ -36,6 +37,7 @@ struct OwnedGameOutput:Identifiable {
             return value
         }
         let mac=record("nxnative-mac.json"),ios=record("nxnative-ios.json")
+        output.originalBundleID=ios["bundle_id"] as? String
         if let path=mac["app_path"] as? String {
             let bundle=URL(fileURLWithPath:path)
             if let data=try? boundedLibraryData(bundle.appendingPathComponent("Contents/Info.plist")),

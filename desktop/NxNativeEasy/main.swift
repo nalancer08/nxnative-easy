@@ -35,7 +35,6 @@ import Darwin
     @Published var showSideload = false
     @Published var showDeviceLibrary = false
     @Published var installerReady = false
-    var chooseGameAfterDeviceLibrary=false
     @Published var catalog: [CatalogGame] = []
     @Published var catalogFailed = false
     private var process: Process?
@@ -517,7 +516,6 @@ struct ContentView: View {
         .onChange(of:model.installerReady) {_,ready in
             if ready,let ipa=model.output,let folder=model.folder {sideload.configure(ipa:ipa,folder:folder,romfs:model.assets);model.showSideload=true;model.installerReady=false}
         }
-        .sheet(isPresented:$model.showDeviceLibrary,onDismiss:{if model.chooseGameAfterDeviceLibrary {model.chooseGameAfterDeviceLibrary=false;model.target="ios";if !model.chooseFolder() {sideload.cancelPendingUpdate()}}}) {SideloadLibraryView(model:sideload,text:model.text,canInstall:!model.running && !updater.busy,prepareGame:{model.chooseGameAfterDeviceLibrary=true})}
         .sheet(isPresented:$model.showSideload) {SideloadView(model:sideload,text:model.text)}
         .sheet(isPresented:$model.showAnalysis) {if let game=model.folder {GameAnalysisView(repo:model.repo,game:game,text:model.text)} else {Text(model.text("Primero selecciona la carpeta de un juego preparado.")).padding(24)}}
         .sheet(isPresented:$model.showCatalog) {GameCatalogView(model:model)}

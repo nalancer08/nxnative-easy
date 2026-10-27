@@ -46,6 +46,14 @@ than an API for live game/controller state.
 The compatibility catalog is a separate action. An accepted game profile does
 not automatically appear as an owned game, and the library supplies no game files.
 
+## Devices navigation
+
+Since 1.10.1, Devices is a page beside Library and Prepare, never a navigation
+modal. Its game list uses local preparation IDs and exact installation records;
+it does not show other user apps. Legacy discovery uses only the minimal ID
+index before querying matched game metadata, as described in
+[restricted discovery](sideloading.md#inline-devices-and-restricted-game-discovery-1101).
+
 ## Persistence
 
 `~/Library/Application Support/nxnative Easy/library.json` is a schema-1 private
