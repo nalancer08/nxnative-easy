@@ -32,7 +32,7 @@ When the app opens:
 
 **Required:** an Apple silicon Mac (M1 or newer), macOS 26+ and Xcode 26+. The command installs the other tools. You must provide your own games and keys. Compilation can take time, especially for the first game. The window shows the current stage, real counters when available, elapsed time and a live log. **Show saved logs** keeps the session output accessible; **Show compiler logs** opens the original tool logs.
 
-![The personal game library](docs/images/nxnative-library-en-v1.10.png)
+![The personal game library](docs/images/nxnative-library-en-v1.12.png)
 
 *Interface example with synthetic library records. Games are supplied by each user.*
 

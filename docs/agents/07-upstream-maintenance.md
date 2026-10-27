@@ -20,7 +20,9 @@ appear everywhere without being forgotten. No recurring schedule is implied.
    ARM64 signing/install helper and explicit personal-team selection, explicit
    external key selection, unsigned/lightweight iOS output and complete Mac apps.
    Keep personal commit attribution, original upstream authors and licensing.
-   Preserve the personal folder library, both-platform output discovery and
+   Keep Apple Account in the application sidebar, independent of Devices;
+   show the signed-in email and retain account-free save export/content copy.
+   Preserve the collection list/detail, personal folder library, both-platform output discovery and
    metadata-only removal. Keep one shared preparation model alive while browsing.
    Use structured build events for stages/counts/ETA; never guess overall progress
    or runtime state from diagnostic log wording. Retain history on log-tail replay.

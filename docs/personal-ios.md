@@ -561,3 +561,23 @@ Validation: compiled Swift client/localization fixtures and whole-app Swift
 type checking passed. This change is UI-only; the existing native helper is
 reused byte-for-byte in the local bundle. No real Apple login, signing, device
 installation or game/save mutation was performed.
+
+## Application account and collection detail (1.12.0)
+
+Apple Account now lives in the persistent application sidebar and opens an
+inline account-only page from every workspace section. Devices no longer owns
+an account card. The sidebar displays the authenticated email or signed-out
+state; session storage, account/team/device bindings and credential handling
+are unchanged. Device copy/export explicitly remain available without Apple
+login. The collection now selects a game from a searchable list and shows its
+existing artwork, prepared platforms and separate play/install/update actions.
+No library schema, original path, installed game or save data was migrated.
+
+The expanded pinned NX2Apple review is in docs/nx2apple-review.md. It records
+native/Qt/core integration boundaries and candidates without claiming a whole
+engine audit or importing unsupported save/archive/runtime changes. English and
+Spanish README screenshots were regenerated from our actual SwiftUI views with
+synthetic metadata. Compiled library/localization/sideload fixtures, SwiftUI
+compilation, documentation and catalog checks passed. The unchanged native
+helper is reused byte-for-byte in the local application build. No real account
+login, signing, installation, game launch or save modification was performed.

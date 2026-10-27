@@ -27,13 +27,14 @@ than an API for live game/controller state.
 2. The personal library remembers folders across launches, including the previous
    game folder from an older launcher. It only links paths and small metadata;
    it never moves game inputs, build caches, keys or saves.
-3. Each card resolves its title/art from the local accepted profile catalog when
+3. Each entry resolves its title/art from the local accepted profile catalog when
    possible and shows the outputs actually found: complete Mac app, iOS IPA or
    unprepared/unavailable folder. A prepared IPA means ready for installation,
    not proof that the game is installed or plays on a phone.
-4. **Open game** opens an existing Mac game. **Install** opens our native installer
-   for an existing iOS output. If both platforms exist, the menu also offers iOS
-   installation. **Prepare or update** returns to the common form and preserves
+4. Selecting a game shows its artwork, actual platform outputs and actions.
+   **Play on Mac** opens its existing Mac app. **Install on iPhone / iPad** opens
+   our native installer for an existing iOS output. When both outputs exist, both
+   actions remain visible. **Prepare or update** returns to the common form and preserves
    existing preparation identities. Native authentication/install validation
    limits in [sideloading](sideloading.md) still apply.
 5. Browsing and searching remain available while a build runs; switching the
@@ -95,3 +96,23 @@ actual ETA, resets, retained history, invalid values and failed/cancelled exit.
 Offscreen visual checks use synthetic folder/output metadata and existing artwork;
 they do not build, install or play a game. Production compilation/signature checks
 validate the launcher bundle, not Apple login or game/device compatibility.
+
+## Collection detail and application account (1.12.0)
+
+The library uses a searchable game list and selected-game detail: large existing
+artwork, platform readiness and play/install/update actions. Search selection
+falls back to the first matching result; unavailable folders remain listed.
+An iOS output is described as prepared, not as installed or tested on a phone.
+No input paths or save locations migrate in this presentation change.
+
+Apple Account is an application-level destination in the persistent sidebar,
+reachable from Library, Prepare and Devices. It shows the authenticated email
+or an explicit signed-out state. The account page is inline and contains no
+device picker or installation action. Device installation still uses the shared
+session and retains each app's account/team/device identity. Devices contains
+no account card and explicitly explains that save export and RomFS copy require
+connection/trust, not Apple sign-in. Account changes are disabled while the
+helper is busy. This does not change login persistence or sign-in validation.
+
+See the [expanded NX2Apple review](nx2apple-review.md) for the pinned source
+inventory, useful features, integration decisions and validation limits.

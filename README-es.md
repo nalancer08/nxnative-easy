@@ -32,7 +32,7 @@ Cuando abra la app:
 
 **Necesitas:** Mac con Apple silicon (M1 o posterior), macOS 26+ y Xcode 26+. El comando instala las otras herramientas. Los juegos y las llaves los aportas tú. La primera compilación puede tardar.
 
-![Biblioteca personal de juegos](docs/images/nxnative-library-es-v1.10.png)
+![Biblioteca personal de juegos](docs/images/nxnative-library-es-v1.12.png)
 
 *Ejemplo de interfaz con registros de prueba. Cada usuario aporta sus juegos.*
 

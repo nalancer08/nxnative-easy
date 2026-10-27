@@ -418,6 +418,7 @@ struct SideloadView:View {
     @ObservedObject var model:SideloadModel
     let text:(String)->String
     var accountOnly=false
+    var embedded=false
     @Environment(\.dismiss) private var dismiss
     @State private var password=""
     @State private var code=""
@@ -427,7 +428,7 @@ struct SideloadView:View {
     var body:some View {
         ScrollView {
             VStack(alignment:.leading,spacing:16) {
-                HStack {Text(text(accountOnly || model.ipa==nil ? "Tu cuenta Apple" : "Instalar en iPhone / iPad")).font(.title2.bold());Spacer();Button(text("Cerrar")){dismiss()}.disabled(model.busy)}
+                HStack {Text(text(accountOnly || model.ipa==nil ? "Tu cuenta Apple" : "Instalar en iPhone / iPad")).font(.title2.bold());Spacer();if !embedded {Button(text("Cerrar")){dismiss()}.disabled(model.busy)}}
                 if !accountOnly {
                 HStack(spacing:18) {
                     Label(text("1 · Dispositivo"),systemImage:model.device.isEmpty ? "circle" : "checkmark.circle.fill")
@@ -488,7 +489,7 @@ struct SideloadView:View {
                 InstallActivityView(model:model,text:text)
                 if !model.busy {Text(text(model.phase)).font(.callout)}
             }.padding(24)
-        }.frame(width:760,height:720).tint(Color(red:0.79,green:0.95,blue:0.37)).preferredColorScheme(.dark).interactiveDismissDisabled(model.busy)
+        }.frame(maxWidth:.infinity,maxHeight:.infinity).frame(width:embedded ? nil : 760,height:embedded ? nil : 720).tint(Color(red:0.79,green:0.95,blue:0.37)).preferredColorScheme(.dark).interactiveDismissDisabled(model.busy)
     }
 }
 
@@ -529,22 +530,10 @@ struct SideloadLibraryView:View {
                 }
                 Spacer();if !embedded {Button(text("Cerrar")){dismiss()}.disabled(model.busy)}
             }.padding(24)
-            VStack(alignment:.leading,spacing:8) {
-                HStack(spacing:12) {
-                    Image(systemName:model.authenticated ? "person.crop.circle.badge.checkmark" : "person.crop.circle").font(.title2).foregroundStyle(accent)
-                    VStack(alignment:.leading,spacing:4) {
-                        Text(text("Cuenta Apple · Todos tus dispositivos")).font(.headline)
-                        if model.authenticated {Text(model.email).textSelection(.enabled)}
-                        else {Text(text("Sin sesión iniciada")).foregroundStyle(.secondary)}
-                    }
-                    Spacer()
-                    Button(text(model.authenticated ? "Ver cuenta y equipos" : "Iniciar sesión")){accountOnly=true;showInstaller=true}.disabled(model.busy || !canInstall)
-                }
-                Text(text("Sólo para firmar, instalar y renovar apps. Exportar partidas y copiar romfs no requieren iniciar sesión.")).font(.callout).foregroundStyle(.secondary)
-            }.padding(.horizontal,24).padding(.bottom,20)
             Divider()
             ScrollView {
                 VStack(alignment:.leading,spacing:20) {
+                    Text(text("Exportar partidas y copiar romfs no requieren iniciar sesión con Apple. Sólo conecta y autoriza tu dispositivo.")).font(.callout).foregroundStyle(.secondary)
                     HStack {
                         Label(text("Dispositivos conectados"),systemImage:"cable.connector").font(.headline)
                         Spacer();Button(text("Buscar dispositivos")){model.listDevices()}.disabled(model.busy || !canInstall)
