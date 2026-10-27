@@ -343,8 +343,6 @@ struct ContentView: View {
     @ObservedObject var updater: AppUpdater
     @ObservedObject var sideload:SideloadModel
     @ObservedObject var model:BuildModel
-    @StateObject private var controllerMonitor=ControllerMonitor()
-    @State private var showControllerTest=false
     private let ink=Color(red:0.93,green:0.94,blue:0.90)
     private let lime=Color(red:0.79,green:0.95,blue:0.37)
     var body: some View {
@@ -408,26 +406,6 @@ struct ContentView: View {
                                         .background(model.target == target ? lime : Color.white.opacity(0.06),in:RoundedRectangle(cornerRadius:9))
                                 }.buttonStyle(.plain).disabled(model.running || updater.busy || sideload.busy).accessibilityIdentifier("target-"+target)
                             }
-                        }
-                        if model.isMac {
-                        HStack(alignment:.top,spacing:10) {
-                            Image(systemName:controllerMonitor.controllers.contains(where:{$0.supported}) ? "checkmark.circle.fill" : "gamecontroller")
-                                .foregroundStyle(controllerMonitor.controllers.contains(where:{$0.supported}) ? lime : .gray)
-                            VStack(alignment:.leading,spacing:4) {
-                                if controllerMonitor.controllers.isEmpty {
-                                    Text(model.text("Sin control conectado en este Mac")).font(.system(size:13,weight:.medium))
-                                    Text(model.text("Conéctalo por Bluetooth y aparecerá aquí.")).font(.system(size:12)).foregroundStyle(.secondary)
-                                } else {
-                                    ForEach(controllerMonitor.controllers) { controller in
-                                        Text((controller.name.isEmpty ? model.text("Control") : controller.name)+" · "+model.text(controller.supported ? "Listo en este Mac" : "Sin perfil compatible"))
-                                            .font(.system(size:13,weight:.medium))
-                                    }
-                                }
-                            }
-                            Spacer()
-                            Button(model.text("Probar control")){showControllerTest=true}
-                                .disabled(model.running || updater.busy || sideload.busy).accessibilityIdentifier("test-controller")
-                        }.accessibilityIdentifier("controller-status")
                         }
                         Button(model.text("Continuar")){model.preparationStep=1}.buttonStyle(LibraryPrimaryButtonStyle()).disabled(model.target.isEmpty || model.running || sideload.busy || updater.busy)
                         }
@@ -586,7 +564,6 @@ struct ContentView: View {
         .sheet(isPresented:$model.showSideload) {SideloadView(model:sideload,text:model.text)}
         .sheet(isPresented:$model.showAnalysis) {if let game=model.folder {GameAnalysisView(repo:model.repo,game:game,text:model.text)} else {Text(model.text("Primero selecciona la carpeta de un juego preparado.")).padding(24)}}
         .sheet(isPresented:$model.showCatalog) {GameCatalogView(model:model)}
-        .sheet(isPresented:$showControllerTest) {ControllerTestView(text:model.text)}
         .task {sideload.canRefresh={ !model.running && !updater.busy };await updater.check();sideload.checkRefresh()}
         .onReceive(Timer.publish(every:21600,on:.main,in:.common).autoconnect()) {_ in Task {await updater.check()}}
         .alert(model.text("Ya tienes la versión más reciente."),isPresented:$updater.showNotice) {Button(model.text("Aceptar"),role:.cancel) {}}
@@ -692,6 +669,11 @@ struct GameCatalogView: View {
         }
             .defaultSize(width:1060,height:700)
             .commands {
+                CommandGroup(replacing:.appSettings) {
+                    Button(EasyStrings.text("Configuración",language:EasyLanguage(rawValue:appLanguage) ?? .english)) {
+                        NotificationCenter.default.post(name:Notification.Name("nxnative.openSettings"),object:nil)
+                    }.keyboardShortcut(",",modifiers:.command)
+                }
                 CommandMenu(EasyStrings.text("Herramientas de análisis",language:EasyLanguage(rawValue:appLanguage) ?? .english)) {
                     Button(EasyStrings.text("Analizar con REA",language:EasyLanguage(rawValue:appLanguage) ?? .english)) {
                         NotificationCenter.default.post(name:Notification.Name("nxnative.openAnalysis"),object:nil)

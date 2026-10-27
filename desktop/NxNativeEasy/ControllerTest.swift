@@ -54,6 +54,7 @@ struct ControllerInputState: Equatable {
 
 struct ControllerTestView: View {
     let text: (String) -> String
+    var embedded=false
     @Environment(\.dismiss) private var dismiss
     @StateObject private var tester=ControllerTester()
     private let lime=Color(red:0.79,green:0.95,blue:0.37)
@@ -97,7 +98,7 @@ struct ControllerTestView: View {
                         .font(.system(size:13)).foregroundStyle(.secondary)
                 }
                 Spacer()
-                Button(text("Cerrar")){dismiss()}.keyboardShortcut(.cancelAction)
+                if !embedded {Button(text("Cerrar")){dismiss()}.keyboardShortcut(.cancelAction)}
             }
             if tester.devices.isEmpty {
                 Label(text("Conecta un control a este Mac por Bluetooth."),systemImage:"gamecontroller")
@@ -154,7 +155,7 @@ struct ControllerTestView: View {
             }.padding(26).background(Color.white.opacity(0.045),in:RoundedRectangle(cornerRadius:24))
             Text(text("Esta prueba comprueba la entrada del control en este Mac, no la compatibilidad de un juego."))
                 .font(.system(size:11)).foregroundStyle(.secondary)
-        }.padding(26).frame(width:690).preferredColorScheme(.dark)
+        }.padding(26).frame(maxWidth:embedded ? .infinity : nil).frame(width:embedded ? nil : 690).preferredColorScheme(.dark)
         .onReceive(tick) {_ in if NSApplication.shared.isActive {tester.sample()} else {tester.clear()}}
         .onDisappear {tester.clear()}
     }

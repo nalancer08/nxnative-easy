@@ -32,7 +32,7 @@ Cuando abra la app:
 
 **Necesitas:** Mac con Apple silicon (M1 o posterior), macOS 26+ y Xcode 26+. El comando instala las otras herramientas. Los juegos y las llaves los aportas tú. La primera compilación puede tardar.
 
-![Biblioteca personal de juegos](docs/images/nxnative-library-es-v1.13.png)
+![Biblioteca personal de juegos](docs/images/nxnative-library-es-v1.14.1.png)
 
 *Ejemplos de interfaz con registros de prueba. Cada usuario aporta sus juegos.*
 
@@ -60,7 +60,7 @@ El motor actual funciona **sin conexión**. No admite los servicios en línea de
 
 ## Idioma
 
-La app inicia en **English**. Cambia a **Español** con el selector de la esquina superior; la elección se guarda en este Mac. Cambia el idioma de la interfaz, no el del juego. Los detalles técnicos se muestran en su idioma original.
+La app inicia en **English**. Cambia a **Español** en **Configuración → General**; la elección se guarda en este Mac. Cambia el idioma de la interfaz, no el del juego. Los detalles técnicos se muestran en su idioma original.
 
 ## Actualizar la app
 

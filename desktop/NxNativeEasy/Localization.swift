@@ -12,6 +12,15 @@ enum EasyLanguage: String, CaseIterable {
 
 struct EasyStrings {
     static let english: [String:String] = [
+        "Configuración":"Settings",
+        "General":"General",
+        "Sección de configuración":"Settings section",
+        "Personaliza la app":"Make it yours",
+        "El idioma del juego se configura por separado.":"The game language is configured separately.",
+        "Ayuda y diagnóstico":"Help and diagnostics",
+        "Comparte un resumen de la app y del último proceso, con datos sensibles ocultos.":"Share a summary of the app and its last process with sensitive details removed.",
+        "Prueba el control conectado a este Mac sin abrir ni preparar un juego.":"Test the controller connected to this Mac without opening or preparing a game.",
+
         "Cuenta gratuita":"Free account",
         "Cupos disponibles estimados":"Estimated available slots",
         "Cuenta gratuita confirmada por su membresía. Estimación basada en los registros devueltos; Apple confirma la disponibilidad al registrar.":"Free team confirmed by membership. Estimate based on returned registrations; Apple confirms availability when registering.",

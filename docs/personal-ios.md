@@ -647,3 +647,19 @@ SwiftUI compilation and synthetic new/existing registration renders passed.
 Documentation and the 78-profile catalog passed. The production native helper
 was rebuilt with the pinned toolchain; real-account registration/signing remains
 unexecuted. No games or save data were accessed or modified by these tests.
+
+## Settings organization and independent controller test (1.14.1)
+
+Replaced the cramped sidebar account/language/version stack with one Settings
+entry. General hosts language, notifications, diagnostics and version; Apple
+Account retains the shared model and full account/registration interface;
+Controller embeds the existing live tester inside the page. Command-comma opens
+Settings. Controller UI was removed from preparation rather than duplicated.
+No account/token storage, mapping, game pipeline, native helper, save or game
+file changed. Existing launcher instances were not restarted.
+
+Validation: compiled controller lifecycle/input fixtures and localization passed,
+including live buttons, D-pad, sticks, triggers, release and disconnection. Whole
+SwiftUI compilation and offscreen Settings/library/controller renders validate
+the layout; they do not claim new physical hardware/gameplay tests. The native
+helper is reused byte-for-byte for this UI-only patch.

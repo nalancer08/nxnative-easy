@@ -160,7 +160,7 @@ a build is current. Advice is informational; it never rebuilds a game by itself,
 changes installed apps or migrates a save. It compares source history, not the
 installed binary's contents, and a dirty build is not a reproducible snapshot.
 
-**Copy diagnostics** is available globally under Apple Account and in build logs.
+**Copy diagnostics** is available under Settings → General and in build logs.
 It copies app/OS/source/target/stage and up to 50 build-log lines. Home prefixes,
 key-value material, email and authentication/device-detail lines are redacted.
 Raw signing/provider logs, credentials and environment dumps are not included.
@@ -178,3 +178,26 @@ elapsed time, live logs and source-provided ETA when available. No overall ETA i
 invented. A stage or installation operation without a percentage/estimate says so
 and retains elapsed-time/log visibility. The preparation step rail represents
 workflow milestones, not the compiler's overall percentage.
+
+## Global settings and controller testing (1.14.1)
+
+The sidebar footer now contains one Settings destination. Account email, language
+and version no longer compete in its narrow column. Settings has three sections:
+General (language, completion notices, redacted diagnostics and version), Apple
+Account (the same shared session/team/registration UI) and Controller (the live
+input tester). The standard Command-comma shortcut opens this in-window page.
+
+The tester is embedded and scrollable, without a Close button or navigation
+modal. It detects attached controllers and displays buttons, sticks and triggers
+without choosing a platform, game or source folder. It samples only while visible
+and clears transient input on leaving; no pairing, input-handler installation or
+game/file/preference modification was added. The preparation screen no longer
+contains controller status or a test action. Controller gameplay mappings and the
+four in-game touch profiles remain unchanged.
+
+![Settings, Spanish interface example](images/nxnative-settings-es-v1.14.1.png)
+
+![Controller test embedded in Settings](images/nxnative-controller-settings-es-v1.14.1.png)
+
+Screenshots use the actual SwiftUI views and synthetic library records; no real
+account, game launch or physical controller result is represented.

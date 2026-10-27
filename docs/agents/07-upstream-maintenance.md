@@ -28,8 +28,10 @@ appear everywhere without being forgotten. No recurring schedule is implied.
    using the reviewed Apple policy and distinct returned registrations. Individual
    is not proof of free membership. Keep new-device consent bound to team/device,
    fresh helper-side checks and automatic-refresh refusal to register a new device.
-   Keep Apple Account in the application sidebar, independent of Devices;
-   show the signed-in email and retain account-free save export/content copy.
+   Keep the global Settings page in the sidebar, with General, Apple Account
+   and Controller sections. Show account email inside its page, not a narrow
+   sidebar card. Keep controller testing independent of game preparation; retain
+   account-free save export/content copy.
    Preserve the collection list/detail, personal folder library, both-platform output discovery and
    metadata-only removal. Keep one shared preparation model alive while browsing.
    Use structured build events for stages/counts/ETA; never guess overall progress

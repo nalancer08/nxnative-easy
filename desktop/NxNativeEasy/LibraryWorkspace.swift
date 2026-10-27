@@ -6,15 +6,13 @@ struct LibraryWorkspace:View {
     @ObservedObject var library:GameLibrary
     @ObservedObject var updater:AppUpdater
     @ObservedObject var sideload:SideloadModel
-    private enum Page {case library,prepare,devices,account}
+    private enum Page {case library,prepare,devices,settings}
     @State private var page=Page.library
     private var preparing:Bool {page == .prepare}
     @State private var query=""
     @State private var selectedGameID:String?
     @State private var rebuildAdvice:[String:String]=[:]
     @State private var adviceGeneration=UUID()
-    @State private var copiedDiagnostics=false
-    @AppStorage("buildNotifications") private var buildNotifications=true
     @State private var removing:OwnedGameOutput?
     @Environment(\.scenePhase) private var scenePhase
     private let accent=Color(red:0.79,green:0.95,blue:0.37)
@@ -73,14 +71,7 @@ struct LibraryWorkspace:View {
                     nav("Compatibilidad",icon:"checklist",selected:false){model.openCatalog()}
                     Spacer()
                     Divider()
-                    Button {page = .account} label:{
-                        VStack(alignment:.leading,spacing:5) {
-                            Label(model.text("Cuenta Apple"),systemImage:"person.crop.circle").font(.system(size:12,weight:.semibold))
-                            Text(sideload.authenticated ? sideload.email : model.text("Sin sesión iniciada")).font(.caption).foregroundStyle(.secondary).lineLimit(2).textSelection(.enabled)
-                        }.frame(maxWidth:.infinity,alignment:.leading).padding(9).background(page == .account ? accent.opacity(0.1) : .clear,in:RoundedRectangle(cornerRadius:9))
-                    }.buttonStyle(.plain).accessibilityLabel(model.text("Cuenta Apple"))
-                    Picker(model.text("Idioma de la interfaz"),selection:$model.language){Text("English").tag(EasyLanguage.english);Text("Español").tag(EasyLanguage.spanish)}.labelsHidden()
-                    Text(Bundle.main.object(forInfoDictionaryKey:"CFBundleShortVersionString") as? String ?? "nxnative Easy").font(.caption).foregroundStyle(.secondary)
+                    nav("Configuración",icon:"gearshape",selected:page == .settings){page = .settings}
                 }.padding(20).frame(width:190).frame(maxHeight:.infinity).background(.white.opacity(0.025))
                 Divider()
                 ZStack {
@@ -88,16 +79,7 @@ struct LibraryWorkspace:View {
                     // update checks and sheets continue when browsing the library.
                     ContentView(updater:updater,sideload:sideload,model:model)
                         .opacity(preparing ? 1 : 0).allowsHitTesting(preparing).accessibilityHidden(!preparing)
-                    if page == .account {
-                        VStack(spacing:0) {
-                            HStack {
-                                Toggle(model.text("Notificar cuando termine una preparación"),isOn:$buildNotifications).toggleStyle(.switch)
-                                Spacer()
-                                Button(model.text(copiedDiagnostics ? "Diagnóstico copiado" : "Copiar diagnóstico")){model.copyDiagnostics();copiedDiagnostics=true}
-                            }.padding(24)
-                            SideloadView(model:sideload,text:model.text,accountOnly:true,embedded:true)
-                        }
-                    }
+                    if page == .settings {WorkspaceSettingsView(model:model,sideload:sideload)}
                     if page == .devices {
                         SideloadLibraryView(model:sideload,text:model.text,canInstall:!model.running && !updater.busy,prepareGame:{
                             page = .prepare;model.folder=sideload.hasPendingUpdate ? sideload.gameFolder : nil;model.failed=false;model.preparationStep=0;model.target="ios"
@@ -176,6 +158,7 @@ struct LibraryWorkspace:View {
             if page != .prepare {model.target="";model.folder=nil;model.preparationStep=0}
             model.acceptDrop(items);if !model.failed {remember()};page = .prepare;return true
         }
+        .onReceive(NotificationCenter.default.publisher(for:Notification.Name("nxnative.openSettings"))){_ in page = .settings}
         .onReceive(NotificationCenter.default.publisher(for:Notification.Name("nxnative.showLibrary"))){_ in page = .library;if !sideload.busy {model.showSideload=false};library.refresh()}
         .onReceive(NotificationCenter.default.publisher(for:Notification.Name("nxnative.showBuildActivity"))){_ in page = .prepare;model.preparationStep=4;model.showDetails=true}
         .onChange(of:model.showDeviceLibrary){_,show in if show {page = .devices;model.showDeviceLibrary=false}}
@@ -195,6 +178,62 @@ struct LibraryWorkspace:View {
     }
     private func nav(_ title:String,icon:String,selected:Bool,action:@escaping()->Void)->some View {
         Button(action:action){Label(model.text(title),systemImage:icon).font(.system(size:12,weight:selected ? .semibold : .regular)).frame(maxWidth:.infinity,alignment:.leading).padding(.vertical,10).padding(.horizontal,9).background(selected ? accent.opacity(0.1) : .clear,in:RoundedRectangle(cornerRadius:9)).foregroundStyle(selected ? accent : Color.primary)}.buttonStyle(.plain)
+    }
+}
+
+struct WorkspaceSettingsView:View {
+    @ObservedObject var model:BuildModel
+    @ObservedObject var sideload:SideloadModel
+    enum Section:String,CaseIterable {case general,apple,controllers}
+    @State var section=Section.general
+    @State private var copiedDiagnostics=false
+    @AppStorage("buildNotifications") private var buildNotifications=true
+    private var version:String {Bundle.main.object(forInfoDictionaryKey:"CFBundleShortVersionString") as? String ?? "development"}
+    private func title(_ section:Section)->String {
+        switch section {case .general:return "General";case .apple:return "Cuenta Apple";case .controllers:return "Control"}
+    }
+    var body:some View {
+        VStack(alignment:.leading,spacing:0) {
+            VStack(alignment:.leading,spacing:20) {
+                Text(model.text("Configuración")).font(.system(size:30,weight:.bold,design:.rounded))
+                Picker(model.text("Sección de configuración"),selection:$section) {
+                    ForEach(Section.allCases,id:\.self) {item in Text(model.text(title(item))).tag(item)}
+                }.pickerStyle(.segmented).labelsHidden()
+            }.padding(28)
+            Divider()
+            switch section {
+            case .general:
+                ScrollView {
+                    VStack(alignment:.leading,spacing:24) {
+                        VStack(alignment:.leading,spacing:20) {
+                            Label(model.text("Personaliza la app"),systemImage:"slider.horizontal.3").font(.headline)
+                            HStack {
+                                VStack(alignment:.leading,spacing:5) {Text(model.text("Idioma de la interfaz")).font(.callout.bold());Text(model.text("El idioma del juego se configura por separado.")).font(.caption).foregroundStyle(.secondary)}
+                                Spacer()
+                                Picker(model.text("Idioma de la interfaz"),selection:$model.language){Text("English").tag(EasyLanguage.english);Text("Español").tag(EasyLanguage.spanish)}.labelsHidden().frame(width:180)
+                            }
+                            Divider()
+                            Toggle(model.text("Notificar cuando termine una preparación"),isOn:$buildNotifications).toggleStyle(.switch)
+                        }.padding(22).frame(maxWidth:.infinity,alignment:.leading).background(.white.opacity(0.035),in:RoundedRectangle(cornerRadius:16))
+                        VStack(alignment:.leading,spacing:16) {
+                            Label(model.text("Ayuda y diagnóstico"),systemImage:"lifepreserver").font(.headline)
+                            Text(model.text("Comparte un resumen de la app y del último proceso, con datos sensibles ocultos.")).font(.callout).foregroundStyle(.secondary)
+                            Button(model.text(copiedDiagnostics ? "Diagnóstico copiado" : "Copiar diagnóstico")){model.copyDiagnostics();copiedDiagnostics=true}
+                        }.padding(22).frame(maxWidth:.infinity,alignment:.leading).background(.white.opacity(0.035),in:RoundedRectangle(cornerRadius:16))
+                        Text("nxnative Easy · "+version).font(.caption).foregroundStyle(.secondary)
+                    }.padding(28)
+                }
+            case .apple:
+                SideloadView(model:sideload,text:model.text,accountOnly:true,embedded:true)
+            case .controllers:
+                ScrollView {
+                    VStack(alignment:.leading,spacing:12) {
+                        Text(model.text("Prueba el control conectado a este Mac sin abrir ni preparar un juego.")).font(.callout).foregroundStyle(.secondary).padding(.horizontal,26).padding(.top,24)
+                        ControllerTestView(text:model.text,embedded:true)
+                    }
+                }
+            }
+        }.frame(maxWidth:.infinity,maxHeight:.infinity,alignment:.topLeading)
     }
 }
 
