@@ -6,13 +6,13 @@ import Darwin
 
 @MainActor final class BuildModel: ObservableObject {
     @Published var language: EasyLanguage = EasyLanguage.load() {
-        didSet {language.save()}
+        didSet {language.save(defaults:defaults)}
     }
     func text(_ source: String) -> String {EasyStrings.text(source, language:language)}
     @Published var target = "" {
         didSet { output=nil;assets=nil;failed=false;restoreOutput() }
     }
-    @Published var splitIOS=(UserDefaults.standard.object(forKey:"iosSplitGameData") as? Bool ?? true) {didSet {UserDefaults.standard.set(splitIOS,forKey:"iosSplitGameData");output=nil;assets=nil;restoreOutput()}}
+    @Published var splitIOS=true {didSet {defaults.set(splitIOS,forKey:"iosSplitGameData");output=nil;assets=nil;restoreOutput()}}
     var isMac: Bool {target == "mac"}
     @Published var folder: URL?
     @Published var keysFolder: URL?
@@ -41,14 +41,18 @@ import Darwin
     private var process: Process?
     private var cancelled = false
     let repo: URL
-    init() {
+    let defaults:UserDefaults
+    init(defaults:UserDefaults = .standard,sourceRepo:URL?=nil) {
+        self.defaults=defaults
+        language=EasyLanguage.load(defaults:defaults)
         let configured=Bundle.main.object(forInfoDictionaryKey:"NxNativeSource") as? String ?? ""
-        repo=URL(fileURLWithPath:configured)
+        repo=sourceRepo ?? URL(fileURLWithPath:configured)
+        splitIOS=defaults.object(forKey:"iosSplitGameData") as? Bool ?? true
         refreshCatalog()
-        if let path=UserDefaults.standard.string(forKey:"keysDirectory"), FileManager.default.fileExists(atPath:path+"/prod.keys") {
+        if let path=defaults.string(forKey:"keysDirectory"), FileManager.default.fileExists(atPath:path+"/prod.keys") {
             keysFolder=URL(fileURLWithPath:path)
         }
-        if let path = UserDefaults.standard.string(forKey:"lastGameFolder"), FileManager.default.fileExists(atPath:path) {
+        if let path = defaults.string(forKey:"lastGameFolder"), FileManager.default.fileExists(atPath:path) {
             folder=URL(fileURLWithPath:path)
             restoreOutput()
         }
@@ -77,7 +81,7 @@ import Darwin
             guard !url.standardizedFileURL.path.hasPrefix(repo.standardizedFileURL.path+"/"), url.standardizedFileURL != repo.standardizedFileURL else {
                 phase="Guarda el juego fuera del repositorio.";detail="Así tus juegos y llaves se quedan fuera de GitHub.";failed=true;return false
             }
-            folder=url;UserDefaults.standard.set(url.path,forKey:"lastGameFolder")
+            folder=url;defaults.set(url.path,forKey:"lastGameFolder")
             phase="Listo para preparar el juego.";detail="Un clic más. Los archivos anteriores se conservan."
             failed=false;output=nil;assets=nil;transcript="";restoreOutput();return true
         } catch { phase="No pudimos leer esa carpeta.";detail=error.localizedDescription;failed=true;return false }
@@ -94,7 +98,7 @@ import Darwin
               FileManager.default.isReadableFile(atPath:key.path) else {
             failed=true;phase="Elige una carpeta externa con tu prod.keys.";detail="No se proporcionan llaves. Debes seleccionar las tuyas.";return
         }
-        keysFolder=resolved;UserDefaults.standard.set(resolved.path,forKey:"keysDirectory")
+        keysFolder=resolved;defaults.set(resolved.path,forKey:"keysDirectory")
         failed=false;phase="Tus llaves están seleccionadas.";detail="Sólo guardamos la ruta en este Mac, nunca su contenido."
     }
     func restoreOutput() {
@@ -147,7 +151,7 @@ import Darwin
             let status=task.terminationStatus
             Task { @MainActor in
                 guard let self else{return}
-                self.activity.finish(logURL:self.logURL);self.transcript=self.activity.transcript
+                self.activity.finish(logURL:self.logURL);self.activity.complete(exitCode:status,cancelled:self.cancelled);self.transcript=self.activity.transcript
                 self.running=false;self.process=nil
                 if self.cancelled {
                     self.phase="Preparación cancelada.";self.detail="Tus archivos y partidas anteriores se conservaron."
@@ -300,7 +304,7 @@ enum AppArtwork {
 struct ContentView: View {
     @ObservedObject var updater: AppUpdater
     @ObservedObject var sideload:SideloadModel
-    @StateObject private var model=BuildModel()
+    @ObservedObject var model:BuildModel
     @StateObject private var controllerMonitor=ControllerMonitor()
     @State private var showControllerTest=false
     private let ink=Color(red:0.93,green:0.94,blue:0.90)
@@ -310,19 +314,6 @@ struct ContentView: View {
             Color(red:0.065,green:0.075,blue:0.07).ignoresSafeArea()
             ScrollView {
                 VStack(alignment:.leading,spacing:22) {
-                    HStack {
-                        HStack(spacing:9) {
-                            Image(nsImage:AppArtwork.icon).resizable().interpolation(.high)
-                                .frame(width:34,height:34).accessibilityHidden(true)
-                            Text("nxnative easy").font(.system(size:15,weight:.semibold)).foregroundStyle(lime)
-                        }
-                        Spacer()
-                        Button(model.text("Mis iPhones y iPads")){model.showDeviceLibrary=true}.disabled(model.running || updater.busy || sideload.busy)
-                        Picker(model.text("Idioma de la interfaz"),selection:$model.language) {
-                            Text("English").tag(EasyLanguage.english)
-                            Text("Español").tag(EasyLanguage.spanish)
-                        }.labelsHidden().frame(width:120).accessibilityIdentifier("interface-language")
-                    }
                     if updater.visible {
                         VStack(alignment:.leading,spacing:10) {
                             HStack(alignment:.top) {
@@ -362,20 +353,6 @@ struct ContentView: View {
                         Text(model.text("Prepara tu juego.")).font(.system(size:32,weight:.bold,design:.rounded)).foregroundStyle(ink)
                         Text(model.text(model.isMac ? "Creamos una app completa para jugar en tu Mac." : "Elige dónde quieres jugar y añade tus archivos."))
                             .font(.system(size:14)).foregroundStyle(.secondary)
-                    }
-                    VStack(alignment:.leading,spacing:10) {
-                        HStack {
-                            Text(model.text("Juegos con soporte en la herramienta"))
-                                .font(.system(size:14,weight:.semibold)).foregroundStyle(ink)
-                            Spacer()
-                            Button {model.openCatalog()} label: {
-                                Label(model.text("Ver todos"),systemImage:"magnifyingglass")
-                                    .font(.system(size:12,weight:.semibold))
-                            }.buttonStyle(.plain).foregroundStyle(lime).accessibilityIdentifier("view-all-games")
-                        }
-                        Text(model.text("No incluye ni descarga juegos. Debes añadir tus propios archivos."))
-                            .font(.system(size:12)).foregroundStyle(.secondary)
-                        SupportCarousel(games:model.catalog)
                     }
                     VStack(alignment:.leading,spacing:18) {
                         HStack {
@@ -518,6 +495,7 @@ struct ContentView: View {
                         }.padding(22).frame(maxWidth:.infinity,alignment:.leading)
                             .background(lime.opacity(0.045),in:RoundedRectangle(cornerRadius:16))
                     }
+                    if !model.activity.history.isEmpty {BuildTimeline(activity:model.activity,text:model.text)}
                     if !model.transcript.isEmpty || model.running {
                         DisclosureGroup(model.text(model.failed ? "Ver error" : "Ver compilación en vivo"),isExpanded:$model.showDetails) {
                             VStack(alignment:.leading,spacing:10) {
@@ -533,7 +511,7 @@ struct ContentView: View {
                     }
                 }.padding(28)
             }
-        }.frame(minWidth:760,minHeight:530).background(CompactWindow(height:(model.isMac ? 740 : 680)+(updater.visible ? 95 : 0)+(sideload.showsRefreshNotice ? 70 : 0))).preferredColorScheme(.dark)
+        }.frame(minWidth:760,minHeight:530).preferredColorScheme(.dark)
         .onReceive(NotificationCenter.default.publisher(for:Notification.Name("nxnative.openAnalysis"))) {_ in if !model.running && !updater.busy {model.showAnalysis=true}}
         .sheet(isPresented:$model.showSaves) {SavesHelpView(folder:model.folder,isMac:model.isMac,text:model.text,language:model.language)}
         .onChange(of:model.installerReady) {_,ready in
@@ -614,15 +592,17 @@ struct GameCatalogView: View {
 @main struct NxNativeEasyApp: App {
     @NSApplicationDelegateAdaptor(LauncherDelegate.self) private var delegate
     @StateObject private var updater=AppUpdater()
+    @StateObject private var model=BuildModel()
+    @StateObject private var library=GameLibrary()
     @StateObject private var sideload=SideloadModel()
     @AppStorage("interfaceLanguage") private var appLanguage="en"
     var body: some Scene {
         Window("nxnative Easy",id:"main") {
-            ContentView(updater:updater,sideload:sideload).onAppear {
+            LibraryWorkspace(model:model,library:library,updater:updater,sideload:sideload).onAppear {
                 NSApplication.shared.applicationIconImage=AppArtwork.icon
             }
         }
-            .defaultSize(width:820,height:740)
+            .defaultSize(width:1060,height:700)
             .commands {
                 CommandMenu(EasyStrings.text("Herramientas de análisis",language:EasyLanguage(rawValue:appLanguage) ?? .english)) {
                     Button(EasyStrings.text("Analizar con REA",language:EasyLanguage(rawValue:appLanguage) ?? .english)) {

@@ -406,7 +406,7 @@ struct SideloadLibraryView:View {
         VStack(spacing:0) {
             HStack(alignment:.top) {
                 VStack(alignment:.leading,spacing:6) {
-                    Label(text("Mis iPhones y iPads"),systemImage:"iphone.and.ipad").font(.title2.bold())
+                    Label(text("Mis iPhones y iPads"),systemImage:"ipad.and.iphone").font(.title2.bold())
                     Text(text("Conecta. Elige tu juego. Instala o actualiza.")).foregroundStyle(.secondary)
                 }
                 Spacer();Button(text("Cerrar")){dismiss()}.disabled(model.busy)

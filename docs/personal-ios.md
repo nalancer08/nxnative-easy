@@ -461,3 +461,27 @@ login, registration query, signing or installation was performed. The Mac
 regression harness was invoked but found no registered Mac Dread build; no
 physical gameplay or full/light migration comparison is claimed. The shader
 chain is unchanged. Cloud work remains paused; saves remain local/manual.
+
+## Personal library and frontend progress (1.10)
+
+Reviewed NX2Apple's library/task organization at 0313148688ec and upstream's
+frontend contract at ceaf6d6ee21b; no engine revision was integrated by this
+frontend change. The [library guide](frontend-library.md) records references,
+own implementation, data boundaries and deferred settings/runtime-event work.
+The launcher now starts at a personal folder library, with accepted local artwork,
+search, separate Mac/iOS output readiness and open/install/update actions.
+Preparation remains one live model across navigation. The dock and timeline use
+structured counts, dynamic stage totals, source ETA and process exit/cancellation;
+log-tail replay retains known stages. Library removal never deletes game files.
+
+Validation: all 65 script cases completed with one optional identity-dependency
+skip. Compiled Foundation fixtures exercise persistence, deduplication, both
+platform outputs, unavailable/missing paths, malformed-index preservation and
+non-destructive removal, plus dynamic progress/ETA/exit/tail cases. The production
+SwiftUI bundle compiled and its ad-hoc signature verified. English/Spanish
+offscreen renders used synthetic metadata, not live game builds; both READMEs
+include current, explicitly labelled examples. Documentation/catalog gates passed
+and Python lint introduced no new findings. The game regression harness was
+invoked but found no registered Mac Dread build, so no new gameplay result is
+claimed. No host, shader-chain, game, key or save data was changed; native signing
+and cloud-sync validation limits remain unchanged.

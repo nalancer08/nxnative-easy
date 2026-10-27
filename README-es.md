@@ -20,9 +20,9 @@ Descarga nxnative Easy, instala Homebrew y las herramientas que falten, **compil
 
 Cuando abra la app:
 
-1. Elige **iPhone / iPad** o **Mac**.
-2. Selecciona la **carpeta de tu juego** y la **carpeta de tus llaves**.
-3. Pulsa **Preparar juego**.
+1. En **Mi biblioteca**, pulsa **Añadir juego** y elige su carpeta.
+2. Elige **iPhone / iPad** o **Mac** y selecciona la carpeta de tus llaves.
+3. Pulsa **Preparar juego**. El juego queda en tu biblioteca para la próxima vez.
 
 **Las siguientes veces:** abre **nxnative Easy.app** en la carpeta **Aplicaciones de tu usuario**. La preparación conserva su propia copia del código; puedes borrar el ZIP y la carpeta que descargaste.
 
@@ -32,7 +32,9 @@ Cuando abra la app:
 
 **Necesitas:** Mac con Apple silicon (M1 o posterior), macOS 26+ y Xcode 26+. El comando instala las otras herramientas. Los juegos y las llaves los aportas tú. La primera compilación puede tardar.
 
-![Nuestra app para preparar juegos](docs/images/nxnative-mac-es-v1.4.png)
+![Biblioteca personal de juegos](docs/images/nxnative-library-es-v1.10.png)
+
+*Ejemplo de interfaz con registros de prueba. Cada usuario aporta sus juegos.*
 
 ## Qué aporta esta versión
 
@@ -77,6 +79,23 @@ La preparación conserva una copia separada del código y respeta los cambios lo
 El acceso de apertura usa el compilador Swift de tu Xcode. La firma de la app es **ad hoc**, local y sin cuenta, certificado ni equipo Apple (`TeamIdentifier` no asignado). No usa cuentas de empresa. Sólo al firmar e instalar la **IPA de iPhone/iPad** introduces tu cuenta personal en el instalador integrado, o en Sideloadly si eliges esa alternativa.
 
 El icono del teléfono con controles es original. Las tarjetas usan las capturas de upstream que ya están en este repositorio como referencia de soporte; no proporcionan ni descargan juegos.
+
+## Tu biblioteca de juegos
+
+**Mi biblioteca** es el inicio: tus propias carpetas, imágenes, buscador y estados
+separados para Mac e iPhone/iPad. Abre un juego de Mac o instala una IPA preparada
+desde su tarjeta. **Preparar o actualizar** usa el mismo flujo de compilación;
+quitar una tarjeta sólo elimina el acceso, nunca los archivos ni las partidas.
+El catálogo de juegos compatibles está separado de tu colección.
+
+Mientras navegas, una barra mantiene visible la compilación con la etapa,
+contadores y ETA informados. **Ver actividad** abre la línea de etapas y los logs.
+El porcentaje corresponde a la etapa actual; no inventamos un porcentaje global.
+[Funcionamiento y contrato del frontend](docs/frontend-library.md).
+
+![La compilación sigue visible al navegar](docs/images/nxnative-build-dock-es-v1.10.png)
+
+*Ejemplo de progreso simulado; en la app, los contadores y ETA vienen de la compilación real.*
 
 ## Instalar y renovar desde la app (experimental)
 

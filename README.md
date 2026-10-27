@@ -20,9 +20,9 @@ It downloads nxnative Easy, installs Homebrew and the missing build tools, **com
 
 When the app opens:
 
-1. Choose **iPhone / iPad** or **Mac**.
-2. Choose your own **game folder** and **keys folder**.
-3. Click **Prepare game**.
+1. In **My library**, click **Add game** and select your game folder.
+2. Choose **iPhone / iPad** or **Mac**, then select your keys folder.
+3. Click **Prepare game**. The game stays in your library for next time.
 
 **After setup:** open **nxnative Easy.app** in your home **Applications** folder. The setup keeps its source checkout separately, so you can delete the downloaded ZIP and folder.
 
@@ -32,7 +32,9 @@ When the app opens:
 
 **Required:** an Apple silicon Mac (M1 or newer), macOS 26+ and Xcode 26+. The command installs the other tools. You must provide your own games and keys. Compilation can take time, especially for the first game. The window shows the current stage, real counters when available, elapsed time and a live log. **Show saved logs** keeps the session output accessible; **Show compiler logs** opens the original tool logs.
 
-![The nxnative Easy desktop app](docs/images/nxnative-mac-v1.4.png)
+![The personal game library](docs/images/nxnative-library-en-v1.10.png)
+
+*Interface example with synthetic library records. Games are supplied by each user.*
 
 ## What this version adds
 
@@ -75,6 +77,23 @@ Setup keeps a separate source checkout and preserves local edits. Developers can
 The launcher uses Xcode's Swift compiler. The desktop app is explicitly **ad-hoc signed**, locally, with no Apple account, certificate or team (`TeamIdentifier` is unset). No company account is used. You enter your personal Apple account in the integrated installer when signing the **iPhone/iPad IPA**. Sideloadly remains an alternative.
 
 The app has an original phone-and-controller icon. Game cards use the existing upstream screenshots in this repository as a support reference; they do not provide or download games.
+
+## Your game library
+
+**My library** opens first: your own game folders, artwork, search and separate
+Mac/iPhone readiness. Open a prepared Mac game or install an existing IPA directly
+from its card. **Prepare or update** uses the same build flow; removing a card
+only removes the shortcut, never game files or saves. The compatible-game catalog
+is separate from your collection.
+
+Compilation stays visible while browsing: a dock shows the current stage,
+reported counts and ETA, with **View activity** for the timeline and original logs.
+It shows real stage progress, not a guessed overall percentage.
+[Library behavior and frontend contract](docs/frontend-library.md).
+
+![Build activity remains visible while browsing](docs/images/nxnative-build-dock-en-v1.10.png)
+
+*Synthetic progress example; counts and ETA in the app come from the real build stream.*
 
 ## Integrated installation and refresh (experimental)
 

@@ -20,6 +20,12 @@ appear everywhere without being forgotten. No recurring schedule is implied.
    ARM64 signing/install helper and explicit personal-team selection, explicit
    external key selection, unsigned/lightweight iOS output and complete Mac apps.
    Keep personal commit attribution, original upstream authors and licensing.
+   Preserve the personal folder library, both-platform output discovery and
+   metadata-only removal. Keep one shared preparation model alive while browsing.
+   Use structured build events for stages/counts/ETA; never guess overall progress
+   or runtime state from diagnostic log wording. Retain history on log-tail replay.
+   Follow the optional launcher-metadata contract; keep game settings delegated to
+   the built app unless implementing that contract explicitly.
    Preserve the isideload exact-identifier patch, signed/profile identity checks,
    Keychain session storage, redacted stdio and RomFS-only transfer capability.
    Preserve UDID deduplication (USB preferred), device metadata/search/update

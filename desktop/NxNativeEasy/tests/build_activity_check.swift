@@ -34,6 +34,15 @@ import Foundation
         assert(PreviousPreparation.load(folder:folder,target:"mac")?.bundleID=="org.mac.same")
         try Data("{\"schema\":99,\"bundle_id\":\"unknown\"}".utf8).write(to:folder.appendingPathComponent("nxnative-ios.json"))
         assert(PreviousPreparation.load(folder:folder,target:"ios")==nil)
-        print("Build activity PASS: split UTF-8/JSON, real fractions, bounded transcript, partial final line and target-specific previous preparation")
+        var stream=BuildActivity()
+        stream.receive(Data("{\"ev\":\"stage\",\"k\":1,\"n\":2,\"name\":\"Extract\"}\n{\"ev\":\"stage_end\",\"ok\":true}\n{\"ev\":\"stage\",\"k\":2,\"n\":3,\"name\":\"Rewrite\"}\n{\"ev\":\"progress\",\"frac\":0.25,\"eta\":42,\"est\":true}\n".utf8))
+        assert(stream.stages==3 && stream.history.count==2 && stream.history[0].state == .done && stream.eta==42 && stream.estimated)
+        stream.receive(Data("{\"ev\":\"progress\",\"eta\":1e100}\n".utf8));assert(stream.eta==nil)
+        stream.receive(Data("{\"ev\":\"step\",\"step\":\"Next step\"}\n".utf8));assert(stream.eta==nil && stream.fraction==nil && !stream.estimated)
+        try Data("{\"ev\":\"say\",\"msg\":\"Tail only\"}\n".utf8).write(to:log)
+        stream.finish(logURL:log);assert(stream.history.count==2 && stream.history[0].state == .done)
+        stream.complete(exitCode:1);assert(stream.history[1].state == .failed)
+        var cancelled=BuildActivity();cancelled.receive(Data("{\"ev\":\"stage\",\"k\":1,\"n\":2,\"name\":\"Compile\"}\n".utf8));cancelled.complete(exitCode:130,cancelled:true);assert(cancelled.history[0].state == .cancelled)
+        print("Build activity PASS: dynamic stage totals, real ETA, reset between steps, retained timeline after tail replay, failed/cancelled outcomes; split UTF-8/JSON, real fractions, bounded transcript, partial final line and target-specific previous preparation")
     }
 }
