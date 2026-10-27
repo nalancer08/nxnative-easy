@@ -47,7 +47,7 @@ Partimos de [seedds/nxnative](https://github.com/seedds/nxnative): el motor, los
 - **Avisos para recompilar, diagnósticos sin datos sensibles y notificaciones al terminar.** La cuenta Apple es global; los cupos de cuentas gratuitas son estimaciones identificadas, con aviso antes de registrar un dispositivo nuevo.
 - **Controles editables en iPhone:** posición, tamaño y opacidad, guardados por juego y layout.
 - **IPA ligera sólo para iPhone/iPad:** los datos `romfs` van aparte; se conservan salidas y cachés válidas.
-- **Llaves del usuario:** debes seleccionar la carpeta de tus propias `prod.keys`. No incluimos, descargamos ni distribuimos llaves o juegos.
+- **Llaves del usuario:** selecciona directamente tu archivo `prod.keys`. No incluimos, descargamos ni distribuimos llaves o juegos.
 - **Preparación local:** sin cuenta Apple, sin certificados de empresa y sin servicio que reciba tus archivos.
 
 Entregamos **código, una interfaz de preparación y herramientas de compilación**. El resultado es una app local para Mac o una IPA para iPhone/iPad sin firmar, que firmas e instalas con tu cuenta mediante el instalador integrado experimental o Sideloadly. No ofrecemos juegos, llaves, firma de Apple ni compatibilidad garantizada con cualquier juego.

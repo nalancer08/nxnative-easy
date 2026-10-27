@@ -5,6 +5,106 @@ import Foundation
 import Darwin
 import UserNotifications
 
+// Read only top-level package metadata. Never open encrypted packages or key contents here.
+struct PreparationFile:Identifiable {
+    let name:String
+    let size:Int64
+    let readable:Bool
+    var id:String {name}
+    static func inspect(_ folder:URL)->[PreparationFile] {
+        let properties:Set<URLResourceKey>=[.isRegularFileKey,.isReadableKey,.fileSizeKey]
+        return ((try? FileManager.default.contentsOfDirectory(at:folder,includingPropertiesForKeys:Array(properties),options:.skipsHiddenFiles)) ?? []).compactMap {url in
+            guard ["nsp","xci","nsz","xcz"].contains(url.pathExtension.lowercased()),
+                  let values=try? url.resourceValues(forKeys:properties),values.isRegularFile==true else {return nil}
+            return PreparationFile(name:url.lastPathComponent,size:Int64(values.fileSize ?? 0),readable:values.isReadable==true && (values.fileSize ?? 0)>0)
+        }.sorted {$0.name.localizedStandardCompare($1.name) == .orderedAscending}
+    }
+}
+
+struct PreparationInventory:View {
+    let files:[PreparationFile]
+    let text:(String)->String
+    var body:some View {
+        VStack(alignment:.leading,spacing:12) {
+            HStack {
+                Label(text(files.isEmpty ? "Esperando tus archivos" : "Archivos detectados"),systemImage:files.isEmpty ? "tray.and.arrow.down" : "checkmark.circle.fill").font(.headline)
+                Spacer()
+                if !files.isEmpty {Text("\(files.count) · "+ByteCountFormatter.string(fromByteCount:files.reduce(0){$0+$1.size},countStyle:.file)).font(.caption.monospacedDigit()).foregroundStyle(.secondary)}
+            }
+            ForEach(Array(files.prefix(8))) {file in
+                HStack(spacing:12) {
+                    Text(URL(fileURLWithPath:file.name).pathExtension.uppercased()).font(.system(size:10,weight:.bold,design:.monospaced)).frame(width:44).padding(.vertical,8).background(.white.opacity(0.07),in:RoundedRectangle(cornerRadius:6))
+                    Text(file.name).font(.callout).lineLimit(2).textSelection(.enabled)
+                    Spacer()
+                    Text(file.readable ? ByteCountFormatter.string(fromByteCount:file.size,countStyle:.file) : text("No se puede leer o está vacío")).font(.caption).foregroundStyle(file.readable ? Color.secondary : Color.orange)
+                    Image(systemName:file.readable ? "checkmark.circle" : "exclamationmark.triangle").foregroundStyle(file.readable ? Color.green : Color.orange).accessibilityLabel(text(file.readable ? "Archivo legible" : "Revisa este archivo"))
+                }
+            }
+            if files.count>8 {Text(text("Más archivos detectados")+": \(files.count-8)").font(.caption).foregroundStyle(.secondary)}
+            if files.isEmpty {Text(text("Añade una carpeta con archivos NSP, XCI, NSZ o XCZ para verlos aquí.")).font(.callout).foregroundStyle(.secondary)}
+        }.padding(18).background(.black.opacity(0.17),in:RoundedRectangle(cornerRadius:14))
+    }
+}
+
+// Each milestone has its own vector composition, independent from game artwork.
+struct PreparationIllustration:View {
+    let step:Int
+    let isMac:Bool
+    let text:(String)->String
+    private let accent=Color(red:0.80,green:0.96,blue:0.36)
+    private var symbol:String {["gamecontroller","tray.and.arrow.down","key.horizontal","point.topleft.down.to.point.bottomright.curvepath","cpu","checkmark.seal"][min(5,max(0,step))]}
+    private var title:String {["Tu juego, en tu pantalla","Ve lo que vas a preparar","La llave la eliges tú","Un plan antes de empezar","Del archivo a tu app","El siguiente paso: jugar"][min(5,max(0,step))]}
+    private var subtitle:String {["Elige tu destino. El resto se adapta a ti.","Tus archivos aparecen aquí antes de compilar.","Un archivo local. Sin subirlo ni copiarlo.","Destino, archivos y datos: todo a la vista.","Cada etapa muestra lo que está ocurriendo.","Tu preparación está lista para el destino elegido."][min(5,max(0,step))]}
+    var body:some View {
+        HStack(spacing:28) {
+            artwork.frame(width:210,height:146).accessibilityHidden(true)
+            VStack(alignment:.leading,spacing:10) {
+                Text(text(title)).font(.system(size:23,weight:.bold,design:.rounded))
+                Text(text(subtitle)).font(.callout).foregroundStyle(.secondary).fixedSize(horizontal:false,vertical:true)
+            }.frame(maxWidth:.infinity,alignment:.leading)
+        }.padding(20).frame(maxWidth:.infinity,alignment:.leading)
+            .background(LinearGradient(colors:[accent.opacity(0.10),.white.opacity(0.025)],startPoint:.leading,endPoint:.trailing),in:RoundedRectangle(cornerRadius:20))
+            .overlay(RoundedRectangle(cornerRadius:20).strokeBorder(accent.opacity(0.12)))
+    }
+    @ViewBuilder private var artwork:some View {
+        ZStack {
+            Circle().stroke(accent.opacity(0.10),lineWidth:1).frame(width:140,height:140)
+            Circle().stroke(accent.opacity(0.08),style:StrokeStyle(lineWidth:1,dash:[3,6])).frame(width:110,height:110)
+            if step==0 {
+                Image(systemName:"desktopcomputer").font(.system(size:76,weight:.ultraLight)).foregroundStyle(accent.opacity(0.8)).offset(x:-24,y:-5)
+                Image(systemName:"iphone").font(.system(size:68,weight:.light)).foregroundStyle(accent).padding(8).background(Color(red:0.08,green:0.12,blue:0.08),in:RoundedRectangle(cornerRadius:18)).rotationEffect(.degrees(12)).offset(x:54,y:18)
+            } else if step==1 {
+                package("XCI",angle:-12,x:-45,y:6)
+                package("NSP",angle:8,x:14,y:-8)
+                Image(systemName:"magnifyingglass").font(.system(size:44,weight:.light)).foregroundStyle(accent).offset(x:65,y:38)
+            } else if step==2 {
+                RoundedRectangle(cornerRadius:18).fill(accent.opacity(0.07)).frame(width:102,height:116).rotationEffect(.degrees(-9))
+                Image(systemName:"lock.shield").font(.system(size:68,weight:.ultraLight)).foregroundStyle(accent.opacity(0.55)).offset(x:-23,y:-6)
+                Image(systemName:"key.horizontal.fill").font(.system(size:50)).foregroundStyle(accent).rotationEffect(.degrees(-28)).offset(x:32,y:24)
+            } else if step==3 {
+                HStack(spacing:10) {
+                    Image(systemName:"doc.zipper");Image(systemName:"arrow.right").font(.caption)
+                    Image(systemName:"cpu");Image(systemName:"arrow.right").font(.caption)
+                    Image(systemName:isMac ? "desktopcomputer" : "iphone")
+                }.font(.system(size:31,weight:.light)).foregroundStyle(accent)
+                Image(systemName:"checkmark.circle.fill").font(.system(size:25)).foregroundStyle(accent).offset(y:48)
+            } else if step==4 {
+                RoundedRectangle(cornerRadius:16).stroke(accent.opacity(0.25),lineWidth:1).frame(width:120,height:110).rotationEffect(.degrees(12))
+                Image(systemName:"cpu").font(.system(size:70,weight:.ultraLight)).foregroundStyle(accent)
+                HStack(spacing:5) {ForEach(0..<5) {n in Capsule().fill(accent.opacity(Double(n+1)/5)).frame(width:16,height:4)}}.offset(y:55)
+            } else {
+                Image(systemName:isMac ? "desktopcomputer" : "ipad.and.iphone").font(.system(size:74,weight:.ultraLight)).foregroundStyle(accent.opacity(0.65))
+                Image(systemName:"checkmark.seal.fill").font(.system(size:44)).foregroundStyle(accent).offset(x:55,y:35)
+            }
+        }
+    }
+    private func package(_ label:String,angle:Double,x:CGFloat,y:CGFloat)->some View {
+        VStack(spacing:10) {Image(systemName:"doc.zipper").font(.system(size:36,weight:.light));Text(label).font(.system(size:12,weight:.bold,design:.monospaced))}
+            .foregroundStyle(accent).frame(width:78,height:103).background(Color(red:0.13,green:0.18,blue:0.11),in:RoundedRectangle(cornerRadius:12))
+            .overlay(RoundedRectangle(cornerRadius:12).stroke(accent.opacity(0.35))).rotationEffect(.degrees(angle)).offset(x:x,y:y)
+    }
+}
+
 @MainActor final class BuildModel: ObservableObject {
     @Published var language: EasyLanguage = EasyLanguage.load() {
         didSet {language.save(defaults:defaults)}
@@ -17,8 +117,18 @@ import UserNotifications
     }
     @Published var splitIOS=true {didSet {defaults.set(splitIOS,forKey:"iosSplitGameData");output=nil;assets=nil;restoreOutput()}}
     var isMac: Bool {target == "mac"}
-    @Published var folder: URL?
+    @Published var folder: URL? {didSet {inspectFiles()}}
     @Published var keysFolder: URL?
+    @Published var detectedFiles:[PreparationFile]=[]
+    var readableKeys:Bool {
+        guard let key=keysFolder?.appendingPathComponent("prod.keys"),
+              let values=try? key.resourceValues(forKeys:[.isRegularFileKey,.isReadableKey,.fileSizeKey]) else {return false}
+        return values.isRegularFile==true && values.isReadable==true && (values.fileSize ?? 0)>0
+    }
+    func inspectFiles() {
+        guard let folder else {detectedFiles=[];return}
+        detectedFiles=PreparationFile.inspect(folder)
+    }
     @Published var running = false
     @Published var phase = "Tu próximo juego empieza aquí."
     @Published var detail = "Elige su carpeta. Nosotros preparamos la IPA ligera."
@@ -56,7 +166,7 @@ import UserNotifications
         }
         if let path = defaults.string(forKey:"lastGameFolder"), FileManager.default.fileExists(atPath:path) {
             folder=URL(fileURLWithPath:path)
-            restoreOutput()
+            inspectFiles();restoreOutput()
         }
     }
     var gameName: String { folder?.lastPathComponent ?? text("Ningún juego seleccionado") }
@@ -91,23 +201,29 @@ import UserNotifications
             }
             folder=url;defaults.set(url.path,forKey:"lastGameFolder")
             phase="Listo para preparar el juego.";detail="Un clic más. Los archivos anteriores se conservan."
-            failed=false;output=nil;assets=nil;transcript="";restoreOutput();return true
+            failed=false;output=nil;assets=nil;transcript="";inspectFiles();restoreOutput();return true
         } catch { phase="No pudimos leer esa carpeta.";detail=error.localizedDescription;failed=true;return false }
     }
     func chooseKeysFolder() {
-        let panel=NSOpenPanel();panel.canChooseDirectories=true;panel.canChooseFiles=false
+        let panel=NSOpenPanel();panel.canChooseDirectories=false;panel.canChooseFiles=true
         panel.allowsMultipleSelection=false;panel.prompt=text("Usar mis llaves")
-        panel.message=text("Elige tu carpeta con prod.keys. No copiamos las llaves ni las incluimos en la app.")
+        panel.message=text("Selecciona el archivo prod.keys de tu Mac.")
         guard panel.runModal() == .OK, let url=panel.url else {return}
-        let resolved=url.resolvingSymlinksInPath().standardizedFileURL
+        _=acceptKeysFile(url)
+    }
+    @discardableResult func acceptKeysFile(_ url:URL)->Bool {
+        guard !running else {return false}
+        let key=url.resolvingSymlinksInPath().standardizedFileURL
         let root=repo.resolvingSymlinksInPath().standardizedFileURL
-        let key=resolved.appendingPathComponent("prod.keys")
-        guard resolved != root, !resolved.path.hasPrefix(root.path+"/"),
-              FileManager.default.isReadableFile(atPath:key.path) else {
-            failed=true;phase="Elige una carpeta externa con tu prod.keys.";detail="No se proporcionan llaves. Debes seleccionar las tuyas.";return
+        guard key.lastPathComponent=="prod.keys",!key.path.hasPrefix(root.path+"/"),
+              let values=try? key.resourceValues(forKeys:[.isRegularFileKey,.isReadableKey,.fileSizeKey]),
+              values.isRegularFile==true,values.isReadable==true,(values.fileSize ?? 0)>0 else {
+            failed=true;phase="Selecciona un archivo prod.keys legible y no vacío, fuera del repositorio."
+            detail="No se proporcionan llaves. Debes seleccionar las tuyas.";return false
         }
-        keysFolder=resolved;defaults.set(resolved.path,forKey:"keysDirectory")
+        keysFolder=key.deletingLastPathComponent();defaults.set(keysFolder!.path,forKey:"keysDirectory")
         failed=false;phase="Tus llaves están seleccionadas.";detail="Sólo guardamos la ruta en este Mac, nunca su contenido."
+        return true
     }
     func restoreOutput() {
         previous=folder.flatMap {PreviousPreparation.load(folder:$0,target:target)}
@@ -132,8 +248,8 @@ import UserNotifications
         guard FileManager.default.fileExists(atPath:script.path) else {
             phase="No encontramos el código de nxnative.";detail="Vuelve a crear la app desde el repositorio con Abrir-interfaz.command.";failed=true;return
         }
-        if keysFolder == nil || !FileManager.default.isReadableFile(atPath:keysFolder!.appendingPathComponent("prod.keys").path) {chooseKeysFolder()}
-        guard let keysFolder else {return}
+        if !readableKeys {chooseKeysFolder()}
+        guard readableKeys,let keysFolder else {return}
         let task=Process();let pipe=Pipe()
         task.executableURL=URL(fileURLWithPath:"/usr/bin/python3")
         var arguments=[repo.appendingPathComponent("desktop/NxNativeEasy/build_session.py").path,script.path,"--target",target,folder.path]
@@ -212,9 +328,7 @@ import UserNotifications
         let fm=FileManager.default
         let files=urls.filter{$0.isFileURL}
         if files.count==1,let item=files.first,item.lastPathComponent=="prod.keys" {
-            let folder=item.deletingLastPathComponent().resolvingSymlinksInPath();let root=repo.resolvingSymlinksInPath()
-            guard folder != root,!folder.path.hasPrefix(root.path+"/"),fm.isReadableFile(atPath:item.path) else {failed=true;phase="Elige una carpeta externa con tu prod.keys.";return}
-            failed=false;keysFolder=folder;defaults.set(folder.path,forKey:"keysDirectory");preparationStep=target.isEmpty ? 0 : 2;return
+            if acceptKeysFile(item) {preparationStep=target.isEmpty ? 0 : 2};return
         }
         var folders=Set<URL>()
         for file in files {
@@ -224,7 +338,7 @@ import UserNotifications
             else if ["nsp","xci","nsz","xcz"].contains(file.pathExtension.lowercased()) {folders.insert(file.deletingLastPathComponent().resolvingSymlinksInPath())}
         }
         guard folders.count==1,let folder=folders.first else {failed=true;phase="Arrastra los archivos de un solo juego desde la misma carpeta.";return}
-        if acceptFolder(folder) {if !target.isEmpty {preparationStep=2}}
+        if acceptFolder(folder) {if !target.isEmpty {preparationStep=1}}
     }
     func revealLog() {if let logURL {NSWorkspace.shared.activateFileViewerSelecting([logURL])}}
     func revealCompilerLogs() {
@@ -396,6 +510,7 @@ struct ContentView: View {
                         }
                         Text(model.text(["Elige el dispositivo. Te guiamos con el resto.","Elige su carpeta o arrastra tus archivos aquí. No los moveremos.","Selecciona tu prod.keys. Sólo recordamos su ubicación.","Revisa el destino antes de empezar. Conservamos tus originales y partidas.","Sigue cada etapa y abre el registro en vivo cuando quieras.","La preparación terminó. El siguiente paso depende de tu dispositivo."][min(5,model.preparationStep)])).foregroundStyle(.secondary)
                     }
+                    PreparationIllustration(step:model.preparationStep,isMac:model.isMac,text:model.text)
                     VStack(alignment:.leading,spacing:18) {
                         if model.preparationStep==0 {
                         HStack(spacing:16) {
@@ -422,21 +537,23 @@ struct ContentView: View {
                             Spacer()
                             Button(model.folder == nil ? model.text("Elegir") : model.text("Cambiar")) {model.chooseFolder()}.disabled(model.running || updater.busy || sideload.busy).accessibilityLabel(model.text("Carpeta de tu juego"))
                         }
-                        Text(model.text("También puedes arrastrar NSP, XCI, NSZ o XCZ de una misma carpeta. No copiamos ni modificamos esos archivos.")).font(.callout).foregroundStyle(.secondary)
-                        Button(model.text("Continuar")){model.preparationStep=2}.buttonStyle(LibraryPrimaryButtonStyle()).disabled(model.folder==nil || model.running || sideload.busy || updater.busy)
+                        PreparationInventory(files:model.detectedFiles,text:model.text)
+                        Text(model.text("Detectamos nombres, formatos y tamaños. El juego y su versión se confirman al preparar con tus llaves.")).font(.caption).foregroundStyle(.secondary)
+                        Button(model.text("Continuar")){model.inspectFiles();model.preparationStep=2}.buttonStyle(LibraryPrimaryButtonStyle()).disabled(model.failed || model.folder==nil || (model.detectedFiles.isEmpty || model.detectedFiles.contains(where:{!$0.readable})) || model.running || sideload.busy || updater.busy)
                         }
                         if model.preparationStep==2 {
                         HStack(spacing:12) {
                             Image(systemName:"key.horizontal").font(.system(size:19)).foregroundStyle(lime).frame(width:24)
                             VStack(alignment:.leading,spacing:4) {
-                                Text(model.text("Carpeta de llaves")).font(.system(size:14,weight:.medium))
-                                Text(model.keysFolder?.lastPathComponent ?? model.text("Selecciona tus propias prod.keys."))
+                                Text("prod.keys").font(.system(size:14,weight:.medium))
+                                Text(model.readableKeys ? model.text("Archivo detectado · listo para la preparación") : model.text("Selecciona tus propias prod.keys."))
                                     .font(.system(size:12)).foregroundStyle(.secondary)
                             }
                             Spacer()
-                            Button(model.keysFolder == nil ? model.text("Elegir") : model.text("Cambiar")) {model.chooseKeysFolder()}.disabled(model.running || updater.busy || sideload.busy).accessibilityLabel(model.text("Carpeta de llaves"))
+                            Button(model.keysFolder == nil ? model.text("Elegir") : model.text("Cambiar")) {model.chooseKeysFolder()}.disabled(model.running || updater.busy || sideload.busy).accessibilityLabel(model.text("Seleccionar prod.keys"))
                         }
-                        Button(model.text("Continuar")){model.preparationStep=3}.buttonStyle(LibraryPrimaryButtonStyle()).disabled(model.keysFolder==nil || model.running || sideload.busy || updater.busy)
+                        Label(model.text(model.readableKeys ? "Recordamos su ubicación. La compatibilidad de las llaves se comprueba al preparar." : "Elige prod.keys o arrástralo aquí. No necesitas seleccionar una carpeta."),systemImage:model.readableKeys ? "checkmark.shield" : "hand.draw").font(.callout).foregroundStyle(.secondary)
+                        Button(model.text("Continuar")){model.preparationStep=3}.buttonStyle(LibraryPrimaryButtonStyle()).disabled(model.failed || !model.readableKeys || model.running || sideload.busy || updater.busy)
                         }
                         if model.preparationStep==3 {
                             Label(model.isMac ? "Mac" : "iPhone / iPad",systemImage:model.isMac ? "desktopcomputer" : "ipad.and.iphone").font(.title2.bold())

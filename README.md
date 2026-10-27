@@ -47,7 +47,7 @@ Built on [seedds/nxnative](https://github.com/seedds/nxnative). The original pro
 - **Rebuild advice, redacted diagnostics and background completion notifications.** Apple Account is shared across the app; free-team device slots are clearly labelled estimates, with a registration warning before installing on a new device.
 - **Editable iPhone touch controls:** position, size and opacity, saved per game and 2D/3D layout.
 - **Lightweight IPA export for iPhone/iPad only:** RomFS data live separately; existing outputs and valid caches are preserved.
-- **Your own keys:** explicitly select the external folder containing your `prod.keys`. No games or keys are included, downloaded or distributed.
+- **Your own keys:** select your own `prod.keys` file directly. No games or keys are included, downloaded or distributed.
 - **Local preparation:** no Apple account or company certificate is used to build the desktop app.
 
 We provide **source code, a preparation interface and build tools**. The output is a local Mac game app, or an unsigned iPhone/iPad IPA that you sign/install with your own account using the experimental integrated installer or Sideloadly. Games, console keys, shared Apple accounts/certificates and universal game compatibility are not provided.

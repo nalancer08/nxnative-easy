@@ -693,3 +693,7 @@ dependency skip; expanded fake-helper recovery/cancellation fixtures passed agai
 after state cleanup. These test restoration orchestration, not the user's actual
 session validity. Production compilation/signature validation and documentation
 checks validate the delivered UI/client patch.
+
+### Guided preparation inspection (1.15.0)
+
+Each milestone has a distinct native vector composition. The file step lists top-level NSP/XCI/NSZ/XCZ regular files, their size and readability; it does not infer a title/version from folder names or decrypt packages. Identity and key compatibility are confirmed by preparation. Unreadable or empty packages block continuation. Drop stays on the file step so the user can inspect before continuing. The keys picker accepts the `prod.keys` file directly (or drag/drop), rejects empty/unreadable files and resolved repository paths, and remembers only its parent path for the existing build CLI. No key contents are read by the picker. Existing folder preferences remain compatible. Synthetic workflow tests cover inspection, direct key selection and source preservation.
