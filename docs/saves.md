@@ -115,3 +115,13 @@ revision checks and revocable sharing. Native export/login/restore is not wired
 to the game. A safe implementation needs a stopped game, both committed roots,
 metadata-preserving packages, a local recovery backup and a durable restore
 journal. This is separate from Apple-ID signing and signature renewal.
+
+
+## Future portable server
+
+No cloud host is selected. The API foundation is provider-independent: Python,
+HTTP, configurable OIDC identity and SQLite. Its consistent database backup can
+move snapshot history and ownership to another server.
+[Configuration, backup and relocation](../dm/cloud/README.md#portable-hosting-and-migration).
+This does not activate in-game sync: native login and safe device snapshot/import
+flows are still pending.

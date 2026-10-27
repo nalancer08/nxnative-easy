@@ -144,3 +144,36 @@ class Identity(unittest.TestCase):
             other=rsa.generate_private_key(public_exponent=65537,key_size=2048)
             with self.assertRaises(api.APIError):verifier(jwt.encode(claims,other,algorithm='RS256'))
         with self.assertRaises(ValueError):api.oidc_verifier(issuer,audience,'https://other.invalid/jwks')
+
+
+class PortableBackup(unittest.TestCase):
+    def test_committed_wal_history_and_shares_survive_relocation(self):
+        from scripts.backup_save_api import backup
+        with tempfile.TemporaryDirectory() as temporary:
+            root=Path(temporary);source=root/'source.sqlite3';store=api.SaveStore(source)
+            # Keep a connection open so committed records can remain in the WAL.
+            with closing(store.connect()) as keeper:
+                keeper.execute('PRAGMA journal_mode=WAL')
+                payload=snapshot();first=store.put('alice',TITLE,'default',payload,'')
+                share=store.share('alice',TITLE,'default',first,60)
+                second=store.put('alice',TITLE,'default',snapshot(b'new'),first)
+                target=backup(source,root/'moved.sqlite3')
+                moved=api.SaveStore(target)
+                self.assertEqual(moved.get('alice',TITLE,'default')['id'],second)
+                self.assertEqual(len(moved.history('alice',TITLE,'default')),2)
+                copied=moved.copy_share('bob',share['token'],TITLE,'shared','')
+                self.assertEqual(moved.get('bob',TITLE,'shared',copied)['payload'],payload)
+                self.assertEqual(store.list('bob',TITLE),[])
+                self.assertEqual(target.stat().st_mode&0o777,0o600)
+                with self.assertRaises(FileExistsError):backup(source,target)
+
+    def test_missing_and_unrelated_sources_are_not_created_or_published(self):
+        from scripts.backup_save_api import backup
+        with tempfile.TemporaryDirectory() as temporary:
+            root=Path(temporary);missing=root/'missing.sqlite3';target=root/'backup.sqlite3'
+            with self.assertRaises(FileNotFoundError):backup(missing,target)
+            self.assertFalse(missing.exists());self.assertFalse(target.exists())
+            source=root/'unrelated.sqlite3'
+            with closing(api.sqlite3.connect(source)) as db:db.execute('CREATE TABLE other(value)')
+            with self.assertRaises(ValueError):backup(source,target)
+            self.assertFalse(target.exists())

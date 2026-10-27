@@ -138,3 +138,44 @@ venv. Fixtures test real loopback HTTP, user isolation, conditional/concurrent
 updates, immutable sharing, revocation/expiry, archive rejection and actual RSA
 JWT signature/issuer/audience/expiry checks. No account, real save or game file is
 used. This does not validate a deployed service or a native iPad-to-iPhone restore.
+
+## Portable hosting and migration
+
+No hosting provider is selected. The API uses ordinary Python, HTTP/OIDC and a
+SQLite database; it needs no Supabase database, Apple server account, proprietary
+storage SDK or game compiler. Authentication is configurable independently of
+hosting. Start with one server instance and a local persistent disk, not a shared
+SQLite file across machines. A container/hosting adapter can be chosen later;
+no deployment or native cloud integration is enabled by this prototype.
+
+To move the API's stored snapshots, create a consistent backup with SQLite's
+backup API instead of copying a live database file (recent committed writes may
+still be in its `-wal` file):
+
+```sh
+python3 scripts/backup_save_api.py \
+  --source /your/private/save-api-data/saves.sqlite3 \
+  --output /your/private/backups/saves-2026-10-27.sqlite3
+```
+
+The output directory must exist outside this checkout, and the output must be a
+new filename. The script opens the source read-only, checks the database schema,
+includes committed WAL writes, verifies SQLite integrity and publishes a private
+`0600` backup without overwriting another file. It does not read any game's save
+folder. A backup includes history, account ownership and sharing records; protect
+it like the original database. It is not encrypted by this script.
+
+For a final server move: pause writes, run a final backup, stop the old instance,
+and copy that verified backup to a **new empty** private data directory on the
+new host as `saves.sqlite3`. Do not overwrite a running instance's database or
+leave old `-wal`/`-shm` sidecars there. Run the API with the same OIDC issuer,
+audience and JWKS configuration, check health and signed-in access, then switch
+the client endpoint and allow writes. Keep the old instance stopped and the
+backup for recovery. Do not accept writes on both copies: their histories would
+diverge. Server/domain relocation does not change ownership; changing the OIDC
+issuer or a user's subject does and requires a separate explicit account migration.
+
+The relocation fixture keeps WAL mode active, backs up synthetic snapshots,
+opens the copy at a new path, verifies retained history/sharing and checks the
+source remains independent. Missing sources, unrelated databases and existing
+backup destinations are refused. Real saves and user credentials are not used.

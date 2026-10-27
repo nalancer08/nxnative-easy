@@ -92,3 +92,13 @@ Aún no tienen exportación ni sincronización entre dispositivos.
 
 Primero dejaremos probado el respaldo y la restauración; después conectaremos
 la nube. La API existente es un prototipo y todavía no está conectada al juego.
+
+
+## Futuro servidor portable
+
+Todavía no elegimos proveedor de nube. La base de la API es independiente del
+hosting: Python, HTTP, identidad OIDC configurable y SQLite. Su comando de
+respaldo permite trasladar la base a otro servidor conservando versiones y
+permisos. [Configuración, respaldo y traslado](../dm/cloud/README.md#portable-hosting-and-migration).
+Esto no activa sincronización en los juegos: faltan el inicio de sesión nativo y
+la exportación/restauración segura de partidas en cada dispositivo.
