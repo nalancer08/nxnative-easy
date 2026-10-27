@@ -20,27 +20,31 @@ It downloads nxnative Easy, installs Homebrew and the missing build tools, **com
 
 When the app opens:
 
-1. In **My library**, click **Add game** and select your game folder.
-2. Choose **iPhone / iPad** or **Mac**, then select your keys folder.
-3. Click **Prepare game**. The game stays in your library for next time.
+1. In **My library**, click **Add game** and choose **Mac** or **iPhone / iPad**.
+2. Follow the steps: game folder (or drag your files), your keys, then review.
+3. Click **Prepare game** and follow the stages, counters and live log. For iOS, continue with device → global Apple account if needed → review → install.
 
 **After setup:** open **nxnative Easy.app** in your home **Applications** folder. The setup keeps its source checkout separately, so you can delete the downloaded ZIP and folder.
 
-**Mac:** creates one complete game `.app`, with its game data included inside; click **Open game**. No separate RomFS folder to copy. No Sideloadly or iPhone needed. Saves stay in `~/Library/Application Support/nxnative/<title ID>/`.
+**Mac:** creates one complete game `.app`, with its game data included inside; click **Play on Mac**. No separate RomFS folder to copy. No Sideloadly or iPhone needed. Saves stay in `~/Library/Application Support/nxnative/<title ID>/`.
 
 **iPhone / iPad:** creates an unsigned lightweight IPA. The experimental in-app installer can sign/install it and transfer game data; Sideloadly remains the validated alternative while native device testing is pending. [See the iPhone/iPad preparation screen](docs/images/nxnative-ios-v1.4.png).
 
 **Required:** an Apple silicon Mac (M1 or newer), macOS 26+ and Xcode 26+. The command installs the other tools. You must provide your own games and keys. Compilation can take time, especially for the first game. The window shows the current stage, real counters when available, elapsed time and a live log. **Show saved logs** keeps the session output accessible; **Show compiler logs** opens the original tool logs.
 
-![The personal game library](docs/images/nxnative-library-en-v1.12.png)
+![The personal game library](docs/images/nxnative-library-en-v1.13.png)
 
-*Interface example with synthetic library records. Games are supplied by each user.*
+*Interface examples use synthetic records. Games are supplied by each user.*
+
+<img src="docs/images/nxnative-prepare-en-v1.13.png" width="49%" alt="Choose your platform first"> <img src="docs/images/nxnative-progress-en-v1.13.png" width="49%" alt="Build stages, real counters and estimated time when available">
 
 ## What this version adds
 
 Built on [seedds/nxnative](https://github.com/seedds/nxnative). The original project provides the engine, game profiles and compatibility work. **nxnative Easy** adds:
 
-- **Native Mac app:** game preparation, progress, cancellation and an integrated iPhone/iPad installer with device/game management.
+- **Guided preparation:** platform → files → keys → review → live build progress, with drag/drop that leaves originals in place.
+- **A library that explains readiness:** local Mac/IPA outputs, verified device installations and clearly dated last-seen devices.
+- **Rebuild advice, redacted diagnostics and background completion notifications.** Apple Account is shared across the app; device registration counts are not presented as remaining quotas.
 - **Editable iPhone touch controls:** position, size and opacity, saved per game and 2D/3D layout.
 - **Lightweight IPA export for iPhone/iPad only:** RomFS data live separately; existing outputs and valid caches are preserved.
 - **Your own keys:** explicitly select the external folder containing your `prod.keys`. No games or keys are included, downloaded or distributed.
@@ -56,7 +60,7 @@ The current runtime plays **offline**. Nintendo online services, LAN/netplay and
 
 ## Language
 
-The app starts in **English**. Choose **Español** using the selector at the top; your selection is remembered on this Mac. This changes the interface language, not the game's language. Build diagnostics keep their original language.
+The app starts in **English**. Choose **Español** using the sidebar selector; your selection is remembered on this Mac. This changes the interface language, not the game's language. Build diagnostics keep their original language.
 
 ## Updating the app
 

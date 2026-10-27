@@ -13,6 +13,8 @@ struct OwnedGame:Codable,Identifiable,Equatable {
     var id:String
     var folder:String
     var added:Date
+    var macRevision:String?
+    var iosRevision:String?
 }
 struct OwnedGameOutput:Identifiable {
     let item:OwnedGame
@@ -24,6 +26,8 @@ struct OwnedGameOutput:Identifiable {
     var iosIPA:URL?
     var romfs:URL?
     var version:String?
+    var macRevision:String?
+    var iosRevision:String?
     var missing=false
     var ready:Bool {macApp != nil || iosIPA != nil}
     static func read(_ item:OwnedGame)->OwnedGameOutput {
@@ -37,6 +41,8 @@ struct OwnedGameOutput:Identifiable {
             return value
         }
         let mac=record("nxnative-mac.json"),ios=record("nxnative-ios.json")
+        output.macRevision=item.macRevision ?? mac["source_revision"] as? String
+        output.iosRevision=item.iosRevision ?? ios["source_revision"] as? String
         output.originalBundleID=ios["bundle_id"] as? String
         if let path=mac["app_path"] as? String {
             let bundle=URL(fileURLWithPath:path)
@@ -100,6 +106,13 @@ struct OwnedGameOutput:Identifiable {
         let item=OwnedGame(id:UUID().uuidString,folder:path,added:Date())
         try persist(items+[item]);return item.id
     }
+    func recordBuild(folder:URL,target:String,revision:String) {
+        let path=folder.resolvingSymlinksInPath().standardizedFileURL.path
+        guard let index=items.firstIndex(where:{$0.folder==path}),revision.range(of:"^[0-9a-fA-F]{40}$",options:.regularExpression) != nil else {return}
+        var changed=items
+        if target=="mac" {changed[index].macRevision=revision}else if target=="ios" {changed[index].iosRevision=revision}else{return}
+        do {try persist(changed)}catch{self.error="No pudimos guardar la biblioteca. Tus archivos no se modificaron."}
+    }
     func remove(_ id:String) {do{try persist(items.filter{$0.id != id})}catch{self.error="No pudimos guardar la biblioteca. Tus archivos no se modificaron."}}
     private func persist(_ proposed:[OwnedGame])throws {
         guard writable else {throw CocoaError(.fileReadCorruptFile)}
@@ -109,5 +122,40 @@ struct OwnedGameOutput:Identifiable {
         try JSONEncoder().encode(Document(schema:1,games:proposed)).write(to:file,options:.atomic)
         try FileManager.default.setAttributes([.posixPermissions:0o600],ofItemAtPath:file.path)
         items=proposed;error=nil;refresh()
+    }
+}
+
+// These services read repository metadata, never game payloads or save folders.
+enum BuildProvenance {
+    static func affects(_ path:String,titleID:String)->Bool {
+        if path.hasSuffix(".md") || path.contains("/tests/") {return false}
+        return path.hasPrefix("dm/games/"+titleID.uppercased()+"/") || ["dm/host/","dm/gfx/","dm/tools/","dm/ios/","dm/mac/","dm/third_party/","dm/games/game.py","dm/games/profile_guess.py","dm/games/settings.","scripts/build_ipa_from_nsp.py","scripts/build_ios.py","scripts/build_mac.py"].contains(where:path.hasPrefix)
+    }
+    static func git(_ repo:URL,_ args:[String])->String? {
+        let task=Process(),pipe=Pipe();task.executableURL=URL(fileURLWithPath:"/usr/bin/git");task.arguments=["-C",repo.path]+args;task.standardOutput=pipe;task.standardError=FileHandle.nullDevice;task.standardInput=FileHandle.nullDevice
+        do {try task.run();let data=pipe.fileHandleForReading.readDataToEndOfFile();task.waitUntilExit();return task.terminationStatus==0 ? String(decoding:data,as:UTF8.self).trimmingCharacters(in:.whitespacesAndNewlines) : nil}catch{return nil}
+    }
+    static func head(_ repo:URL)->String? {git(repo,["rev-parse","HEAD"])}
+    static func recommendation(repo:URL,revision:String?,titleID:String)->Bool? {
+        guard let revision,revision.range(of:"^[0-9a-fA-F]{40}$",options:.regularExpression) != nil,
+              let paths=git(repo,["diff","--name-only","--no-renames",revision,"--"]) else {return nil}
+        return paths.split(separator:"\n").contains {affects(String($0),titleID:titleID)}
+    }
+}
+
+enum BuildDiagnostics {
+    // Deliberately omit Apple account/device identifiers, environment and raw install logs.
+    static func redact(_ value:String,home:String=NSHomeDirectory())->String {
+        var out=value.replacingOccurrences(of:home+"/",with:"~/")
+        let rules:[(String,String)]=[
+            (#"(?i)([A-Za-z0-9_.-]+\s*=\s*)(?:0x)?[0-9a-f]{16,}"#,"$1[redacted]"),
+            (#"(?i)(?:[^\s]*)(?:password|passwd|token|authorization|cookie|secret|anisette|apple.?id|udid)[^\n]*"#,"[private authentication/device detail removed]"),
+            (#"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}"#,"[email removed]")]
+        for (pattern,replacement) in rules {out=out.replacingOccurrences(of:pattern,with:replacement,options:.regularExpression)}
+        return out
+    }
+    static func report(version:String,system:String,revision:String?,target:String,stage:String,log:String)->String {
+        let tail=log.split(separator:"\n",omittingEmptySubsequences:false).suffix(50).joined(separator:"\n")
+        return redact("nxnative Easy diagnostics\nApp: \(version)\nSystem: \(system)\nSource: \(revision ?? "unknown")\nTarget: \(target)\nStage: \(stage)\n\nLast build output (up to 50 lines):\n"+tail)
     }
 }

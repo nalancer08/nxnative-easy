@@ -20,27 +20,31 @@ Descarga nxnative Easy, instala Homebrew y las herramientas que falten, **compil
 
 Cuando abra la app:
 
-1. En **Mi biblioteca**, pulsa **Añadir juego** y elige su carpeta.
-2. Elige **iPhone / iPad** o **Mac** y selecciona la carpeta de tus llaves.
-3. Pulsa **Preparar juego**. El juego queda en tu biblioteca para la próxima vez.
+1. En **Mi biblioteca**, pulsa **Añadir juego** y elige **Mac** o **iPhone / iPad**.
+2. Sigue los pasos: carpeta del juego (o arrastra tus archivos), tus llaves y revisión.
+3. Pulsa **Preparar juego** y sigue las etapas, contadores y registro. En iOS continúa con dispositivo → cuenta Apple global si hace falta → revisión → instalación.
 
 **Las siguientes veces:** abre **nxnative Easy.app** en la carpeta **Aplicaciones de tu usuario**. La preparación conserva su propia copia del código; puedes borrar el ZIP y la carpeta que descargaste.
 
-**Mac:** crea una sola `.app` completa, con todos los datos del juego dentro; pulsa **Abrir juego**. No necesitas copiar una carpeta RomFS aparte. No necesitas Sideloadly ni un iPhone. Las partidas quedan en `~/Library/Application Support/nxnative/<title ID>/`.
+**Mac:** crea una sola `.app` completa, con todos los datos del juego dentro; pulsa **Jugar en Mac**. No necesitas copiar una carpeta RomFS aparte. No necesitas Sideloadly ni un iPhone. Las partidas quedan en `~/Library/Application Support/nxnative/<title ID>/`.
 
 **iPhone / iPad:** crea una IPA ligera sin firmar. Pulsa **Instalar en iPhone / iPad** para firmarla, instalarla y copiar los datos desde nuestra app. El flujo nativo es experimental; Sideloadly sigue disponible como alternativa probada. [Ver pantalla de preparación para iPhone/iPad](docs/images/nxnative-ios-es-v1.4.png).
 
 **Necesitas:** Mac con Apple silicon (M1 o posterior), macOS 26+ y Xcode 26+. El comando instala las otras herramientas. Los juegos y las llaves los aportas tú. La primera compilación puede tardar.
 
-![Biblioteca personal de juegos](docs/images/nxnative-library-es-v1.12.png)
+![Biblioteca personal de juegos](docs/images/nxnative-library-es-v1.13.png)
 
-*Ejemplo de interfaz con registros de prueba. Cada usuario aporta sus juegos.*
+*Ejemplos de interfaz con registros de prueba. Cada usuario aporta sus juegos.*
+
+<img src="docs/images/nxnative-prepare-es-v1.13.png" width="49%" alt="Primero eliges dónde jugar"> <img src="docs/images/nxnative-progress-es-v1.13.png" width="49%" alt="Etapas, contadores reales y estimación cuando existe">
 
 ## Qué aporta esta versión
 
 Partimos de [seedds/nxnative](https://github.com/seedds/nxnative): el motor, los perfiles y la compatibilidad son trabajo del proyecto original. **nxnative Easy** añade:
 
-- **App para Mac:** preparación del juego, avance, cancelación e instalador integrado con gestión de juegos y dispositivos.
+- **Preparación guiada:** destino → archivos → llaves → revisión → compilación con avance y registro. Arrastrar archivos no mueve tus originales.
+- **Biblioteca con estados claros:** app/IPA preparada, instalaciones verificadas y última comprobación de dispositivos desconectados.
+- **Avisos para recompilar, diagnósticos sin datos sensibles y notificaciones al terminar.** La cuenta Apple es global; los dispositivos registrados no se presentan como cupos restantes.
 - **Controles editables en iPhone:** posición, tamaño y opacidad, guardados por juego y layout.
 - **IPA ligera sólo para iPhone/iPad:** los datos `romfs` van aparte; se conservan salidas y cachés válidas.
 - **Llaves del usuario:** debes seleccionar la carpeta de tus propias `prod.keys`. No incluimos, descargamos ni distribuimos llaves o juegos.

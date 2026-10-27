@@ -581,3 +581,40 @@ synthetic metadata. Compiled library/localization/sideload fixtures, SwiftUI
 compilation, documentation and catalog checks passed. The unchanged native
 helper is reused byte-for-byte in the local application build. No real account
 login, signing, installation, game launch or save modification was performed.
+
+## Guided preparation and explanatory library (1.13.0)
+
+The platform-first flow separates destination, source selection/drop, external
+keys, review and compilation. Starting a new game clears only form selection;
+existing collection entries, files and saves stay in place. Known device updates
+prefill only their matching prepared folder. Choosing Mac cancels an outstanding
+iOS update intent. Existing outputs can be used explicitly, without recompilation.
+The installer uses device/account/review/activity steps and preserves explicit
+confirmation and original identity guards. Registered Apple devices are shown
+as records, never as an invented remaining free-account quota.
+
+The library now displays scoped device observations separately from local output
+readiness. Read-only physical discovery found one matched Metroid installation
+on the connected iPhone and recorded private local presence metadata. No Apple
+login, app install, game-container read, content copy or save write occurred.
+Cached observations after reopening/disconnection are labelled last-seen, not
+current verification. Scope filtering and malformed-cache preservation remain.
+
+Per-platform build provenance adds informational advice only for relevant runtime,
+build-tool or own-profile changes; missing history is explicit. Global/build-log
+diagnostics redact home paths, key-value material, email and authentication/device
+lines without altering original logs. Background completion notices request OS
+permission at a real build and can be disabled; cancellation and foreground
+builds are silent. Real OS notification delivery was not exercised during tests.
+
+Validation: all 68 script cases completed with one optional JWT dependency skip.
+New compiled Swift fixtures exercise actual Git history comparisons, missing
+revisions, platform-specific metadata persistence, diagnostics redaction, drop
+ambiguity, source/repository symlinks, busy guards and unchanged synthetic inputs.
+Existing client fixtures now test private scoped presence persistence, historical
+versus verified status and unrelated-app exclusion. Affected checks passed again
+after flow refinements. Full SwiftUI compilation and synthetic English/Spanish
+screenshots cover library, platform selection/review and build activity. Python
+lint retained 414 baseline findings, with none added. The game regression harness
+was invoked with the local root but found no registered Mac Dread build. No new
+gameplay or real-account signing validation is claimed; host/shaders are unchanged.

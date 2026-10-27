@@ -55,6 +55,13 @@ import Foundation
         model.preparedIdentifiers=["org.game.custom"]
         model.listDevices();try await wait { !model.busy && model.apps.count==1 }
         assert(model.device=="SYNTHETIC-DEVICE" && model.devices.count==1 && model.devices[0].model=="iPad-test" && model.devices[0].connections.contains("USB"))
+        assert(model.deviceGames.count==1 && model.deviceGames[0].bundleID=="org.game.custom" && model.isVerified(model.deviceGames[0]))
+        let cached=SideloadModel(stateURL:root.appendingPathComponent("cached-jobs.json"),defaults:defaults,helperURL:root.appendingPathComponent("missing-helper"))
+        assert(cached.deviceGames.count==1 && !cached.isVerified(cached.deviceGames[0]))
+        assert(cached.observations(titleID:nil,originalID:"org.game.custom").count==1)
+        assert(cached.observations(titleID:"OTHER",originalID:"org.other").isEmpty)
+        let cacheData=try String(contentsOf:root.appendingPathComponent("device-games.json"),encoding:.utf8)
+        assert(!cacheData.contains("com.unrelated.private") && !cacheData.contains("customevil"))
         model.email=" TEST@example.org ";model.signIn(password:"synthetic-password-only",remember:false)
         try await wait {model.codeRequired};assert(model.busy && !model.authenticated)
         model.submitCode("123456");try await wait {model.authenticated && !model.busy}

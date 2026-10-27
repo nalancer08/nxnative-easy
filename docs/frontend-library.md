@@ -116,3 +116,64 @@ helper is busy. This does not change login persistence or sign-in validation.
 
 See the [expanded NX2Apple review](nx2apple-review.md) for the pinned source
 inventory, useful features, integration decisions and validation limits.
+
+## Guided preparation and verified device state (1.13.0)
+
+**Add game** starts with platform selection, then one source folder, external keys,
+review and compilation. Previous outputs can be used explicitly from review;
+starting a new game clears only the form selection, not collection entries or
+files. A drop anywhere in the workspace enters this flow. Package files must
+share one parent folder; a `prod.keys` drop selects only its external parent.
+The same source-folder validator rejects repository paths and symlink aliases.
+No dropped file is copied or rewritten. Multiple-source-folder ambiguity is an
+error, and preparation/signing never begins on a drop.
+
+For iOS, the resulting IPA is passed to the installer directly: select the paired
+device, use the global Apple account if needed, choose its team, review the
+existing app identity and confirm installation. Reading the team's registered
+devices is separate from physical connection. The response does not expose a
+reliable remaining-slot count; the UI explicitly says so rather than subtracting
+from an assumed free-account quota. Signing/install execution remains subject
+to the existing validation limits in sideloading.md.
+
+The library separates a prepared local IPA from an observed device installation.
+Scoped discovery records only matched own-game identifiers, device names, version
+and check time in private `device-games.json` beside the app's refresh index.
+Connected/verified observations and cached last-seen observations have different
+labels. Disconnecting or reopening the app cannot turn a historical observation
+into current proof. A successful scoped rescan removes observations for games no
+longer returned within that scope; an error does not erase the last good record.
+No unrestricted app inventory, account login or game-container read is needed.
+A read-only physical check found the existing Metroid installation and wrote
+only this private local metadata; it did not install or modify anything.
+
+## Rebuild advice, diagnostics and completion notices
+
+Successful desktop preparations record the source commit per platform in optional
+fields in our private collection index. Existing per-folder source revisions are
+read as a fallback. The checker compares relevant runtime/build inputs and the
+selected game's own profile with the recorded commit, including tracked working
+changes. Documentation, tests and frontend-only changes do not alone recommend
+rebuilding. A missing/malformed/unavailable commit is **unknown**, not proof that
+a build is current. Advice is informational; it never rebuilds a game by itself,
+changes installed apps or migrates a save. It compares source history, not the
+installed binary's contents, and a dirty build is not a reproducible snapshot.
+
+**Copy diagnostics** is available globally under Apple Account and in build logs.
+It copies app/OS/source/target/stage and up to 50 build-log lines. Home prefixes,
+key-value material, email and authentication/device-detail lines are redacted.
+Raw signing/provider logs, credentials and environment dumps are not included.
+Original compiler logs remain available separately and are not rewritten.
+
+Completion notifications default on, with macOS permission requested at the first
+real build. The account page offers an off switch. Success and failure notify
+only while the app is in the background; cancellation is silent. A notification
+click activates the app and requests Library or build activity. System permission
+and notification delivery policies still apply. Unit/offscreen runs do not ask
+for notification permission.
+
+Compilation shows structured stages, real counters, current-stage percentage,
+elapsed time, live logs and source-provided ETA when available. No overall ETA is
+invented. A stage or installation operation without a percentage/estimate says so
+and retains elapsed-time/log visibility. The preparation step rail represents
+workflow milestones, not the compiler's overall percentage.

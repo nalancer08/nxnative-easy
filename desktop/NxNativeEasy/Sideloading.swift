@@ -42,6 +42,16 @@ struct GameAppScope {
     }
 }
 
+struct DeviceGameObservation:Codable,Identifiable {
+    var id:String {device+":"+bundleID}
+    let device:String
+    let deviceName:String
+    let bundleID:String
+    let titleID:String?
+    let version:String
+    let checkedAt:Date
+}
+
 struct RefreshJob:Codable,Identifiable {
     var id:String
     var ipa:String
@@ -69,6 +79,9 @@ enum RefreshPolicy {
 
 @MainActor final class SideloadModel:ObservableObject {
     @Published var devices:[SideloadDevice]=[]
+    @Published private(set) var deviceGames:[DeviceGameObservation]=[]
+    private var presenceWritable=true
+    private var verifiedDevices:Set<String>=[]
     @Published var teams:[SideloadTeam]=[]
     @Published var apps:[InstalledGame]=[]
     var preparedIdentifiers:[String]=[]
@@ -123,6 +136,10 @@ enum RefreshPolicy {
         self.defaults=defaults;self.helperURL=helperURL
         email=defaults.string(forKey:"sideloadEmail") ?? "";anisette=defaults.string(forKey:"sideloadAnisette") ?? "https://ani.iloader.app"
         self.stateURL=stateURL ?? FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Library/Application Support/nxnative Easy/refresh-jobs.json")
+        let presence=self.stateURL.deletingLastPathComponent().appendingPathComponent("device-games.json")
+        if FileManager.default.fileExists(atPath:presence.path) {
+            if let data=try? Data(contentsOf:presence),data.count<=1048576,let saved=try? JSONDecoder().decode([DeviceGameObservation].self,from:data),saved.count<=2000 {deviceGames=saved}else{presenceWritable=false}
+        }
         if let data=try? Data(contentsOf:self.stateURL),let saved=try? JSONDecoder().decode([RefreshJob].self,from:data) {jobs=saved}
         terminationObserver=NotificationCenter.default.addObserver(forName:NSApplication.willTerminateNotification,object:nil,queue:.main) { [weak self] _ in MainActor.assumeIsolated {self?.cancel()} }
         timer=Timer.publish(every:1800,on:.main,in:.common).autoconnect().sink { [weak self] _ in Task {@MainActor in self?.checkRefresh()}}
@@ -137,6 +154,19 @@ enum RefreshPolicy {
             if device==known.udid {existing=known.effectiveID}
         }
         connect();listDevices()
+    }
+    func observations(titleID:String?,originalID:String?)->[DeviceGameObservation] {
+        deviceGames.filter {item in (titleID != nil && item.titleID==titleID) || (originalID != nil && item.bundleID==originalID)}.sorted {$0.checkedAt>$1.checkedAt}
+    }
+    func isVerified(_ item:DeviceGameObservation)->Bool {verifiedDevices.contains(item.device) && devices.contains(where:{$0.id==item.device})}
+    private func savePresence() {
+        guard presenceWritable else {return}
+        let file=stateURL.deletingLastPathComponent().appendingPathComponent("device-games.json")
+        do {
+            try FileManager.default.createDirectory(at:file.deletingLastPathComponent(),withIntermediateDirectories:true,attributes:[.posixPermissions:0o700])
+            try JSONEncoder().encode(deviceGames).write(to:file,options:.atomic)
+            try FileManager.default.setAttributes([.posixPermissions:0o600],ofItemAtPath:file.path)
+        }catch{}
     }
     func titleID(for app:InstalledGame)->String? {
         let parts=app.id.split(separator:".")
@@ -178,8 +208,9 @@ enum RefreshPolicy {
         pendingContentID=app.id;busy=true;error=nil;fraction=nil;startedAt=Date();phase="Copiando datos del juego…";record(phase)
         send(["op":"copy_romfs","udid":device,"effective_id":app.id,"romfs":source.path,"confirmed_closed":confirmedClosed,"game_version":app.version,"original_ids":appQueryScope.originals.sorted(),"known_ids":appQueryScope.known.sorted()])
     }
+    var hasPendingUpdate:Bool {pendingUpdate != nil}
     func cancelPendingUpdate() {pendingUpdate=nil}
-    func prepareUpdate(_ app:InstalledGame) {guard !busy,!device.isEmpty else {return};pendingUpdate=(device,app.id)}
+    func prepareUpdate(_ app:InstalledGame) {guard !busy,!device.isEmpty else {return};pendingUpdate=(device,app.id);gameFolder=titleID(for:app).flatMap {preparedFolders[$0]}}
     func openDevice(_ id:String) {
         guard !busy else {return}
         device=id;existing="";apps=[];inspectApps()
@@ -236,6 +267,7 @@ enum RefreshPolicy {
         var originals=Set(preparedIdentifiers)
         if !originalID.isEmpty {originals.insert(originalID)}
         let scope=GameAppScope(originals:originals,known:Set(jobs.filter{$0.udid==device}.map(\.effectiveID)))
+        verifiedDevices.remove(device)
         apps=[];appQueryScope=scope
         guard !scope.isEmpty else {phase="Añade la carpeta preparada del juego para reconocer instalaciones anteriores.";return}
         guard scopedDiscovery else {error="Actualiza la app para buscar juegos sin consultar otras aplicaciones.";return}
@@ -302,6 +334,10 @@ enum RefreshPolicy {
             }
         case "installed_apps":
             apps=((event["items"] as? [[String:Any]]) ?? []).compactMap {item in guard let id=item["id"] as? String,appQueryScope.permits(id),let name=item["name"] as? String else {return nil};return InstalledGame(id:id,name:name,version:item["version"] as? String ?? "")}.sorted {$0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending}
+            deviceGames.removeAll {$0.device==device && appQueryScope.permits($0.bundleID)}
+            let checked=Date(),deviceName=devices.first(where:{$0.id==device})?.name ?? "iPhone / iPad"
+            deviceGames += apps.map {DeviceGameObservation(device:device,deviceName:deviceName,bundleID:$0.id,titleID:titleID(for:$0),version:$0.version,checkedAt:checked)}
+            verifiedDevices.insert(device);savePresence()
             record("Lista de tus juegos actualizada.")
             let matches=apps.filter {$0.id.hasPrefix(originalID)};if existing.isEmpty,matches.count==1 {existing=matches[0].id}
             busy=false
@@ -420,6 +456,7 @@ struct SideloadView:View {
     var accountOnly=false
     var embedded=false
     @Environment(\.dismiss) private var dismiss
+    @State private var installStep=0
     @State private var password=""
     @State private var code=""
     @State private var remember=true
@@ -430,11 +467,14 @@ struct SideloadView:View {
             VStack(alignment:.leading,spacing:16) {
                 HStack {Text(text(accountOnly || model.ipa==nil ? "Tu cuenta Apple" : "Instalar en iPhone / iPad")).font(.title2.bold());Spacer();if !embedded {Button(text("Cerrar")){dismiss()}.disabled(model.busy)}}
                 if !accountOnly {
-                HStack(spacing:18) {
-                    Label(text("1 · Dispositivo"),systemImage:model.device.isEmpty ? "circle" : "checkmark.circle.fill")
-                    Label(text("2 · Cuenta Apple"),systemImage:model.authenticated ? "checkmark.circle.fill" : "circle")
-                    Label(text("3 · Instalar"),systemImage:"arrow.down.app")
-                }.font(.caption).foregroundStyle(.secondary)
+                HStack(spacing:12) {
+                    ForEach(Array(["Dispositivo","Cuenta Apple","Revisar","Instalar"].enumerated()),id:\.offset) {index,title in
+                        Label(text(title),systemImage:index<installStep ? "checkmark.circle.fill" : "\(index+1).circle").foregroundStyle(index==installStep ? Color.primary : .secondary)
+                    }
+                    Spacer()
+                    if installStep>0 && installStep<3 {Button(text("Atrás")){installStep-=1}.disabled(model.busy)}
+                }.font(.caption)
+                if installStep==0 {
                 if let folder=model.gameFolder {Text(folder.lastPathComponent).font(.headline)}
                 Text(text("Conecta tu dispositivo e inicia sesión. Firmar e instalar requiere tu confirmación.")).foregroundStyle(.secondary)
                 Picker(text("Dispositivo"),selection:$model.device) {Text(text("Elige tu iPhone/iPad")).tag("");ForEach(model.devices){Text($0.name).tag($0.id)}}.disabled(model.busy)
@@ -443,7 +483,10 @@ struct SideloadView:View {
                 Button(text("Buscar dispositivos")){model.listDevices()}.disabled(model.busy)
                 Text(text("Desbloquea el dispositivo, confía en este Mac y activa Modo de desarrollador si iOS lo pide.")) .font(.caption).foregroundStyle(.secondary)
                 }
-                if accountOnly {Text(text("Una cuenta para todos tus dispositivos en este Mac. Sólo se necesita para firmar, instalar y renovar apps.")).foregroundStyle(.secondary)}
+                if installStep==0 && !accountOnly {Button(text("Continuar")){installStep=1}.buttonStyle(.borderedProminent).disabled(model.busy || model.device.isEmpty)}
+                }
+                if accountOnly || installStep==1 {
+                Text(text("Una cuenta para todos tus dispositivos en este Mac. Sólo se necesita para firmar, instalar y renovar apps.")).foregroundStyle(.secondary)
                 if !model.authenticated {
                     LabeledContent(text("Cuenta Apple personal")){TextField("name@example.com",text:$model.email).textFieldStyle(.roundedBorder).disabled(model.busy)}
                     LabeledContent(text("Contraseña de Apple")){SecureField(text("Contraseña de Apple"),text:$password).textFieldStyle(.roundedBorder).disabled(model.busy)}
@@ -464,19 +507,7 @@ struct SideloadView:View {
                         Text(text("Dispositivos registrados en el equipo")+": "+String(model.accountDevices.count)).font(.headline)
                         ForEach(model.accountDevices) {item in Text(item.name+" · …"+String(item.id.suffix(8))+" · "+item.status).font(.caption)}
                     }
-                    Text(text("Cuenta gratuita: Apple indica hasta 3 dispositivos y perfiles de 7 días. Esta lista muestra registros reales; no calcula cupos libres ni elimina dispositivos.")).font(.caption).foregroundStyle(.secondary)
-                    if !accountOnly && model.ipa != nil {
-                    Picker(text("App existente que actualizarás"),selection:$model.existing) {Text(text("Primera instalación")).tag("");ForEach(model.apps){Text($0.name+" · "+$0.id).tag($0.id)}}.disabled(model.busy)
-                    Text(text("Se conserva el identificador efectivo. Si no corresponde al juego y equipo, la instalación se detiene; no se desinstala la app anterior.")) .font(.caption).foregroundStyle(.secondary)
-                    Toggle(text("Renovar automáticamente antes de que caduque"),isOn:$autoRefresh).disabled(model.busy || !remember)
-                    Toggle(text("Abrir nxnative Easy al iniciar sesión"),isOn:$loginItem).onChange(of:loginItem){_,value in model.setLoginItem(value)}.disabled(model.busy)
-                    Text(text("La renovación necesita este Mac encendido, nxnative Easy abierto, conexión a Internet y el dispositivo accesible. Conserva la IPA original.")) .font(.caption).foregroundStyle(.secondary)
-                    Button(text(model.existing.isEmpty ? "Firmar e instalar" : "Firmar y actualizar")){model.install(autoRefresh:autoRefresh)}.buttonStyle(.borderedProminent).disabled(model.busy || model.device.isEmpty || model.team.isEmpty || model.originalID.isEmpty)
-                    }
-                    if !accountOnly && model.canUpdateAppOnly {
-                        Button(text("Actualizar sólo la app; conservar romfs")){model.install(autoRefresh:autoRefresh,includeContent:false)}.disabled(model.busy)
-                        Text(text("Para cambios de controles o de la app con la misma versión del juego. Si cambió el juego o DLC, usa la instalación con datos nuevos.")).font(.caption).foregroundStyle(.secondary)
-                    }
+                    Text(text("Apple no informa los cupos restantes en esta consulta. Mostramos los dispositivos registrados, sin inventar disponibilidad ni eliminar registros.")).font(.caption).foregroundStyle(.secondary)
                     Button(text("Cerrar sesión")){model.signOut()}.disabled(model.busy)
                 }
                 if model.codeRequired {
@@ -485,11 +516,34 @@ struct SideloadView:View {
                     Button(text("Enviar a mis dispositivos")){model.sendToDevices()}
                     ForEach(model.smsNumbers) {number in Button("SMS · …"+number.digits){model.sendSMS(number.id)}}
                 }
+                if !accountOnly {Button(text("Continuar")){installStep=2}.buttonStyle(.borderedProminent).disabled(model.busy || !model.authenticated || model.team.isEmpty)}
+                }
+                if !accountOnly && installStep==2 {
+                    Label(text("Revisa antes de instalar"),systemImage:"checklist").font(.title2.bold())
+                    Text(model.devices.first(where:{$0.id==model.device})?.name ?? "iPhone / iPad").font(.headline)
+                    Text(model.email).font(.callout).foregroundStyle(.secondary)
+                    if let folder=model.gameFolder {Text(folder.lastPathComponent).font(.headline)}
+                    if model.ipa != nil {
+                    Picker(text("App existente que actualizarás"),selection:$model.existing) {Text(text("Primera instalación")).tag("");ForEach(model.apps){Text($0.name+" · "+$0.id).tag($0.id)}}.disabled(model.busy)
+                    Text(text("Se conserva el identificador efectivo. Si no corresponde al juego y equipo, la instalación se detiene; no se desinstala la app anterior.")) .font(.caption).foregroundStyle(.secondary)
+                    Toggle(text("Renovar automáticamente antes de que caduque"),isOn:$autoRefresh).disabled(model.busy || !remember)
+                    Toggle(text("Abrir nxnative Easy al iniciar sesión"),isOn:$loginItem).onChange(of:loginItem){_,value in model.setLoginItem(value)}.disabled(model.busy)
+                    Text(text("La renovación necesita este Mac encendido, nxnative Easy abierto, conexión a Internet y el dispositivo accesible. Conserva la IPA original.")) .font(.caption).foregroundStyle(.secondary)
+                    Button(text(model.existing.isEmpty ? "Firmar e instalar" : "Firmar y actualizar")){installStep=3;model.install(autoRefresh:autoRefresh)}.buttonStyle(.borderedProminent).disabled(model.busy || model.device.isEmpty || model.team.isEmpty || model.originalID.isEmpty)
+                    }
+                    if model.canUpdateAppOnly {
+                        Button(text("Actualizar sólo la app; conservar romfs")){installStep=3;model.install(autoRefresh:autoRefresh,includeContent:false)}.disabled(model.busy)
+                        Text(text("Para cambios de controles o de la app con la misma versión del juego. Si cambió el juego o DLC, usa la instalación con datos nuevos.")).font(.caption).foregroundStyle(.secondary)
+                    }
+                }
+                if !accountOnly && installStep==3 && !model.busy {Button(text("Revisar e intentar de nuevo")){installStep=2}}
                 if !accountOnly {Text(text("Guarda y cierra el juego antes de instalar. Firma, copia y renovación nativas aún requieren validación completa con una cuenta y dispositivo reales.")).font(.caption).foregroundStyle(.secondary)}
                 InstallActivityView(model:model,text:text)
                 if !model.busy {Text(text(model.phase)).font(.callout)}
             }.padding(24)
-        }.frame(maxWidth:.infinity,maxHeight:.infinity).frame(width:embedded ? nil : 760,height:embedded ? nil : 720).tint(Color(red:0.79,green:0.95,blue:0.37)).preferredColorScheme(.dark).interactiveDismissDisabled(model.busy)
+        }
+        .onChange(of:model.team){_,value in if !value.isEmpty && model.authenticated && !model.busy {model.inspectAccountDevices()}}
+        .frame(maxWidth:.infinity,maxHeight:.infinity).frame(width:embedded ? nil : 760,height:embedded ? nil : 720).tint(Color(red:0.79,green:0.95,blue:0.37)).preferredColorScheme(.dark).interactiveDismissDisabled(model.busy)
     }
 }
 
@@ -626,7 +680,7 @@ struct InstallActivityView:View {
         VStack(alignment:.leading,spacing:10) {
             if model.busy {
                 HStack {Text(text(model.phase)).font(.headline);Spacer();Button(text("Cancelar")){model.cancel()}}
-                if let fraction=model.fraction {ProgressView(value:fraction);Text(String(Int(fraction*100))+" %").font(.caption.monospacedDigit())}else{ProgressView().progressViewStyle(.linear)}
+                if let fraction=model.fraction {ProgressView(value:fraction);Text(String(Int(fraction*100))+" %").font(.caption.monospacedDigit())}else{ProgressView().progressViewStyle(.linear);Text(text("Esta operación no informa un porcentaje. Puedes seguir el tiempo transcurrido y el registro.")).font(.caption).foregroundStyle(.secondary)}
                 TimelineView(.periodic(from:.now,by:1)){context in Text(text("Tiempo transcurrido")+" "+String(Int(context.date.timeIntervalSince(model.startedAt ?? context.date)))+" s").font(.caption).foregroundStyle(.secondary)}
             }
             if let error=model.error {Label(text(error),systemImage:"exclamationmark.triangle").foregroundStyle(.orange).textSelection(.enabled)}

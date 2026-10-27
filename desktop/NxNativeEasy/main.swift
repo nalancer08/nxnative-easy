@@ -3,12 +3,15 @@ import Combine
 import AppKit
 import Foundation
 import Darwin
+import UserNotifications
 
 @MainActor final class BuildModel: ObservableObject {
     @Published var language: EasyLanguage = EasyLanguage.load() {
         didSet {language.save(defaults:defaults)}
     }
     func text(_ source: String) -> String {EasyStrings.text(source, language:language)}
+    @Published var preparationStep=0
+    var buildRevision:String?
     @Published var target = "" {
         didSet { output=nil;assets=nil;failed=false;restoreOutput() }
     }
@@ -70,6 +73,12 @@ import Darwin
         panel.allowsMultipleSelection=false;panel.prompt=text("Elegir juego")
         panel.message=text("Selecciona la carpeta con el juego base y sus actualizaciones NSP/XCI.")
         guard panel.runModal() == .OK, let url=panel.url else { return false }
+        return acceptFolder(url)
+    }
+    @discardableResult func acceptFolder(_ url:URL)->Bool {
+        guard !running else {return false}
+        let url=url.resolvingSymlinksInPath().standardizedFileURL
+        let root=repo.resolvingSymlinksInPath().standardizedFileURL
         do {
             let files=try FileManager.default.contentsOfDirectory(at:url,includingPropertiesForKeys:nil)
             guard files.contains(where:{["nsp","xci","nsz","xcz"].contains($0.pathExtension.lowercased())}) else {
@@ -77,7 +86,7 @@ import Darwin
                 detail="Elige la carpeta que contiene los archivos NSP o XCI directamente."
                 failed=true;return false
             }
-            guard !url.standardizedFileURL.path.hasPrefix(repo.standardizedFileURL.path+"/"), url.standardizedFileURL != repo.standardizedFileURL else {
+            guard !url.path.hasPrefix(root.path+"/"), url.path != root.path else {
                 phase="Guarda el juego fuera del repositorio.";detail="Así tus juegos y llaves se quedan fuera de GitHub.";failed=true;return false
             }
             folder=url;defaults.set(url.path,forKey:"lastGameFolder")
@@ -139,7 +148,10 @@ import Darwin
         logURL=log;environment["NXE_BUILD_LOG"]=log.path;environment["NXE_GAME_DIR"]=folder.path
         startedAt=Date();lastOutputAt=nil;activity=BuildActivity()
         task.environment=environment
-        installerReady=false;running=true;cancelled=false;failed=false;showDetails=false;output=nil;assets=nil;transcript=""
+        buildRevision=BuildProvenance.head(repo)
+        BuildCompletionNotice.requestIfEnabled(defaults:defaults)
+        preparationStep=4
+        installerReady=false;running=true;cancelled=false;failed=false;showDetails=true;output=nil;assets=nil;transcript=""
         phase="Preparando herramientas…";detail="Puedes dejar esta ventana abierta. No necesitas usar Terminal."
         pipe.fileHandleForReading.readabilityHandler={ [weak self] handle in
             let data=handle.availableData
@@ -173,6 +185,10 @@ import Darwin
                         self.detail="Tus archivos anteriores se conservaron. Puedes ver o copiar el error para revisarlo."
                     }
                 }
+                if !self.cancelled {
+                    BuildCompletionNotice.post(success:status==0 && !self.failed,game:self.gameName,target:self.isMac ? "Mac" : "iPhone / iPad",text:self.text,defaults:self.defaults)
+                }
+                if status==0 && self.output != nil {self.preparationStep=5}
             }
         }
         do { process=task;try task.run() }
@@ -186,6 +202,29 @@ import Darwin
         else if lower.contains("app") || lower.contains("host") {phase=isMac ? "Compilando la app para Mac…" : "Compilando la app para iPhone…"}
         else if lower.contains("shader") {phase="Preparando los gráficos del juego…"}
         else if lower.contains("extract") {phase="Preparando los archivos del juego…"}
+    }
+    func copyDiagnostics() {
+        let report=BuildDiagnostics.report(version:Bundle.main.object(forInfoDictionaryKey:"CFBundleShortVersionString") as? String ?? "development",system:ProcessInfo.processInfo.operatingSystemVersionString+" · "+(ProcessInfo.processInfo.environment["HOSTTYPE"] ?? "Apple silicon"),revision:BuildProvenance.head(repo),target:target,stage:activity.stage,log:transcript)
+        NSPasteboard.general.clearContents();NSPasteboard.general.setString(report,forType:.string)
+    }
+    func acceptDrop(_ urls:[URL]) {
+        guard !running else {return}
+        let fm=FileManager.default
+        let files=urls.filter{$0.isFileURL}
+        if files.count==1,let item=files.first,item.lastPathComponent=="prod.keys" {
+            let folder=item.deletingLastPathComponent().resolvingSymlinksInPath();let root=repo.resolvingSymlinksInPath()
+            guard folder != root,!folder.path.hasPrefix(root.path+"/"),fm.isReadableFile(atPath:item.path) else {failed=true;phase="Elige una carpeta externa con tu prod.keys.";return}
+            failed=false;keysFolder=folder;defaults.set(folder.path,forKey:"keysDirectory");preparationStep=target.isEmpty ? 0 : 2;return
+        }
+        var folders=Set<URL>()
+        for file in files {
+            var directory:ObjCBool=false
+            guard fm.fileExists(atPath:file.path,isDirectory:&directory) else {continue}
+            if directory.boolValue {folders.insert(file.resolvingSymlinksInPath())}
+            else if ["nsp","xci","nsz","xcz"].contains(file.pathExtension.lowercased()) {folders.insert(file.deletingLastPathComponent().resolvingSymlinksInPath())}
+        }
+        guard folders.count==1,let folder=folders.first else {failed=true;phase="Arrastra los archivos de un solo juego desde la misma carpeta.";return}
+        if acceptFolder(folder) {if !target.isEmpty {preparationStep=2}}
     }
     func revealLog() {if let logURL {NSWorkspace.shared.activateFileViewerSelecting([logURL])}}
     func revealCompilerLogs() {
@@ -348,19 +387,23 @@ struct ContentView: View {
                             if !sideload.busy {Button(model.text("Revisar renovación")){model.showDeviceLibrary=true}}
                         }.padding(14).background(Color.orange.opacity(0.08),in:RoundedRectangle(cornerRadius:12))
                     }
-                    VStack(alignment:.leading,spacing:6) {
-                        Text(model.text("Prepara tu juego.")).font(.system(size:32,weight:.bold,design:.rounded)).foregroundStyle(ink)
-                        Text(model.text(model.isMac ? "Creamos una app completa para jugar en tu Mac." : "Elige dónde quieres jugar y añade tus archivos."))
-                            .font(.system(size:14)).foregroundStyle(.secondary)
+                    VStack(alignment:.leading,spacing:12) {
+                        HStack {
+                            Text(model.text(["¿Dónde quieres jugar?","Añade tu juego","Tus llaves, en tu Mac","Todo listo para preparar","Creando tu juego","Tu juego está preparado"][min(5,model.preparationStep)])).font(.system(size:32,weight:.bold,design:.rounded)).foregroundStyle(ink)
+                            Spacer()
+                            if model.preparationStep>0 && model.preparationStep<4 {Button(model.text("Atrás")){model.preparationStep-=1}.disabled(model.running || sideload.busy || updater.busy)}
+                        }
+                        HStack(spacing:6) {
+                            ForEach(0..<5) {step in Capsule().fill(step<=model.preparationStep ? lime : .white.opacity(0.08)).frame(height:4)}
+                        }
+                        Text(model.text(["Elige el dispositivo. Te guiamos con el resto.","Elige su carpeta o arrastra tus archivos aquí. No los moveremos.","Selecciona tu prod.keys. Sólo recordamos su ubicación.","Revisa el destino antes de empezar. Conservamos tus originales y partidas.","Sigue cada etapa y abre el registro en vivo cuando quieras.","La preparación terminó. El siguiente paso depende de tu dispositivo."][min(5,model.preparationStep)])).foregroundStyle(.secondary)
                     }
                     VStack(alignment:.leading,spacing:18) {
-                        HStack {
-                            Text(model.text("¿Dónde quieres jugar?")).font(.system(size:13,weight:.medium))
-                            Spacer()
+                        if model.preparationStep==0 {
+                        HStack(spacing:16) {
                             ForEach(["ios","mac"],id:\.self) { target in
                                 Button {model.target=target} label: {
-                                    Text(target == "ios" ? "iPhone / iPad" : "Mac")
-                                        .font(.system(size:13,weight:.semibold)).padding(.horizontal,16).padding(.vertical,9)
+                                    VStack(spacing:16) {Image(systemName:target=="ios" ? "ipad.and.iphone" : "desktopcomputer").font(.system(size:46,weight:.light));Text(target == "ios" ? "iPhone / iPad" : "Mac").font(.title2.bold());Text(model.text(target=="ios" ? "Prepara la IPA y te guiamos para instalarla." : "Una app completa. Preparar y jugar en este Mac.")).font(.callout).multilineTextAlignment(.center)}.frame(maxWidth:.infinity,minHeight:200).padding(20)
                                         .foregroundStyle(model.target == target ? Color.black : ink)
                                         .background(model.target == target ? lime : Color.white.opacity(0.06),in:RoundedRectangle(cornerRadius:9))
                                 }.buttonStyle(.plain).disabled(model.running || updater.busy || sideload.busy).accessibilityIdentifier("target-"+target)
@@ -386,6 +429,9 @@ struct ContentView: View {
                                 .disabled(model.running || updater.busy || sideload.busy).accessibilityIdentifier("test-controller")
                         }.accessibilityIdentifier("controller-status")
                         }
+                        Button(model.text("Continuar")){model.preparationStep=1}.buttonStyle(LibraryPrimaryButtonStyle()).disabled(model.target.isEmpty || model.running || sideload.busy || updater.busy)
+                        }
+                        if model.preparationStep==1 {
                         HStack(spacing:12) {
                             Image(systemName:"folder.fill").font(.system(size:24)).foregroundStyle(lime)
                             VStack(alignment:.leading,spacing:4) {
@@ -398,6 +444,10 @@ struct ContentView: View {
                             Spacer()
                             Button(model.folder == nil ? model.text("Elegir") : model.text("Cambiar")) {model.chooseFolder()}.disabled(model.running || updater.busy || sideload.busy).accessibilityLabel(model.text("Carpeta de tu juego"))
                         }
+                        Text(model.text("También puedes arrastrar NSP, XCI, NSZ o XCZ de una misma carpeta. No copiamos ni modificamos esos archivos.")).font(.callout).foregroundStyle(.secondary)
+                        Button(model.text("Continuar")){model.preparationStep=2}.buttonStyle(LibraryPrimaryButtonStyle()).disabled(model.folder==nil || model.running || sideload.busy || updater.busy)
+                        }
+                        if model.preparationStep==2 {
                         HStack(spacing:12) {
                             Image(systemName:"key.horizontal").font(.system(size:19)).foregroundStyle(lime).frame(width:24)
                             VStack(alignment:.leading,spacing:4) {
@@ -408,7 +458,14 @@ struct ContentView: View {
                             Spacer()
                             Button(model.keysFolder == nil ? model.text("Elegir") : model.text("Cambiar")) {model.chooseKeysFolder()}.disabled(model.running || updater.busy || sideload.busy).accessibilityLabel(model.text("Carpeta de llaves"))
                         }
-                        if model.target=="ios" {
+                        Button(model.text("Continuar")){model.preparationStep=3}.buttonStyle(LibraryPrimaryButtonStyle()).disabled(model.keysFolder==nil || model.running || sideload.busy || updater.busy)
+                        }
+                        if model.preparationStep==3 {
+                            Label(model.isMac ? "Mac" : "iPhone / iPad",systemImage:model.isMac ? "desktopcomputer" : "ipad.and.iphone").font(.title2.bold())
+                            Text(model.gameName).font(.headline)
+                            Label(model.text("Llaves seleccionadas"),systemImage:"key.horizontal").foregroundStyle(.secondary)
+                        }
+                        if model.target=="ios" && model.preparationStep==3 {
                             Toggle(model.text("IPA ligera: separar los datos del juego"),isOn:$model.splitIOS).disabled(model.running || updater.busy || sideload.busy)
                             Text(model.text(model.splitIOS ? "Recomendado: la app pesa menos y el instalador copia romfs por separado." : "IPA completa: incluye el juego dentro. Ocupa más y cada renovación vuelve a transferir toda la app.")).font(.caption).foregroundStyle(.secondary)
                             Label(model.text("Carpeta y llaves → Preparar → Cuenta Apple → Instalar y copiar datos"),systemImage:"arrow.right.circle").font(.caption).foregroundStyle(.secondary)
@@ -433,19 +490,19 @@ struct ContentView: View {
                                 Text(model.text("Tiempo transcurrido")+String(format:" %d:%02d",max(0,elapsed)/60,max(0,elapsed)%60)+(quiet>=15 ? " · "+model.text("Sin salida nueva; el proceso sigue activo.") : ""))
                                     .font(.system(size:11)).foregroundStyle(.secondary)
                             }
-                            Text(model.activity.latest.isEmpty ? model.text("Esperando la primera salida del compilador…") : model.activity.latest)
-                                .font(.system(size:11,design:.monospaced)).lineLimit(2).textSelection(.enabled)
+                            if !model.activity.latest.isEmpty {Text(model.activity.latest).font(.system(size:11,design:.monospaced)).lineLimit(2).textSelection(.enabled)}
+                            else if model.activity.stage.isEmpty {Text(model.text("Esperando la primera salida del compilador…")).font(.caption).foregroundStyle(.secondary)}
                         } else if model.failed {
                             Text(model.text(model.phase)).font(.system(size:14,weight:.semibold)).foregroundStyle(.orange)
                             Text(model.text(model.detail)).font(.system(size:12)).foregroundStyle(.secondary)
                         }
-                        if model.previous != nil && !model.running {
+                        if model.previous != nil && !model.running && model.preparationStep==3 {
                             Label(model.text("Ya preparaste este juego antes"),systemImage:"arrow.triangle.2.circlepath").font(.system(size:13,weight:.medium))
                             if let version=model.previous?.version {Text(model.text("Versión anterior")+": "+version).font(.system(size:12)).foregroundStyle(.secondary)}
                             Text(model.text(model.isMac ? "Crearás una app nueva. Tus partidas siguen en este Mac, fuera de la app. Cierra el juego antes de abrir la versión nueva." : "Crearás una IPA para actualizar tu app. En Instalar en iPhone / iPad, elige la app existente y su misma cuenta. No desinstales el juego. La preparación no comprueba qué está instalado en tu iPhone."))
                                 .font(.system(size:12)).foregroundStyle(.secondary)
                         }
-                        if !model.running && (model.output == nil || model.failed) {
+                        if !model.running && model.preparationStep==3 {
                             Button {model.build()} label: {
                                 HStack {
                                     Text(model.text(model.failed ? "Intentar de nuevo" : (model.previous == nil ? "Preparar juego" : "Preparar actualización")))
@@ -455,8 +512,12 @@ struct ContentView: View {
                                     .background(model.folder == nil || model.target.isEmpty ? Color.gray : lime,in:RoundedRectangle(cornerRadius:10))
                             }.buttonStyle(.plain).disabled(model.folder == nil || model.target.isEmpty || updater.busy || sideload.busy)
                         }
+                        if model.output != nil && model.preparationStep==3 {Button(model.text("Usar la preparación existente")){model.preparationStep=5}.disabled(sideload.busy || updater.busy)}
+                        if model.failed && model.preparationStep==4 {Button(model.text("Revisar e intentar de nuevo")){model.preparationStep=3}.disabled(model.running)}
+                        if model.preparationStep==4 && model.activity.eta==nil {Text(model.text("Esta etapa todavía no informa cuánto falta. Mostramos el avance real y el tiempo transcurrido.")).font(.caption).foregroundStyle(.secondary)}
+                        if let eta=model.activity.eta,model.running {Text(model.text("Tiempo restante de esta etapa")+": ~"+String(Int(eta))+" s").font(.callout).monospacedDigit()}
                     }.padding(22).background(Color.white.opacity(0.045),in:RoundedRectangle(cornerRadius:16))
-                    if model.output != nil && !model.running && !model.failed {
+                    if model.output != nil && !model.running && !model.failed && model.preparationStep==5 {
                         VStack(alignment:.leading,spacing:16) {
                             if model.isMac {
                                 Label(model.text("Listo. Juega en tu Mac."),systemImage:"checkmark.circle.fill")
@@ -490,12 +551,13 @@ struct ContentView: View {
                             }.font(.system(size:12))
                             }
                             Button(model.text("Tus partidas")){model.showSaves=true}
-                            Button(model.text(model.previous == nil ? "Preparar de nuevo" : "Preparar actualización")){model.build()}.buttonStyle(.link).disabled(updater.busy || sideload.busy)
+                            Button(model.text(model.previous == nil ? "Preparar de nuevo" : "Preparar actualización")){model.preparationStep=3}.buttonStyle(.link).disabled(updater.busy || sideload.busy)
                         }.padding(22).frame(maxWidth:.infinity,alignment:.leading)
                             .background(lime.opacity(0.045),in:RoundedRectangle(cornerRadius:16))
                     }
-                    if !model.activity.history.isEmpty {BuildTimeline(activity:model.activity,text:model.text)}
-                    if !model.transcript.isEmpty || model.running {
+                    if !model.activity.history.isEmpty && model.preparationStep>=4 {BuildTimeline(activity:model.activity,text:model.text)}
+                    if model.failed && model.preparationStep<4 {Text(model.text(model.phase)).foregroundStyle(.orange)}
+                    if (!model.transcript.isEmpty || model.running) && model.preparationStep>=4 {
                         DisclosureGroup(model.text(model.failed ? "Ver error" : "Ver compilación en vivo"),isExpanded:$model.showDetails) {
                             VStack(alignment:.leading,spacing:10) {
                                 ScrollViewReader {proxy in
@@ -504,14 +566,19 @@ struct ContentView: View {
                                 }
                                 if model.logURL != nil {Button(model.text("Mostrar logs guardados")){model.revealLog()}}
                                 Button(model.text("Mostrar logs del compilador")){model.revealCompilerLogs()}
-                                Button(model.text("Copiar diagnóstico")){NSPasteboard.general.clearContents();NSPasteboard.general.setString(model.transcript,forType:.string)}
+                                Button(model.text("Copiar diagnóstico")){model.copyDiagnostics()}
                             }.padding(.top,8)
                         }.font(.system(size:12)).foregroundStyle(.secondary)
                     }
                 }.padding(28)
             }
         }.frame(minWidth:760,minHeight:530).preferredColorScheme(.dark)
+        .dropDestination(for:URL.self) {items,_ in
+            guard !model.running,!sideload.busy,!updater.busy else {return false}
+            model.acceptDrop(items);return true
+        }
         .onReceive(NotificationCenter.default.publisher(for:Notification.Name("nxnative.openAnalysis"))) {_ in if !model.running && !updater.busy {model.showAnalysis=true}}
+        .onChange(of:model.target){_,target in if target=="mac" {sideload.cancelPendingUpdate()}}
         .sheet(isPresented:$model.showSaves) {SavesHelpView(folder:model.folder,isMac:model.isMac,text:model.text,language:model.language)}
         .onChange(of:model.installerReady) {_,ready in
             if ready,let ipa=model.output,let folder=model.folder {sideload.configure(ipa:ipa,folder:folder,romfs:model.assets);model.showSideload=true;model.installerReady=false}
@@ -587,6 +654,28 @@ struct GameCatalogView: View {
     }
 }
 
+
+@MainActor final class BuildCompletionNotice:NSObject,UNUserNotificationCenterDelegate {
+    static let shared=BuildCompletionNotice()
+    static func enabled(_ defaults:UserDefaults)->Bool {defaults.object(forKey:"buildNotifications") as? Bool ?? true}
+    static func requestIfEnabled(defaults:UserDefaults) {
+        guard enabled(defaults),Bundle.main.bundleIdentifier != nil else {return}
+        let center=UNUserNotificationCenter.current();center.delegate=shared
+        center.requestAuthorization(options:[.alert,.sound]){_,_ in}
+    }
+    static func post(success:Bool,game:String,target:String,text:(String)->String,defaults:UserDefaults) {
+        guard enabled(defaults),!NSApp.isActive,Bundle.main.bundleIdentifier != nil else {return}
+        let content=UNMutableNotificationContent();content.title=text(success ? "Tu juego está preparado" : "La preparación necesita atención")
+        content.body=game+" · "+target;content.sound = .default;content.userInfo=["success":success]
+        UNUserNotificationCenter.current().add(UNNotificationRequest(identifier:"build-"+UUID().uuidString,content:content,trigger:nil))
+    }
+    nonisolated func userNotificationCenter(_ center:UNUserNotificationCenter,didReceive response:UNNotificationResponse,withCompletionHandler completionHandler:@escaping()->Void) {
+        let success=response.notification.request.content.userInfo["success"] as? Bool ?? false
+        Task {@MainActor in NSApp.activate(ignoringOtherApps:true);NSApp.windows.first(where:{$0.isVisible})?.makeKeyAndOrderFront(nil);NotificationCenter.default.post(name:Notification.Name(success ? "nxnative.showLibrary" : "nxnative.showBuildActivity"),object:nil)}
+        completionHandler()
+    }
+}
+
 @main struct NxNativeEasyApp: App {
     @NSApplicationDelegateAdaptor(LauncherDelegate.self) private var delegate
     @StateObject private var updater=AppUpdater()
@@ -598,6 +687,7 @@ struct GameCatalogView: View {
         Window("nxnative Easy",id:"main") {
             LibraryWorkspace(model:model,library:library,updater:updater,sideload:sideload).onAppear {
                 NSApplication.shared.applicationIconImage=AppArtwork.icon
+                if Bundle.main.bundleIdentifier != nil {UNUserNotificationCenter.current().delegate=BuildCompletionNotice.shared}
             }
         }
             .defaultSize(width:1060,height:700)

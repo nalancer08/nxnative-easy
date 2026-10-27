@@ -100,3 +100,12 @@ and synthetic English/Spanish visual checks. The screenshots contain example
 metadata, no real accounts or game/save payloads. No login, signing, install,
 restore or game-content copy was performed. Existing native-signing validation
 limits remain unchanged.
+
+## Follow-through in 1.13.0
+
+The independent implementation now includes per-platform rebuild advice from
+recorded source revisions, redacted diagnostics, permission-based background
+completion notifications, non-copying workspace drops, a guided preparation/
+installation flow and scoped cached device presence. These follow the integration
+boundaries above; no reference source or runtime/archive/save-write changes were
+imported. See [the player flow](frontend-library.md#guided-preparation-and-verified-device-state-1130).
