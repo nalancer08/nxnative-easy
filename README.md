@@ -58,6 +58,8 @@ Our main incorporates the upstream revision recorded in the [integration review]
 
 The current runtime plays **offline**. Nintendo online services, LAN/netplay and Windows are not supported. A Nintendo Switch Online subscription does not enable them here. Local controllers on one Mac are a separate feature. [How the game code, mods and networking work](docs/development.md#game-binaries-mods-and-networking).
 
+When **Remember session** is enabled, the app attempts to restore your Apple session from this Mac’s Keychain after reopening. If recovery fails, retry or sign in again; the password is not saved.
+
 ## Language
 
 The app starts in **English**. Choose **Español** under **Settings → General**; your selection is remembered on this Mac. This changes the interface language, not the game's language. Build diagnostics keep their original language.

@@ -41,7 +41,8 @@ appear everywhere without being forgotten. No recurring schedule is implied.
    Follow the optional launcher-metadata contract; keep game settings delegated to
    the built app unless implementing that contract explicitly.
    Preserve the isideload exact-identifier patch, signed/profile identity checks,
-   Keychain session storage, redacted stdio and RomFS-only transfer capability.
+   Keychain session storage, one queued authentication-only remembered-session
+   recovery per launch, explicit logout and failure preservation, redacted stdio and RomFS-only transfer capability.
    Preserve UDID deduplication (USB preferred), device metadata/search/update
    selection, separate connected/registered inventories and logs without raw
    credential/provider payloads. Full/light packaging must retain the bundled

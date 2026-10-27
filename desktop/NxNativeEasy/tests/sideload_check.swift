@@ -16,6 +16,7 @@ import Foundation
         emit({'event':'hello','protocol':1,'architecture':'aarch64','capabilities':['scoped-games-v1','save-export-v1','romfs-copy-v1','registration-consent-v1']})
         for line in sys.stdin:
             value=json.loads(line)
+            with open(os.path.join(os.path.dirname(__file__),'operations.log'),'a') as audit:audit.write(value['op']+'\\n')
             if value['op']=='devices':emit({'event':'devices','items':[{'udid':'SYNTHETIC-DEVICE','name':'Test iPad','model':'iPad-test','os':'26.0','connections':['Wi-Fi']},{'udid':'SYNTHETIC-DEVICE','name':'Test iPad','model':'iPad-test','os':'26.0','connections':['USB','Wi-Fi']}]})
             elif value['op']=='installed_apps':
                 assert value.get('original_ids') and 'known_ids' in value
@@ -26,7 +27,9 @@ import Foundation
             elif value['op']=='code':
                 assert value['code']=='123456'
                 emit({'event':'signed_in','teams':[{'id':'ABCDE12345','name':'Personal test team'}]})
-            elif value['op']=='restore':emit({'event':'signed_in','teams':[{'id':'ABCDE12345','name':'Personal test team'}]})
+            elif value['op']=='restore':
+                if value['email']=='unavailable@example.invalid':emit({'event':'error','operation':'restore','code':'failed'})
+                else:emit({'event':'signed_in','teams':[{'id':'ABCDE12345','name':'Personal test team'}]})
             elif value['op']=='install':
                 assert value['automatic']==False and value['update']==True
                 assert value.get('approve_registration') in (False,True)
@@ -52,6 +55,44 @@ import Foundation
             elif value['op']=='quit':break
         """.write(to:helper,atomically:true,encoding:.utf8)
         try FileManager.default.setAttributes([.posixPermissions:0o700],ofItemAtPath:helper.path)
+        let recoverySuite=suite+".recovery",recoveryDefaults:UserDefaults
+        recoveryDefaults=UserDefaults(suiteName:recoverySuite)!
+        defer {recoveryDefaults.removePersistentDomain(forName:recoverySuite)}
+        func restoredCount()->Int {
+            let operations=(try? String(contentsOf:root.appendingPathComponent("operations.log"),encoding:.utf8)) ?? ""
+            return operations.split(separator:"\n").filter{$0=="restore"}.count
+        }
+        let noSaved=SideloadModel(stateURL:root.appendingPathComponent("recovery/no-saved.json"),defaults:recoveryDefaults,helperURL:helper)
+        noSaved.recoverRememberedSessionIfNeeded();assert(!noSaved.busy && !noSaved.authenticated && restoredCount()==0)
+        recoveryDefaults.set("saved@example.invalid",forKey:"sideloadEmail")
+        let saved=SideloadModel(stateURL:root.appendingPathComponent("recovery/saved.json"),defaults:recoveryDefaults,helperURL:helper)
+        saved.recoverRememberedSessionIfNeeded();saved.recoverRememberedSessionIfNeeded()
+        try await wait {saved.authenticated && !saved.busy}
+        assert(restoredCount()==1 && !saved.recoveringSession && saved.jobs.isEmpty && saved.team.isEmpty)
+        saved.team="ABCDE12345";saved.cancel()
+        let restarted=SideloadModel(stateURL:root.appendingPathComponent("recovery/restarted.json"),defaults:recoveryDefaults,helperURL:helper)
+        restarted.preparedIdentifiers=["org.game.custom"];restarted.listDevices();restarted.recoverRememberedSessionIfNeeded()
+        try await wait {restarted.authenticated && !restarted.busy && restarted.apps.count==1}
+        assert(restoredCount()==2 && restarted.team=="ABCDE12345" && restarted.jobs.isEmpty)
+        restarted.signOut();try await wait {!restarted.authenticated};assert(recoveryDefaults.string(forKey:"sideloadEmail")==nil)
+        restarted.recoverRememberedSessionIfNeeded();assert(!restarted.busy && restoredCount()==2);restarted.cancel()
+        recoveryDefaults.set("unavailable@example.invalid",forKey:"sideloadEmail")
+        let unavailable=SideloadModel(stateURL:root.appendingPathComponent("recovery/unavailable.json"),defaults:recoveryDefaults,helperURL:helper)
+        unavailable.recoverRememberedSessionIfNeeded();try await wait {!unavailable.busy && unavailable.error != nil}
+        assert(restoredCount()==3 && unavailable.hasRememberedSession && !unavailable.recoveringSession)
+        unavailable.recoverRememberedSessionIfNeeded();try await Task.sleep(nanoseconds:50_000_000);assert(restoredCount()==3)
+        unavailable.restoreSession();try await wait {!unavailable.busy};assert(restoredCount()==4 && unavailable.hasRememberedSession);unavailable.cancel()
+        let unavailableHelper=SideloadModel(stateURL:root.appendingPathComponent("recovery/missing.json"),defaults:recoveryDefaults,helperURL:root.appendingPathComponent("missing-helper"))
+        unavailableHelper.recoverRememberedSessionIfNeeded();assert(!unavailableHelper.busy && !unavailableHelper.recoveringSession && unavailableHelper.hasRememberedSession)
+        let recoveryOperations=try String(contentsOf:root.appendingPathComponent("operations.log"),encoding:.utf8)
+        assert(!recoveryOperations.split(separator:"\n").contains("install") && !recoveryOperations.split(separator:"\n").contains("login"))
+        recoveryDefaults.set("saved@example.invalid",forKey:"sideloadEmail")
+        let cancelledLogin=SideloadModel(stateURL:root.appendingPathComponent("recovery/cancelled-login.json"),defaults:recoveryDefaults,helperURL:helper)
+        cancelledLogin.signIn(password:"synthetic-password-only",remember:false);try await wait {cancelledLogin.codeRequired}
+        cancelledLogin.cancel();try await wait {!cancelledLogin.busy}
+        cancelledLogin.restoreSession();try await wait {cancelledLogin.authenticated && !cancelledLogin.busy}
+        assert(cancelledLogin.hasRememberedSession && recoveryDefaults.string(forKey:"sideloadEmail")=="saved@example.invalid")
+        cancelledLogin.cancel()
         let missing=SideloadModel(stateURL:root.appendingPathComponent("missing-jobs.json"),defaults:defaults,helperURL:root.appendingPathComponent("missing-helper"));missing.listDevices();assert(!missing.busy && missing.error != nil)
         let emptyScope=SideloadModel(stateURL:root.appendingPathComponent("empty-scope.json"),defaults:defaults,helperURL:helper)
         emptyScope.listDevices();try await wait {!emptyScope.busy && emptyScope.devices.count==1};assert(emptyScope.apps.isEmpty);emptyScope.cancel()

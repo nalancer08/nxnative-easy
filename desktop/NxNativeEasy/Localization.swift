@@ -12,6 +12,13 @@ enum EasyLanguage: String, CaseIterable {
 
 struct EasyStrings {
     static let english: [String:String] = [
+        "Actividad":"Activity",
+        "Recuperando tu sesión del Llavero…":"Restoring your Keychain session…",
+        "No pudimos recuperar la sesión guardada. Revisa Internet y el acceso al Llavero, o vuelve a iniciar sesión.":"Could not restore the saved session. Check your connection and Keychain access, or sign in again.",
+        "Recuperar tu sesión":"Restore your session",
+        "Recordamos tu cuenta en este Mac. Recupera el acceso desde el Llavero o entra de nuevo si Apple lo solicita.":"Your account is remembered on this Mac. Restore access from Keychain, or sign in again if Apple requires it.",
+        "Reintentar sesión guardada":"Retry saved session",
+        "Entrar con contraseña":"Sign in with password",
         "Configuración":"Settings",
         "General":"General",
         "Sección de configuración":"Settings section",

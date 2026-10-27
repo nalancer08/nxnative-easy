@@ -113,12 +113,21 @@ enum RefreshPolicy {
     private var loggedPhase=""
     private var loggedBucket = -1
     @Published var device=""
-    @Published var team=""
+    @Published var team="" {
+        didSet {
+            if authenticated,hasRememberedSession,teams.contains(where:{$0.id==team}) {defaults.set(team,forKey:"sideloadTeam."+RefreshPolicy.account(email))}
+        }
+    }
     @Published var existing=""
     @Published var email=""
     @Published var anisette="https://ani.iloader.app"
     @Published var authenticated=false
-    @Published var busy=false
+    @Published private(set) var recoveringSession=false
+    private var recoveryRequested=false
+    private var automaticRecoveryAttempted=false
+    @Published var busy=false {
+        didSet {if !busy && recoveryRequested {Task {@MainActor [weak self] in self?.recoverRememberedSessionIfNeeded()}}}
+    }
     @Published var codeRequired=false
     @Published var smsNumbers:[TrustedSMS]=[]
     @Published var error:String?
@@ -272,14 +281,20 @@ enum RefreshPolicy {
             let data=handle.availableData;if data.isEmpty {handle.readabilityHandler=nil;return}
             Task {@MainActor in self?.receive(data)}
         }
-        task.terminationHandler={ [weak self] finished in Task {@MainActor in guard let self,self.process === finished else {return};self.process=nil;self.input=nil;self.scopedDiscovery=false;self.authenticated=false;self.codeRequired=false;if self.busy {self.error="Instalación detenida. Vuelve a intentar; las partidas no se tocaron."};self.busy=false;self.activeRefresh=nil;self.installIntent=nil;self.refreshAuthenticated=false}}
+        task.terminationHandler={ [weak self] finished in Task {@MainActor in
+            guard let self,self.process === finished else {return}
+            let recovering=self.recoveringSession
+            self.process=nil;self.input=nil;self.scopedDiscovery=false;self.authenticated=false;self.codeRequired=false;self.recoveringSession=false;self.pendingRemember=nil
+            if self.busy {self.error=recovering ? "No pudimos recuperar la sesión guardada. Revisa Internet y el acceso al Llavero, o vuelve a iniciar sesión." : "Instalación detenida. Vuelve a intentar; las partidas no se tocaron."}
+            self.busy=false;self.activeRefresh=nil;self.installIntent=nil;self.refreshAuthenticated=false
+        }}
         do {process=task;try task.run()}
         catch {process=nil;input=nil;self.error="No pudimos iniciar el instalador nativo."}
     }
     private func send(_ value:[String:Any]) {
-        connect();guard let input,let process,process.isRunning else {busy=false;return}
+        connect();guard let input,let process,process.isRunning else {recoveringSession=false;busy=false;return}
         do {var data=try JSONSerialization.data(withJSONObject:value);data.append(10);try input.write(contentsOf:data)}
-        catch {self.error="No pudimos comunicarnos con el instalador.";busy=false}
+        catch {self.error="No pudimos comunicarnos con el instalador.";recoveringSession=false;busy=false}
     }
     func listDevices() {guard !busy else {return};error=nil;busy=true;startedAt=Date();fraction=nil;phase="Buscando dispositivos conectados…";record(phase);send(["op":"devices"])}
     func inspectApps() {
@@ -297,6 +312,7 @@ enum RefreshPolicy {
 
     func signIn(password:String,remember:Bool) {
         guard !busy,!email.isEmpty,!password.isEmpty else {return}
+        recoveryRequested=false;automaticRecoveryAttempted=true;recoveringSession=false
         email=email.trimmingCharacters(in:.whitespacesAndNewlines).lowercased()
         busy=true;error=nil;startedAt=Date();fraction=nil;phase="Iniciando sesión con Apple…"
         record("Iniciando sesión con Apple…")
@@ -307,8 +323,8 @@ enum RefreshPolicy {
     func sendToDevices() {phase="Solicitando un nuevo código…";codeRequired=false;send(["op":"send_to_devices"])}
     func sendSMS(_ number:Int) {phase="Solicitando un nuevo código…";codeRequired=false;send(["op":"sms","number":number])}
     func resend() {phase="Solicitando un nuevo código…";codeRequired=false;send(["op":"resend"])}
-    func signOut() {guard !busy else {return};send(["op":"logout","email":email]);defaults.removeObject(forKey:"sideloadEmail");for index in jobs.indices {jobs[index].enabled=false};saveJobs()}
-    func cancel() {record("Operación cancelada; puedes volver a intentar.");if let refresh=activeRefresh,let index=jobs.firstIndex(where:{$0.id==refresh.id}) {jobs[index].retryAfter=Date().addingTimeInterval(6*3600);saveJobs()};if let process,process.isRunning {if kill(-process.processIdentifier,SIGTERM) != 0 {process.terminate()}}}
+    func signOut() {guard !busy else {return};recoveryRequested=false;automaticRecoveryAttempted=true;defaults.removeObject(forKey:"sideloadTeam."+RefreshPolicy.account(email));send(["op":"logout","email":email]);defaults.removeObject(forKey:"sideloadEmail");for index in jobs.indices {jobs[index].enabled=false};saveJobs()}
+    func cancel() {recoveryRequested=false;automaticRecoveryAttempted=true;pendingRemember=nil;record("Operación cancelada; puedes volver a intentar.");if let refresh=activeRefresh,let index=jobs.firstIndex(where:{$0.id==refresh.id}) {jobs[index].retryAfter=Date().addingTimeInterval(6*3600);saveJobs()};if let process,process.isRunning {if kill(-process.processIdentifier,SIGTERM) != 0 {process.terminate()}}}
     var canUpdateAppOnly:Bool {
         guard let folder=gameFolder,let version=PreviousPreparation.load(folder:folder,target:"ios")?.version,!version.isEmpty,
               let app=apps.first(where:{$0.id==existing}) else {return false}
@@ -375,13 +391,15 @@ enum RefreshPolicy {
             busy=false;record("Dispositivos registrados consultados.")
         case "two_factor":record("Introduce el código de Apple.");codeRequired=true;phase="Introduce el código de Apple.";smsNumbers=((event["numbers"] as? [[String:Any]]) ?? []).compactMap {number in guard let id=number["id"] as? Int,let digits=number["last_digits"] as? String else {return nil};return TrustedSMS(id:id,digits:digits)}
         case "signed_in":
+            recoveringSession=false;recoveryRequested=false;automaticRecoveryAttempted=true
             record("Sesión iniciada. Elige tu equipo personal.");authenticated=true;busy=false;codeRequired=false;error=nil;phase="Sesión iniciada. Elige tu equipo personal."
             if let remember=pendingRemember {if remember {defaults.set(email,forKey:"sideloadEmail");defaults.set(anisette,forKey:"sideloadAnisette")}else{defaults.removeObject(forKey:"sideloadEmail")};pendingRemember=nil}
             teams=((event["teams"] as? [[String:Any]]) ?? []).compactMap {item in guard let id=item["id"] as? String else {return nil};return SideloadTeam(id:id,name:item["name"] as? String ?? id,kind:item["kind"] as? String ?? "",freeDeviceLimit:(item["free_device_limit"] as? Int)==3 ? 3 : nil)}
             if !teams.contains(where:{$0.id==team}) {team=""}
+            if activeRefresh==nil,team.isEmpty,hasRememberedSession,let saved=defaults.string(forKey:"sideloadTeam."+RefreshPolicy.account(email)),teams.contains(where:{$0.id==saved}) {team=saved}
             for index in jobs.indices where jobs[index].account==RefreshPolicy.account(email) {jobs[index].needsLogin=false};saveJobs()
             if let refresh=activeRefresh {refreshAuthenticated=true;continueRefresh(refresh)}
-        case "signed_out":authenticated=false;accountDevices=[];accountDeviceTeam="";accountDeviceLimit=nil;accountDevicesCheckedAt=nil;teams=[];team="";busy=false
+        case "signed_out":recoveringSession=false;recoveryRequested=false;automaticRecoveryAttempted=true;authenticated=false;accountDevices=[];accountDeviceTeam="";accountDeviceLimit=nil;accountDevicesCheckedAt=nil;teams=[];team="";busy=false
         case "progress":
             let phases=["Exporting saves":"Exportando partidas…","Verifying saves":"Verificando el respaldo…","Registering device":"Registrando el dispositivo con Apple…","Verifying signature":"Verificando firma y vencimiento…","Preparing IPA":"Preparando IPA…","Signing app":"Firmando la app…","Installing app":"Instalando la app…","Copying game data":"Copiando datos del juego…","Game data ready":"Datos del juego listos."]
             phase=phases[event["phase"] as? String ?? ""] ?? phase;if let value=event["fraction"] as? Double,value.isFinite,value>=0,value<=1 {fraction=value}else{fraction=nil}
@@ -412,8 +430,9 @@ enum RefreshPolicy {
             if op=="installed_apps" {apps=[];error=(event["code"] as? String)=="scope_unavailable" ? "No pudimos limitar la consulta a tus juegos. No mostramos otras aplicaciones." : "No pudimos leer tus juegos. Desbloquea el dispositivo, confía en este Mac y vuelve a buscar."}
             if op=="devices" {error="No pudimos buscar dispositivos. Revisa la conexión y vuelve a intentar."}
             if op=="account_devices" {accountDevices=[];accountDeviceTeam="";error="Apple no devolvió los dispositivos de este equipo. Revisa tu sesión y vuelve a consultar."}
+            if op=="restore" {error="No pudimos recuperar la sesión guardada. Revisa Internet y el acceso al Llavero, o vuelve a iniciar sesión."}
             if let code=event["apple_code"] as? Int {error=(error ?? "")+" · Apple: \(code)"}
-            if op=="login" || op=="restore" {authenticated=false;pendingRemember=nil}
+            if op=="login" || op=="restore" {authenticated=false;pendingRemember=nil;recoveringSession=false}
             if let refresh=activeRefresh,let index=jobs.firstIndex(where:{$0.id==refresh.id}) {jobs[index].retryAfter=Date().addingTimeInterval((event["code"] as? String)=="game_running" ? 600 : 6*3600);jobs[index].needsLogin=(op=="restore");saveJobs()}
             if let error {record(error)}
             activeRefresh=nil;installIntent=nil;refreshAuthenticated=false;codeRequired=false;busy=false
@@ -429,11 +448,20 @@ enum RefreshPolicy {
             try FileManager.default.setAttributes([.posixPermissions:0o600],ofItemAtPath:stateURL.path)
         } catch {self.error="La instalación terminó, pero no pudimos guardar su renovación automática."}
     }
+    // Restore authentication only. Never starts registration, signing or installation.
+    func recoverRememberedSessionIfNeeded() {
+        guard !automaticRecoveryAttempted,!authenticated,hasRememberedSession else {recoveryRequested=false;return}
+        recoveryRequested=true
+        guard !busy,activeRefresh==nil else {return}
+        restoreSession()
+    }
     func restoreSession() {
         guard !busy,!email.isEmpty,defaults.string(forKey:"sideloadEmail")==email else {return}
-        busy=true;error=nil;startedAt=Date();fraction=nil;phase="Renovando sesión guardada…";record(phase)
+        recoveryRequested=false;automaticRecoveryAttempted=true;recoveringSession=true;pendingRemember=nil
+        busy=true;error=nil;startedAt=Date();fraction=nil;phase="Recuperando tu sesión del Llavero…";record(phase)
         send(["op":"restore","email":email,"anisette_url":anisette])
     }
+    // This is an opt-in marker, not proof that Keychain or Apple will accept the saved session.
     var hasRememberedSession:Bool {defaults.string(forKey:"sideloadEmail")==email && !email.isEmpty}
     func select(_ job:RefreshJob) {
         guard !busy else {return}
@@ -469,7 +497,7 @@ enum RefreshPolicy {
     private func continueRefresh(_ job:RefreshJob) {
         guard devices.contains(where:{$0.id==job.udid}) else {if manualRefresh {error="Conecta y desbloquea el dispositivo donde instalaste este juego."};activeRefresh=nil;return}
         guard teams.contains(where:{$0.id==job.team}) || !refreshAuthenticated else {error="La cuenta actual no tiene el equipo original de este juego. No cambiamos su identidad.";activeRefresh=nil;return}
-        if !refreshAuthenticated {busy=true;phase="Renovando sesión guardada…";send(["op":"restore","email":email,"anisette_url":anisette])}
+        if !refreshAuthenticated {recoveryRequested=false;automaticRecoveryAttempted=true;recoveringSession=true;busy=true;phase="Recuperando tu sesión del Llavero…";send(["op":"restore","email":email,"anisette_url":anisette])}
         else {startInstall(job,updating:true,content:nil)}
     }
     func setLoginItem(_ enabled:Bool) {
@@ -486,6 +514,7 @@ struct SideloadView:View {
     @Environment(\.dismiss) private var dismiss
     @State private var approveRegistration=false
     @State private var installStep=0
+    @State private var usePassword=false
     @State private var password=""
     @State private var remember=true
     @State private var autoRefresh=true
@@ -516,6 +545,15 @@ struct SideloadView:View {
                 if accountOnly || installStep==1 {
                 Text(text("Una cuenta para todos tus dispositivos en este Mac. Sólo se necesita para firmar, instalar y renovar apps.")).foregroundStyle(.secondary)
                 if !model.authenticated && !model.codeRequired && !model.busy {
+                    if model.hasRememberedSession && !usePassword {
+                        VStack(alignment:.leading,spacing:14) {
+                            Label(text("Recuperar tu sesión"),systemImage:"key.horizontal").font(.headline)
+                            Text(model.email).font(.callout).textSelection(.enabled)
+                            Text(text("Recordamos tu cuenta en este Mac. Recupera el acceso desde el Llavero o entra de nuevo si Apple lo solicita.")).font(.callout).foregroundStyle(.secondary)
+                            Button(text("Reintentar sesión guardada")){model.restoreSession()}.buttonStyle(.borderedProminent)
+                            Button(text("Entrar con contraseña")){usePassword=true}.buttonStyle(.link)
+                        }.padding(20).frame(maxWidth:.infinity,alignment:.leading).background(.white.opacity(0.04),in:RoundedRectangle(cornerRadius:14))
+                    } else {
                     LabeledContent(text("Cuenta Apple personal")){TextField("name@example.com",text:$model.email).textFieldStyle(.roundedBorder).disabled(model.busy)}
                     LabeledContent(text("Contraseña de Apple")){SecureField(text("Contraseña de Apple"),text:$password).textFieldStyle(.roundedBorder).disabled(model.busy)}
                     Toggle(text("Recordar sesión en el Llavero; no guardar la contraseña"),isOn:$remember).disabled(model.busy).onChange(of:remember){_,value in if !value {autoRefresh=false}}
@@ -525,6 +563,7 @@ struct SideloadView:View {
                     }
                     if model.hasRememberedSession {Button(text("Usar sesión del Llavero")){model.restoreSession()}.disabled(model.busy)}
                     Button(text("Iniciar sesión")){model.signIn(password:password,remember:remember);password=""}.buttonStyle(.borderedProminent).disabled(model.busy || model.email.isEmpty || password.isEmpty)
+                    }
                 } else if model.authenticated {
                     Label(text("Sesión iniciada"),systemImage:"person.crop.circle.badge.checkmark")
                     Text(model.email).font(.caption).textSelection(.enabled)
@@ -570,6 +609,7 @@ struct SideloadView:View {
                 if !model.busy {Text(text(model.phase)).font(.callout)}
             }.padding(24)
         }
+        .task {model.recoverRememberedSessionIfNeeded()}
         .onChange(of:model.device){_,_ in approveRegistration=false}
         .onChange(of:installStep){_,step in if step==2 {approveRegistration=false;if !model.busy {model.inspectAccountDevices()}}}
         .onChange(of:model.team){_,value in approveRegistration=false;if !value.isEmpty && model.authenticated && !model.busy {model.inspectAccountDevices()}}
@@ -799,7 +839,7 @@ struct InstallActivityView:View {
             if let error=model.error {Label(text(error),systemImage:"exclamationmark.triangle").foregroundStyle(.orange).textSelection(.enabled)}
             if let export=model.exportedSaves {Button(text("Mostrar ZIP de partidas")){NSWorkspace.shared.activateFileViewerSelecting([export])}}
             if !model.logs.isEmpty {
-                DisclosureGroup(text("Actividad de instalación"),isExpanded:$expanded) {
+                DisclosureGroup(text("Actividad"),isExpanded:$expanded) {
                     HStack {Button(text("Copiar registro")){model.copyLogs(text:text)};if let url=model.logURL {Button(text("Mostrar registro guardado")){NSWorkspace.shared.activateFileViewerSelecting([url])}};Spacer()}
                     ScrollView {LazyVStack(alignment:.leading,spacing:5) {ForEach(model.logs) {entry in Text(entry.date.formatted(date:.omitted,time:.standard)+" · "+text(entry.message)+(entry.progress.map{" · "+String(Int($0*100))+" %"} ?? "")).font(.system(size:11,design:.monospaced)).textSelection(.enabled)}}.frame(maxWidth:.infinity,alignment:.leading)}.frame(height:160)
                 }

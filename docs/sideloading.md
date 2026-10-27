@@ -366,3 +366,43 @@ inventory even if signing later fails: registering happens before installation
 and can consume the slot independently of install success. The UI explains this
 before confirmation. Apple remains authoritative when registration is attempted.
 Agent validation never logs into a real account or registers a device.
+
+## Remembered session recovery (1.14.3)
+
+Remember session stores the helper's private Apple session data in macOS Keychain,
+under the existing stable service/account key. It does not store the password or
+copy Apple credentials to an iPhone/iPad, game folder or repository. The saved
+email preference is only an opt-in marker, not proof that a Keychain entry exists
+or that Apple still accepts it. No Keychain identifier/format or native helper
+changed in this patch; actual token validity was not inspected by the agent.
+
+Previously a new launcher process started unauthenticated and restored only when
+the player pressed Use Keychain session or a due installation refresh requested
+it. The password form appeared first despite a remembered account. Startup and
+the account view now request one automatic authentication-only recovery. It waits
+for discovery or another helper operation to finish and does not create jobs,
+register devices, sign, install or copy game data. Duplicate view/startup requests
+coalesce; a failure does not cause a retry loop or delete the saved marker/token.
+A visible recovery status offers cancellation outside the account/installer UI.
+
+On failure the account page offers Retry saved session and an explicit password
+fallback. Connection/Keychain failures are not labelled as proven expiration.
+Apple may still require a new authentication; the app cannot promise an indefinite
+session. A manual retry remains possible. Cancelled password-login intent is
+cleared before a later recovery, preventing an abandoned Do not remember choice
+from deleting an earlier remembered account marker. Explicit sign-out remains
+explicit: it removes the saved session through the existing helper and prevents
+an automatic login from undoing the sign-out.
+
+The previously selected team is remembered per account only after successful
+Apple authentication with Remember enabled. Recovery restores it only if that
+exact ID is still in the freshly returned team list and there is no active
+original-team refresh intent. It never chooses an arbitrary team. Existing
+per-app account/team/BundleID bindings remain authoritative for updates.
+
+Compiled fake-helper fixtures simulate cold restart, deferred recovery after
+scoped discovery, duplicate requests, no opt-in, successful prior-team recovery,
+unavailable sessions, explicit retry, logout, helper absence and a cancelled
+non-remembering login followed by recovery. They verify authentication-only
+transport, no retry loop and preservation of saved preference metadata. They do
+not access the user's Keychain or authenticate against Apple.

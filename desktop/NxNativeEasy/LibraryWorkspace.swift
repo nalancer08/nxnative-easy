@@ -144,6 +144,15 @@ struct LibraryWorkspace:View {
                     }
                 }
             }
+            if sideload.recoveringSession && page != .settings && !model.showSideload {
+                Divider()
+                HStack(spacing:12) {
+                    ProgressView().controlSize(.small)
+                    Text(model.text("Recuperando tu sesión del Llavero…")).font(.callout)
+                    Spacer()
+                    Button(model.text("Cancelar")){sideload.cancel()}
+                }.padding(.horizontal,24).padding(.vertical,12)
+            }
             if model.running || model.failed || !model.activity.history.isEmpty {
                 Divider()
                 BuildDock(model:model,show:{page = .prepare;model.showDetails=true})
@@ -153,6 +162,7 @@ struct LibraryWorkspace:View {
             if model.folder != nil && library.games.isEmpty && library.error==nil {remember()}
             checkBuildAdvice()
             if !occupied && !library.games.isEmpty {sideload.listDevices()}
+            sideload.recoverRememberedSessionIfNeeded()
         }
         .dropDestination(for:URL.self) {items,_ in
             guard !occupied else {return false}

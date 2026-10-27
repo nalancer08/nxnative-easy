@@ -58,6 +58,8 @@ Nuestro main incorpora la revisión del original registrada en el [informe de in
 
 El motor actual funciona **sin conexión**. No admite los servicios en línea de Nintendo, LAN/netplay ni Windows. Una suscripción a Nintendo Switch Online no los activa aquí. Usar varios controles en un mismo Mac es una función distinta. [Cómo funcionan el código, los mods y la red](docs/development.md#game-binaries-mods-and-networking).
 
+Con **Recordar sesión**, la app intenta recuperar tu cuenta Apple del Llavero de este Mac al volver a abrir. Si falla, puedes reintentar o identificarte de nuevo; no se guarda la contraseña.
+
 ## Idioma
 
 La app inicia en **English**. Cambia a **Español** en **Configuración → General**; la elección se guarda en este Mac. Cambia el idioma de la interfaz, no el del juego. Los detalles técnicos se muestran en su idioma original.

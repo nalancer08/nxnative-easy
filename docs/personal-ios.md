@@ -673,3 +673,23 @@ the modal frame and Close button. No helper, game or save behavior changed.
 Offscreen navigation validates that the open-catalog intent is consumed without
 an attached sheet; catalog fixtures/checks and the production SwiftUI build
 validate the change. No gameplay/device actions were performed.
+
+## Automatic remembered account recovery (1.14.3)
+
+The observed sign-in form was caused by missing normal-startup session recovery:
+only a manual action or a due app refresh invoked the existing Keychain route.
+This fix queues one authentication-only recovery when the remembered-account
+marker exists, waits for the shared helper to be idle and prevents duplicate
+attempts/retry loops. Failure preserves saved data and offers retry/password
+choices without asserting that the token expired. A per-account previous team
+is restored only against fresh team membership and never over an active refresh.
+Explicit logout/cancel prevents queued recovery; cancelled remember-choice intent
+cannot overwrite a prior saved preference during a later recovery.
+
+The native helper, Keychain service/key/format, game files and saves are unchanged.
+No real Keychain value was read, credential printed, Apple login performed or
+running launcher restarted. All 68 script cases completed with one optional JWT
+dependency skip; expanded fake-helper recovery/cancellation fixtures passed again
+after state cleanup. These test restoration orchestration, not the user's actual
+session validity. Production compilation/signature validation and documentation
+checks validate the delivered UI/client patch.
