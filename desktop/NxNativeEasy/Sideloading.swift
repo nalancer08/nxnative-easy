@@ -458,7 +458,6 @@ struct SideloadView:View {
     @Environment(\.dismiss) private var dismiss
     @State private var installStep=0
     @State private var password=""
-    @State private var code=""
     @State private var remember=true
     @State private var autoRefresh=true
     @State private var loginItem=SMAppService.mainApp.status == .enabled
@@ -487,7 +486,7 @@ struct SideloadView:View {
                 }
                 if accountOnly || installStep==1 {
                 Text(text("Una cuenta para todos tus dispositivos en este Mac. Sólo se necesita para firmar, instalar y renovar apps.")).foregroundStyle(.secondary)
-                if !model.authenticated {
+                if !model.authenticated && !model.codeRequired {
                     LabeledContent(text("Cuenta Apple personal")){TextField("name@example.com",text:$model.email).textFieldStyle(.roundedBorder).disabled(model.busy)}
                     LabeledContent(text("Contraseña de Apple")){SecureField(text("Contraseña de Apple"),text:$password).textFieldStyle(.roundedBorder).disabled(model.busy)}
                     Toggle(text("Recordar sesión en el Llavero; no guardar la contraseña"),isOn:$remember).disabled(model.busy).onChange(of:remember){_,value in if !value {autoRefresh=false}}
@@ -497,7 +496,7 @@ struct SideloadView:View {
                     }
                     if model.hasRememberedSession {Button(text("Usar sesión del Llavero")){model.restoreSession()}.disabled(model.busy)}
                     Button(text("Iniciar sesión")){model.signIn(password:password,remember:remember);password=""}.buttonStyle(.borderedProminent).disabled(model.busy || model.email.isEmpty || password.isEmpty)
-                } else {
+                } else if model.authenticated {
                     Label(text("Sesión iniciada"),systemImage:"person.crop.circle.badge.checkmark")
                     Text(model.email).font(.caption).textSelection(.enabled)
                     Picker(text("Tu equipo personal"),selection:$model.team) {Text(text("Selecciona tu equipo")).tag("");ForEach(model.teams){Text($0.name+" · "+$0.id).tag($0.id)}}.disabled(model.busy)
@@ -510,13 +509,8 @@ struct SideloadView:View {
                     Text(text("Apple no informa los cupos restantes en esta consulta. Mostramos los dispositivos registrados, sin inventar disponibilidad ni eliminar registros.")).font(.caption).foregroundStyle(.secondary)
                     Button(text("Cerrar sesión")){model.signOut()}.disabled(model.busy)
                 }
-                if model.codeRequired {
-                    TextField(text("Código de verificación"),text:$code)
-                    HStack {Button(text("Confirmar código")){model.submitCode(code);code=""};Button(text("Reenviar código")){model.resend()}}
-                    Button(text("Enviar a mis dispositivos")){model.sendToDevices()}
-                    ForEach(model.smsNumbers) {number in Button("SMS · …"+number.digits){model.sendSMS(number.id)}}
-                }
-                if !accountOnly {Button(text("Continuar")){installStep=2}.buttonStyle(.borderedProminent).disabled(model.busy || !model.authenticated || model.team.isEmpty)}
+                if model.codeRequired {AppleVerificationView(model:model,text:text)}
+                if !accountOnly && !model.codeRequired {Button(text("Continuar")){installStep=2}.buttonStyle(.borderedProminent).disabled(model.busy || !model.authenticated || model.team.isEmpty)}
                 }
                 if !accountOnly && installStep==2 {
                     Label(text("Revisa antes de instalar"),systemImage:"checklist").font(.title2.bold())
@@ -537,13 +531,65 @@ struct SideloadView:View {
                     }
                 }
                 if !accountOnly && installStep==3 && !model.busy {Button(text("Revisar e intentar de nuevo")){installStep=2}}
-                if !accountOnly {Text(text("Guarda y cierra el juego antes de instalar. Firma, copia y renovación nativas aún requieren validación completa con una cuenta y dispositivo reales.")).font(.caption).foregroundStyle(.secondary)}
-                InstallActivityView(model:model,text:text)
+                if !accountOnly && !model.codeRequired {Text(text("Guarda y cierra el juego antes de instalar. Firma, copia y renovación nativas aún requieren validación completa con una cuenta y dispositivo reales.")).font(.caption).foregroundStyle(.secondary)}
+                if !model.codeRequired {InstallActivityView(model:model,text:text)}
                 if !model.busy {Text(text(model.phase)).font(.callout)}
             }.padding(24)
         }
         .onChange(of:model.team){_,value in if !value.isEmpty && model.authenticated && !model.busy {model.inspectAccountDevices()}}
         .frame(maxWidth:.infinity,maxHeight:.infinity).frame(width:embedded ? nil : 760,height:embedded ? nil : 720).tint(Color(red:0.79,green:0.95,blue:0.37)).preferredColorScheme(.dark).interactiveDismissDisabled(model.busy)
+    }
+}
+
+
+struct AppleVerificationView:View {
+    @ObservedObject var model:SideloadModel
+    let text:(String)->String
+    @State private var code=""
+    @FocusState private var focused:Bool
+    private var valid:Bool {code.count==6 && code.utf8.allSatisfy {48...57 ~= $0}}
+    private func confirm() {guard valid else {return};let submitted=code;code="";model.submitCode(submitted)}
+    var body:some View {
+        VStack(alignment:.leading,spacing:22) {
+            HStack(alignment:.top,spacing:14) {
+                Image(systemName:"lock.shield").font(.system(size:28,weight:.light)).foregroundStyle(Color(red:0.79,green:0.95,blue:0.37)).frame(width:48,height:48).background(.white.opacity(0.04),in:RoundedRectangle(cornerRadius:12))
+                VStack(alignment:.leading,spacing:6) {
+                    Text(text("Verifica tu cuenta")).font(.title2.bold())
+                    if !model.email.isEmpty {Text(model.email).font(.caption).foregroundStyle(.secondary)}
+                    Text(text("Introduce los 6 dígitos que Apple muestra en tu dispositivo de confianza o envía por SMS.")).font(.callout).foregroundStyle(.secondary).fixedSize(horizontal:false,vertical:true)
+                }
+            }
+            VStack(alignment:.leading,spacing:10) {
+                Text(text("Código de verificación")).font(.callout.weight(.semibold))
+                TextField("······",text:$code).textFieldStyle(.plain).font(.system(size:30,weight:.medium,design:.monospaced)).tracking(7)
+                    .padding(.horizontal,18).padding(.vertical,15).frame(width:250)
+                    .background(.black.opacity(0.18),in:RoundedRectangle(cornerRadius:11))
+                    .overlay(RoundedRectangle(cornerRadius:11).strokeBorder(focused ? Color(red:0.79,green:0.95,blue:0.37).opacity(0.65) : .white.opacity(0.12)))
+                    .focused($focused).accessibilityLabel(text("Código de verificación"))
+                    .onChange(of:code){_,value in code=String(value.utf8.filter {48...57 ~= $0}.prefix(6).map {Character(UnicodeScalar($0))})}
+                    .onSubmit {confirm()}
+                Text(text("Puedes pegar el código completo.")).font(.caption).foregroundStyle(.secondary)
+            }
+            Button(action:confirm){Label(text("Verificar y continuar"),systemImage:"arrow.right").font(.callout.bold()).padding(.horizontal,18).frame(minHeight:44)
+                .foregroundStyle(valid ? Color.black : Color.secondary)
+                .background(valid ? Color(red:0.79,green:0.95,blue:0.37) : .white.opacity(0.06),in:RoundedRectangle(cornerRadius:10))}
+                .buttonStyle(.plain).disabled(!valid)
+            Divider().overlay(.white.opacity(0.06))
+            DisclosureGroup(text("¿No recibiste el código?")) {
+                VStack(alignment:.leading,spacing:12) {
+                    Text(text("Elige dónde quieres recibir uno nuevo.")).font(.caption).foregroundStyle(.secondary)
+                    Button {code="";model.sendToDevices()} label:{Label(text("Mostrar en mis dispositivos Apple"),systemImage:"ipad.and.iphone")}
+                    ForEach(model.smsNumbers) {number in
+                        Button {code="";model.sendSMS(number.id)} label:{Label(text("Enviar SMS al número terminado en")+" "+number.digits,systemImage:"message")}
+                    }
+                    Button(text("Solicitar otro código")){code="";model.resend()}.buttonStyle(.link)
+                }.padding(.top,12)
+            }.font(.callout)
+            Text(text("El código se envía a Apple y no se guarda.")).font(.caption).foregroundStyle(.secondary)
+        }.padding(24).frame(maxWidth:.infinity,alignment:.leading)
+            .background(.white.opacity(0.035),in:RoundedRectangle(cornerRadius:18))
+            .overlay(RoundedRectangle(cornerRadius:18).strokeBorder(.white.opacity(0.06)))
+            .onAppear {focused=true}
     }
 }
 

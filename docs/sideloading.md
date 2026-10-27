@@ -307,3 +307,15 @@ app. Support for the new game version still depends on the engine/profile.
 A lightweight IPA still needs the complete RomFS on the phone; it makes app
 signing/reinstallation smaller, not the game data optional. Full-IPA mode embeds
 those data and retransfers the larger app on renewal.
+
+## Apple verification presentation (1.13.1)
+
+An active verification challenge replaces the password form with one card:
+account context, six-digit ASCII code input, paste/Enter support and one primary
+Verify and continue action. It remains disabled until six digits are entered.
+Alternative trusted-device/SMS delivery and resend live under Did not receive a
+code, rather than competing with verification. The code is cleared on submission
+or requesting another delivery and is never persisted or logged. No password,
+provider/session, request transport or delivery behavior changed. Generic busy
+activity and the installer Continue button do not compete with a pending code.
+The update does not restart a running launcher or interrupt its in-memory login.
