@@ -201,3 +201,17 @@ four in-game touch profiles remain unchanged.
 
 Screenshots use the actual SwiftUI views and synthetic library records; no real
 account, game launch or physical controller result is represented.
+
+## In-window compatibility (1.14.2)
+
+Compatibility is a workspace page with an active sidebar item, flexible layout,
+search, live profile counts, artwork, versions and existing game-note links.
+All open-catalog intents, including preparation's View all and the empty-library
+action, route to this page. The catalog has no sheet, Close button or fixed modal
+size. The shared preparation model, active build and logs remain alive while
+browsing. Catalog membership remains separate from owned/installed games.
+
+![Compatibility as an in-window page](images/nxnative-compatibility-en-v1.14.2.png)
+
+Native offscreen capture using the repository catalog; these are support
+profiles, not an owned collection or supplied game files.

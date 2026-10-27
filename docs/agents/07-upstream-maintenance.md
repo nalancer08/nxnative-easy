@@ -29,7 +29,9 @@ appear everywhere without being forgotten. No recurring schedule is implied.
    is not proof of free membership. Keep new-device consent bound to team/device,
    fresh helper-side checks and automatic-refresh refusal to register a new device.
    Keep the global Settings page in the sidebar, with General, Apple Account
-   and Controller sections. Show account email inside its page, not a narrow
+   and Controller sections. Compatibility is an in-window page, including all
+   View all/empty-library catalog entry points; do not reintroduce a catalog sheet.
+   Show account email inside its page, not a narrow
    sidebar card. Keep controller testing independent of game preparation; retain
    account-free save export/content copy.
    Preserve the collection list/detail, personal folder library, both-platform output discovery and

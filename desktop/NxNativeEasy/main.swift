@@ -563,7 +563,6 @@ struct ContentView: View {
         }
         .sheet(isPresented:$model.showSideload) {SideloadView(model:sideload,text:model.text)}
         .sheet(isPresented:$model.showAnalysis) {if let game=model.folder {GameAnalysisView(repo:model.repo,game:game,text:model.text)} else {Text(model.text("Primero selecciona la carpeta de un juego preparado.")).padding(24)}}
-        .sheet(isPresented:$model.showCatalog) {GameCatalogView(model:model)}
         .task {sideload.canRefresh={ !model.running && !updater.busy };await updater.check();sideload.checkRefresh()}
         .onReceive(Timer.publish(every:21600,on:.main,in:.common).autoconnect()) {_ in Task {await updater.check()}}
         .alert(model.text("Ya tienes la versión más reciente."),isPresented:$updater.showNotice) {Button(model.text("Aceptar"),role:.cancel) {}}
@@ -588,7 +587,6 @@ struct GameCatalogView: View {
                     }.font(.system(size:12)).foregroundStyle(.secondary)
                 }
                 Spacer()
-                Button(model.text("Cerrar")) {model.showCatalog=false}.keyboardShortcut(.cancelAction)
             }
             Text(model.text("Juegos del repositorio. Consulta cada ficha para ver dispositivos probados y versiones."))
                 .font(.system(size:12)).foregroundStyle(.secondary).fixedSize(horizontal:false,vertical:true)
@@ -626,7 +624,7 @@ struct GameCatalogView: View {
                     }
                 }
             }
-        }.padding(26).frame(width:760,height:620).preferredColorScheme(.dark)
+        }.padding(28).frame(maxWidth:.infinity,maxHeight:.infinity,alignment:.topLeading).preferredColorScheme(.dark)
         .onAppear {searchFocused=true}
     }
 }

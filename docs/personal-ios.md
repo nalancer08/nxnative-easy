@@ -663,3 +663,13 @@ including live buttons, D-pad, sticks, triggers, release and disconnection. Whol
 SwiftUI compilation and offscreen Settings/library/controller renders validate
 the layout; they do not claim new physical hardware/gameplay tests. The native
 helper is reused byte-for-byte for this UI-only patch.
+
+## In-window compatibility page (1.14.2)
+
+Removed the catalog sheet and routed all catalog entry points through workspace
+navigation. The sidebar shows Compatibility selected; search, profile counts,
+artwork and note links retain the existing data model. Flexible sizing replaces
+the modal frame and Close button. No helper, game or save behavior changed.
+Offscreen navigation validates that the open-catalog intent is consumed without
+an attached sheet; catalog fixtures/checks and the production SwiftUI build
+validate the change. No gameplay/device actions were performed.

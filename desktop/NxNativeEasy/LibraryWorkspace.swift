@@ -6,7 +6,7 @@ struct LibraryWorkspace:View {
     @ObservedObject var library:GameLibrary
     @ObservedObject var updater:AppUpdater
     @ObservedObject var sideload:SideloadModel
-    private enum Page {case library,prepare,devices,settings}
+    private enum Page {case library,prepare,devices,settings,compatibility}
     @State private var page=Page.library
     private var preparing:Bool {page == .prepare}
     @State private var query=""
@@ -68,7 +68,7 @@ struct LibraryWorkspace:View {
                     nav("Preparar juego",icon:"hammer",selected:preparing){page = .prepare}
                     Divider()
                     nav("Dispositivos",icon:"ipad.and.iphone",selected:page == .devices){page = .devices}
-                    nav("Compatibilidad",icon:"checklist",selected:false){model.openCatalog()}
+                    nav("Compatibilidad",icon:"checklist",selected:page == .compatibility){model.openCatalog()}
                     Spacer()
                     Divider()
                     nav("Configuración",icon:"gearshape",selected:page == .settings){page = .settings}
@@ -80,6 +80,7 @@ struct LibraryWorkspace:View {
                     ContentView(updater:updater,sideload:sideload,model:model)
                         .opacity(preparing ? 1 : 0).allowsHitTesting(preparing).accessibilityHidden(!preparing)
                     if page == .settings {WorkspaceSettingsView(model:model,sideload:sideload)}
+                    if page == .compatibility {GameCatalogView(model:model)}
                     if page == .devices {
                         SideloadLibraryView(model:sideload,text:model.text,canInstall:!model.running && !updater.busy,prepareGame:{
                             page = .prepare;model.folder=sideload.hasPendingUpdate ? sideload.gameFolder : nil;model.failed=false;model.preparationStep=0;model.target="ios"
@@ -161,6 +162,7 @@ struct LibraryWorkspace:View {
         .onReceive(NotificationCenter.default.publisher(for:Notification.Name("nxnative.openSettings"))){_ in page = .settings}
         .onReceive(NotificationCenter.default.publisher(for:Notification.Name("nxnative.showLibrary"))){_ in page = .library;if !sideload.busy {model.showSideload=false};library.refresh()}
         .onReceive(NotificationCenter.default.publisher(for:Notification.Name("nxnative.showBuildActivity"))){_ in page = .prepare;model.preparationStep=4;model.showDetails=true}
+        .onChange(of:model.showCatalog){_,show in if show {page = .compatibility;model.showCatalog=false}}
         .onChange(of:model.showDeviceLibrary){_,show in if show {page = .devices;model.showDeviceLibrary=false}}
         .onReceive(library.$games){games in checkBuildAdvice(games);sideload.preparedFolders=Dictionary(games.compactMap {game in game.titleID.map {($0,game.folder)}},uniquingKeysWith:{first,_ in first});sideload.preparedIdentifiers=games.compactMap {game in game.originalBundleID ?? game.titleID.map {"org.nxnative."+$0.lowercased()}}}
         .onChange(of:model.folder){_,_ in if model.folder != nil {remember()}}
