@@ -42,7 +42,7 @@ When the app opens:
 
 Built on [seedds/nxnative](https://github.com/seedds/nxnative). The original project provides the engine, game profiles and compatibility work. **nxnative Easy** adds:
 
-- **Guided preparation:** platform → files → keys → review → live build progress, with drag/drop that leaves originals in place.
+- **Guided preparation:** platform → identify your game → review → live build progress. Choose `prod.keys` to read the real game name, base version, updates and selected version before compiling. Your originals stay in place.
 - **A library that explains readiness:** local Mac/IPA outputs, verified device installations and clearly dated last-seen devices.
 - **Rebuild advice, redacted diagnostics and background completion notifications.** Apple Account is shared across the app; free-team device slots are clearly labelled estimates, with a registration warning before installing on a new device.
 - **Editable iPhone touch controls:** position, size and opacity, saved per game and 2D/3D layout.

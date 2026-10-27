@@ -34,7 +34,7 @@ def build_lock():
             fcntl.flock(lock,fcntl.LOCK_UN)
 
 
-def load_builder():
+def load_builder(package_metadata=None):
     spec = importlib.util.spec_from_file_location('nxnative_builder', REPO / 'scripts/build_ipa_from_nsp.py')
     assert spec is not None and spec.loader is not None
     builder = importlib.util.module_from_spec(spec)
@@ -42,6 +42,12 @@ def load_builder():
     spec.loader.exec_module(builder)
     # Preserve the venv executable path: resolving its symlink selects global Python.
     builder.TOOL_PATHS.insert(0, str(Path(sys.executable).parent))
+    if package_metadata is not None:
+        metadata_spec = importlib.util.spec_from_file_location('nxnative_inspection', REPO/'scripts/inspect_game.py')
+        metadata = importlib.util.module_from_spec(metadata_spec)
+        metadata_spec.loader.exec_module(metadata)
+        value = json.loads(Path(package_metadata).read_text())
+        builder.scan_nsps = lambda folder: metadata.family_from_metadata(folder, value)
     return builder
 
 
@@ -96,6 +102,7 @@ def parser():
     p.add_argument('-l', '--language', help='first build defaults to es-419; later builds retain identity settings')
     p.add_argument('--bundle-id', help='use the SAME effective identifier when updating an installed app')
     p.add_argument('--app-name')
+    p.add_argument('--package-metadata',type=Path,help='verified preflight metadata; changed inputs are rejected')
     p.add_argument('--package', help='explicit game update, such as v327680')
     p.add_argument('--gpu', help='pipeline archive target; first build defaults to none')
     p.add_argument('--show-fps', action=argparse.BooleanOptionalAction, default=None, help='retain FPS display choice across builds')
@@ -184,7 +191,7 @@ def main(argv=None):
             keys = select_keys(args)
             if any(p.suffix.lower() in {'.nsz','.xcz'} for p in packages):
                 subprocess.run([sys.executable,'-m','pip','install','nsz'],check=True)
-            builder = load_builder()
+            builder = load_builder(args.package_metadata) if args.package_metadata else load_builder()
             code = builder.cli(command + ['-k',str(keys)])
             if code: return code
         info = verify_ipa(output)

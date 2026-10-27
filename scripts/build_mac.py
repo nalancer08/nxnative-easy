@@ -15,6 +15,7 @@ def main(argv=None):
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('game_dir',type=Path)
     parser.add_argument('--keys-folder',type=Path,required=True)
+    parser.add_argument('--package-metadata',type=Path)
     parser.add_argument('--dry-run',action='store_true')
     args=parser.parse_args(argv)
     game=args.game_dir.expanduser().resolve(strict=True)
@@ -48,7 +49,8 @@ def main(argv=None):
         if any(p.suffix.lower() in {'.nsz','.xcz'} for p in packages):
             import subprocess
             subprocess.run([sys.executable,'-m','pip','install','nsz'],check=True)
-        code=load_builder().cli(command+['-k',str(keys)])
+        builder=load_builder(args.package_metadata) if args.package_metadata else load_builder()
+        code=builder.cli(command+['-k',str(keys)])
         if code: return code
         romfs=output/'Contents/Resources/romfs'
         if not (output/'Contents/MacOS/dmhost').is_file() or not romfs.is_dir() or romfs.is_symlink():

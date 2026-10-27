@@ -26,6 +26,7 @@ static class P {
     [DllImport("libc", SetLastError = true)] static extern int clonefile(string src, string dst, uint flags);
 
     static int Main(string[] a) {
+        if (a.Length >= 3 && a[0] == "--inspect") return Inspect(a);
         bool manifest = Array.IndexOf(a, "--manifest") >= 0; a = Array.FindAll(a, s => s != "--manifest");
         g_allow = Array.IndexOf(a, "--allow-damaged") >= 0; a = Array.FindAll(a, s => s != "--allow-damaged");
         if (a.Length < 4) { Console.Error.WriteLine("usage: nx_extract <prod.keys> <base.nsp> <update.nsp|-> <out dir> [base RomFS dir] [--manifest] [--allow-damaged]\n       nx_extract <prod.keys> --aoc <dlc.nsp> <out dir>"); return 2; }
@@ -69,6 +70,56 @@ static class P {
         if (manifest) Manifest(new RomFsFileSystem(romfs), Path.Combine(outDir, "romfs_manifest.tsv"));
         else Copy(new RomFsFileSystem(romfs), Path.Combine(outDir, "RomFS"), cmpDir);
         return Damaged();
+    }
+
+    // Metadata-only path: no ExeFS, RomFS, icon or game output is written.
+    // CNMT supplies package identity/type/numeric version; NACP supplies the display name/version.
+    static int Inspect(string[] args) {
+        var packages = new List<object>(); var errors = new List<object>();
+        KeySet keys;
+        try { keys = ExternalKeyReader.ReadKeyFile(args[1]); }
+        catch { Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(new { schema = 1, packages, errors = new[] { new { file = "prod.keys", code = "keys_unreadable" } } })); return 1; }
+        foreach (string path in args[2..]) {
+            string file = Path.GetFileName(path);
+            try {
+                var ncas = OpenNsp(keys, path); int found = 0;
+                foreach (Nca meta in ncas) {
+                    if (meta.Header.ContentType != NcaContentType.Meta) continue;
+                    using IFileSystem fs = meta.OpenFileSystem(NcaSectionType.Data, IntegrityCheckLevel.ErrorOnInvalid);
+                    foreach (DirectoryEntryEx entry in fs.EnumerateEntries("*", SearchOptions.Default)) {
+                        if (!entry.Name.EndsWith(".cnmt", StringComparison.OrdinalIgnoreCase)) continue;
+                        using var stream = new UniqueRef<IFile>();
+                        fs.OpenFile(ref stream.Ref, entry.FullPath.ToU8Span(), OpenMode.Read).ThrowIfFailure();
+                        byte[] header = new byte[0x20];
+                        stream.Get.Read(out long read, 0, header, ReadOption.None).ThrowIfFailure();
+                        if (read != header.Length) throw new InvalidDataException();
+                        ulong id = System.Buffers.Binary.BinaryPrimitives.ReadUInt64LittleEndian(header);
+                        uint version = System.Buffers.Binary.BinaryPrimitives.ReadUInt32LittleEndian(header.AsSpan(8));
+                        string kind = header[12] switch { 0x80 => "base", 0x81 => "update", 0x82 => "dlc", _ => "other" };
+                        ulong application = kind == "update" ? id & ~0xFFFUL : id;
+                        if (kind == "dlc") {
+                            byte[] extended = new byte[8];
+                            stream.Get.Read(out long got, 0x20, extended, ReadOption.None).ThrowIfFailure();
+                            if (got != 8) throw new InvalidDataException();
+                            application = System.Buffers.Binary.BinaryPrimitives.ReadUInt64LittleEndian(extended);
+                        }
+                        string name = null, display = null;
+                        Nca control = Pick(ncas, NcaContentType.Control, application);
+                        if (control != null) {
+                            byte[] nacp = Nacp(control);
+                            if (nacp.Length < 0x3070) throw new InvalidDataException();
+                            name = TitleName(nacp);
+                            display = System.Text.Encoding.UTF8.GetString(nacp, 0x3060, 0x10).TrimEnd('\0');
+                        }
+                        packages.Add(new { file, title_id = application.ToString("X16"), content_id = id.ToString("X16"), kind, version, name, display_version = display });
+                        found++;
+                    }
+                }
+                if (found == 0) errors.Add(new { file, code = "metadata_missing" });
+            } catch { errors.Add(new { file, code = "metadata_unreadable" }); }
+        }
+        Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(new { schema = 1, packages, errors }));
+        return errors.Count == 0 ? 0 : 1;
     }
 
     // Files whose data failed the hash check: listed at the end; exit code 3 unless --allow-damaged

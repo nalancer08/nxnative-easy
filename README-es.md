@@ -42,7 +42,7 @@ Cuando abra la app:
 
 Partimos de [seedds/nxnative](https://github.com/seedds/nxnative): el motor, los perfiles y la compatibilidad son trabajo del proyecto original. **nxnative Easy** añade:
 
-- **Preparación guiada:** destino → archivos → llaves → revisión → compilación con avance y registro. Arrastrar archivos no mueve tus originales.
+- **Preparación guiada:** destino → identificar tu juego → revisión → compilación con avance y registro. Con tu `prod.keys`, muestra el nombre real, la versión base, los updates y la versión que se preparará antes de compilar. Tus originales se conservan.
 - **Biblioteca con estados claros:** app/IPA preparada, instalaciones verificadas y última comprobación de dispositivos desconectados.
 - **Avisos para recompilar, diagnósticos sin datos sensibles y notificaciones al terminar.** La cuenta Apple es global; los cupos de cuentas gratuitas son estimaciones identificadas, con aviso antes de registrar un dispositivo nuevo.
 - **Controles editables en iPhone:** posición, tamaño y opacidad, guardados por juego y layout.

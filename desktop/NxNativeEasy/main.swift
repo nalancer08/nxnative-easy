@@ -105,6 +105,95 @@ struct PreparationIllustration:View {
     }
 }
 
+struct InspectedPackage:Decodable,Identifiable {
+    let file:String
+    let title_id:String
+    let kind:String
+    let version:UInt64
+    let name:String?
+    let display_version:String?
+    var id:String {file+title_id+kind+String(version)}
+}
+struct PackageInspection:Decodable {
+    let schema:Int
+    let status:String
+    let title_id:String?
+    let name:String?
+    let display_version:String?
+    let version:UInt64?
+    let selected_file:String?
+    let base_version:String?
+    let updates:[InspectedPackage]?
+    let dlc:[InspectedPackage]?
+    var ready:Bool {schema==1 && status=="ready"}
+}
+
+struct PackageIdentityView:View {
+    @State private var started=Date()
+    let inspection:PackageInspection?
+    let inspecting:Bool
+    let hasKeys:Bool
+    let catalog:[CatalogGame]
+    let text:(String)->String
+    let chooseKeys:()->Void
+    let retry:()->Void
+    let setup:()->Void
+    let cancel:()->Void
+    private var message:String {
+        switch inspection?.status {
+        case "files_changed":return "Los archivos cambiaron. Vuelve a identificar la carpeta antes de continuar."
+        case "base_missing":return "No encontramos un juego base. Añade el archivo base, además del update."
+        case "multiple_games":return "Hay varios juegos en esta carpeta. Deja un solo juego con sus updates y DLC."
+        case "tools_missing","tools_unavailable":return "Necesitamos preparar la herramienta de lectura de metadatos. El juego todavía no se compila."
+        case "incomplete":return "Algunos archivos no se pudieron identificar. Revisa tus llaves y que los archivos estén completos."
+        default:return "No pudimos leer los metadatos. Revisa tus llaves y los archivos del juego."
+        }
+    }
+    var body:some View {
+        VStack(alignment:.leading,spacing:12) {
+            if inspecting {
+                HStack {ProgressView().controlSize(.small);Text(text("Leyendo el juego y sus actualizaciones…")).font(.headline);Spacer();Button(text("Cancelar"),action:cancel)}
+                Text(text("Sólo leemos los metadatos internos. No extraemos romfs ni compilamos el juego.")).font(.caption).foregroundStyle(.secondary)
+                TimelineView(.periodic(from:.now,by:1)) {context in
+                    Text(text("Tiempo transcurrido")+": "+String(max(0,Int(context.date.timeIntervalSince(started))))+" s").font(.caption.monospacedDigit()).foregroundStyle(.secondary)
+                }
+            } else if !hasKeys {
+                Label(text("Identifica tu juego antes de compilar"),systemImage:"magnifyingglass").font(.headline)
+                Text(text("Necesitamos tu prod.keys para leer el nombre, la versión y los updates dentro de tus archivos.")).font(.callout).foregroundStyle(.secondary)
+                Button(text("Elegir prod.keys e identificar"),action:chooseKeys)
+            } else if let result=inspection,result.ready {
+                Label(result.name ?? catalog.first(where:{$0.id.uppercased()==result.title_id})?.name ?? text("Juego identificado"),systemImage:"checkmark.seal.fill").font(.title2.bold())
+                HStack(spacing:20) {
+                    Label(text("Versión a preparar")+": "+(result.display_version ?? text("Versión interna")+" \(result.version ?? 0)"),systemImage:"tag")
+                    Text(result.title_id ?? "").font(.caption.monospaced()).foregroundStyle(.secondary)
+                }
+                if let base=result.base_version,!base.isEmpty {Text(text("Juego base")+": "+base).font(.callout).foregroundStyle(.secondary)}
+                if let updates=result.updates,!updates.isEmpty {
+                    Text(text("Actualizaciones detectadas")+": \(updates.count)").font(.headline)
+                    ForEach(updates) {update in
+                        HStack {
+                            Image(systemName:update.file==result.selected_file ? "checkmark.circle.fill" : "arrow.down.circle")
+                            Text(update.display_version ?? text("Versión interna")+" \(update.version)").fontWeight(.semibold)
+                            Text(update.file).lineLimit(2).foregroundStyle(.secondary)
+                            if update.file==result.selected_file {Text(text("Se usará esta")).font(.caption.bold())}
+                        }.font(.callout)
+                    }
+                } else {Label(text("Sin updates detectados: se preparará el juego base."),systemImage:"info.circle").font(.callout)}
+                if let dlc=result.dlc,!dlc.isEmpty {Label(text("DLC detectados")+": \(dlc.count)",systemImage:"square.stack.3d.up").font(.callout)}
+                if let id=result.title_id,!catalog.contains(where:{$0.id.uppercased()==id}) {Text(text("Este juego no tiene un perfil probado en el catálogo. Prepararlo no garantiza que funcione.")).font(.caption).foregroundStyle(.orange)}
+                Button(text("Volver a comprobar"),action:retry).font(.caption)
+            } else {
+                Label(text(message),systemImage:"exclamationmark.triangle").foregroundStyle(.orange)
+                HStack {
+                    if ["tools_missing","tools_unavailable"].contains(inspection?.status ?? "") {Button(text("Preparar herramienta de lectura"),action:setup)}
+                    else {Button(text("Volver a comprobar"),action:retry);Button(text("Cambiar prod.keys"),action:chooseKeys)}
+                }
+            }
+        }.padding(18).frame(maxWidth:.infinity,alignment:.leading).background(Color(red:0.79,green:0.95,blue:0.37).opacity(0.065),in:RoundedRectangle(cornerRadius:14))
+            .onChange(of:inspecting) {_,active in if active {started=Date()}}
+    }
+}
+
 @MainActor final class BuildModel: ObservableObject {
     @Published var language: EasyLanguage = EasyLanguage.load() {
         didSet {language.save(defaults:defaults)}
@@ -118,7 +207,13 @@ struct PreparationIllustration:View {
     @Published var splitIOS=true {didSet {defaults.set(splitIOS,forKey:"iosSplitGameData");output=nil;assets=nil;restoreOutput()}}
     var isMac: Bool {target == "mac"}
     @Published var folder: URL? {didSet {inspectFiles()}}
-    @Published var keysFolder: URL?
+    @Published var keysFolder: URL? {didSet {identifyGame()}}
+    @Published var inspecting=false
+    @Published var inspection:PackageInspection?
+    private var inspectionData:Data?
+    private var inspectionManifest:URL?
+    private var inspectionProcess:Process?
+    private var inspectionGeneration=UUID()
     @Published var detectedFiles:[PreparationFile]=[]
     var readableKeys:Bool {
         guard let key=keysFolder?.appendingPathComponent("prod.keys"),
@@ -128,6 +223,7 @@ struct PreparationIllustration:View {
     func inspectFiles() {
         guard let folder else {detectedFiles=[];return}
         detectedFiles=PreparationFile.inspect(folder)
+        identifyGame()
     }
     @Published var running = false
     @Published var phase = "Tu próximo juego empieza aquí."
@@ -173,6 +269,36 @@ struct PreparationIllustration:View {
     private func refreshCatalog() {
         do {catalog=try GameCatalog.load(repo:repo);catalogFailed=false}
         catch {catalog=[];catalogFailed=true}
+    }
+    func cancelInspection() {
+        inspectionGeneration=UUID()
+        if let task=inspectionProcess,task.isRunning {if kill(-task.processIdentifier,SIGTERM) != 0 {task.terminate()}}
+        inspectionProcess=nil;inspecting=false
+    }
+    func identifyGame(setupTools:Bool=false) {
+        cancelInspection();inspection=nil;inspectionData=nil
+        guard let folder,readableKeys,!detectedFiles.isEmpty else {return}
+        let script=repo.appendingPathComponent("scripts/inspect_game.py")
+        guard FileManager.default.fileExists(atPath:script.path),let keysFolder else {return}
+        let generation=inspectionGeneration,task=Process(),pipe=Pipe()
+        task.executableURL=URL(fileURLWithPath:"/usr/bin/python3")
+        task.arguments=[repo.appendingPathComponent("desktop/NxNativeEasy/build_session.py").path,script.path,folder.path,"--keys",keysFolder.appendingPathComponent("prod.keys").path]+(setupTools ? ["--setup-tools"] : [])
+        task.standardOutput=pipe;task.standardError=FileHandle.nullDevice
+        var env=ProcessInfo.processInfo.environment
+        env.removeValue(forKey:"NXE_BUILD_LOG");env.removeValue(forKey:"NXE_GAME_DIR")
+        task.environment=env
+        do {try task.run();inspectionProcess=task;inspecting=true}
+        catch {inspection=try? JSONDecoder().decode(PackageInspection.self,from:Data("{\"schema\":1,\"status\":\"metadata_unreadable\"}".utf8));return}
+        DispatchQueue.global(qos:.userInitiated).async { [weak self] in
+            let data=try? pipe.fileHandleForReading.readToEnd()
+            task.waitUntilExit()
+            Task {@MainActor in
+                guard let self,self.inspectionGeneration==generation else {return}
+                self.inspectionProcess=nil;self.inspecting=false
+                if let data,data.count<=1048576,let result=try? JSONDecoder().decode(PackageInspection.self,from:data),result.schema==1 {self.inspection=result;self.inspectionData=data}
+                else {self.inspection=try? JSONDecoder().decode(PackageInspection.self,from:Data("{\"schema\":1,\"status\":\"metadata_unreadable\"}".utf8))}
+            }
+        }
     }
     func openCatalog() {
         refreshCatalog()
@@ -243,7 +369,7 @@ struct PreparationIllustration:View {
     }
 
     func build() {
-        guard let folder, !running, !target.isEmpty else {return}
+        guard let folder, !running, !inspecting,inspection?.ready==true,!target.isEmpty else {return}
         let script=repo.appendingPathComponent("scripts/prepare_ios.sh")
         guard FileManager.default.fileExists(atPath:script.path) else {
             phase="No encontramos el código de nxnative.";detail="Vuelve a crear la app desde el repositorio con Abrir-interfaz.command.";failed=true;return
@@ -253,7 +379,11 @@ struct PreparationIllustration:View {
         let task=Process();let pipe=Pipe()
         task.executableURL=URL(fileURLWithPath:"/usr/bin/python3")
         var arguments=[repo.appendingPathComponent("desktop/NxNativeEasy/build_session.py").path,script.path,"--target",target,folder.path]
-        arguments += ["--keys-folder",keysFolder.path]
+        guard let inspectionData else {return}
+        let manifest=FileManager.default.temporaryDirectory.appendingPathComponent("nxnative-inspection-"+UUID().uuidString+".json")
+        do {try inspectionData.write(to:manifest,options:.atomic);inspectionManifest=manifest}
+        catch {failed=true;phase="No pudimos guardar la comprobación del juego.";return}
+        arguments += ["--keys-folder",keysFolder.path,"--package-metadata",manifest.path]
         if target=="ios" && !splitIOS {arguments.append("--full-only")}
         task.arguments=arguments;task.currentDirectoryURL=repo
         task.standardOutput=pipe;task.standardError=pipe
@@ -280,6 +410,7 @@ struct PreparationIllustration:View {
                 guard let self else{return}
                 self.activity.finish(logURL:self.logURL);self.activity.complete(exitCode:status,cancelled:self.cancelled);self.transcript=self.activity.transcript
                 self.running=false;self.process=nil
+                if let manifest=self.inspectionManifest {try? FileManager.default.removeItem(at:manifest);self.inspectionManifest=nil}
                 if self.cancelled {
                     self.phase="Preparación cancelada.";self.detail="Tus archivos y partidas anteriores se conservaron."
                 } else if status==0 {
@@ -308,7 +439,7 @@ struct PreparationIllustration:View {
             }
         }
         do { process=task;try task.run() }
-        catch { running=false;process=nil;failed=true;phase="No pudimos iniciar la preparación.";detail=error.localizedDescription }
+        catch { if let manifest=inspectionManifest {try? FileManager.default.removeItem(at:manifest);inspectionManifest=nil};running=false;process=nil;failed=true;phase="No pudimos iniciar la preparación.";detail=error.localizedDescription }
     }
     func append(_ data:Data) {
         guard running else {return}
@@ -349,6 +480,7 @@ struct PreparationIllustration:View {
         NSWorkspace.shared.activateFileViewerSelecting(paths.isEmpty ? [folder] : paths)
     }
     func cancel() {
+        cancelInspection()
         guard let process,process.isRunning else{return}
         cancelled=true
         if kill(-process.processIdentifier,SIGTERM) != 0 {process.terminate()}
@@ -537,9 +669,11 @@ struct ContentView: View {
                             Spacer()
                             Button(model.folder == nil ? model.text("Elegir") : model.text("Cambiar")) {model.chooseFolder()}.disabled(model.running || updater.busy || sideload.busy).accessibilityLabel(model.text("Carpeta de tu juego"))
                         }
-                        PreparationInventory(files:model.detectedFiles,text:model.text)
-                        Text(model.text("Detectamos nombres, formatos y tamaños. El juego y su versión se confirman al preparar con tus llaves.")).font(.caption).foregroundStyle(.secondary)
-                        Button(model.text("Continuar")){model.inspectFiles();model.preparationStep=2}.buttonStyle(LibraryPrimaryButtonStyle()).disabled(model.failed || model.folder==nil || (model.detectedFiles.isEmpty || model.detectedFiles.contains(where:{!$0.readable})) || model.running || sideload.busy || updater.busy)
+                        PackageIdentityView(inspection:model.inspection,inspecting:model.inspecting,hasKeys:model.readableKeys,catalog:model.catalog,text:model.text,chooseKeys:{model.chooseKeysFolder()},retry:{model.identifyGame()},setup:{model.identifyGame(setupTools:true)},cancel:{model.cancelInspection()})
+                        if model.inspection?.ready==true {
+                            DisclosureGroup(model.text("Ver archivos detectados")) {PreparationInventory(files:model.detectedFiles,text:model.text)}.font(.callout).foregroundStyle(.secondary)
+                        } else {PreparationInventory(files:model.detectedFiles,text:model.text)}
+                        Button(model.text("Continuar")){model.preparationStep=model.readableKeys ? 3 : 2}.buttonStyle(LibraryPrimaryButtonStyle()).disabled(model.inspecting || model.inspection?.ready != true || model.failed || model.folder==nil || (model.detectedFiles.isEmpty || model.detectedFiles.contains(where:{!$0.readable})) || model.running || sideload.busy || updater.busy)
                         }
                         if model.preparationStep==2 {
                         HStack(spacing:12) {
@@ -553,11 +687,13 @@ struct ContentView: View {
                             Button(model.keysFolder == nil ? model.text("Elegir") : model.text("Cambiar")) {model.chooseKeysFolder()}.disabled(model.running || updater.busy || sideload.busy).accessibilityLabel(model.text("Seleccionar prod.keys"))
                         }
                         Label(model.text(model.readableKeys ? "Recordamos su ubicación. La compatibilidad de las llaves se comprueba al preparar." : "Elige prod.keys o arrástralo aquí. No necesitas seleccionar una carpeta."),systemImage:model.readableKeys ? "checkmark.shield" : "hand.draw").font(.callout).foregroundStyle(.secondary)
-                        Button(model.text("Continuar")){model.preparationStep=3}.buttonStyle(LibraryPrimaryButtonStyle()).disabled(model.failed || !model.readableKeys || model.running || sideload.busy || updater.busy)
+                        if model.folder != nil {PackageIdentityView(inspection:model.inspection,inspecting:model.inspecting,hasKeys:model.readableKeys,catalog:model.catalog,text:model.text,chooseKeys:{model.chooseKeysFolder()},retry:{model.identifyGame()},setup:{model.identifyGame(setupTools:true)},cancel:{model.cancelInspection()})}
+                        Button(model.text("Continuar")){model.preparationStep=3}.buttonStyle(LibraryPrimaryButtonStyle()).disabled(model.inspecting || model.inspection?.ready != true || model.failed || !model.readableKeys || model.running || sideload.busy || updater.busy)
                         }
                         if model.preparationStep==3 {
                             Label(model.isMac ? "Mac" : "iPhone / iPad",systemImage:model.isMac ? "desktopcomputer" : "ipad.and.iphone").font(.title2.bold())
-                            Text(model.gameName).font(.headline)
+                            Text(model.inspection?.name ?? model.gameName).font(.headline)
+                            if let version=model.inspection?.display_version {Label(model.text("Versión a preparar")+": "+version,systemImage:"tag")}
                             Label(model.text("Llaves seleccionadas"),systemImage:"key.horizontal").foregroundStyle(.secondary)
                         }
                         if model.target=="ios" && model.preparationStep==3 {

@@ -1,6 +1,6 @@
 import Foundation
 @main struct WorkflowCheck {
-    @MainActor static func main() throws {
+    @MainActor static func main() async throws {
         let root=FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString).resolvingSymlinksInPath()
         try FileManager.default.createDirectory(at:root,withIntermediateDirectories:true)
         defer {try? FileManager.default.removeItem(at:root)}
@@ -29,6 +29,27 @@ import Foundation
         model.running=true;model.acceptDrop([other]);assert(model.folder?.path==game.path);model.running=false
         for url in [file,update,key] {let bytes=try Data(contentsOf:url);assert(bytes==Data("synthetic original".utf8))}
         assert(!FileManager.default.fileExists(atPath:repo.appendingPathComponent("prod.keys").path))
+        // Fake metadata worker: exercises automatic read, stale result rejection and cancellation only.
+        let scripts=repo.appendingPathComponent("scripts"),desktop=repo.appendingPathComponent("desktop/NxNativeEasy")
+        try FileManager.default.createDirectory(at:scripts,withIntermediateDirectories:true)
+        try FileManager.default.createDirectory(at:desktop,withIntermediateDirectories:true)
+        try """
+        import os,sys
+        if os.getpgrp()!=os.getpid():os.setsid()
+        os.execv(sys.executable,[sys.executable]+sys.argv[1:])
+        """.write(to:desktop.appendingPathComponent("build_session.py"),atomically:true,encoding:.utf8)
+        try """
+        import sys,json,time,os
+        time.sleep(0.15)
+        print(json.dumps({'schema':1,'status':'ready','name':os.path.basename(sys.argv[1]),'title_id':'010093801237C000','version':0,'updates':[],'dlc':[]}))
+        """.write(to:scripts.appendingPathComponent("inspect_game.py"),atomically:true,encoding:.utf8)
+        assert(model.acceptFolder(game));assert(model.inspecting)
+        assert(model.acceptFolder(other));assert(model.inspecting)
+        for _ in 0..<100 {if !model.inspecting {break};try await Task.sleep(nanoseconds:20_000_000)}
+        assert(model.inspection?.ready==true && model.inspection?.name=="other")
+        model.identifyGame();assert(model.inspecting);model.cancelInspection()
+        try await Task.sleep(nanoseconds:250_000_000)
+        assert(!model.inspecting && model.inspection==nil)
         print("Workflow PASS: shared chooser/drop validation, target-first flow, one-folder ambiguity, repository/symlink rejection, busy guard and unchanged source/key bytes")
     }
 }
