@@ -585,7 +585,11 @@ struct AppleVerificationView:View {
                     Button(text("Solicitar otro código")){code="";model.resend()}.buttonStyle(.link)
                 }.padding(.top,12)
             }.font(.callout)
-            Text(text("El código se envía a Apple y no se guarda.")).font(.caption).foregroundStyle(.secondary)
+            HStack(alignment:.firstTextBaseline) {
+                Text(text("El código se envía a Apple y no se guarda.")).font(.caption).foregroundStyle(.secondary)
+                Spacer()
+                Button(text("Cancelar")){code="";model.cancel()}.buttonStyle(.link)
+            }
         }.padding(24).frame(maxWidth:.infinity,alignment:.leading)
             .background(.white.opacity(0.035),in:RoundedRectangle(cornerRadius:18))
             .overlay(RoundedRectangle(cornerRadius:18).strokeBorder(.white.opacity(0.06)))
