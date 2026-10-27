@@ -15,7 +15,8 @@ appear everywhere without being forgotten. No recurring schedule is implied.
    `--stage`. Never reset our main to upstream or replace it with their README.
    Conflicts stay in the candidate until deliberately resolved.
 3. Retain English/Spanish UI and documentation, automatic app updates, Mac/iPhone
-   target selection, controller detection/test, shared touch editor and its four named per-game profiles, explicit
+   target selection, controller detection/test, shared touch editor and its four named per-game profiles, live build
+   progress/persistent logs and optional original-code REA analysis, explicit
    external key selection, unsigned/lightweight iOS output and complete Mac apps.
    Keep personal commit attribution, original upstream authors and licensing.
    Keep local saves and control preferences separate from the optional save API;

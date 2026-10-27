@@ -86,6 +86,29 @@ El icono del teléfono con controles es original. Las tarjetas usan las capturas
 
 Para actualizar, usa la misma cuenta y el mismo bundle ID efectivo de Sideloadly. **Instala encima; no desinstales la app**, para conservar tus partidas. Si los datos del juego no cambiaron, puedes reutilizar el `romfs` existente. La app instala las herramientas de compilación que falten después de tener Xcode y Homebrew, pero **no firma ni instala el juego en el iPhone**. Esos pasos los hace Sideloadly. La app los explica cuando la IPA está lista.
 
+## Actualizar un juego preparado
+
+Añade tus propios archivos de actualización a la misma carpeta del juego y
+prepáralo de nuevo. La app reconoce la preparación anterior y explica que será
+una actualización; no puede inspeccionar lo instalado en tu iPhone. Una versión
+nueva del juego sigue necesitando soporte compatible del motor y su perfil.
+
+- **Mac:** se crea otra `.app` completa y se conserva la anterior. Cierra el juego
+  viejo y abre la nueva. Se mantienen el Title ID y la identidad de la app; las
+  partidas siguen fuera de ella, en Application Support.
+- **iPhone / iPad:** instala la IPA encima usando la misma cuenta e identificador
+  efectivo de Sideloadly. Si cambió el contenido del juego, reemplaza sólo
+  `romfs` por los datos nuevos desde Finder. Conserva `save`, `save_device` y la
+  app instalada; no los borres.
+
+Durante la preparación puedes ver la etapa, contadores reales cuando existen,
+tiempo transcurrido y el log en vivo. **Mostrar logs guardados** abre el registro
+de la sesión y **Mostrar logs del compilador** muestra los originales completos.
+
+El análisis opcional está en **Herramientas de análisis → Analizar con REA**.
+Exporta código original para un motor de análisis instalado; no hace compatibles
+los juegos automáticamente. [Flujo y requisitos de análisis](docs/game-analysis.md).
+
 ## Perfiles de juegos con soporte
 
 El carrusel muestra los perfiles de esta copia; no proporciona ni descarga juegos. Debes añadir tus propios archivos del juego. Pulsa **Ver todos** arriba a la derecha para consultar la lista completa de soporte. Busca por nombre, versión o Title ID; cada resultado enlaza a su ficha. El catálogo vuelve a leer los perfiles locales cada vez que lo abres. El carrusel rota automáticamente y se pausa al colocar el cursor encima.

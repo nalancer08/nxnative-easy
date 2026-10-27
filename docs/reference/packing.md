@@ -49,3 +49,10 @@
 - **Cause:** the fixture used `pso_offline.py`'s SDK-major default (27) on a Mac running macOS 26.6. Production intentionally falls back to compiling bases on-device when it cannot load such an archive.
 - **Fix:** the native fixture explicitly passes the current macOS major as `--os-min`, so it tests archive reuse on the system actually running it; keep its scratch fixture on failure for diagnostics. Production fallback remains intact.
 - **Found on:** full-main GPU validation with Xcode 27.1 on macOS 26.6.1, Apple M2 Max.
+
+### Desktop preparation shows a spinner with no build activity
+
+- **Symptom:** preparation appears stuck; the player cannot inspect compilation output until a failure.
+- **Cause:** the UI hid its transcript unless `failed` was true, parsed only coarse text fragments, and did not surface the compiler logs that the upstream builder intentionally writes separately.
+- **Fix:** request upstream JSON progress through the wrappers, frame complete UTF-8 records in the native model, and show stage counters/fractions only when reported. The group-preserving worker streams console output and bounded tails of changed regular per-tool logs, retains a private session log and preserves the original complete compiler files. The UI exposes both log locations, elapsed time, a quiet-output notice and error details; preview truncation never deletes the original logs. Mac rebuilds retain bundle/Title ID metadata; a previous preparation is not evidence of an iPhone installation.
+- **Found on:** desktop builds reported by the repository owner; validated with synthetic streaming/rotation/failure/cancellation fixtures and the production Swift model. See [personal desktop workflow](../personal-ios.md#live-preparation-logs-and-game-updates).

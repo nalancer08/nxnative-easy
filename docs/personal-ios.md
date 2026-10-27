@@ -358,3 +358,36 @@ physical iPhone/iPad comparison was performed. Existing installed games, working
 caches, keys and saves were not changed. Preparing a game again builds against
 the new chain and includes the control profiles; sideload over the same bundle
 identity rather than deleting the game to retain its local data.
+
+## Live preparation logs and game updates
+
+Version 1.7/build 11 detects prior target-specific preparation records and explains
+Mac versus iPhone update handling. Mac output remains a fresh complete app;
+its previous identity and Title ID are checked before recording success, and
+external saves are untouched. iPhone retains its existing identity checks;
+content updates require the new RomFS, preserving the app and both save roots.
+
+The shared worker retains cancellable process groups, persists console output,
+streams bounded changed compiler-log tails and leaves original logs complete.
+The native parser handles split UTF-8/JSON records, partial final lines and
+unknown counts. The UI exposes live logs, compiler-log folders and elapsed time;
+it never invents a percentage or interprets silence as a dead process.
+
+The separate [REA flow](game-analysis.md) exports original NSO to ELF and offers
+optional local analysis. Synthetic converter tests exercise the actual NSO/ELF
+tool, source integrity, destination isolation, tool pins and preserved Evidence
+on provider failure. Published REA 6.8.0 was downloaded with isolated Node
+24.22.1 and provider discovery ran successfully; no native decompiler provider
+was configured on the validation Mac, so full Ghidra/Hopper/IDA analysis is not
+claimed. No real game module, game installation, key or save was changed.
+
+Validation for this release: 58 script cases passed (one optional API-identity
+test skipped without its separate dependency); focused native progress/log/
+language cases passed, including byte-split UTF-8, real counts, final log replay,
+private retained logs, bounded tails and Foundation cancellation. The production
+SwiftUI bundle compiled and its ad-hoc signature verified. The game catalog
+remains 78 profiles and documentation checks passed. Python lint retained 414
+baseline findings and introduced none. `scripts/regress.py` was invoked, but no
+registered Dread Mac build was discoverable (`tools/dmhost` absent); no gameplay
+comparison or physical Mac/iPhone update was performed. The shader chain and
+runtime were not changed by this release.

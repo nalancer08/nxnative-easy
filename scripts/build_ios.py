@@ -147,7 +147,7 @@ def main(argv=None):
         raise ValueError('Bundle ID differs from the previous build. Use a separate game folder for a separate app.')
     output = game / ('nxnative-ios-' + datetime.now().strftime('%Y%m%d-%H%M%S-%f') + '-unsigned.ipa')
     command = [str(game), '--platform','ios','--team-id','0000000000',
-               '--gpu',settings['gpu'],'-l',settings['language'],'--progress','lines','-o',str(output)]
+               '--gpu',settings['gpu'],'-l',settings['language'],'--progress',os.environ.get('NXE_PROGRESS','lines'),'-o',str(output)]
     for key in ['bundle_id','app_name']:
         if settings[key]: command += ['--'+key.replace('_','-'), settings[key]]
     command += ['--show-fps' if settings['show_fps'] else '--no-show-fps']
@@ -192,6 +192,8 @@ def main(argv=None):
         if old_id and actual_id != old_id: raise ValueError('Built bundle ID changed unexpectedly; do not install.')
         settings['bundle_id'] = actual_id
         from split_ipa import split_ipa
+        if os.environ.get('NXE_PROGRESS')=='json' and not args.full_only:
+            print(json.dumps({'ev':'stage','name':'Export lightweight IPA','step':'Separating game data','k':0,'n':0}),flush=True)
         light_dir = None if args.full_only else split_ipa(output)
         record = dict(schema=1, **settings, version=info.get('CFBundleShortVersionString'),
                       source_revision=revision, full_ipa=str(output), light_dir=str(light_dir) if light_dir else None)

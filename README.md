@@ -30,7 +30,7 @@ When the app opens:
 
 **iPhone / iPad:** creates an unsigned lightweight IPA; install it with Sideloadly, then copy the game data as shown in the app. [See the iPhone/iPad preparation screen](docs/images/nxnative-ios-v1.4.png).
 
-**Required:** an Apple silicon Mac (M1 or newer), macOS 26+ and Xcode 26+. The command installs the other tools. You must provide your own games and keys. Compilation can take time, especially for the first game.
+**Required:** an Apple silicon Mac (M1 or newer), macOS 26+ and Xcode 26+. The command installs the other tools. You must provide your own games and keys. Compilation can take time, especially for the first game. The window shows the current stage, real counters when available, elapsed time and a live log. **Show saved logs** keeps the session output accessible; **Show compiler logs** opens the original tool logs.
 
 ![The nxnative Easy desktop app](docs/images/nxnative-mac-v1.4.png)
 
@@ -83,6 +83,25 @@ The app has an original phone-and-controller icon. Game cards use the existing u
 3. On the first installation, click **Show game data** and copy the complete `romfs` folder using **Finder → iPhone → Files → your game**.
 
 For updates, keep the same Apple account and effective bundle ID used in Sideloadly. **Install over the existing app; do not uninstall it**, to retain its saves. Reuse the existing `romfs` only when the game data have not changed. The app installs missing build dependencies after Xcode and Homebrew are available, but **does not sign or install the iPhone game**. Those steps happen in Sideloadly. The app explains them only when the IPA is ready. See the [official Sideloadly FAQ](https://sideloadly.io/faq).
+
+## Updating a prepared game
+
+Add your own update files to the same game folder and prepare it again. The app
+recognizes its previous preparation and explains that this is an update; it
+cannot inspect what is installed on an iPhone. A new game version still needs
+compatible engine/profile support.
+
+- **Mac:** a new complete `.app` is created; the previous app remains available.
+  Close the old game and open the new app. The Title ID and bundle identity are
+  retained; saves stay outside the app in Application Support.
+- **iPhone / iPad:** install the new IPA over the existing app using the same
+  Sideloadly account and effective identifier. For a game-content update, replace
+  only `romfs` with the newly prepared data via Finder. Keep `save`, `save_device`
+  and the installed app; do not delete them.
+
+Optional developer analysis is under **Analysis tools → Analyze with REA**.
+It exports original code for an existing native analysis engine; it does not
+make unsupported games work automatically. [Analysis flow and prerequisites](docs/game-analysis.md).
 
 ## Included game profiles
 

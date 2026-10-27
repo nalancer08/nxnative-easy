@@ -19,11 +19,17 @@ import Darwin
     @Published var phase = "Tu próximo juego empieza aquí."
     @Published var detail = "Elige su carpeta. Nosotros preparamos la IPA ligera."
     @Published var transcript = ""
+    @Published var activity=BuildActivity()
+    @Published var startedAt:Date?
+    @Published var lastOutputAt:Date?
+    @Published var logURL:URL?
+    @Published var previous:PreviousPreparation?
     @Published var output: URL?
     @Published var assets: URL?
     @Published var failed = false
     @Published var showDetails = false
     @Published var showCatalog = false
+    @Published var showAnalysis = false
     @Published var catalog: [CatalogGame] = []
     @Published var catalogFailed = false
     private var process: Process?
@@ -86,6 +92,7 @@ import Darwin
         failed=false;phase="Tus llaves están seleccionadas.";detail="Sólo guardamos la ruta en este Mac, nunca su contenido."
     }
     func restoreOutput() {
+        previous=folder.flatMap {PreviousPreparation.load(folder:$0,target:target)}
         if isMac {
             guard let folder,
                   let data=try? Data(contentsOf:folder.appendingPathComponent("nxnative-mac.json")),
@@ -118,19 +125,23 @@ import Darwin
         task.standardOutput=pipe;task.standardError=pipe
         var environment=ProcessInfo.processInfo.environment
         environment["PYTHONUNBUFFERED"]="1"
+        environment["NXE_PROGRESS"]="json"
+        let log=folder.appendingPathComponent("nxnative-tools/logs/build-"+UUID().uuidString+".log")
+        logURL=log;environment["NXE_BUILD_LOG"]=log.path;environment["NXE_GAME_DIR"]=folder.path
+        startedAt=Date();lastOutputAt=nil;activity=BuildActivity()
         task.environment=environment
         running=true;cancelled=false;failed=false;showDetails=false;output=nil;assets=nil;transcript=""
         phase="Preparando herramientas…";detail="Puedes dejar esta ventana abierta. No necesitas usar Terminal."
         pipe.fileHandleForReading.readabilityHandler={ [weak self] handle in
             let data=handle.availableData
             guard !data.isEmpty else { handle.readabilityHandler=nil;return }
-            let text=String(decoding:data,as:UTF8.self)
-            Task { @MainActor in self?.append(text) }
+            Task { @MainActor in self?.append(data) }
         }
         task.terminationHandler={ [weak self] task in
             let status=task.terminationStatus
             Task { @MainActor in
                 guard let self else{return}
+                self.activity.finish(logURL:self.logURL);self.transcript=self.activity.transcript
                 self.running=false;self.process=nil
                 if self.cancelled {
                     self.phase="Preparación cancelada.";self.detail="Tus archivos y partidas anteriores se conservaron."
@@ -140,7 +151,7 @@ import Darwin
                     self.phase=self.output == nil ? "Terminó, pero no encontramos la app." : (self.isMac ? "Tu juego está listo para Mac." : "Tu juego está listo para Sideloadly.")
                     self.detail=self.output == nil ? "Usa Ver error para revisar lo que ocurrió." : "Abre la IPA y arrástrala a Sideloadly. La firma se hace con tu cuenta personal."
                 } else {
-                    self.failed=true;self.phase="No pudimos preparar el juego."
+                    self.failed=true;self.showDetails=true;self.phase="No pudimos preparar el juego."
                     let log=self.transcript.lowercased()
                     if log.contains("install and open full xcode") {
                         self.detail="Instala Xcode y ábrelo una vez. Después vuelve a intentar."
@@ -157,15 +168,22 @@ import Darwin
         do { process=task;try task.run() }
         catch { running=false;process=nil;failed=true;phase="No pudimos iniciar la preparación.";detail=error.localizedDescription }
     }
-    func append(_ text:String) {
-        transcript += text
-        if transcript.count>120000 {transcript=String(transcript.suffix(100000))}
+    func append(_ data:Data) {
         guard running else {return}
-        let lower=text.lowercased()
-        if lower.contains("pack ipa") || lower.contains("source ipa:") || lower.contains("procesados") || lower.contains("processed ") {phase="Creando tu IPA ligera…"}
-        else if lower.contains("xcodebuild") || lower.contains("building the ipa") {phase=isMac ? "Compilando la app para Mac…" : "Compilando la app para iPhone…"}
+        activity.receive(data);transcript=activity.transcript;lastOutputAt=Date()
+        let lower=activity.stage.lowercased()
+        if lower.contains("pack") || lower.contains("export") {phase=isMac ? "Compilando la app para Mac…" : "Creando tu IPA ligera…"}
+        else if lower.contains("app") || lower.contains("host") {phase=isMac ? "Compilando la app para Mac…" : "Compilando la app para iPhone…"}
         else if lower.contains("shader") {phase="Preparando los gráficos del juego…"}
         else if lower.contains("extract") {phase="Preparando los archivos del juego…"}
+    }
+    func revealLog() {if let logURL {NSWorkspace.shared.activateFileViewerSelecting([logURL])}}
+    func revealCompilerLogs() {
+        guard let folder else {return}
+        let paths=((try? FileManager.default.contentsOfDirectory(at:folder,includingPropertiesForKeys:nil)) ?? [])
+            .filter {$0.lastPathComponent.range(of:"^[0-9A-Fa-f]{16}_build$",options:.regularExpression) != nil}
+            .map {$0.appendingPathComponent("logs")}.filter {FileManager.default.fileExists(atPath:$0.path)}
+        NSWorkspace.shared.activateFileViewerSelecting(paths.isEmpty ? [folder] : paths)
     }
     func cancel() {
         guard let process,process.isRunning else{return}
@@ -405,15 +423,35 @@ struct ContentView: View {
                                 Spacer()
                                 Button(model.text("Cancelar")){model.cancel()}
                             }
-                            ProgressView().progressViewStyle(.linear).tint(lime)
+                            if let fraction=model.activity.fraction {ProgressView(value:fraction).tint(lime)}
+                            else {ProgressView().progressViewStyle(.linear).tint(lime)}
+                            if !model.activity.stage.isEmpty {
+                                Text((model.activity.stages>0 ? "\(model.activity.stageNumber)/\(model.activity.stages) · " : "")+model.activity.stage+(model.activity.step.isEmpty ? "" : " · "+model.activity.step))
+                                    .font(.system(size:12)).foregroundStyle(.secondary)
+                            }
+                            if !model.activity.count.isEmpty {Text(model.activity.count).font(.system(size:12,design:.monospaced))}
+                            TimelineView(.periodic(from:.now,by:1)) {context in
+                                let elapsed=Int(context.date.timeIntervalSince(model.startedAt ?? context.date))
+                                let quiet=Int(context.date.timeIntervalSince(model.lastOutputAt ?? model.startedAt ?? context.date))
+                                Text(model.text("Tiempo transcurrido")+String(format:" %d:%02d",max(0,elapsed)/60,max(0,elapsed)%60)+(quiet>=15 ? " · "+model.text("Sin salida nueva; el proceso sigue activo.") : ""))
+                                    .font(.system(size:11)).foregroundStyle(.secondary)
+                            }
+                            Text(model.activity.latest.isEmpty ? model.text("Esperando la primera salida del compilador…") : model.activity.latest)
+                                .font(.system(size:11,design:.monospaced)).lineLimit(2).textSelection(.enabled)
                         } else if model.failed {
                             Text(model.text(model.phase)).font(.system(size:14,weight:.semibold)).foregroundStyle(.orange)
                             Text(model.text(model.detail)).font(.system(size:12)).foregroundStyle(.secondary)
                         }
+                        if model.previous != nil && !model.running {
+                            Label(model.text("Ya preparaste este juego antes"),systemImage:"arrow.triangle.2.circlepath").font(.system(size:13,weight:.medium))
+                            if let version=model.previous?.version {Text(model.text("Versión anterior")+": "+version).font(.system(size:12)).foregroundStyle(.secondary)}
+                            Text(model.text(model.isMac ? "Crearás una app nueva. Tus partidas siguen en este Mac, fuera de la app. Cierra el juego antes de abrir la versión nueva." : "Crearás una IPA para actualizar tu app. Usa la misma cuenta e identificador en Sideloadly e instala encima, sin desinstalar. No podemos comprobar lo instalado en tu iPhone."))
+                                .font(.system(size:12)).foregroundStyle(.secondary)
+                        }
                         if !model.running && (model.output == nil || model.failed) {
                             Button {model.build()} label: {
                                 HStack {
-                                    Text(model.text(model.failed ? "Intentar de nuevo" : "Preparar juego"))
+                                    Text(model.text(model.failed ? "Intentar de nuevo" : (model.previous == nil ? "Preparar juego" : "Preparar actualización")))
                                     Spacer()
                                     Image(systemName:"arrow.right")
                                 }.font(.system(size:15,weight:.bold)).padding(15).foregroundStyle(Color.black)
@@ -444,20 +482,25 @@ struct ContentView: View {
                                 Button(model.text(model.sideloadlyURL == nil ? "Descargar Sideloadly" : "Enviar a Sideloadly")){model.openSideloadly()}.buttonStyle(.borderedProminent).tint(lime).foregroundStyle(.black)
                                 Button(model.text("Mostrar IPA")){model.revealIPA()}
                             }
-                            Text(model.text("2. La primera vez, copia romfs por Finder → iPhone → Archivos → tu juego."))
+                            Text(model.text("2. Copia el nuevo romfs por Finder → iPhone → Archivos → tu juego. Reemplaza sólo romfs; conserva save y save_device."))
                                 .font(.system(size:13))
                             Button(model.text("Mostrar datos del juego")){model.revealAssets()}
                             Text(model.text("Para actualizar: misma cuenta e identificador de Sideloadly. Instala encima, sin desinstalar."))
                                 .font(.system(size:11)).foregroundStyle(.secondary)
                             }
-                            Button(model.text("Preparar de nuevo")){model.build()}.buttonStyle(.link).disabled(updater.busy)
+                            Button(model.text(model.previous == nil ? "Preparar de nuevo" : "Preparar actualización")){model.build()}.buttonStyle(.link).disabled(updater.busy)
                         }.padding(22).frame(maxWidth:.infinity,alignment:.leading)
                             .background(lime.opacity(0.045),in:RoundedRectangle(cornerRadius:16))
                     }
-                    if model.failed && !model.transcript.isEmpty {
-                        DisclosureGroup(model.text("Ver error"),isExpanded:$model.showDetails) {
+                    if !model.transcript.isEmpty || model.running {
+                        DisclosureGroup(model.text(model.failed ? "Ver error" : "Ver compilación en vivo"),isExpanded:$model.showDetails) {
                             VStack(alignment:.leading,spacing:10) {
-                                ScrollView {Text(model.transcript).font(.system(size:10,design:.monospaced)).textSelection(.enabled).frame(maxWidth:.infinity,alignment:.leading)}.frame(height:150)
+                                ScrollViewReader {proxy in
+                                    ScrollView {Text(model.transcript).font(.system(size:10,design:.monospaced)).textSelection(.enabled).frame(maxWidth:.infinity,alignment:.leading);Color.clear.frame(height:1).id("log-bottom")}
+                                        .frame(height:150).onChange(of:model.transcript) {_,_ in if model.running {proxy.scrollTo("log-bottom",anchor:.bottom)}}
+                                }
+                                if model.logURL != nil {Button(model.text("Mostrar logs guardados")){model.revealLog()}}
+                                Button(model.text("Mostrar logs del compilador")){model.revealCompilerLogs()}
                                 Button(model.text("Copiar diagnóstico")){NSPasteboard.general.clearContents();NSPasteboard.general.setString(model.transcript,forType:.string)}
                             }.padding(.top,8)
                         }.font(.system(size:12)).foregroundStyle(.secondary)
@@ -465,6 +508,8 @@ struct ContentView: View {
                 }.padding(28)
             }
         }.frame(minWidth:760,minHeight:530).background(CompactWindow(height:(model.isMac ? 740 : 680)+(updater.visible ? 95 : 0))).preferredColorScheme(.dark)
+        .onReceive(NotificationCenter.default.publisher(for:Notification.Name("nxnative.openAnalysis"))) {_ in if !model.running && !updater.busy {model.showAnalysis=true}}
+        .sheet(isPresented:$model.showAnalysis) {if let game=model.folder {GameAnalysisView(repo:model.repo,game:game,text:model.text)} else {Text(model.text("Primero selecciona la carpeta de un juego preparado.")).padding(24)}}
         .sheet(isPresented:$model.showCatalog) {GameCatalogView(model:model)}
         .sheet(isPresented:$showControllerTest) {ControllerTestView(text:model.text)}
         .task {await updater.check()}
@@ -546,6 +591,11 @@ struct GameCatalogView: View {
         }
             .defaultSize(width:820,height:740)
             .commands {
+                CommandMenu(EasyStrings.text("Herramientas de análisis",language:EasyLanguage(rawValue:appLanguage) ?? .english)) {
+                    Button(EasyStrings.text("Analizar con REA",language:EasyLanguage(rawValue:appLanguage) ?? .english)) {
+                        NotificationCenter.default.post(name:Notification.Name("nxnative.openAnalysis"),object:nil)
+                    }
+                }
                 CommandGroup(after:.appInfo) {
                     Button(EasyStrings.text("Buscar actualizaciones…",language:EasyLanguage(rawValue:appLanguage) ?? .english)) {
                         Task {await updater.check(manual:true)}

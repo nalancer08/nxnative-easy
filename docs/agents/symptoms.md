@@ -10,6 +10,7 @@ One line per symptom in the [subsystem references](../reference/): what you see 
 - clicking Prepare game stops before any build tools start, with `PermissionError: [Errno 1] Operation not permitted` at `build_session.py` `os.setsid()`. → [Prepare game fails at `os.setsid()`](../reference/packing.md#prepare-game-fails-at-ossetsid)
 - `check_t_transform_feedback` reports `Code/.../t_transform_feedback: No such file or directory` before running its checks. → [Graphics regression command fails in a workspace path containing spaces](../reference/packing.md#graphics-regression-command-fails-in-a-workspace-path-containing-spaces)
 - `t_pso_bundle` builds an archive but reports ten failures after Metal rejects its deployment target. → [Bundled-pipeline regression fixture targets a newer macOS than the host](../reference/packing.md#bundled-pipeline-regression-fixture-targets-a-newer-macos-than-the-host)
+- preparation appears stuck; the player cannot inspect compilation output until a failure. → [Desktop preparation shows a spinner with no build activity](../reference/packing.md#desktop-preparation-shows-a-spinner-with-no-build-activity)
 
 ## Rewriter
 
