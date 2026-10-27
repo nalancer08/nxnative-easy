@@ -12,6 +12,8 @@ enum EasyLanguage: String, CaseIterable {
 
 struct EasyStrings {
     static let english: [String:String] = [
+        "Verificando código…":"Verifying code…",
+        "Solicitando un nuevo código…":"Requesting a new code…",
         "Verifica tu cuenta":"Verify your account",
         "Introduce los 6 dígitos que Apple muestra en tu dispositivo de confianza o envía por SMS.":"Enter the 6 digits Apple shows on your trusted device or sends by text message.",
         "Puedes pegar el código completo.":"You can paste the entire code.",

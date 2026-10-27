@@ -283,10 +283,10 @@ enum RefreshPolicy {
         pendingRemember=remember
         send(["op":"login","email":email,"password":password,"remember":remember,"anisette_url":anisette])
     }
-    func submitCode(_ code:String) {codeRequired=false;send(["op":"code","code":code])}
-    func sendToDevices() {codeRequired=false;send(["op":"send_to_devices"])}
-    func sendSMS(_ number:Int) {codeRequired=false;send(["op":"sms","number":number])}
-    func resend() {codeRequired=false;send(["op":"resend"])}
+    func submitCode(_ code:String) {phase="Verificando código…";codeRequired=false;send(["op":"code","code":code])}
+    func sendToDevices() {phase="Solicitando un nuevo código…";codeRequired=false;send(["op":"send_to_devices"])}
+    func sendSMS(_ number:Int) {phase="Solicitando un nuevo código…";codeRequired=false;send(["op":"sms","number":number])}
+    func resend() {phase="Solicitando un nuevo código…";codeRequired=false;send(["op":"resend"])}
     func signOut() {guard !busy else {return};send(["op":"logout","email":email]);defaults.removeObject(forKey:"sideloadEmail");for index in jobs.indices {jobs[index].enabled=false};saveJobs()}
     func cancel() {record("Operación cancelada; puedes volver a intentar.");if let refresh=activeRefresh,let index=jobs.firstIndex(where:{$0.id==refresh.id}) {jobs[index].retryAfter=Date().addingTimeInterval(6*3600);saveJobs()};if let process,process.isRunning {if kill(-process.processIdentifier,SIGTERM) != 0 {process.terminate()}}}
     var canUpdateAppOnly:Bool {
@@ -486,7 +486,7 @@ struct SideloadView:View {
                 }
                 if accountOnly || installStep==1 {
                 Text(text("Una cuenta para todos tus dispositivos en este Mac. Sólo se necesita para firmar, instalar y renovar apps.")).foregroundStyle(.secondary)
-                if !model.authenticated && !model.codeRequired {
+                if !model.authenticated && !model.codeRequired && !model.busy {
                     LabeledContent(text("Cuenta Apple personal")){TextField("name@example.com",text:$model.email).textFieldStyle(.roundedBorder).disabled(model.busy)}
                     LabeledContent(text("Contraseña de Apple")){SecureField(text("Contraseña de Apple"),text:$password).textFieldStyle(.roundedBorder).disabled(model.busy)}
                     Toggle(text("Recordar sesión en el Llavero; no guardar la contraseña"),isOn:$remember).disabled(model.busy).onChange(of:remember){_,value in if !value {autoRefresh=false}}
