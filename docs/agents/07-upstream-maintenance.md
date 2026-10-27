@@ -118,3 +118,5 @@ The tools stage and check updates; they do not auto-approve unreviewed engine
 changes, erase conflicts, install on devices or overwrite a user's game files.
 
 Preserve metadata-only `nx_extract --inspect` and `scripts/inspect_game.py`: game names/display versions come from NACP, package identity/type/version from CNMT. Frontend builds pass their checked manifest through both wrappers; do not restore filename-based guesses for these builds. Reject changed file signatures and mixed games before preparation; retain local-only key handling and cancelled/stale worker-result guards.
+
+For desktop UI changes, follow [the shared design system](../design-system.md) and reuse `DesignSystem.swift`. Preserve inline post-preparation installation, later-install modals, shared embedded Settings account, explicit final install/registration consent, confirmed-event success and collapsed log history.

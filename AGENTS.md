@@ -6,6 +6,7 @@
 
   | Task | Read first |
   |---|---|
+  | Desktop UI | [Design system](docs/design-system.md) |
   | A crash, abort, hang, `[RED]` line or wrong picture | [docs/agents/symptoms.md](docs/agents/symptoms.md): search it for the text in the log or what you see; it leads to the entry in [docs/reference](docs/reference/README.md) and the games it was found on. Recipes (crash reports, lldb, probes, dumps) are in [05-debugging.md](docs/agents/05-debugging.md) |
   | A game that does not reach its frame loop | [03-bringup.md](docs/agents/03-bringup.md) (the run loop, reading the log), then the symptom index |
   | Rendering or shaders | [04-graphics.md](docs/agents/04-graphics.md), then [rendering](docs/reference/rendering.md), [shaders](docs/reference/shaders.md) and [NVN objects](docs/reference/nvn-objects.md) |

@@ -15,7 +15,7 @@ struct LibraryWorkspace:View {
     @State private var adviceGeneration=UUID()
     @State private var removing:OwnedGameOutput?
     @Environment(\.scenePhase) private var scenePhase
-    private let accent=Color(red:0.79,green:0.95,blue:0.37)
+    private let accent=EasyDesign.accent
     private var occupied:Bool {model.running || updater.busy || sideload.busy}
     private func name(_ game:OwnedGameOutput)->String {model.catalog.first(where:{$0.id==game.titleID})?.name ?? game.folder.lastPathComponent}
     private var results:[OwnedGameOutput] {library.games.filter {query.isEmpty || (name($0)+" "+($0.titleID ?? "")+" "+$0.item.folder).localizedCaseInsensitiveContains(query)}}
@@ -26,15 +26,15 @@ struct LibraryWorkspace:View {
         model.folder=game.folder;model.defaults.set(game.item.folder,forKey:"lastGameFolder")
         model.output=nil;model.assets=nil;model.target=game.macApp != nil ? "mac" : game.iosIPA != nil ? "ios" : ""
         if model.target=="ios" {model.splitIOS=game.romfs != nil}
-        model.restoreOutput();model.preparationStep=0;page = .prepare
+        model.restoreOutput();model.installingInline=false;model.preparationStep=0;page = .prepare
     }
     private func install(_ game:OwnedGameOutput) {
         guard !occupied,let ipa=game.iosIPA else {return}
-        sideload.configure(ipa:ipa,folder:game.folder,romfs:game.romfs);model.showSideload=true
+        model.installingInline=false;sideload.configure(ipa:ipa,folder:game.folder,romfs:game.romfs);model.showSideload=true
     }
     private func add() {
         guard !occupied else {return}
-        model.folder=nil;model.target="";model.failed=false;model.preparationStep=0;page = .prepare
+        model.installingInline=false;model.folder=nil;model.target="";model.failed=false;model.preparationStep=0;page = .prepare
     }
     private func remember() {
         guard let folder=model.folder else {return}
@@ -144,7 +144,7 @@ struct LibraryWorkspace:View {
                     }
                 }
             }
-            if sideload.recoveringSession && page != .settings && !model.showSideload {
+            if sideload.recoveringSession && page != .settings && !model.showSideload && !model.installingInline {
                 Divider()
                 HStack(spacing:12) {
                     ProgressView().controlSize(.small)
@@ -170,6 +170,7 @@ struct LibraryWorkspace:View {
             model.acceptDrop(items);if !model.failed {remember()};page = .prepare;return true
         }
         .onReceive(NotificationCenter.default.publisher(for:Notification.Name("nxnative.openSettings"))){_ in page = .settings}
+        .onChange(of:model.installingInline){_,inline in if inline {page = .prepare}}
         .onReceive(NotificationCenter.default.publisher(for:Notification.Name("nxnative.showLibrary"))){_ in page = .library;if !sideload.busy {model.showSideload=false};library.refresh()}
         .onReceive(NotificationCenter.default.publisher(for:Notification.Name("nxnative.showBuildActivity"))){_ in page = .prepare;model.preparationStep=4;model.showDetails=true}
         .onChange(of:model.showCatalog){_,show in if show {page = .compatibility;model.showCatalog=false}}
@@ -361,12 +362,5 @@ struct BuildTimeline:View {
 
 
 struct LibraryPrimaryButtonStyle:ButtonStyle {
-    @Environment(\.isEnabled) private var enabled
-    func makeBody(configuration:Configuration)->some View {
-        configuration.label.font(.system(size:13,weight:.semibold))
-            .padding(.horizontal,13).padding(.vertical,8).frame(minHeight:34)
-            .foregroundStyle(enabled ? Color.black : Color.secondary)
-            .background(enabled ? Color(red:0.79,green:0.95,blue:0.37) : Color.white.opacity(0.065),in:RoundedRectangle(cornerRadius:8))
-            .opacity(configuration.isPressed ? 0.8 : 1)
-    }
+    func makeBody(configuration:Configuration)->some View {EasyPrimaryStyle().makeBody(configuration:configuration)}
 }

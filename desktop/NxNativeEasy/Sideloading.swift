@@ -122,6 +122,7 @@ enum RefreshPolicy {
     @Published var email=""
     @Published var anisette="https://ani.iloader.app"
     @Published var authenticated=false
+    @Published private(set) var completedInstallation=false
     @Published private(set) var recoveringSession=false
     private var recoveryRequested=false
     private var automaticRecoveryAttempted=false
@@ -167,6 +168,7 @@ enum RefreshPolicy {
         timer=Timer.publish(every:1800,on:.main,in:.common).autoconnect().sink { [weak self] _ in Task {@MainActor in self?.checkRefresh()}}
     }
     func configure(ipa:URL,folder:URL,romfs:URL?) {
+        completedInstallation=false
         self.ipa=ipa;gameFolder=folder;self.romfs=romfs
         originalID=PreviousPreparation.load(folder:folder,target:"ios")?.bundleID ?? ""
         existing=pendingUpdate?.id ?? ""
@@ -342,6 +344,7 @@ enum RefreshPolicy {
         guard helperCapabilities.contains("registration-consent-v1") else {error="Actualiza el instalador para comprobar el registro del dispositivo.";activeRefresh=nil;return}
         guard FileManager.default.isReadableFile(atPath:job.ipa) else {error="No encontramos la IPA original. Conserva los archivos de preparación para renovarla.";activeRefresh=nil;return}
         if let content,!FileManager.default.fileExists(atPath:content.path) {error="Faltan los datos romfs. Prepara el juego de nuevo antes de instalarlo.";activeRefresh=nil;return}
+        completedInstallation=false
         installIntent=job;loggedPhase="";loggedBucket = -1;logURL=nil;record("Firmando e instalando…");busy=true;error=nil;startedAt=Date();phase="Firmando e instalando…";fraction=nil
         var value:[String:Any]=["op":"install","ipa":job.ipa,"original_id":job.originalID,"team":job.team,"udid":job.udid,"work":URL(fileURLWithPath:job.gameFolder).appendingPathComponent("nxnative-tools/sideloading").path,"update":updating,"automatic":activeRefresh != nil && !manualRefresh]
         value["approve_registration"]=approveRegistration && activeRefresh==nil
@@ -416,7 +419,8 @@ enum RefreshPolicy {
                 error="No pudimos verificar el resultado de la instalación. Revisa el dispositivo antes de continuar.";busy=false;activeRefresh=nil;installIntent=nil;return
             }
             job.expires=Date(timeIntervalSince1970:expiry);job.sha256=hash;job.retryAfter=nil;job.needsLogin=false;jobs.removeAll {$0.id==job.id};jobs.append(job);error=nil;saveJobs();existing=actual
-            installIntent=nil;activeRefresh=nil;refreshAuthenticated=false;busy=false;fraction=1;phase="Instalado. Tus partidas se conservan en el dispositivo.";record(phase)
+            let confirmsCurrentInstall=activeRefresh==nil && job.ipa==ipa?.path && job.gameFolder==gameFolder?.path && job.originalID==originalID && job.udid==device && job.team==team
+            installIntent=nil;activeRefresh=nil;refreshAuthenticated=false;busy=false;fraction=1;completedInstallation=confirmsCurrentInstall;phase="Instalado. Tus partidas se conservan en el dispositivo.";record(phase)
         case "error":
             record("La operación se detuvo. Revisa el mensaje de error.")
             let op=event["operation"] as? String
@@ -511,6 +515,9 @@ struct SideloadView:View {
     let text:(String)->String
     var accountOnly=false
     var embedded=false
+    var guided=false
+    var gameName:String?
+    var onReturn:()->Void={}
     @Environment(\.dismiss) private var dismiss
     @State private var approveRegistration=false
     @State private var installStep=0
@@ -518,102 +525,229 @@ struct SideloadView:View {
     @State private var password=""
     @State private var remember=true
     @State private var autoRefresh=true
+    @State private var includeGameData=true
     @State private var loginItem=SMAppService.mainApp.status == .enabled
+    init(model:SideloadModel,text:@escaping (String)->String,accountOnly:Bool=false,embedded:Bool=false,guided:Bool=false,gameName:String?=nil,onReturn:@escaping ()->Void={},initialStep:Int=0) {
+        self.model=model;self.text=text;self.accountOnly=accountOnly;self.embedded=embedded;self.guided=guided;self.gameName=gameName;self.onReturn=onReturn
+        _installStep=State(initialValue:max(0,min(3,initialStep)))
+    }
+    private var selectedDevice:SideloadDevice? {model.devices.first {$0.id==model.device}}
+    private var displayedGame:String {gameName ?? model.gameFolder?.lastPathComponent ?? text("Tu juego")}
+    private var title:String {
+        if accountOnly {return model.codeRequired ? "Verifica tu cuenta" : model.authenticated ? "Tu cuenta, lista para instalar" : "Conecta tu cuenta Apple"}
+        return ["Elige dónde instalar","Conecta tu cuenta Apple","Todo listo para instalar",model.completedInstallation ? "Ya está en tu dispositivo" : model.busy ? "Instalando tu juego" : "Revisa la instalación"][min(3,installStep)]
+    }
+    private var subtitle:String {
+        if accountOnly {return "Una cuenta para firmar e instalar en todos tus dispositivos."}
+        return ["Tu juego ya está preparado. Ahora elige tu iPhone o iPad.","Inicia sesión para firmar tu app. Tus partidas y archivos siguen en su lugar.","Revisa el destino y confirma. La instalación empieza sólo cuando tú lo indiques.",model.completedInstallation ? "Abre el juego en tu iPhone o iPad. Tus partidas se conservan." : model.busy ? "Sigue la firma, la instalación y la copia de datos desde aquí." : "La instalación no terminó. Revisa lo ocurrido antes de volver a intentarlo."][min(3,installStep)]
+    }
+    private var kind:EasyMilestoneKind {accountOnly || installStep==1 ? .account : installStep==0 ? .device : installStep==2 ? .review : model.completedInstallation ? .complete : model.busy ? .transfer : .review}
+    private var canInstall:Bool {!model.busy && model.authenticated && !model.device.isEmpty && !model.team.isEmpty && !model.originalID.isEmpty && model.ipa != nil && model.registrationState != .unknown && (model.registrationState != .new || approveRegistration)}
     var body:some View {
         ScrollView {
-            VStack(alignment:.leading,spacing:16) {
-                HStack {Text(text(accountOnly || model.ipa==nil ? "Tu cuenta Apple" : "Instalar en iPhone / iPad")).font(.title2.bold());Spacer();if !embedded {Button(text("Cerrar")){dismiss()}.disabled(model.busy)}}
-                if !accountOnly {
-                HStack(spacing:12) {
-                    ForEach(Array(["Dispositivo","Cuenta Apple","Revisar","Instalar"].enumerated()),id:\.offset) {index,title in
-                        Label(text(title),systemImage:index<installStep ? "checkmark.circle.fill" : "\(index+1).circle").foregroundStyle(index==installStep ? Color.primary : .secondary)
+            VStack(alignment:.leading,spacing:EasyDesign.spacing) {
+                HStack(alignment:.center) {
+                    VStack(alignment:.leading,spacing:5) {
+                        Text(text(accountOnly ? "Tu cuenta Apple" : guided ? "Del juego a tu dispositivo" : "Instalar en iPhone / iPad")).font(.system(size:30,weight:.bold,design:.rounded))
+                        if !accountOnly {Label(displayedGame,systemImage:"checkmark.circle.fill").font(.callout).foregroundStyle(.secondary)}
                     }
                     Spacer()
-                    if installStep>0 && installStep<3 {Button(text("Atrás")){installStep-=1}.disabled(model.busy)}
-                }.font(.caption)
-                if installStep==0 {
-                if let folder=model.gameFolder {Text(folder.lastPathComponent).font(.headline)}
-                Text(text("Conecta tu dispositivo e inicia sesión. Firmar e instalar requiere tu confirmación.")).foregroundStyle(.secondary)
-                Picker(text("Dispositivo"),selection:$model.device) {Text(text("Elige tu iPhone/iPad")).tag("");ForEach(model.devices){Text($0.name).tag($0.id)}}.disabled(model.busy)
-                    .onChange(of:model.device) {_,_ in model.existing="";model.inspectApps()}
-                if let selected=model.devices.first(where:{$0.id==model.device}),!selected.detail.isEmpty {Text(selected.detail).font(.caption).foregroundStyle(.secondary)}
-                Button(text("Buscar dispositivos")){model.listDevices()}.disabled(model.busy)
-                Text(text("Desbloquea el dispositivo, confía en este Mac y activa Modo de desarrollador si iOS lo pide.")) .font(.caption).foregroundStyle(.secondary)
+                    if !embedded {Button(text("Cerrar")){dismiss()}.disabled(model.busy)}
+                    else if guided {Button(text("Ver preparación"),action:onReturn).disabled(model.busy)}
                 }
-                if installStep==0 && !accountOnly {Button(text("Continuar")){installStep=1}.buttonStyle(.borderedProminent).disabled(model.busy || model.device.isEmpty)}
+                if !accountOnly {
+                    if guided {Label(text("Preparación completada · Ahora vamos a instalar"),systemImage:"checkmark.seal.fill").font(.caption.weight(.semibold)).foregroundStyle(EasyDesign.accent)}
+                    EasyStepRail(titles:["Dispositivo","Cuenta Apple","Revisar","Instalar"].map(text),current:installStep)
                 }
-                if accountOnly || installStep==1 {
-                Text(text("Una cuenta para todos tus dispositivos en este Mac. Sólo se necesita para firmar, instalar y renovar apps.")).foregroundStyle(.secondary)
-                if !model.authenticated && !model.codeRequired && !model.busy {
-                    if model.hasRememberedSession && !usePassword {
-                        VStack(alignment:.leading,spacing:14) {
-                            Label(text("Recuperar tu sesión"),systemImage:"key.horizontal").font(.headline)
-                            Text(model.email).font(.callout).textSelection(.enabled)
-                            Text(text("Recordamos tu cuenta en este Mac. Recupera el acceso desde el Llavero o entra de nuevo si Apple lo solicita.")).font(.callout).foregroundStyle(.secondary)
-                            Button(text("Reintentar sesión guardada")){model.restoreSession()}.buttonStyle(.borderedProminent)
-                            Button(text("Entrar con contraseña")){usePassword=true}.buttonStyle(.link)
-                        }.padding(20).frame(maxWidth:.infinity,alignment:.leading).background(.white.opacity(0.04),in:RoundedRectangle(cornerRadius:14))
-                    } else {
-                    LabeledContent(text("Cuenta Apple personal")){TextField("name@example.com",text:$model.email).textFieldStyle(.roundedBorder).disabled(model.busy)}
-                    LabeledContent(text("Contraseña de Apple")){SecureField(text("Contraseña de Apple"),text:$password).textFieldStyle(.roundedBorder).disabled(model.busy)}
-                    Toggle(text("Recordar sesión en el Llavero; no guardar la contraseña"),isOn:$remember).disabled(model.busy).onChange(of:remember){_,value in if !value {autoRefresh=false}}
-                    DisclosureGroup(text("Servicio de autenticación")) {
-                        Text(text("La contraseña y el código se envían a Apple. El servicio anisette recibe los datos técnicos que requiere la autenticación, no tu contraseña.")) .font(.caption)
-                        TextField("Anisette HTTPS",text:$model.anisette).disabled(model.busy)
-                    }
-                    if model.hasRememberedSession {Button(text("Usar sesión del Llavero")){model.restoreSession()}.disabled(model.busy)}
-                    Button(text("Iniciar sesión")){model.signIn(password:password,remember:remember);password=""}.buttonStyle(.borderedProminent).disabled(model.busy || model.email.isEmpty || password.isEmpty)
-                    }
-                } else if model.authenticated {
-                    Label(text("Sesión iniciada"),systemImage:"person.crop.circle.badge.checkmark")
-                    Text(model.email).font(.caption).textSelection(.enabled)
-                    Picker(text("Tu equipo personal"),selection:$model.team) {Text(text("Selecciona tu equipo")).tag("");ForEach(model.teams){Text($0.name+" · "+$0.id).tag($0.id)}}.disabled(model.busy)
-                    if let selected=model.teams.first(where:{$0.id==model.team}),!selected.kind.isEmpty {Text(text("Tipo de equipo según Apple")+": "+(selected.freeDeviceLimit==3 ? text("Cuenta gratuita") : selected.kind)).font(.caption).foregroundStyle(.secondary)}
-                    Button(text("Leer dispositivos de mi cuenta Apple")){model.inspectAccountDevices()}.disabled(model.busy || model.team.isEmpty)
-                    if model.accountDeviceTeam==model.team {
-                        Text(text("Dispositivos registrados en el equipo")+": "+String(model.accountDevices.count)).font(.headline)
-                        if let remaining=model.estimatedDeviceSlots {
-                            Label(text("Cupos disponibles estimados")+": "+String(remaining)+" / 3",systemImage:"iphone").font(.title3.bold())
-                            Text(text("Cuenta gratuita confirmada por su membresía. Estimación basada en los registros devueltos; Apple confirma la disponibilidad al registrar.")).font(.caption).foregroundStyle(.secondary)
-                        } else {Text(text("No pudimos confirmar un límite para esta membresía. No asumimos que Individual significa cuenta gratuita.")).font(.caption).foregroundStyle(.secondary)}
-                        ForEach(model.accountDevices) {item in Label(model.accountDeviceName(item),systemImage:"checkmark.circle").font(.callout)}
-                    }
-                    Text(text("El cupo corresponde al dispositivo, no a cada juego. Actualizar en un dispositivo ya registrado no consume otro cupo de dispositivo.")).font(.caption).foregroundStyle(.secondary)
-                    Button(text("Cerrar sesión")){model.signOut()}.disabled(model.busy)
+                EasyMilestone(kind:kind,title:text(title),subtitle:text(subtitle))
+                if accountOnly || installStep==1 {accountContent}
+                else if installStep==0 {deviceContent}
+                else if installStep==2 {reviewContent}
+                else {installationContent}
+                if !accountOnly && installStep>0 && installStep<3 {
+                    Button {installStep-=1} label:{Label(text("Atrás"),systemImage:"arrow.left")}.buttonStyle(EasyLinkStyle()).disabled(model.busy)
                 }
-                if model.codeRequired {AppleVerificationView(model:model,text:text)}
-                if !accountOnly && !model.codeRequired {Button(text("Continuar")){installStep=2}.buttonStyle(.borderedProminent).disabled(model.busy || !model.authenticated || model.team.isEmpty)}
-                }
-                if !accountOnly && installStep==2 {
-                    Label(text("Revisa antes de instalar"),systemImage:"checklist").font(.title2.bold())
-                    Text(model.devices.first(where:{$0.id==model.device})?.name ?? "iPhone / iPad").font(.headline)
-                    Text(model.email).font(.callout).foregroundStyle(.secondary)
-                    if let folder=model.gameFolder {Text(folder.lastPathComponent).font(.headline)}
-                    RegistrationReviewView(model:model,text:text,approved:$approveRegistration)
-                    if model.ipa != nil {
-                    Picker(text("App existente que actualizarás"),selection:$model.existing) {Text(text("Primera instalación")).tag("");ForEach(model.apps){Text($0.name+" · "+$0.id).tag($0.id)}}.disabled(model.busy)
-                    Text(text("Se conserva el identificador efectivo. Si no corresponde al juego y equipo, la instalación se detiene; no se desinstala la app anterior.")) .font(.caption).foregroundStyle(.secondary)
-                    Toggle(text("Renovar automáticamente antes de que caduque"),isOn:$autoRefresh).disabled(model.busy || !remember)
-                    Toggle(text("Abrir nxnative Easy al iniciar sesión"),isOn:$loginItem).onChange(of:loginItem){_,value in model.setLoginItem(value)}.disabled(model.busy)
-                    Text(text("La renovación necesita este Mac encendido, nxnative Easy abierto, conexión a Internet y el dispositivo accesible. Conserva la IPA original.")) .font(.caption).foregroundStyle(.secondary)
-                    Button(text(model.existing.isEmpty ? "Firmar e instalar" : "Firmar y actualizar")){installStep=3;model.install(autoRefresh:autoRefresh,approveRegistration:approveRegistration)}.buttonStyle(.borderedProminent).disabled(model.busy || model.device.isEmpty || model.team.isEmpty || model.originalID.isEmpty || model.registrationState == .unknown || (model.registrationState == .new && !approveRegistration))
-                    }
-                    if model.canUpdateAppOnly {
-                        Button(text("Actualizar sólo la app; conservar romfs")){installStep=3;model.install(autoRefresh:autoRefresh,includeContent:false,approveRegistration:approveRegistration)}.disabled(model.busy || model.registrationState == .unknown || (model.registrationState == .new && !approveRegistration))
-                        Text(text("Para cambios de controles o de la app con la misma versión del juego. Si cambió el juego o DLC, usa la instalación con datos nuevos.")).font(.caption).foregroundStyle(.secondary)
-                    }
-                }
-                if !accountOnly && installStep==3 && !model.busy {Button(text("Revisar e intentar de nuevo")){installStep=2}}
-                if !accountOnly && !model.codeRequired {Text(text("Guarda y cierra el juego antes de instalar. Firma, copia y renovación nativas aún requieren validación completa con una cuenta y dispositivo reales.")).font(.caption).foregroundStyle(.secondary)}
-                if !model.codeRequired {InstallActivityView(model:model,text:text)}
-                if !model.busy {Text(text(model.phase)).font(.callout)}
-            }.padding(24)
+                InstallActivityView(model:model,text:text)
+            }.frame(maxWidth:860,alignment:.leading).frame(maxWidth:.infinity,alignment:.top).padding(EasyDesign.pagePadding)
         }
-        .task {model.recoverRememberedSessionIfNeeded()}
-        .onChange(of:model.device){_,_ in approveRegistration=false}
+        .safeAreaInset(edge:.bottom,spacing:0) {if !accountOnly && installStep==2 {installFooter}}
+        .background(EasyDesign.background)
+        .buttonStyle(EasySecondaryStyle())
+        .task {model.recoverRememberedSessionIfNeeded();if model.authenticated && !model.hasRememberedSession {autoRefresh=false}}
+        .onDisappear {password=""}
+        .onChange(of:model.authenticated){_,authenticated in if authenticated {password="";autoRefresh=model.hasRememberedSession}}
+        .onChange(of:model.device){_,_ in approveRegistration=false;includeGameData=true}
         .onChange(of:installStep){_,step in if step==2 {approveRegistration=false;if !model.busy {model.inspectAccountDevices()}}}
+        .onChange(of:model.existing){_,_ in includeGameData=true}
         .onChange(of:model.team){_,value in approveRegistration=false;if !value.isEmpty && model.authenticated && !model.busy {model.inspectAccountDevices()}}
-        .frame(maxWidth:.infinity,maxHeight:.infinity).frame(width:embedded ? nil : 760,height:embedded ? nil : 720).tint(Color(red:0.79,green:0.95,blue:0.37)).preferredColorScheme(.dark).interactiveDismissDisabled(model.busy)
+        .frame(maxWidth:.infinity,maxHeight:.infinity).frame(width:embedded ? nil : 820,height:embedded ? nil : 760)
+        .tint(EasyDesign.accent).preferredColorScheme(.dark).interactiveDismissDisabled(model.busy)
+    }
+    private var deviceContent:some View {
+        EasyCard {
+            VStack(alignment:.leading,spacing:18) {
+                HStack {
+                    Label(text(model.devices.isEmpty ? "Conecta tu iPhone o iPad" : "Dispositivos disponibles"),systemImage:"cable.connector").font(.headline)
+                    Spacer();Button(text("Buscar dispositivos")){model.listDevices()}.disabled(model.busy)
+                }
+                if model.devices.isEmpty {
+                    Text(text("Conecta por USB, desbloquea y pulsa Confiar si tu dispositivo lo pide.")).font(.callout).foregroundStyle(.secondary)
+                } else {
+                    ForEach(model.devices) {device in
+                        Button {model.device=device.id;model.existing="";model.inspectApps()} label:{
+                            HStack(spacing:14) {
+                                Image(systemName:device.kind=="iPad" ? "ipad" : "iphone").font(.system(size:30,weight:.light)).foregroundStyle(EasyDesign.accent).frame(width:40)
+                                VStack(alignment:.leading,spacing:6) {Text(device.name).font(.headline);if !device.detail.isEmpty {Text(device.detail).font(.caption).foregroundStyle(.secondary)}}
+                                Spacer();Image(systemName:model.device==device.id ? "checkmark.circle.fill" : "circle").foregroundStyle(model.device==device.id ? EasyDesign.accent : .secondary)
+                            }.padding(16).background(model.device==device.id ? EasyDesign.accent.opacity(0.08) : .white.opacity(0.025),in:RoundedRectangle(cornerRadius:12))
+                        }.buttonStyle(.plain).disabled(model.busy).accessibilityLabel(device.name).accessibilityAddTraits(model.device==device.id ? .isSelected : [])
+                    }
+                }
+                Text(text("Desbloquea el dispositivo, confía en este Mac y activa Modo de desarrollador si iOS lo pide.")).font(.caption).foregroundStyle(.secondary)
+                Button {installStep=1} label:{Label(text("Continuar con este dispositivo"),systemImage:"arrow.right")}.buttonStyle(EasyPrimaryStyle()).disabled(model.busy || model.device.isEmpty)
+            }
+        }
+    }
+    private var accountContent:some View {
+        VStack(alignment:.leading,spacing:20) {
+            if model.codeRequired {AppleVerificationView(model:model,text:text)}
+            else if model.authenticated {signedInContent}
+            else if model.busy {
+                Label(model.email,systemImage:"person.crop.circle").font(.callout).foregroundStyle(.secondary)
+            } else if model.hasRememberedSession && !usePassword {
+                EasyCard {
+                    VStack(alignment:.leading,spacing:16) {
+                        Label(text("Tu cuenta está guardada en este Mac"),systemImage:"key.horizontal").font(.headline)
+                        Text(model.email).font(.callout).textSelection(.enabled)
+                        Text(text("Recupera la sesión del Llavero. Si Apple vuelve a pedir acceso, inicia sesión con tu contraseña.")).font(.callout).foregroundStyle(.secondary)
+                        Button(text("Reintentar sesión guardada")){model.restoreSession()}.buttonStyle(EasyPrimaryStyle())
+                        Button(text("Entrar con contraseña")){usePassword=true}.buttonStyle(EasyLinkStyle())
+                    }
+                }
+            } else {loginContent}
+            if !accountOnly && model.authenticated && !model.codeRequired {
+                Button {installStep=2} label:{Label(text("Continuar a la revisión"),systemImage:"arrow.right")}.buttonStyle(EasyPrimaryStyle()).disabled(model.busy || model.team.isEmpty)
+            }
+        }
+    }
+    private var loginContent:some View {
+        EasyCard {
+            VStack(alignment:.leading,spacing:20) {
+                VStack(alignment:.leading,spacing:6) {Text(text("Inicia sesión en Apple")).font(.title3.bold());Text(text("Sólo hace falta para firmar, instalar y renovar apps. Exportar partidas y copiar romfs no necesitan sesión.")).font(.callout).foregroundStyle(.secondary)}
+                VStack(alignment:.leading,spacing:16) {
+                    EasyField(text("Cuenta Apple personal")){TextField("name@example.com",text:$model.email).accessibilityLabel(text("Cuenta Apple personal"))}
+                    EasyField(text("Contraseña de Apple")){SecureField(text("Contraseña de Apple"),text:$password).accessibilityLabel(text("Contraseña de Apple")).onSubmit {signIn()}}
+                    Toggle(text("Recordar sesión en este Mac"),isOn:$remember).onChange(of:remember){_,value in if !value {autoRefresh=false}}
+                    Text(text("Guardamos la sesión en el Llavero, nunca tu contraseña.")).font(.caption).foregroundStyle(.secondary)
+                    Button {signIn()} label:{Label(text("Iniciar sesión"),systemImage:"arrow.right")}.buttonStyle(EasyPrimaryStyle()).disabled(model.email.trimmingCharacters(in:.whitespacesAndNewlines).isEmpty || password.isEmpty)
+                    if model.hasRememberedSession {Button(text("Usar sesión del Llavero")){usePassword=false;password="";model.restoreSession()}.buttonStyle(EasyLinkStyle())}
+                }.frame(maxWidth:500,alignment:.leading)
+                DisclosureGroup(text("Privacidad y conexión")) {
+                    VStack(alignment:.leading,spacing:12) {
+                        Text(text("La contraseña y el código se envían a Apple. El servicio anisette recibe los datos técnicos que requiere la autenticación, no tu contraseña.")).font(.caption).foregroundStyle(.secondary)
+                        EasyField(text("Servicio de autenticación")){TextField("Anisette HTTPS",text:$model.anisette)}
+                    }.padding(.top,12)
+                }.font(.caption)
+            }
+        }.disabled(model.busy)
+    }
+    private func signIn() {guard !model.busy,!password.isEmpty,!model.email.trimmingCharacters(in:.whitespacesAndNewlines).isEmpty else {return};let value=password;password="";model.signIn(password:value,remember:remember)}
+    private var signedInContent:some View {
+        EasyCard {
+            VStack(alignment:.leading,spacing:18) {
+                HStack(spacing:14) {
+                    Image(systemName:"person.crop.circle.badge.checkmark").font(.system(size:34,weight:.light)).foregroundStyle(EasyDesign.accent)
+                    VStack(alignment:.leading,spacing:5) {Text(text("Sesión iniciada")).font(.headline);Text(model.email).font(.callout).textSelection(.enabled)}
+                    Spacer();Button(text("Cerrar sesión")){model.signOut()}.buttonStyle(EasyLinkStyle()).disabled(model.busy)
+                }
+                Divider()
+                VStack(alignment:.leading,spacing:8) {
+                    Text(text("Equipo para firmar tus apps")).font(.callout.bold())
+                    Picker(text("Tu equipo personal"),selection:$model.team) {Text(text("Selecciona tu equipo")).tag("");ForEach(model.teams){Text($0.name+" · "+$0.id).tag($0.id)}}.labelsHidden().frame(maxWidth:520).disabled(model.busy)
+                    if let selected=model.teams.first(where:{$0.id==model.team}),!selected.kind.isEmpty {Text(selected.freeDeviceLimit==3 ? text("Cuenta gratuita") : selected.kind).font(.caption).foregroundStyle(.secondary)}
+                }
+                if model.accountDeviceTeam==model.team && !model.team.isEmpty {
+                    HStack(spacing:20) {
+                        VStack(alignment:.leading,spacing:4) {Text(String(model.accountDevices.count)).font(.system(size:28,weight:.bold,design:.rounded));Text(text("Dispositivos registrados")).font(.caption).foregroundStyle(.secondary)}
+                        if let remaining=model.estimatedDeviceSlots {Divider().frame(height:44);VStack(alignment:.leading,spacing:4) {Text("\(remaining) / 3").font(.system(size:28,weight:.bold,design:.rounded)).foregroundStyle(EasyDesign.accent);Text(text("Cupos disponibles estimados")).font(.caption).foregroundStyle(.secondary)}}
+                    }
+                    if model.estimatedDeviceSlots==nil {Text(text("Apple aún no confirmó cuántos dispositivos puedes registrar.")).font(.caption).foregroundStyle(.secondary)}
+                    else {Text(text("Estimación según los registros devueltos. Apple confirma el cupo al registrar un dispositivo nuevo.")).font(.caption).foregroundStyle(.secondary)}
+                    DisclosureGroup(text("Ver dispositivos registrados")) {VStack(alignment:.leading,spacing:10) {ForEach(model.accountDevices) {item in Label(model.accountDeviceName(item),systemImage:"iphone")}}.padding(.top,12)}.font(.callout)
+                }
+                Button(text("Actualizar dispositivos de mi cuenta")){model.inspectAccountDevices()}.disabled(model.busy || model.team.isEmpty)
+                Text(text("El cupo corresponde al dispositivo, no a cada juego. Actualizar en un dispositivo ya registrado no consume otro cupo de dispositivo.")).font(.caption).foregroundStyle(.secondary)
+            }
+        }
+    }
+    private var reviewContent:some View {
+        VStack(alignment:.leading,spacing:20) {
+            EasyCard {
+                VStack(alignment:.leading,spacing:16) {
+                    Text(displayedGame).font(.title3.bold())
+                    Label(selectedDevice?.name ?? "iPhone / iPad",systemImage:"iphone").font(.headline)
+                    Label(model.email,systemImage:"person.crop.circle").font(.callout).foregroundStyle(.secondary)
+                    Label(text(model.romfs == nil ? "IPA completa: el juego va dentro de la app." : "IPA ligera: instalaremos la app y copiaremos romfs por separado."),systemImage:"shippingbox").font(.callout).foregroundStyle(.secondary)
+                    VStack(alignment:.leading,spacing:8) {
+                        Text(text("App existente que actualizarás")).font(.callout.bold())
+                        Picker(text("App existente que actualizarás"),selection:$model.existing) {Text(text("Primera instalación")).tag("");ForEach(model.apps){Text($0.name+" · "+$0.id).tag($0.id)}}.labelsHidden().frame(maxWidth:.infinity).disabled(model.busy)
+                    }
+                    Text(text("Se conserva el identificador efectivo. Si no corresponde al juego y equipo, la instalación se detiene; no se desinstala la app anterior.")).font(.caption).foregroundStyle(.secondary)
+                }
+            }
+            RegistrationReviewView(model:model,text:text,approved:$approveRegistration)
+            EasyCard {
+                VStack(alignment:.leading,spacing:16) {
+                    Toggle(text("Renovar automáticamente antes de que caduque"),isOn:$autoRefresh).disabled(model.busy || !model.hasRememberedSession)
+                    if !model.hasRememberedSession {Text(text("Para renovar automáticamente, inicia sesión recordándola en el Llavero.")).font(.caption).foregroundStyle(.secondary)}
+                    Text(text("La renovación necesita este Mac encendido, nxnative Easy abierto, conexión a Internet y el dispositivo accesible. Conserva la IPA original.")).font(.caption).foregroundStyle(.secondary)
+                    DisclosureGroup(text("Más opciones")) {
+                        VStack(alignment:.leading,spacing:14) {
+                            Toggle(text("Abrir nxnative Easy al iniciar sesión"),isOn:$loginItem).onChange(of:loginItem){_,value in model.setLoginItem(value)}
+                            if model.canUpdateAppOnly {Toggle(text("Copiar también los datos del juego"),isOn:$includeGameData);Text(text("Para cambios de controles o de la app con la misma versión del juego. Si cambió el juego o DLC, usa la instalación con datos nuevos.")).font(.caption).foregroundStyle(.secondary)}
+                        }.padding(.top,12)
+                    }.font(.callout)
+                    Label(text("Guarda y cierra el juego antes de instalar. No desinstales la app anterior."),systemImage:"info.circle").font(.callout)
+
+                    if model.originalID.isEmpty || model.ipa==nil {Text(text("Falta una IPA preparada con su identidad. Vuelve a preparar el juego antes de instalar.")).font(.caption).foregroundStyle(.orange)}
+                }
+            }.disabled(model.busy)
+        }
+    }
+    private var readinessMessage:String {
+        if model.busy {return "Esperando la operación actual…"}
+        if !model.authenticated {return "Vuelve a iniciar sesión para continuar."}
+        if model.device.isEmpty {return "Elige un dispositivo conectado."}
+        if model.team.isEmpty {return "Selecciona tu equipo Apple."}
+        if model.ipa==nil || model.originalID.isEmpty {return "Falta una IPA preparada con su identidad. Vuelve a preparar el juego antes de instalar."}
+        if model.registrationState == .unknown {return "Consulta tu cuenta para comprobar el registro."}
+        if model.registrationState == .new && !approveRegistration {return "Confirma arriba el uso de un cupo para este dispositivo."}
+        return "La firma y la instalación empiezan al pulsar el botón."
+    }
+    private var installFooter:some View {
+        HStack(spacing:18) {
+            VStack(alignment:.leading,spacing:5) {
+                Text(text(canInstall ? "Listo para instalar" : "Antes de instalar")).font(.headline)
+                Text(text(readinessMessage)).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal:false,vertical:true)
+            }.frame(maxWidth:.infinity,alignment:.leading)
+            Button {installStep=3;model.install(autoRefresh:autoRefresh,includeContent:includeGameData,approveRegistration:approveRegistration)} label:{Label(text(model.existing.isEmpty ? "Firmar e instalar" : "Firmar y actualizar"),systemImage:"arrow.down.app")}.buttonStyle(EasyPrimaryStyle()).disabled(!canInstall)
+        }.padding(20).frame(maxWidth:860).frame(maxWidth:.infinity).background(EasyDesign.background).overlay(alignment:.top){Divider()}
+    }
+    private var installationContent:some View {
+        EasyCard {
+            VStack(alignment:.leading,spacing:16) {
+                Label(displayedGame,systemImage:model.completedInstallation ? "checkmark.seal.fill" : "shippingbox").font(.title3.bold())
+                Text(selectedDevice?.name ?? "iPhone / iPad").font(.callout).foregroundStyle(.secondary)
+                if model.completedInstallation {
+                    Text(text("Instalación confirmada. Ya puedes abrir el juego en tu dispositivo.")).font(.callout)
+                    if guided {Button(text("Volver a la preparación"),action:onReturn).buttonStyle(EasyPrimaryStyle())}
+                    else if !embedded {Button(text("Listo")){dismiss()}.buttonStyle(EasyPrimaryStyle())}
+                } else if !model.busy {
+                    Text(text("La instalación no ha terminado. Revisa el mensaje y vuelve a intentarlo.")).font(.callout).foregroundStyle(.secondary)
+                    Button(text("Revisar e intentar de nuevo")){installStep=2}.buttonStyle(EasyPrimaryStyle())
+                } else {Text(text("Mantén el dispositivo conectado y la app abierta hasta que terminemos.")).font(.callout).foregroundStyle(.secondary)}
+            }
+        }
     }
 }
 
@@ -655,7 +789,7 @@ struct AppleVerificationView:View {
     var body:some View {
         VStack(alignment:.leading,spacing:22) {
             HStack(alignment:.top,spacing:14) {
-                Image(systemName:"lock.shield").font(.system(size:28,weight:.light)).foregroundStyle(Color(red:0.79,green:0.95,blue:0.37)).frame(width:48,height:48).background(.white.opacity(0.04),in:RoundedRectangle(cornerRadius:12))
+                Image(systemName:"lock.shield").font(.system(size:28,weight:.light)).foregroundStyle(EasyDesign.accent).frame(width:48,height:48).background(.white.opacity(0.04),in:RoundedRectangle(cornerRadius:12))
                 VStack(alignment:.leading,spacing:6) {
                     Text(text("Verifica tu cuenta")).font(.title2.bold())
                     if !model.email.isEmpty {Text(model.email).font(.caption).foregroundStyle(.secondary)}
@@ -667,16 +801,13 @@ struct AppleVerificationView:View {
                 TextField("······",text:$code).textFieldStyle(.plain).font(.system(size:30,weight:.medium,design:.monospaced)).tracking(7)
                     .padding(.horizontal,18).padding(.vertical,15).frame(width:250)
                     .background(.black.opacity(0.18),in:RoundedRectangle(cornerRadius:11))
-                    .overlay(RoundedRectangle(cornerRadius:11).strokeBorder(focused ? Color(red:0.79,green:0.95,blue:0.37).opacity(0.65) : .white.opacity(0.12)))
+                    .overlay(RoundedRectangle(cornerRadius:11).strokeBorder(focused ? EasyDesign.accent.opacity(0.65) : .white.opacity(0.12)))
                     .focused($focused).accessibilityLabel(text("Código de verificación"))
                     .onChange(of:code){_,value in code=String(value.utf8.filter {48...57 ~= $0}.prefix(6).map {Character(UnicodeScalar($0))})}
                     .onSubmit {confirm()}
                 Text(text("Puedes pegar el código completo.")).font(.caption).foregroundStyle(.secondary)
             }
-            Button(action:confirm){Label(text("Verificar y continuar"),systemImage:"arrow.right").font(.callout.bold()).padding(.horizontal,18).frame(minHeight:44)
-                .foregroundStyle(valid ? Color.black : Color.secondary)
-                .background(valid ? Color(red:0.79,green:0.95,blue:0.37) : .white.opacity(0.06),in:RoundedRectangle(cornerRadius:10))}
-                .buttonStyle(.plain).disabled(!valid)
+            Button(action:confirm){Label(text("Verificar y continuar"),systemImage:"arrow.right")}.buttonStyle(EasyPrimaryStyle()).disabled(!valid)
             Divider().overlay(.white.opacity(0.06))
             DisclosureGroup(text("¿No recibiste el código?")) {
                 VStack(alignment:.leading,spacing:12) {
@@ -685,13 +816,13 @@ struct AppleVerificationView:View {
                     ForEach(model.smsNumbers) {number in
                         Button {code="";model.sendSMS(number.id)} label:{Label(text("Enviar SMS al número terminado en")+" "+number.digits,systemImage:"message")}
                     }
-                    Button(text("Solicitar otro código")){code="";model.resend()}.buttonStyle(.link)
+                    Button(text("Solicitar otro código")){code="";model.resend()}.buttonStyle(EasyLinkStyle())
                 }.padding(.top,12)
             }.font(.callout)
             HStack(alignment:.firstTextBaseline) {
                 Text(text("El código se envía a Apple y no se guarda.")).font(.caption).foregroundStyle(.secondary)
                 Spacer()
-                Button(text("Cancelar")){code="";model.cancel()}.buttonStyle(.link)
+                Button(text("Cancelar")){code="";model.cancel()}.buttonStyle(EasyLinkStyle())
             }
         }.padding(24).frame(maxWidth:.infinity,alignment:.leading)
             .background(.white.opacity(0.035),in:RoundedRectangle(cornerRadius:18))
@@ -716,7 +847,7 @@ struct SideloadLibraryView:View {
     @State private var search=""
     @State private var appLimit=8
     private var matchingApps:[InstalledGame] {model.apps.filter {search.isEmpty || ($0.name+" "+$0.id).localizedCaseInsensitiveContains(search)}}
-    private let accent=Color(red:0.79,green:0.95,blue:0.37)
+    private let accent=EasyDesign.accent
     private var confirmationTitle:String {
         switch confirmation {case .export:return "Exportar partidas";case .copy:return "Copiar datos del juego";case .forget:return "¿Quitar este registro?";case nil:return ""}
     }
@@ -828,21 +959,30 @@ struct SideloadLibraryView:View {
 struct InstallActivityView:View {
     @ObservedObject var model:SideloadModel
     let text:(String)->String
-    @State private var expanded=true
+    @State private var expanded=false
     var body:some View {
-        VStack(alignment:.leading,spacing:10) {
-            if model.busy {
-                HStack {Text(text(model.phase)).font(.headline);Spacer();Button(text("Cancelar")){model.cancel()}}
-                if let fraction=model.fraction {ProgressView(value:fraction);Text(String(Int(fraction*100))+" %").font(.caption.monospacedDigit())}else{ProgressView().progressViewStyle(.linear);Text(text("Esta operación no informa un porcentaje. Puedes seguir el tiempo transcurrido y el registro.")).font(.caption).foregroundStyle(.secondary)}
-                TimelineView(.periodic(from:.now,by:1)){context in Text(text("Tiempo transcurrido")+" "+String(Int(context.date.timeIntervalSince(model.startedAt ?? context.date)))+" s").font(.caption).foregroundStyle(.secondary)}
+        VStack(alignment:.leading,spacing:16) {
+            if model.busy && !model.codeRequired {
+                EasyCard {
+                    VStack(alignment:.leading,spacing:14) {
+                        HStack {Label(text(model.phase),systemImage:"arrow.triangle.2.circlepath").font(.headline);Spacer();Button(text("Cancelar")){model.cancel()}.buttonStyle(EasyLinkStyle())}
+                        if let fraction=model.fraction {ProgressView(value:fraction).tint(EasyDesign.accent);Text(String(Int(fraction*100))+" %").font(.caption.monospacedDigit())}
+                        else {ProgressView().progressViewStyle(.linear).tint(EasyDesign.accent);Text(text("Esta operación no informa un porcentaje. Puedes seguir el tiempo transcurrido y el registro.")).font(.caption).foregroundStyle(.secondary)}
+                        TimelineView(.periodic(from:.now,by:1)){context in Text(text("Tiempo transcurrido")+" "+String(max(0,Int(context.date.timeIntervalSince(model.startedAt ?? context.date))))+" s").font(.caption.monospacedDigit()).foregroundStyle(.secondary)}
+                    }
+                }
             }
-            if let error=model.error {Label(text(error),systemImage:"exclamationmark.triangle").foregroundStyle(.orange).textSelection(.enabled)}
+            if let error=model.error {
+                EasyCard {VStack(alignment:.leading,spacing:8) {Label(text("Necesitamos revisar algo"),systemImage:"exclamationmark.triangle").font(.headline).foregroundStyle(.orange);Text(text(error)).font(.callout).textSelection(.enabled)}}
+            }
             if let export=model.exportedSaves {Button(text("Mostrar ZIP de partidas")){NSWorkspace.shared.activateFileViewerSelecting([export])}}
             if !model.logs.isEmpty {
                 DisclosureGroup(text("Actividad"),isExpanded:$expanded) {
-                    HStack {Button(text("Copiar registro")){model.copyLogs(text:text)};if let url=model.logURL {Button(text("Mostrar registro guardado")){NSWorkspace.shared.activateFileViewerSelecting([url])}};Spacer()}
-                    ScrollView {LazyVStack(alignment:.leading,spacing:5) {ForEach(model.logs) {entry in Text(entry.date.formatted(date:.omitted,time:.standard)+" · "+text(entry.message)+(entry.progress.map{" · "+String(Int($0*100))+" %"} ?? "")).font(.system(size:11,design:.monospaced)).textSelection(.enabled)}}.frame(maxWidth:.infinity,alignment:.leading)}.frame(height:160)
-                }
+                    VStack(alignment:.leading,spacing:12) {
+                        HStack {Button(text("Copiar registro")){model.copyLogs(text:text)};if let url=model.logURL {Button(text("Mostrar registro guardado")){NSWorkspace.shared.activateFileViewerSelecting([url])}};Spacer()}
+                        ScrollView {LazyVStack(alignment:.leading,spacing:7) {ForEach(model.logs) {entry in Text(entry.date.formatted(date:.omitted,time:.standard)+" · "+text(entry.message)+(entry.progress.map{" · "+String(Int($0*100))+" %"} ?? "")).font(.system(size:11,design:.monospaced)).textSelection(.enabled)}}.frame(maxWidth:.infinity,alignment:.leading)}.frame(height:180).defaultScrollAnchor(.bottom)
+                    }.padding(.top,14)
+                }.font(.callout).padding(18).background(EasyDesign.surface,in:RoundedRectangle(cornerRadius:14))
             }
         }
     }

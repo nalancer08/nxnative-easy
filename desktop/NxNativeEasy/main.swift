@@ -51,7 +51,7 @@ struct PreparationIllustration:View {
     let step:Int
     let isMac:Bool
     let text:(String)->String
-    private let accent=Color(red:0.80,green:0.96,blue:0.36)
+    private let accent=EasyDesign.accent
     private var symbol:String {["gamecontroller","tray.and.arrow.down","key.horizontal","point.topleft.down.to.point.bottomright.curvepath","cpu","checkmark.seal"][min(5,max(0,step))]}
     private var title:String {["Tu juego, en tu pantalla","Ve lo que vas a preparar","La llave la eliges tú","Un plan antes de empezar","Del archivo a tu app","El siguiente paso: jugar"][min(5,max(0,step))]}
     private var subtitle:String {["Elige tu destino. El resto se adapta a ti.","Tus archivos aparecen aquí antes de compilar.","Un archivo local. Sin subirlo ni copiarlo.","Destino, archivos y datos: todo a la vista.","Cada etapa muestra lo que está ocurriendo.","Tu preparación está lista para el destino elegido."][min(5,max(0,step))]}
@@ -244,6 +244,7 @@ struct PackageIdentityView:View {
     @Published var showSideload = false
     @Published var showDeviceLibrary = false
     @Published var installerReady = false
+    @Published var installingInline=false
     @Published var catalog: [CatalogGame] = []
     @Published var catalogFailed = false
     private var process: Process?
@@ -397,7 +398,7 @@ struct PackageIdentityView:View {
         buildRevision=BuildProvenance.head(repo)
         BuildCompletionNotice.requestIfEnabled(defaults:defaults)
         preparationStep=4
-        installerReady=false;running=true;cancelled=false;failed=false;showDetails=true;output=nil;assets=nil;transcript=""
+        installingInline=false;installerReady=false;running=true;cancelled=false;failed=false;showDetails=true;output=nil;assets=nil;transcript=""
         phase="Preparando herramientas…";detail="Puedes dejar esta ventana abierta. No necesitas usar Terminal."
         pipe.fileHandleForReading.readabilityHandler={ [weak self] handle in
             let data=handle.availableData
@@ -589,11 +590,14 @@ struct ContentView: View {
     @ObservedObject var updater: AppUpdater
     @ObservedObject var sideload:SideloadModel
     @ObservedObject var model:BuildModel
-    private let ink=Color(red:0.93,green:0.94,blue:0.90)
-    private let lime=Color(red:0.79,green:0.95,blue:0.37)
+    private let ink=EasyDesign.ink
+    private let lime=EasyDesign.accent
     var body: some View {
         ZStack {
             Color(red:0.065,green:0.075,blue:0.07).ignoresSafeArea()
+            if model.installingInline {
+                SideloadView(model:sideload,text:model.text,embedded:true,guided:true,gameName:model.inspection?.name,onReturn:{model.installingInline=false})
+            } else {
             ScrollView {
                 VStack(alignment:.leading,spacing:22) {
                     if updater.visible {
@@ -767,7 +771,7 @@ struct ContentView: View {
                                 .font(.system(size:20,weight:.semibold)).foregroundStyle(lime)
                             Text(model.text("Instala y copia los datos desde aquí con tu cuenta personal, o usa Sideloadly como alternativa."))
                                 .font(.system(size:13))
-                            Button(model.text("Instalar en iPhone / iPad")){if let ipa=model.output,let folder=model.folder {sideload.configure(ipa:ipa,folder:folder,romfs:model.assets);model.showSideload=true}}
+                            Button(model.text("Instalar en iPhone / iPad")){if let ipa=model.output,let folder=model.folder {sideload.configure(ipa:ipa,folder:folder,romfs:model.assets);model.installingInline=true}}
                                 .disabled(updater.busy || sideload.busy).buttonStyle(.borderedProminent).tint(lime).foregroundStyle(.black)
                             DisclosureGroup(model.text("Alternativa: Sideloadly")) {
                                 VStack(alignment:.leading,spacing:10) {
@@ -803,16 +807,17 @@ struct ContentView: View {
                     }
                 }.padding(28)
             }
+            }
         }.frame(minWidth:760,minHeight:530).preferredColorScheme(.dark)
         .dropDestination(for:URL.self) {items,_ in
-            guard !model.running,!sideload.busy,!updater.busy else {return false}
+            guard !model.installingInline,!model.running,!sideload.busy,!updater.busy else {return false}
             model.acceptDrop(items);return true
         }
         .onReceive(NotificationCenter.default.publisher(for:Notification.Name("nxnative.openAnalysis"))) {_ in if !model.running && !updater.busy {model.showAnalysis=true}}
         .onChange(of:model.target){_,target in if target=="mac" {sideload.cancelPendingUpdate()}}
         .sheet(isPresented:$model.showSaves) {SavesHelpView(folder:model.folder,isMac:model.isMac,text:model.text,language:model.language)}
         .onChange(of:model.installerReady) {_,ready in
-            if ready,let ipa=model.output,let folder=model.folder {sideload.configure(ipa:ipa,folder:folder,romfs:model.assets);model.showSideload=true;model.installerReady=false}
+            if ready,let ipa=model.output,let folder=model.folder {sideload.configure(ipa:ipa,folder:folder,romfs:model.assets);model.installingInline=true;model.installerReady=false}
         }
         .sheet(isPresented:$model.showSideload) {SideloadView(model:sideload,text:model.text)}
         .sheet(isPresented:$model.showAnalysis) {if let game=model.folder {GameAnalysisView(repo:model.repo,game:game,text:model.text)} else {Text(model.text("Primero selecciona la carpeta de un juego preparado.")).padding(24)}}
@@ -827,7 +832,7 @@ struct GameCatalogView: View {
     @ObservedObject var model: BuildModel
     @State private var query=""
     @FocusState private var searchFocused: Bool
-    private let lime=Color(red:0.79,green:0.95,blue:0.37)
+    private let lime=EasyDesign.accent
     private var results: [CatalogGame] {GameCatalog.search(model.catalog,query:query)}
     var body: some View {
         VStack(alignment:.leading,spacing:18) {

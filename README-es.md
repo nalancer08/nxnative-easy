@@ -124,15 +124,28 @@ controles, ni los archivos JSON de preparación. [Guía detallada de partidas y 
 
 ## Pon tu juego en iPhone o iPad
 
-1. Elige iPhone/iPad, tu carpeta del juego y tus llaves. Deja IPA ligera o desactívala para incluir todo en la IPA; pulsa **Preparar juego**. El instalador se abre al terminar correctamente.
+1. Elige iPhone/iPad, tu carpeta del juego y tus llaves. Deja IPA ligera o desactívala para incluir todo en la IPA; pulsa **Preparar juego**. La instalación continúa en la misma pantalla al terminar: dispositivo → cuenta → revisión → instalación.
 2. Conecta y desbloquea tu dispositivo. Confía en el Mac y activa Modo de desarrollador cuando iOS lo pida.
 3. Inicia sesión con tu cuenta Apple, introduce el código y selecciona tu equipo personal.
 4. Si ya tienes el juego instalado, elige esa app existente para conservar su identidad. Pulsa **Firmar y actualizar**; no desinstales el juego anterior.
 5. Mantén cerrado el juego hasta que termine la firma, instalación y copia de datos. La renovación opcional recuerda la sesión en el Llavero.
 
+**Firmar e instalar** queda visible durante la revisión y explica qué falta. Si instalas después desde la biblioteca, se abre el mismo instalador guiado como modal. La sesión global del Mac está en **Configuración → Cuenta Apple**. El registro completo está en **Actividad**, cerrado por defecto.
+
+![Selección guiada del dispositivo](docs/images/nxnative-install-es-v1.17.png)
+
+<details>
+<summary>Pantalla de Cuenta Apple</summary>
+
+![Formulario de Cuenta Apple](docs/images/nxnative-account-es-v1.17.png)
+
+</details>
+
+*Las vistas de ejemplo usan datos ficticios de juego, dispositivo y cuenta.*
+
 En **Dispositivos**, en la barra lateral, abres una sección dentro de la ventana.
 Ves dispositivos conectados (identificador de modelo, sistema y USB/Wi-Fi), juegos
-reconocidos con buscador, cuenta Apple y firmas registradas. Las demás apps no se
+reconocidos con buscador y firmas registradas. Las demás apps no se
 muestran; para reconocer instalaciones antiguas, añade la carpeta preparada del
 juego a tu biblioteca o conserva su registro de instalación. **Actualizar con mis archivos** inicia la preparación para una app
 existente. Pulsa **Renovar ahora**

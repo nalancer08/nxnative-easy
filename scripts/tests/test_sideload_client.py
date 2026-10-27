@@ -12,7 +12,7 @@ class SideloadClient(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             executable=Path(temporary)/'client'
             subprocess.run(['xcrun','swiftc','-parse-as-library','-swift-version','5',
-                str(ROOT/'desktop/NxNativeEasy/BuildActivity.swift'),str(ROOT/'desktop/NxNativeEasy/Sideloading.swift'),
+                str(ROOT/'desktop/NxNativeEasy/DesignSystem.swift'),str(ROOT/'desktop/NxNativeEasy/BuildActivity.swift'),str(ROOT/'desktop/NxNativeEasy/Sideloading.swift'),
                 str(ROOT/'desktop/NxNativeEasy/SavesHelp.swift'),str(ROOT/'desktop/NxNativeEasy/Localization.swift'),
                 str(ROOT/'desktop/NxNativeEasy/tests/sideload_check.swift'),'-o',str(executable)],check=True)
             subprocess.run([str(executable)],check=True,timeout=20)

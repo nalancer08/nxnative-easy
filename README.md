@@ -118,21 +118,34 @@ RomFS and control profiles. [Save locations and backup limits](docs/saves.md).
 
 ## Put your game on iPhone or iPad
 
-1. Choose iPhone/iPad, your game folder and keys. Keep lightweight mode or turn it off for a complete IPA, then press **Prepare game**. The installer opens automatically when preparation succeeds.
+1. Choose iPhone/iPad, your game folder and keys. Keep lightweight mode or turn it off for a complete IPA, then press **Prepare game**. Installation continues on the same screen when preparation succeeds: device → account → review → install.
 2. Connect and unlock your device. Trust the Mac and enable Developer Mode when iOS asks.
 3. Sign in with your own Apple account, enter the verification code and choose your personal team.
 4. If the game is already installed, select that existing app to retain its identity. Choose **Sign and update**; keep the previous app installed.
 5. Keep the game closed while signing, installation and game-data copying finish. Optional refresh remembers the session in Keychain.
 
+The final **Sign and install** action stays visible during review and tells you what is missing. Installing later from your library opens the same guided installer in a modal. Manage the shared Mac session in **Settings → Apple Account**. Full logs are available under **Activity**, collapsed by default.
+
+![Guided device selection](docs/images/nxnative-install-en-v1.17.png)
+
+<details>
+<summary>Apple Account screen</summary>
+
+![Apple Account form](docs/images/nxnative-account-en-v1.17.png)
+
+</details>
+
+*Interface previews use fictitious game, device and account data.*
+
 **Devices** in the sidebar opens a page inside the main window. It shows connected
 devices (model identifier, OS and USB/Wi-Fi), searchable recognized game installations,
-your Apple-account sign-in and our recorded signature expiry dates. Other user
+our recorded signature expiry dates. Other user
 apps are excluded; recognizing older installs requires the game’s prepared folder
 in your library or an existing installation record. Choose
 **Update using my files** on an installed app to begin a game update. Use **Refresh now** without
 recompiling or copying RomFS again, or pause automatic renewal per game.
-**Read my Apple account devices** queries registrations after sign-in/team selection;
-these are separate from currently connected devices. **Installation activity** shows
+In **Settings → Apple Account**, **Refresh account devices** queries registrations after sign-in/team selection;
+these are separate from currently connected devices. **Activity** shows
 progress, elapsed time and copyable/retained logs without credentials.
 **Review account and installation** restores that game's original device/team/ID;
 **Use Keychain session** signs back in without entering the password again when

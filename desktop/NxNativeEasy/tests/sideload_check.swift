@@ -156,6 +156,7 @@ import Foundation
         model.restoreSession();try await wait {model.authenticated && !model.busy}
         model.renew(job);try await wait {!model.busy && model.jobs.first(where:{$0.id==job.id})?.expires != job.expires}
         assert(model.error==nil && model.jobs.count==2 && !model.jobs.first(where:{$0.id==job.id})!.enabled && model.jobs.first(where:{$0.id==job.id})!.sha256==job.sha256)
+        assert(!model.completedInstallation) // A background/manual renewal must not complete another install screen.
         model.forget(job);assert(model.jobs.count==1 && model.jobs[0].id==second.id && FileManager.default.fileExists(atPath:ipa.path))
         let empty=SideloadModel(stateURL:root.appendingPathComponent("jobs.json"),defaults:defaults,helperURL:helper);assert(empty.jobs.count==1 && empty.jobs[0].id==second.id)
         let lightweight=root.appendingPathComponent("light");try FileManager.default.createDirectory(at:lightweight,withIntermediateDirectories:true)
@@ -180,7 +181,7 @@ import Foundation
         assert(model.canUpdateAppOnly)
         model.install(autoRefresh:false,includeContent:false);try await wait {!model.busy}
         model.inspectAccountDevices();try await wait {!model.busy};assert(model.estimatedDeviceSlots==2)
-        model.install(autoRefresh:false,includeContent:false,approveRegistration:true);try await wait {!model.busy};assert(model.error==nil)
+        model.install(autoRefresh:false,includeContent:false,approveRegistration:true);try await wait {!model.busy};assert(model.error==nil && model.completedInstallation)
         assert(model.estimatedDeviceSlots==1 && model.registrationState == .registered)
         let backup=root.appendingPathComponent("progress.zip")
         model.exportSaves(selected,destination:backup,confirmedClosed:true);try await wait {!model.busy && model.exportedSaves != nil};assert(model.exportedSaves==backup)
