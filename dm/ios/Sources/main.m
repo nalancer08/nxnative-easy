@@ -17,7 +17,12 @@ static char *g_argv[4]; static int g_argc;
 static NSString *romfs_locate(void) {
     NSFileManager *fm = NSFileManager.defaultManager;
     NSString *doc = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES)[0];
-    for (NSString *d in @[[doc stringByAppendingPathComponent:@"romfs"], [NSBundle.mainBundle.resourcePath stringByAppendingPathComponent:@"romfs"]])
+    NSString *external = [doc stringByAppendingPathComponent:@"romfs"];
+    NSString *bundled = [NSBundle.mainBundle.resourcePath stringByAppendingPathComponent:@"romfs"];
+    // A complete native installation must not boot stale externally copied data.
+    // Legacy/full apps still accept an intentional Documents override by default.
+    BOOL preferBundled = [NSBundle.mainBundle.infoDictionary[@"DMPreferBundledRomFS"] boolValue];
+    for (NSString *d in (preferBundled ? @[bundled, external] : @[external, bundled]))
         if ([fm fileExistsAtPath:[d stringByAppendingPathComponent:@DM_GAME_ROMFS_MARKER]]) return d;   // only a directory containing the game profile's romfs_marker path counts (Mario: System/Resource, the resource size table)
     return nil;
 }

@@ -196,7 +196,7 @@ def main(argv=None):
             print(json.dumps({'ev':'stage','name':'Export lightweight IPA','step':'Separating game data','k':0,'n':0}),flush=True)
         light_dir = None if args.full_only else split_ipa(output)
         record = dict(schema=1, **settings, version=info.get('CFBundleShortVersionString'),
-                      source_revision=revision, full_ipa=str(output), light_dir=str(light_dir) if light_dir else None)
+                      source_revision=revision, packaging="full" if args.full_only else "split", full_ipa=str(output), light_dir=str(light_dir) if light_dir else None)
         temp = state_path.with_suffix('.json.tmp')
         temp.write_text(json.dumps(record,indent=2)+'\n'); temp.replace(state_path)
         print('Build complete. Install over the existing app using the same personal account and effective bundle ID.')

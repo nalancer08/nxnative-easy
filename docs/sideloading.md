@@ -162,3 +162,74 @@ The implementation covers our prepared-game installation lifecycle. It is not a
 full binary/source migration of Sideloadly: no proprietary code is available to
 port, and arbitrary IPA injection/plugins and all of its advanced options are
 not implemented. Intel Sideloadly is not required by the native code path.
+
+## Guided device workspace (1.9)
+
+The device workspace separates three different inventories:
+
+- **Connected devices:** read-only usbmuxd/Lockdown discovery. Duplicate USB/Wi-Fi
+  entries are merged by UDID, preferring USB for operations. Device cards show
+  Apple's model identifier, OS version, available transports and trust/readiness.
+  A model identifier is not a guessed marketing model name.
+- **Installed apps:** the selected device's actual installation-proxy user-app
+  list, with names, effective bundle IDs, versions and search. These do not need
+  an Apple-account login and include apps outside nxnative. **Update using my
+  files** retains that target/device, returns to game-folder preparation and
+  carries the target into installation. Matching game identity is checked again
+  before overwriting; selecting an unrelated app does not authorize replacing it.
+- **Apple-account devices:** after login and explicit team selection, **Read my
+  Apple account devices** queries that team's actual registrations. This is not
+  the same as a list of devices currently connected. A query failure is shown,
+  not interpreted as zero registrations or available free slots.
+
+Apple documents a Personal Team limit of up to three test devices and seven-day
+profiles in its [account overview](https://developer.apple.com/help/account/basics/about-your-developer-account).
+Sideloadly's [FAQ](https://sideloadly.io/faq.html) also describes the three-active-app
+limit for free accounts. The UI shows returned registrations and team type; it
+cannot infer a reliable remaining quota from installed user-app counts, count
+paid teams as free, remove registrations or bypass Apple's limits. No speculative
+"slots remaining" counter is displayed.
+
+### Folder to device
+
+Choose iPhone/iPad, select your own game folder and keys, select packaging, and
+press Prepare. Compilation already exposes live and retained compiler logs.
+After success the native installer opens automatically: select the device, sign
+in with your Apple account/2FA, explicitly choose your team and existing target,
+then approve signing/installing. Installation remains an explicit button; finishing
+compilation never signs or installs silently. Device-workspace account access is
+also available before preparing a game. A new source folder alone does not
+install anything.
+
+**Lightweight IPA** is the default. RomFS remains separate and the installer
+copies it with bounded progress and staging/recovery. **Complete IPA** uses
+`--full-only`, omits separate content transfer and includes the game inside the
+app; every signature renewal must transfer that larger app. Archive expansion is
+bounded to 64 GiB; use lightweight mode for larger content or constrained storage. Older preparation
+records require a new full preparation before using this mode. During native
+signing a bundle with RomFS gets `DMPreferBundledRomFS`; the updated game runtime
+then checks bundled content first, falling back to Documents when absent. This
+prevents a complete game update from booting an older external RomFS. It does not
+delete the previous external directory or touch saves. Legacy apps without the
+flag retain their intentional Documents override. Physical content-mode migration
+still needs device validation.
+
+**Installation activity** shows timestamped, bounded events for discovery, login
+state, device registration, signing, signature verification, installation and
+content transfer. Percentages come from actual helper callbacks when available;
+otherwise progress is indeterminate with elapsed time. The viewer can copy the
+log and reveal a retained `nxnative-tools/logs/install-<id>.log` in the game folder.
+Only fixed local status/error messages and numeric progress/Apple error codes
+are logged, never raw protocol payloads, passwords, 2FA codes, Apple responses,
+account names, device IDs or session tokens. The compiler log remains separate.
+
+### Honest parity boundary
+
+The REA investigation was read-only Mach-O inspection, not full decompilation or
+a recovered Sideloadly source tree. This project implements our game workflow
+using a separately licensed open-source signer. It has no claim of full Sideloadly
+parity: arbitrary IPA/plugin injection, all advanced signing options and its
+unattended background-daemon behavior are not implemented. Auto-renewal requires
+our launcher running. Real connected-device metadata and installed-app discovery
+were checked locally; account registrations, real provisioning/signing, physical
+RomFS recovery and unattended renewal remain unvalidated. Keep the fallback.

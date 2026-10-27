@@ -435,3 +435,29 @@ assertions, account rejection and non-destructive record removal. The production
 ARM64 bundle compiled and its signature verified; localization, documentation and
 78-profile catalog checks passed. No runtime, shader or Rust helper change was
 needed. No real account login, signing or physical-device install was performed.
+
+## Guided device workspace and complete iOS packaging (1.9)
+
+The device workspace now exposes metadata, transport/readiness, installed app
+search, update selection, Apple-account access and separate team registration
+queries. USB/Wi-Fi duplicates merge by UDID with USB preferred. After preparing
+an iOS game the installer opens, but signing/installing still needs explicit
+approval in the UI. Lightweight mode remains default; full-only mode includes
+RomFS and skips separate transfer. The new `DMPreferBundledRomFS` runtime flag
+prevents an older Documents/romfs from shadowing a complete native installation;
+unflagged apps retain legacy overrides. No saves or external directories are
+removed. Installation activity is bounded, timestamped, copyable and privately
+retained, without raw protocol/account credentials.
+
+Validation: 11 Rust cases passed; the expanded Swift fixture covers duplicate
+connections, metadata, installed-target continuity, explicit team-account device
+queries, full/light output selection, legacy full-record refusal and private log
+permissions/redaction. All 64 script cases completed (two optional dependency/
+compiled-helper checks skipped in that suite); documentation/localization and
+78-profile catalog gates passed. The unsigned iOS compile check compiled 178
+files with zero failures. Read-only real-device probing returned one unique
+connected iPhone with model/OS and 184 installed user apps. No Apple-account
+login, registration query, signing or installation was performed. The Mac
+regression harness was invoked but found no registered Mac Dread build; no
+physical gameplay or full/light migration comparison is claimed. The shader
+chain is unchanged. Cloud work remains paused; saves remain local/manual.

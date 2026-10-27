@@ -16,7 +16,7 @@ import Foundation
         emit({'event':'hello','protocol':1,'architecture':'aarch64'})
         for line in sys.stdin:
             value=json.loads(line)
-            if value['op']=='devices':emit({'event':'devices','items':[{'udid':'SYNTHETIC-DEVICE','name':'Test iPad'}]})
+            if value['op']=='devices':emit({'event':'devices','items':[{'udid':'SYNTHETIC-DEVICE','name':'Test iPad','model':'iPad-test','os':'26.0','connections':['Wi-Fi']},{'udid':'SYNTHETIC-DEVICE','name':'Test iPad','model':'iPad-test','os':'26.0','connections':['USB','Wi-Fi']}]})
             elif value['op']=='installed_apps':emit({'event':'installed_apps','items':[{'id':'org.game.custom','name':'Test game'}]})
             elif value['op']=='login':
                 assert value['password']=='synthetic-password-only'
@@ -30,6 +30,9 @@ import Foundation
                 assert value['expected_id']=='org.game.custom'
                 assert value['sha256']=='a'*64 and 'romfs' not in value
                 emit({'event':'installed','effective_id':value['expected_id'],'expires':time.time()+86400,'sha256':'a'*64})
+            elif value['op']=='account_devices':
+                assert value['team']=='ABCDE12345'
+                emit({'event':'account_devices','team':value['team'],'items':[{'udid':'REGISTERED-DEVICE','name':'Synthetic iPhone','status':'a'}]})
             elif value['op']=='logout':emit({'event':'signed_out'})
             elif value['op']=='quit':break
         """.write(to:helper,atomically:true,encoding:.utf8)
@@ -37,12 +40,18 @@ import Foundation
         let missing=SideloadModel(stateURL:root.appendingPathComponent("missing-jobs.json"),defaults:defaults,helperURL:root.appendingPathComponent("missing-helper"));missing.listDevices();assert(!missing.busy && missing.error != nil)
         let model=SideloadModel(stateURL:root.appendingPathComponent("jobs.json"),defaults:defaults,helperURL:helper)
         model.listDevices();try await wait { !model.busy && model.apps.count==1 }
-        assert(model.device=="SYNTHETIC-DEVICE")
+        assert(model.device=="SYNTHETIC-DEVICE" && model.devices.count==1 && model.devices[0].model=="iPad-test" && model.devices[0].connections.contains("USB"))
         model.email=" TEST@example.org ";model.signIn(password:"synthetic-password-only",remember:false)
         try await wait {model.codeRequired};assert(model.busy && !model.authenticated)
         model.submitCode("123456");try await wait {model.authenticated && !model.busy}
         assert(model.email=="test@example.org" && model.teams.count==1 && model.team.isEmpty)
         assert(defaults.string(forKey:"sideloadEmail")==nil)
+        model.inspectAccountDevices();assert(!model.busy && model.accountDevices.isEmpty)
+        model.team="ABCDE12345";model.inspectAccountDevices();try await wait {!model.busy && model.accountDevices.count==1}
+        assert(model.accountDeviceTeam==model.team)
+        assert(!model.logs.map(\.message).joined().contains("synthetic-password-only"))
+        assert(!model.logs.map(\.message).joined().contains("123456"))
+        assert(!model.logs.map(\.message).joined().contains("test@example.org"))
         model.signOut();try await wait {!model.authenticated};model.cancel()
         let now=Date();var job=RefreshJob(id:"test",ipa:"/synthetic.ipa",gameFolder:root.path,originalID:"org.game",effectiveID:"org.game.custom",team:"ABCDE12345",udid:"test",account:RefreshPolicy.account("Test@Example.org"),sha256:"test",expires:now.addingTimeInterval(24*3600),enabled:true)
         assert(RefreshPolicy.due(job,now:now,account:RefreshPolicy.account("test@example.org")))
@@ -70,6 +79,21 @@ import Foundation
         assert(model.error==nil && model.jobs.count==2 && !model.jobs.first(where:{$0.id==job.id})!.enabled && model.jobs.first(where:{$0.id==job.id})!.sha256==job.sha256)
         model.forget(job);assert(model.jobs.count==1 && model.jobs[0].id==second.id && FileManager.default.fileExists(atPath:ipa.path))
         let empty=SideloadModel(stateURL:root.appendingPathComponent("jobs.json"),defaults:defaults,helperURL:helper);assert(empty.jobs.count==1 && empty.jobs[0].id==second.id)
+        let lightweight=root.appendingPathComponent("light");try FileManager.default.createDirectory(at:lightweight,withIntermediateDirectories:true)
+        try Data("synthetic-ipa".utf8).write(to:lightweight.appendingPathComponent("test.ipa"))
+        let packaging:[String:Any]=["full_ipa":ipa.path,"light_dir":lightweight.path,"packaging":"full"]
+        assert(IOSPackageOutput.load(record:packaging,split:false)?.ipa==ipa)
+        assert(IOSPackageOutput.load(record:packaging,split:false)?.romfs==nil)
+        assert(IOSPackageOutput.load(record:packaging,split:true)?.romfs==lightweight.appendingPathComponent("romfs"))
+        assert(IOSPackageOutput.load(record:["full_ipa":ipa.path],split:false)==nil)
+        try JSONSerialization.data(withJSONObject:["schema":1,"bundle_id":"org.game"]).write(to:folder.appendingPathComponent("nxnative-ios.json"))
+        let selected=InstalledGame(id:"org.game.custom",name:"Test game")
+        model.prepareUpdate(selected);model.configure(ipa:ipa,folder:folder,romfs:nil)
+        try await wait {!model.busy && model.apps.count==1}
+        assert(model.existing==selected.id && model.device=="SYNTHETIC-DEVICE")
+        assert(model.logURL != nil)
+        let permissions=try FileManager.default.attributesOfItem(atPath:model.logURL!.path)[.posixPermissions] as! NSNumber
+        assert(permissions.intValue==0o600)
         model.cancel()
         print("Sideload client PASS: multi-game persistence, explicit manual refresh with original identity/hash and no RomFS recopy, account guard, metadata-only removal; private stdio login/2FA, explicit team selection, logout, refresh account/expiry/backoff guards, custom update identity and save-location mapping")
     }

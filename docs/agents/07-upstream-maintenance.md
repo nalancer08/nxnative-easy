@@ -22,6 +22,12 @@ appear everywhere without being forgotten. No recurring schedule is implied.
    Keep personal commit attribution, original upstream authors and licensing.
    Preserve the isideload exact-identifier patch, signed/profile identity checks,
    Keychain session storage, redacted stdio and RomFS-only transfer capability.
+   Preserve UDID deduplication (USB preferred), device metadata/search/update
+   selection, separate connected/registered inventories and logs without raw
+   credential/provider payloads. Full/light packaging must retain the bundled
+   RomFS priority flag and legacy-record rebuild gate; never delete external
+   content or saves to switch modes. Show actual registration results, not an
+   invented remaining free-account quota.
    Never add automatic certificate revocation, account/team changes, save-folder
    writes or password logging. Helper tests use synthetic credentials and no device;
    compilation never counts as successful Apple login or physical installation.

@@ -99,16 +99,21 @@ controles, ni los archivos JSON de preparación. [Guía detallada de partidas y 
 
 ## Pon tu juego en iPhone o iPad
 
-1. Prepara tu juego y pulsa **Instalar en iPhone / iPad**.
+1. Elige iPhone/iPad, tu carpeta del juego y tus llaves. Deja IPA ligera o desactívala para incluir todo en la IPA; pulsa **Preparar juego**. El instalador se abre al terminar correctamente.
 2. Conecta y desbloquea tu dispositivo. Confía en el Mac y activa Modo de desarrollador cuando iOS lo pida.
 3. Inicia sesión con tu cuenta Apple, introduce el código y selecciona tu equipo personal.
 4. Si ya tienes el juego instalado, elige esa app existente para conservar su identidad. Pulsa **Firmar y actualizar**; no desinstales el juego anterior.
 5. Mantén cerrado el juego hasta que termine la firma, instalación y copia de datos. La renovación opcional recuerda la sesión en el Llavero.
 
-En **Mis iPhones y iPads**, arriba en la ventana principal, ves las instalaciones
-registradas y la fecha real de vencimiento de su firma. Pulsa **Renovar ahora**
+En **Mis iPhones y iPads**, arriba en la ventana principal, ves los dispositivos conectados (identificador de modelo, sistema y USB/Wi-Fi),
+las apps instaladas con buscador, el acceso a tu cuenta Apple y las firmas
+registradas. **Actualizar con mis archivos** inicia la preparación para una app
+existente. Pulsa **Renovar ahora**
 sin recompilar ni copiar RomFS otra vez; también puedes pausar la renovación
-por juego. **Revisar cuenta e instalación** recupera su dispositivo, equipo e
+por juego. **Leer dispositivos de mi cuenta Apple** consulta los registros del
+equipo después de iniciar sesión; es distinto a ver dispositivos conectados.
+**Actividad de instalación** muestra avance, tiempo y logs copiables/guardados
+sin credenciales. **Revisar cuenta e instalación** recupera su dispositivo, equipo e
 identificador. **Usar sesión del Llavero** permite volver a entrar sin escribir
 la contraseña cuando esa sesión todavía sea válida. Quitar un registro sólo
 detiene su renovación; no desinstala el juego ni elimina partidas.

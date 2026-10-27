@@ -12,6 +12,7 @@ import Darwin
     @Published var target = "" {
         didSet { output=nil;assets=nil;failed=false;restoreOutput() }
     }
+    @Published var splitIOS=(UserDefaults.standard.object(forKey:"iosSplitGameData") as? Bool ?? true) {didSet {UserDefaults.standard.set(splitIOS,forKey:"iosSplitGameData");output=nil;assets=nil;restoreOutput()}}
     var isMac: Bool {target == "mac"}
     @Published var folder: URL?
     @Published var keysFolder: URL?
@@ -33,6 +34,8 @@ import Darwin
     @Published var showSaves = false
     @Published var showSideload = false
     @Published var showDeviceLibrary = false
+    @Published var installerReady = false
+    var chooseGameAfterDeviceLibrary=false
     @Published var catalog: [CatalogGame] = []
     @Published var catalogFailed = false
     private var process: Process?
@@ -59,25 +62,25 @@ import Darwin
         refreshCatalog()
         showCatalog=true
     }
-    func chooseFolder() {
+    @discardableResult func chooseFolder()->Bool {
         let panel=NSOpenPanel();panel.canChooseDirectories=true;panel.canChooseFiles=false
         panel.allowsMultipleSelection=false;panel.prompt=text("Elegir juego")
         panel.message=text("Selecciona la carpeta con el juego base y sus actualizaciones NSP/XCI.")
-        guard panel.runModal() == .OK, let url=panel.url else { return }
+        guard panel.runModal() == .OK, let url=panel.url else { return false }
         do {
             let files=try FileManager.default.contentsOfDirectory(at:url,includingPropertiesForKeys:nil)
             guard files.contains(where:{["nsp","xci","nsz","xcz"].contains($0.pathExtension.lowercased())}) else {
                 output=nil;assets=nil;phase="No encontramos el juego en esa carpeta."
                 detail="Elige la carpeta que contiene los archivos NSP o XCI directamente."
-                failed=true;return
+                failed=true;return false
             }
             guard !url.standardizedFileURL.path.hasPrefix(repo.standardizedFileURL.path+"/"), url.standardizedFileURL != repo.standardizedFileURL else {
-                phase="Guarda el juego fuera del repositorio.";detail="Así tus juegos y llaves se quedan fuera de GitHub.";failed=true;return
+                phase="Guarda el juego fuera del repositorio.";detail="Así tus juegos y llaves se quedan fuera de GitHub.";failed=true;return false
             }
             folder=url;UserDefaults.standard.set(url.path,forKey:"lastGameFolder")
             phase="Listo para preparar el juego.";detail="Un clic más. Los archivos anteriores se conservan."
-            failed=false;output=nil;assets=nil;transcript="";restoreOutput()
-        } catch { phase="No pudimos leer esa carpeta.";detail=error.localizedDescription;failed=true }
+            failed=false;output=nil;assets=nil;transcript="";restoreOutput();return true
+        } catch { phase="No pudimos leer esa carpeta.";detail=error.localizedDescription;failed=true;return false }
     }
     func chooseKeysFolder() {
         let panel=NSOpenPanel();panel.canChooseDirectories=true;panel.canChooseFiles=false
@@ -107,11 +110,10 @@ import Darwin
         guard target == "ios", let folder,
               let data=try? Data(contentsOf:folder.appendingPathComponent("nxnative-ios.json")),
               let record=(try? JSONSerialization.jsonObject(with:data)) as? [String:Any],
-              let path=record["light_dir"] as? String else {return}
-        let directory=URL(fileURLWithPath:path)
-        if let files=try? FileManager.default.contentsOfDirectory(at:directory,includingPropertiesForKeys:nil),
-           let ipa=files.first(where:{$0.pathExtension=="ipa"}) { output=ipa;assets=directory.appendingPathComponent("romfs") }
+              let prepared=IOSPackageOutput.load(record:record,split:splitIOS) else {return}
+        output=prepared.ipa;assets=prepared.romfs
     }
+
     func build() {
         guard let folder, !running, !target.isEmpty else {return}
         let script=repo.appendingPathComponent("scripts/prepare_ios.sh")
@@ -124,6 +126,7 @@ import Darwin
         task.executableURL=URL(fileURLWithPath:"/usr/bin/python3")
         var arguments=[repo.appendingPathComponent("desktop/NxNativeEasy/build_session.py").path,script.path,"--target",target,folder.path]
         arguments += ["--keys-folder",keysFolder.path]
+        if target=="ios" && !splitIOS {arguments.append("--full-only")}
         task.arguments=arguments;task.currentDirectoryURL=repo
         task.standardOutput=pipe;task.standardError=pipe
         var environment=ProcessInfo.processInfo.environment
@@ -133,7 +136,7 @@ import Darwin
         logURL=log;environment["NXE_BUILD_LOG"]=log.path;environment["NXE_GAME_DIR"]=folder.path
         startedAt=Date();lastOutputAt=nil;activity=BuildActivity()
         task.environment=environment
-        running=true;cancelled=false;failed=false;showDetails=false;output=nil;assets=nil;transcript=""
+        installerReady=false;running=true;cancelled=false;failed=false;showDetails=false;output=nil;assets=nil;transcript=""
         phase="Preparando herramientas…";detail="Puedes dejar esta ventana abierta. No necesitas usar Terminal."
         pipe.fileHandleForReading.readabilityHandler={ [weak self] handle in
             let data=handle.availableData
@@ -151,6 +154,7 @@ import Darwin
                 } else if status==0 {
                     self.restoreOutput()
                     self.failed=self.output==nil
+                    self.installerReady = !self.isMac && self.output != nil
                     self.phase=self.output == nil ? "Terminó, pero no encontramos la app." : (self.isMac ? "Tu juego está listo para Mac." : "Tu juego está listo para instalar en iPhone / iPad.")
                     self.detail=self.output == nil ? "Usa Ver error para revisar lo que ocurrió." : "Pulsa Instalar en iPhone / iPad. Inicia sesión con tu cuenta personal para firmar e instalar el juego y sus datos."
                 } else {
@@ -428,6 +432,11 @@ struct ContentView: View {
                             Spacer()
                             Button(model.keysFolder == nil ? model.text("Elegir") : model.text("Cambiar")) {model.chooseKeysFolder()}.disabled(model.running || updater.busy || sideload.busy).accessibilityLabel(model.text("Carpeta de llaves"))
                         }
+                        if model.target=="ios" {
+                            Toggle(model.text("IPA ligera: separar los datos del juego"),isOn:$model.splitIOS).disabled(model.running || updater.busy || sideload.busy)
+                            Text(model.text(model.splitIOS ? "Recomendado: la app pesa menos y el instalador copia romfs por separado." : "IPA completa: incluye el juego dentro. Ocupa más y cada renovación vuelve a transferir toda la app.")).font(.caption).foregroundStyle(.secondary)
+                            Label(model.text("Carpeta y llaves → Preparar → Cuenta Apple → Instalar y copiar datos"),systemImage:"arrow.right.circle").font(.caption).foregroundStyle(.secondary)
+                        }
                         if model.running {
                             Divider().overlay(Color.white.opacity(0.08))
                             HStack {
@@ -527,7 +536,10 @@ struct ContentView: View {
         }.frame(minWidth:760,minHeight:530).background(CompactWindow(height:(model.isMac ? 740 : 680)+(updater.visible ? 95 : 0)+(sideload.showsRefreshNotice ? 70 : 0))).preferredColorScheme(.dark)
         .onReceive(NotificationCenter.default.publisher(for:Notification.Name("nxnative.openAnalysis"))) {_ in if !model.running && !updater.busy {model.showAnalysis=true}}
         .sheet(isPresented:$model.showSaves) {SavesHelpView(folder:model.folder,isMac:model.isMac,text:model.text,language:model.language)}
-        .sheet(isPresented:$model.showDeviceLibrary) {SideloadLibraryView(model:sideload,text:model.text,canInstall:!model.running && !updater.busy)}
+        .onChange(of:model.installerReady) {_,ready in
+            if ready,let ipa=model.output,let folder=model.folder {sideload.configure(ipa:ipa,folder:folder,romfs:model.assets);model.showSideload=true;model.installerReady=false}
+        }
+        .sheet(isPresented:$model.showDeviceLibrary,onDismiss:{if model.chooseGameAfterDeviceLibrary {model.chooseGameAfterDeviceLibrary=false;model.target="ios";if !model.chooseFolder() {sideload.cancelPendingUpdate()}}}) {SideloadLibraryView(model:sideload,text:model.text,canInstall:!model.running && !updater.busy,prepareGame:{model.chooseGameAfterDeviceLibrary=true})}
         .sheet(isPresented:$model.showSideload) {SideloadView(model:sideload,text:model.text)}
         .sheet(isPresented:$model.showAnalysis) {if let game=model.folder {GameAnalysisView(repo:model.repo,game:game,text:model.text)} else {Text(model.text("Primero selecciona la carpeta de un juego preparado.")).padding(24)}}
         .sheet(isPresented:$model.showCatalog) {GameCatalogView(model:model)}

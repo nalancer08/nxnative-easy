@@ -70,3 +70,10 @@
 - **Cause:** isideload 0.5.0 unconditionally appended the team ID to the supplied bundle ID, even when the caller already knows the effective installed identifier.
 - **Fix:** the small vendored MIT patch preserves the caller's exact final ID. Our helper selects an actual existing device app, checks that it matches the game, verifies the signed/provisioned identity and never uninstalls the previous app to force an update. Original preparation IPAs stay unsigned. Tests cover custom identifiers and mismatch refusal; real-account/device migration still requires validation.
 - **Found on:** source review and synthetic tests for the [integrated installer](../sideloading.md#user-flow), with no existing user installation modified.
+
+### A complete iOS IPA can still select older external game data
+
+- **Symptom:** a complete game update includes new bundled RomFS but an existing Documents/romfs can take priority when the app boots.
+- **Cause:** the legacy iOS boot search intentionally checks Documents first to support external game-content overrides; preserving the container across an update also preserves that older directory.
+- **Fix:** the native signer marks bundles containing RomFS with `DMPreferBundledRomFS`. The iOS boot search honors the flag by checking bundled content first, with Documents as fallback. Unflagged apps retain the old override behavior. The desktop full-mode preparation gate requires a new preparation record; it does not silently reuse an older runtime. No save or external content is deleted. Physical mode migration remains unvalidated.
+- **Found on:** [native installer source review](../sideloading.md#guided-device-workspace-19), not a verified gameplay regression.

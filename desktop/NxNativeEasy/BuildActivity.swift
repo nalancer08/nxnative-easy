@@ -76,3 +76,19 @@ struct PreviousPreparation {
         return Self(target:target,version:record["version"] as? String ?? info?["CFBundleShortVersionString"] as? String,bundleID:record["bundle_id"] as? String ?? info?["CFBundleIdentifier"] as? String)
     }
 }
+
+
+// Full mode is explicit: older preparation records must be rebuilt so their
+// runtime understands bundled-data priority over an older Documents/romfs.
+enum IOSPackageOutput {
+    static func load(record:[String:Any],split:Bool)->(ipa:URL,romfs:URL?)? {
+        if !split {
+            guard record["packaging"] as? String=="full",let path=record["full_ipa"] as? String,FileManager.default.isReadableFile(atPath:path) else {return nil}
+            return (URL(fileURLWithPath:path),nil)
+        }
+        guard let path=record["light_dir"] as? String else {return nil}
+        let root=URL(fileURLWithPath:path)
+        guard let files=try? FileManager.default.contentsOfDirectory(at:root,includingPropertiesForKeys:nil),let ipa=files.sorted(by:{$0.path<$1.path}).first(where:{$0.pathExtension.lowercased()=="ipa"}) else {return nil}
+        return (ipa,root.appendingPathComponent("romfs"))
+    }
+}

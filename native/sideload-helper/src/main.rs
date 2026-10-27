@@ -3,8 +3,8 @@ mod idle;
 mod romfs;
 use idevice::{
     IdeviceService,
-    provider::UsbmuxdProvider,
-    usbmuxd::{UsbmuxdAddr, UsbmuxdConnection},
+    provider::{IdeviceProvider, UsbmuxdProvider},
+    usbmuxd::{Connection, UsbmuxdAddr, UsbmuxdConnection, UsbmuxdDevice},
 };
 use isideload::{
     anisette::remote_v3::RemoteV3AnisetteProvider,
@@ -109,25 +109,65 @@ fn effective_id(
 }
 async fn provider(udid: &str) -> Result<UsbmuxdProvider, Report> {
     let mut mux = UsbmuxdConnection::default().await?;
-    let devices = mux.get_devices().await?;
+    let devices = unique_devices(mux.get_devices().await?);
     let device = devices
         .into_iter()
         .find(|d| d.udid == udid)
         .ok_or_else(|| report!("Device disconnected"))?;
     Ok(device.to_provider(UsbmuxdAddr::from_env_var()?, "nxnative-easy"))
 }
+// usbmuxd can report the same paired device over USB and Wi-Fi. Keep one
+// stable identity and prefer USB for metadata, app queries and installations.
+fn unique_devices(mut devices: Vec<UsbmuxdDevice>) -> Vec<UsbmuxdDevice> {
+    devices.sort_by_key(|d| {
+        (
+            d.udid.clone(),
+            !matches!(d.connection_type, Connection::Usb),
+        )
+    });
+    devices.dedup_by(|a, b| a.udid == b.udid);
+    devices
+}
+async fn device_details(p: &UsbmuxdProvider) -> Result<plist::Dictionary, Report> {
+    let mut lockdown = idevice::lockdown::LockdownClient::connect(p).await?;
+    lockdown.start_session(&p.get_pairing_file().await?).await?;
+    lockdown
+        .get_value(None, None)
+        .await?
+        .into_dictionary()
+        .ok_or_else(|| report!("Missing device metadata"))
+}
 async fn devices() -> Result<(), Report> {
     let mut mux = UsbmuxdConnection::default().await?;
+    let all = mux.get_devices().await?;
     let mut result = Vec::new();
-    for device in mux.get_devices().await? {
+    for device in unique_devices(all.clone()) {
         let p = device.to_provider(UsbmuxdAddr::from_env_var()?, "nxnative-easy");
-        let name = tokio::time::timeout(Duration::from_secs(3), IdeviceInfo::from_device(&p))
+        let details = tokio::time::timeout(Duration::from_secs(5), device_details(&p))
             .await
             .ok()
-            .and_then(Result::ok)
-            .map(|i| i.name)
-            .unwrap_or_else(|| "iPhone / iPad — unlock and trust this Mac".into());
-        result.push(json!({"udid":device.udid,"name":name}));
+            .and_then(Result::ok);
+        let value = |key: &str| {
+            details
+                .as_ref()
+                .and_then(|d| d.get(key))
+                .and_then(plist::Value::as_string)
+                .unwrap_or("")
+                .to_string()
+        };
+        let connections: Vec<_> = all
+            .iter()
+            .filter(|d| d.udid == device.udid)
+            .map(|d| match d.connection_type {
+                Connection::Usb => "USB",
+                Connection::Network(_) => "Wi-Fi",
+                Connection::Unknown(_) => "Unknown",
+            })
+            .collect::<std::collections::BTreeSet<_>>()
+            .into_iter()
+            .collect();
+        let name = value("DeviceName");
+        result.push(json!({"udid":device.udid,"name":if name.is_empty(){"iPhone / iPad".to_string()}else{name},"model":value("ProductType"),"os":value("ProductVersion"),"kind":value("DeviceClass"),"ready":details.is_some(),"connections":connections}));
     }
     emit(json!({"event":"devices","items":result}));
     Ok(())
@@ -145,7 +185,7 @@ async fn installed(udid: &str) -> Result<Vec<Value>, Report> {
                 .or_else(|| app.get("CFBundleName"))
                 .and_then(plist::Value::as_string)
                 .unwrap_or(&id);
-            Some(json!({"id":id,"name":name}))
+            Some(json!({"id":id,"name":name,"version":app.get("CFBundleShortVersionString").and_then(plist::Value::as_string).unwrap_or("")}))
         })
         .collect();
     Ok(result)
@@ -220,7 +260,7 @@ async fn login(request: &mut Value, restore: bool) -> Result<Session, Report> {
     .build();
     let choices: Vec<_> = teams
         .iter()
-        .map(|t| json!({"id":t.team_id,"name":t.name}))
+        .map(|t| json!({"id":t.team_id,"name":t.name,"kind":t.r#type,"status":t.status}))
         .collect();
     emit(json!({"event":"signed_in","teams":choices}));
     Ok(Session {
@@ -275,7 +315,8 @@ fn extract(ipa: &Path, stage: &Path) -> Result<PathBuf, Report> {
         expanded = expanded
             .checked_add(entry.size())
             .ok_or_else(|| report!("IPA too large"))?;
-        if expanded > 16 * 1024 * 1024 * 1024 {
+        // Full game IPAs can exceed 16 GiB; retain a bounded 64 GiB ceiling.
+        if expanded > 64 * 1024 * 1024 * 1024 {
             bail!("IPA too large")
         }
         let output = stage.join(relative);
@@ -413,6 +454,11 @@ async fn install(session: &mut Session, request: &Value) -> Result<(), Report> {
     }
     // Rebind the main bundle and its extensions using the SDK's own prefix rules.
     rebind_app(&app, original, &base)?;
+    if app.join("romfs").is_dir() {
+        let mut info: plist::Dictionary = plist::from_file(app.join("Info.plist"))?;
+        info.insert("DMPreferBundledRomFS".into(), plist::Value::Boolean(true));
+        plist::to_file_binary(app.join("Info.plist"), &info)?;
+    }
     if request["update"].as_bool() == Some(true) {
         let name = metadata
             .get("CFBundleDisplayName")
@@ -429,6 +475,7 @@ async fn install(session: &mut Session, request: &Value) -> Result<(), Report> {
             bail!("Selected installed app does not match this game")
         }
     }
+    emit(json!({"event":"progress","phase":"Registering device"}));
     session
         .loader
         .get_dev_session()
@@ -449,6 +496,7 @@ async fn install(session: &mut Session, request: &Value) -> Result<(), Report> {
     {
         bail!("Signed identity mismatch; not installed")
     }
+    emit(json!({"event":"progress","phase":"Verifying signature"}));
     let expires = profile_details(&signed, &effective, team_id)?;
     let verify = std::process::Command::new("/usr/bin/codesign")
         .args(["--verify", "--deep", "--strict"])
@@ -502,6 +550,16 @@ async fn main() {
                     Err(e)
                 }
             },
+            "account_devices" => match &mut session {
+                Some(value) => async {
+                    let id=text(&request,"team")?;
+                    let team=value.teams.iter().find(|t|t.team_id==id).cloned().ok_or_else(||report!("Select your team"))?;
+                    let items=value.loader.get_dev_session().list_devices(&team,None).await?;
+                    emit(json!({"event":"account_devices","team":id,"items":items.iter().map(|d|json!({"udid":d.device_number,"name":d.name,"status":d.status})).collect::<Vec<_>>()}));
+                    Ok(())
+                }.await,
+                None => Err(report!("Sign in first")),
+            },
             "install" => match &mut session {
                 Some(value) => install(value, &request).await,
                 None => Err(report!("Sign in first")),
@@ -554,6 +612,28 @@ async fn main() {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn usb_and_wifi_are_one_device_with_usb_preferred() {
+        let usb = UsbmuxdDevice {
+            udid: "same".into(),
+            device_id: 2,
+            connection_type: Connection::Usb,
+        };
+        let wifi = UsbmuxdDevice {
+            udid: "same".into(),
+            device_id: 1,
+            connection_type: Connection::Network("127.0.0.1".parse().unwrap()),
+        };
+        for items in [vec![wifi.clone(), usb.clone()], vec![
+            usb.clone(),
+            wifi.clone(),
+        ]] {
+            let result = unique_devices(items);
+            assert_eq!(result.len(), 1);
+            assert_eq!(result[0].device_id, 2);
+        }
+    }
+
     #[test]
     fn identifiers_preserve_update_identity() {
         assert_eq!(

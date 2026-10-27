@@ -13,6 +13,7 @@ One line per symptom in the [subsystem references](../reference/): what you see 
 - preparation appears stuck; the player cannot inspect compilation output until a failure. → [Desktop preparation shows a spinner with no build activity](../reference/packing.md#desktop-preparation-shows-a-spinner-with-no-build-activity)
 - the official Rust component shell installer rejects part of `--prefix` as an unknown option; a partial LLVM setup can also make `rust-objcopy` fail to load `libLLVM.dylib`. → [Native sideload toolchain install rejects a workspace path with spaces](../reference/packing.md#native-sideload-toolchain-install-rejects-a-workspace-path-with-spaces)
 - a replacement signer can append a second team suffix or produce another app identifier, separating the user from the existing app container. → [A sideload signer changes an existing game's bundle identifier](../reference/packing.md#a-sideload-signer-changes-an-existing-games-bundle-identifier)
+- a complete game update includes new bundled RomFS but an existing Documents/romfs can take priority when the app boots. → [A complete iOS IPA can still select older external game data](../reference/packing.md#a-complete-ios-ipa-can-still-select-older-external-game-data)
 
 ## Rewriter
 
