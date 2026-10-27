@@ -2,6 +2,7 @@
 mod games;
 mod idle;
 mod romfs;
+mod saves;
 use idevice::{
     IdeviceService,
     provider::{IdeviceProvider, UsbmuxdProvider},
@@ -436,6 +437,19 @@ async fn install(session: &mut Session, request: &Value) -> Result<(), Report> {
         .ok_or_else(|| report!("Missing game executable"))?
         .to_string();
     let automatic = request["automatic"].as_bool() == Some(true);
+    if automatic || request["app_only"].as_bool() == Some(true) {
+        let version = metadata
+            .get("CFBundleShortVersionString")
+            .and_then(plist::Value::as_string);
+        let installed_version = apps
+            .iter()
+            .find(|a| a["id"].as_str() == Some(effective.as_str()))
+            .and_then(|a| a["version"].as_str())
+            .filter(|s| !s.is_empty());
+        if version.is_none() || version != installed_version {
+            bail!("Game version differs from installed data")
+        }
+    }
     if automatic {
         idle::require_idle(udid, &executable)?;
     }
@@ -507,12 +521,56 @@ async fn install(session: &mut Session, request: &Value) -> Result<(), Report> {
     );
     Ok(())
 }
+// Never terminate a game to copy/export. A user may acknowledge an unknown
+// process inventory; an observed running process always stops the operation.
+fn require_closed(udid: &str, game: &Value, confirmed: bool) -> Result<(), Report> {
+    let executable = game["executable"]
+        .as_str()
+        .filter(|s| !s.is_empty() && !s.contains(['/', '\\']));
+    if let Some(executable) = executable {
+        match idle::require_idle(udid, executable) {
+            Ok(()) => return Ok(()),
+            Err(error) if error.to_string().contains("Game is running") => return Err(error),
+            Err(error) if !confirmed => return Err(error),
+            _ => {}
+        }
+    } else if !confirmed {
+        bail!("Cannot verify game process state")
+    }
+    Ok(())
+}
+async fn copy_game_content(request: &Value) -> Result<(), Report> {
+    let udid = text(request, "udid")?;
+    let effective = text(request, "effective_id")?;
+    let scope: games::Scope = serde_json::from_value(request.clone())?;
+    let apps = games::installed(udid, &scope).await?;
+    let game = apps
+        .iter()
+        .find(|app| app["id"].as_str() == Some(effective))
+        .ok_or_else(|| report!("Existing app identity was not found"))?;
+    if request["game_version"].as_str().filter(|v| !v.is_empty()) != game["version"].as_str() {
+        bail!("Game version differs from installed data")
+    }
+    require_closed(
+        udid,
+        game,
+        request["confirmed_closed"].as_bool() == Some(true),
+    )?;
+    romfs::transfer(
+        &provider(udid).await?,
+        effective,
+        Path::new(text(request, "romfs")?),
+    )
+    .await?;
+    emit(json!({"event":"content_copied","effective_id":effective}));
+    Ok(())
+}
 #[tokio::main]
 async fn main() {
     let _ = rustls::crypto::ring::default_provider().install_default();
     let _ = isideload::init();
     emit(
-        json!({"event":"hello","protocol":1,"architecture":std::env::consts::ARCH,"capabilities":["scoped-games-v1"]}),
+        json!({"event":"hello","protocol":1,"architecture":std::env::consts::ARCH,"capabilities":["scoped-games-v1","save-export-v1","romfs-copy-v1"]}),
     );
     let mut session: Option<Session> = None;
     while let Ok(mut request) = read_request() {
@@ -552,6 +610,11 @@ async fn main() {
                 }.await,
                 None => Err(report!("Sign in first")),
             },
+            "export_saves" => async {
+                let scope:games::Scope=serde_json::from_value(request.clone())?;
+                saves::export(text(&request,"udid")?,text(&request,"effective_id")?,&scope,Path::new(text(&request,"destination")?),request["confirmed_closed"].as_bool()==Some(true)).await
+            }.await,
+            "copy_romfs" => copy_game_content(&request).await,
             "install" => match &mut session {
                 Some(value) => install(value, &request).await,
                 None => Err(report!("Sign in first")),
@@ -578,7 +641,19 @@ async fn main() {
                 }
             });
             let detail = error.to_string();
-            let code = if detail.contains("discovery scope") {
+            let code = if detail.contains("Game version differs") {
+                "version_changed"
+            } else if detail.contains("No committed save") {
+                "no_saves"
+            } else if detail.contains("Save changed") {
+                "save_changed"
+            } else if detail.contains("Unsupported save metadata") {
+                "save_metadata"
+            } else if detail.contains("Save destination") {
+                "save_destination"
+            } else if detail.contains("Save export exceeds") {
+                "save_limits"
+            } else if detail.contains("discovery scope") {
                 "scope_unavailable"
             } else if detail.contains("Game is running") {
                 "game_running"

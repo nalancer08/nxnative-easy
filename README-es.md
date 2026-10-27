@@ -151,6 +151,18 @@ todas las funciones propietarias de Sideloadly. La alternativa sigue disponible.
 
 Para actualizar, usa la misma cuenta y el mismo bundle ID efectivo de Sideloadly. **Instala encima; no desinstales la app**, para conservar tus partidas. Si los datos del juego no cambiaron, puedes reutilizar el `romfs` existente. En esta alternativa la firma se hace en Sideloadly y la copia en Finder; el instalador integrado realiza esas operaciones desde nuestra app.
 
+## Partidas y datos desde Dispositivos
+
+Cada juego reconocido muestra su imagen y ofrece **Exportar partidas** para
+crear un ZIP local de `save` y `save_device`, con el juego guardado y cerrado.
+Puedes compartir ese ZIP a mano; no hay nube ni restauración automática.
+[Formato y límites del respaldo](docs/saves-es.md#exportar-del-iphoneipad-desde-la-app-111).
+
+**Copiar datos del juego** pasa el `romfs` preparado al dispositivo sin reinstalar
+la app. Si sólo cambió el editor o la app y sigue siendo la misma versión del
+juego, **Actualizar sólo la app; conservar romfs** evita reenviar esos datos.
+Un update del juego o DLC con archivos nuevos sí necesita sus datos nuevos.
+
 ## Actualizar un juego preparado
 
 Añade tus propios archivos de actualización a la misma carpeta del juego y

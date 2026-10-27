@@ -58,7 +58,10 @@ struct LibraryWorkspace:View {
                     if page == .devices {
                         SideloadLibraryView(model:sideload,text:model.text,canInstall:!model.running && !updater.busy,prepareGame:{
                             page = .prepare;model.target="ios";if !model.chooseFolder() {sideload.cancelPendingUpdate()}
-                        },embedded:true)
+                        },embedded:true,artwork:{app in
+                            guard let id=sideload.titleID(for:app) else {return nil}
+                            return GameArtworkCache.image(model.catalog.first(where:{$0.id==id})?.artworkURL)
+                        })
                     }
                     if page == .library {
                         VStack(alignment:.leading,spacing:20) {
@@ -110,7 +113,7 @@ struct LibraryWorkspace:View {
         }.frame(minWidth:1000,minHeight:640).tint(accent).background(Color(red:0.065,green:0.075,blue:0.07)).preferredColorScheme(.dark)
         .task {if model.folder != nil && library.games.isEmpty && library.error==nil {remember()}}
         .onChange(of:model.showDeviceLibrary){_,show in if show {page = .devices;model.showDeviceLibrary=false}}
-        .onReceive(library.$games){games in sideload.preparedIdentifiers=games.compactMap {game in game.originalBundleID ?? game.titleID.map {"org.nxnative."+$0.lowercased()}}}
+        .onReceive(library.$games){games in sideload.preparedFolders=Dictionary(games.compactMap {game in game.titleID.map {($0,game.folder)}},uniquingKeysWith:{first,_ in first});sideload.preparedIdentifiers=games.compactMap {game in game.originalBundleID ?? game.titleID.map {"org.nxnative."+$0.lowercased()}}}
         .onChange(of:model.folder){_,_ in if model.folder != nil {remember()}}
         .onChange(of:model.running){old,new in if old && !new {library.refresh()}}
         .onChange(of:scenePhase){_,phase in if phase == .active {library.refresh()}}

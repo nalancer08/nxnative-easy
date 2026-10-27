@@ -512,3 +512,37 @@ navigation request without attaching a sheet. The production ARM64 bundle
 compiled; signing/install execution on real devices was not part of this fix.
 The regression harness was invoked again but found no registered Mac Dread
 build; this release adds no gameplay validation claim.
+
+## Manual device saves and separate game content (1.11.0)
+
+Devices resolves game artwork by the prepared TitleID and offers a read-only
+committed-save ZIP export. Export requires a closed game, reads only save and
+save_device, verifies a stable inventory and a second content hash pass, and
+never replaces an existing local backup. It rejects aliases requiring guest
+metadata that AFC cannot preserve. Cloud synchronization and automatic restore
+remain deferred. A read-only physical iPhone export, with the process guard
+verified rather than manually overridden, produced four files (38,362 bytes);
+ZIP integrity and all manifest hashes passed. The private ZIP is outside Git.
+
+Copy game data now invokes the existing RomFS staging/recovery transfer without
+reinstalling the app or touching saves. The prepared and installed game versions
+must agree. An explicit app-only update keeps existing RomFS for controls/runtime
+changes at the same game version; changed game/DLC assets still require new data.
+No physical content transfer, Apple account login, signing or installation was
+performed over the user's working game in this release. Physical transfer
+interruption/recovery and native signing validation remain outstanding.
+
+Validation: 18 Rust tests passed, including actual ZIP pipeline/manifest/hash/
+permissions roundtrip and changing-source rejection. All 66 script cases completed
+with one optional JWT dependency skip; compiled Swift client and production
+SwiftUI/helper builds passed. Documentation and the 78-profile catalog passed;
+Python lint retained 414 baseline findings with no additions. The gameplay
+harness was invoked with the local game root, but no registered Mac Dread build
+was available; this release claims no new gameplay test. Host and shaders did
+not change.
+
+The explicitly approved obsolete backup was permanently removed after checking
+for protected data, freeing approximately 35.7 GB before final build-cache
+cleanup. Original XCI/update NSP, the lightweight unsigned IPA, RomFS, source
+checkout and exported saves remain outside that deletion. A private cleanup
+receipt records paths, available space and the IPA hash beside the game tools.

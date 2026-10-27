@@ -125,3 +125,31 @@ move snapshot history and ownership to another server.
 [Configuration, backup and relocation](../dm/cloud/README.md#portable-hosting-and-migration).
 This does not activate in-game sync: native login and safe device snapshot/import
 flows are still pending.
+
+
+## Export from a trusted iPhone/iPad (1.11)
+
+In **Devices**, choose **Export saves** for a recognized game, save and close it
+from the app switcher, confirm and select a new ZIP. Apple-account login is not
+required for this read on an already paired/trusted device. **Show save ZIP**
+reveals the result for manual sharing.
+
+A separate read-only AFC capability exports only committed `Documents/save` and
+optional `Documents/save_device`. It excludes game content, working transactions,
+preferences and credentials. Inventories/sizes and a second SHA-256 read must
+remain stable before a private ZIP is atomically published without overwriting a
+backup. The package contains the same folder names plus
+`nxnative-save-export.json` with game identity/version, hashes and source times.
+There is no device write or restore operation in this module.
+
+Observed running games stop export. If process inventory is unavailable, manual
+export requires the player's explicit closed-game acknowledgement. Symlinks,
+special files and `.dm-case-*` aliases are refused because AFC cannot preserve
+the engine's case-alias xattr; use a complete device backup for those cases.
+Limits are 512 MB and 8192 entries. A forced termination may leave a private
+partial temporary file, never a falsely successful final ZIP.
+
+Manual sharing/restoration still needs matching game/version/format and a backup
+of the recipient's original files. Control presets are separate. This package
+is not yet connected to the provider-independent cloud API or its nxsave schema.
+There is no automatic import or universal emulator conversion claim.

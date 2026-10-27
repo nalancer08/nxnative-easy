@@ -102,3 +102,32 @@ respaldo permite trasladar la base a otro servidor conservando versiones y
 permisos. [Configuración, respaldo y traslado](../dm/cloud/README.md#portable-hosting-and-migration).
 Esto no activa sincronización en los juegos: faltan el inicio de sesión nativo y
 la exportación/restauración segura de partidas en cada dispositivo.
+
+
+## Exportar del iPhone/iPad desde la app (1.11)
+
+En **Dispositivos**, busca tu juego reconocido y pulsa **Exportar partidas**.
+Guarda dentro del juego y ciérralo desde el selector de apps; confirma ese paso y
+elige un ZIP nuevo. No necesitas iniciar sesión con Apple para esta lectura en
+un dispositivo ya emparejado y de confianza. **Mostrar ZIP de partidas** abre su
+ubicación para compartirlo manualmente, por ejemplo mediante AirDrop.
+
+La herramienta lee únicamente `Documents/save` y `Documents/save_device` cuando
+existe. No copia `romfs`, cachés, `.work`, `.new` ni preferencias de controles.
+Verifica inventarios, tamaños y hashes en dos lecturas antes de publicar el ZIP;
+si la partida cambia, no publica un respaldo incompleto. El ZIP incluye esas
+carpetas y `nxnative-save-export.json`, con versión del juego y comprobaciones.
+No modifica el dispositivo ni sobrescribe otro ZIP. La nube sigue desconectada.
+
+Si detecta el juego abierto, se detiene. Cuando el sistema no puede comprobarlo,
+la exportación manual depende de tu confirmación de haberlo cerrado; no uses
+esta opción con una partida activa. Se rechazan enlaces, archivos especiales,
+credenciales y alias `.dm-case-*` cuyos metadatos no podemos conservar por AFC.
+Límites actuales: 512 MB y 8192 entradas. La interrupción forzada puede dejar un
+archivo temporal privado, pero no un ZIP final presentado como correcto.
+
+Para compartir, manda el ZIP completo. Restaurar es todavía manual y depende de
+que coincidan juego, versión y formato; no prometemos conversión de partidas de
+otros emuladores. Antes de reemplazar archivos desde Finder, conserva un respaldo
+del destino y cierra también ese juego. Esta versión no añade restauración
+automática ni modifica tus partidas al preparar o copiar datos.

@@ -265,3 +265,45 @@ Local read-only validation with the Metroid preparation scope returned only
 No app was installed, updated, uninstalled or accessed through HouseArrest during
 that check. Rust tests cover matching boundaries and empty-scope/no-device access;
 compiled Swift/protocol tests cover scope forwarding and unrelated-row rejection.
+
+
+## Save export, standalone content copy and app-only updates (1.11)
+
+Recognized device games now resolve artwork through the local profile catalog
+using their Title ID. No name-based ownership matching was added.
+
+**Export saves** is a separate read-only HouseArrest/AFC module. Its path boundary
+can address only committed `save`/`save_device`, never game content, transaction
+siblings, credential files or arbitrary container paths. It refuses unsupported
+case aliases, checks source stability with inventories plus two hash reads and
+publishes a local ZIP atomically without overwriting another backup. Directory
+permissions remain traversable (0700); files/the archive are private (0600).
+Destinations inside Git checkouts are refused. No restore/device write endpoint
+was introduced. [Export format and limits](saves.md#export-from-a-trusted-iphoneipad-111).
+A real read-only Metroid export was verified locally: four committed files,
+38,362 uncompressed bytes, ZIP CRCs and per-file hashes checked. The private ZIP
+is outside this repo and is not published. The device was not modified.
+
+**Copy game data** transfers the local preparation's RomFS to the selected
+recognized game without signing/reinstalling or asking for an Apple login. The
+client and helper check the installed game version; keep the game closed.
+The existing RomFS-only staging/recovery capability remains unchanged, so this
+operation cannot write to saves. It has not been rerun over the working Metroid
+content just to test this UI; physical interrupted-transfer recovery remains a
+validation item.
+
+**Update app only; keep romfs** is offered for an existing installation when the
+reported game version matches the local preparation. It sends no RomFS and keeps
+existing data. The helper checks the IPA's actual version against the installed
+app again; scheduled renewals now also stop on a version mismatch. This is not
+a full asset-difference detector: new game assets, mods or DLC need their new
+data even if the displayed version happens to be unchanged.
+
+For controls/runtime-only changes: prepare again with valid cached work, then
+choose app-only update. For a new game update: place your own new NSP update with
+the base files, prepare again and install the app plus its newly prepared data.
+Retain the same effective bundle ID/team/account and never uninstall the previous
+app. Support for the new game version still depends on the engine/profile.
+A lightweight IPA still needs the complete RomFS on the phone; it makes app
+signing/reinstallation smaller, not the game data optional. Full-IPA mode embeds
+those data and retransfers the larger app on renewal.

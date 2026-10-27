@@ -72,6 +72,11 @@ enum RefreshPolicy {
     @Published var teams:[SideloadTeam]=[]
     @Published var apps:[InstalledGame]=[]
     var preparedIdentifiers:[String]=[]
+    var preparedFolders:[String:URL]=[:]
+    @Published var exportedSaves:URL?
+    private var helperCapabilities:Set<String>=[]
+    private var pendingExport:URL?
+    private var pendingContentID:String?
     private var appQueryScope=GameAppScope()
     private var scopedDiscovery=false
     @Published var accountDevices:[AccountDevice]=[]
@@ -132,6 +137,46 @@ enum RefreshPolicy {
             if device==known.udid {existing=known.effectiveID}
         }
         connect();listDevices()
+    }
+    func titleID(for app:InstalledGame)->String? {
+        let parts=app.id.split(separator:".")
+        if parts.count>=3,parts[0].lowercased()=="org",parts[1].lowercased()=="nxnative",parts[2].count==16,parts[2].allSatisfy({$0.isHexDigit}) {return parts[2].uppercased()}
+        if let job=jobs.first(where:{$0.udid==device && $0.effectiveID==app.id}) {return SaveLocations.titleID(folder:URL(fileURLWithPath:job.gameFolder))}
+        if let folder=gameFolder,app.id==existing {return SaveLocations.titleID(folder:folder)}
+        return nil
+    }
+    func dataFolder(for app:InstalledGame)->URL? {
+        guard let id=titleID(for:app),let folder=preparedFolders[id],
+              let data=try? Data(contentsOf:folder.appendingPathComponent("nxnative-ios.json")),
+              let info=(try? JSONSerialization.jsonObject(with:data)) as? [String:Any],
+              let path=info["light_dir"] as? String else {return nil}
+        let romfs=URL(fileURLWithPath:path).appendingPathComponent("romfs")
+        return FileManager.default.fileExists(atPath:romfs.path) ? romfs : nil
+    }
+    var supportsSaveExport:Bool {helperCapabilities.contains("save-export-v1")}
+    var supportsContentCopy:Bool {helperCapabilities.contains("romfs-copy-v1")}
+    func exportSaves(_ app:InstalledGame,destination:URL,confirmedClosed:Bool) {
+        guard !busy,!device.isEmpty,appQueryScope.permits(app.id),helperCapabilities.contains("save-export-v1") else {return}
+        guard !destination.deletingLastPathComponent().pathComponents.contains(".git") else {return}
+        if let id=titleID(for:app),let folder=preparedFolders[id] {gameFolder=folder};logURL=nil
+        pendingExport=destination;exportedSaves=nil;busy=true;error=nil;fraction=nil;startedAt=Date();phase="Exportando partidas…";record(phase)
+        send(["op":"export_saves","udid":device,"effective_id":app.id,"destination":destination.path,"confirmed_closed":confirmedClosed,"original_ids":appQueryScope.originals.sorted(),"known_ids":appQueryScope.known.sorted()])
+    }
+    func chooseSaveDestination(_ app:InstalledGame,text:(String)->String={ $0 }) {
+        guard !busy else {return}
+        let panel=NSSavePanel();panel.title=app.name;panel.canCreateDirectories=true;panel.prompt=text("Exportar partidas")
+        let formatter=DateFormatter();formatter.locale=Locale(identifier:"en_US_POSIX");formatter.dateFormat="yyyyMMdd-HHmmss"
+        panel.nameFieldStringValue="partidas-"+(titleID(for:app) ?? "juego")+"-"+formatter.string(from:Date())+".zip"
+        if let id=titleID(for:app),let folder=preparedFolders[id] {panel.directoryURL=folder}
+        guard panel.runModal() == .OK,let url=panel.url else {return}
+        exportSaves(app,destination:url,confirmedClosed:true)
+    }
+    func copyData(_ app:InstalledGame,confirmedClosed:Bool) {
+        guard !busy,!device.isEmpty,appQueryScope.permits(app.id),let source=dataFolder(for:app),helperCapabilities.contains("romfs-copy-v1") else {return}
+        guard let id=titleID(for:app),let folder=preparedFolders[id],let version=PreviousPreparation.load(folder:folder,target:"ios")?.version,version==app.version else {error="Actualiza primero la app con la misma versión que los datos preparados.";return}
+        gameFolder=folder;logURL=nil
+        pendingContentID=app.id;busy=true;error=nil;fraction=nil;startedAt=Date();phase="Copiando datos del juego…";record(phase)
+        send(["op":"copy_romfs","udid":device,"effective_id":app.id,"romfs":source.path,"confirmed_closed":confirmedClosed,"game_version":app.version,"original_ids":appQueryScope.originals.sorted(),"known_ids":appQueryScope.known.sorted()])
     }
     func cancelPendingUpdate() {pendingUpdate=nil}
     func prepareUpdate(_ app:InstalledGame) {guard !busy,!device.isEmpty else {return};pendingUpdate=(device,app.id)}
@@ -212,18 +257,25 @@ enum RefreshPolicy {
     func resend() {codeRequired=false;send(["op":"resend"])}
     func signOut() {guard !busy else {return};send(["op":"logout","email":email]);defaults.removeObject(forKey:"sideloadEmail");for index in jobs.indices {jobs[index].enabled=false};saveJobs()}
     func cancel() {record("Operación cancelada; puedes volver a intentar.");if let refresh=activeRefresh,let index=jobs.firstIndex(where:{$0.id==refresh.id}) {jobs[index].retryAfter=Date().addingTimeInterval(6*3600);saveJobs()};if let process,process.isRunning {if kill(-process.processIdentifier,SIGTERM) != 0 {process.terminate()}}}
-    func install(autoRefresh:Bool) {
+    var canUpdateAppOnly:Bool {
+        guard let folder=gameFolder,let version=PreviousPreparation.load(folder:folder,target:"ios")?.version,!version.isEmpty,
+              let app=apps.first(where:{$0.id==existing}) else {return false}
+        return app.version==version && romfs != nil
+    }
+    func install(autoRefresh:Bool,includeContent:Bool=true) {
         guard !busy,authenticated,let ipa,let gameFolder,!originalID.isEmpty,!device.isEmpty,!team.isEmpty else {return}
+        if !includeContent && !canUpdateAppOnly {error="La versión del juego cambió o no está verificada. Instala la app con sus datos nuevos.";return}
         if autoRefresh && defaults.string(forKey:"sideloadEmail") != email {error="Para renovar al reiniciar, inicia sesión recordándola en el Llavero, o desactiva la renovación.";return}
         guard let effective=RefreshPolicy.identity(original:originalID,team:team,existing:existing) else {error="Ese identificador no corresponde al equipo elegido. Detenido para conservar la app anterior.";return}
         let job=RefreshJob(id:device+":"+effective,ipa:ipa.path,gameFolder:gameFolder.path,originalID:originalID,effectiveID:effective,team:team,udid:device,account:RefreshPolicy.account(email),sha256:"",expires:Date(),enabled:autoRefresh)
-        startInstall(job,updating:!existing.isEmpty,content:romfs)
+        startInstall(job,updating:!existing.isEmpty,content:includeContent ? romfs : nil,appOnly:!includeContent)
     }
-    private func startInstall(_ job:RefreshJob,updating:Bool,content:URL?) {
+    private func startInstall(_ job:RefreshJob,updating:Bool,content:URL?,appOnly:Bool=false) {
         guard FileManager.default.isReadableFile(atPath:job.ipa) else {error="No encontramos la IPA original. Conserva los archivos de preparación para renovarla.";activeRefresh=nil;return}
         if let content,!FileManager.default.fileExists(atPath:content.path) {error="Faltan los datos romfs. Prepara el juego de nuevo antes de instalarlo.";activeRefresh=nil;return}
         installIntent=job;loggedPhase="";loggedBucket = -1;logURL=nil;record("Firmando e instalando…");busy=true;error=nil;startedAt=Date();phase="Firmando e instalando…";fraction=nil
         var value:[String:Any]=["op":"install","ipa":job.ipa,"original_id":job.originalID,"team":job.team,"udid":job.udid,"work":URL(fileURLWithPath:job.gameFolder).appendingPathComponent("nxnative-tools/sideloading").path,"update":updating,"automatic":activeRefresh != nil && !manualRefresh]
+        if appOnly {value["app_only"]=true}
         if updating {value["expected_id"]=job.effectiveID}
         if !job.sha256.isEmpty {value["sha256"]=job.sha256}
         if let content {value["romfs"]=content.path}
@@ -238,7 +290,7 @@ enum RefreshPolicy {
     }
     private func handle(_ event:[String:Any]) {
         switch event["event"] as? String {
-        case "hello":scopedDiscovery=(event["capabilities"] as? [String] ?? []).contains("scoped-games-v1");if (event["protocol"] as? Int) != 1 || event["architecture"] as? String != "aarch64" {error="El instalador debe compilarse para Apple silicon.";cancel()}
+        case "hello":helperCapabilities=Set(event["capabilities"] as? [String] ?? []);scopedDiscovery=(event["capabilities"] as? [String] ?? []).contains("scoped-games-v1");if (event["protocol"] as? Int) != 1 || event["architecture"] as? String != "aarch64" {error="El instalador debe compilarse para Apple silicon.";cancel()}
         case "devices":
             devices=SideloadDevice.decode((event["items"] as? [[String:Any]]) ?? []);record("Búsqueda de dispositivos terminada.")
             busy=false
@@ -267,10 +319,16 @@ enum RefreshPolicy {
             if let refresh=activeRefresh {refreshAuthenticated=true;continueRefresh(refresh)}
         case "signed_out":authenticated=false;accountDevices=[];accountDeviceTeam="";teams=[];team="";busy=false
         case "progress":
-            let phases=["Registering device":"Registrando el dispositivo con Apple…","Verifying signature":"Verificando firma y vencimiento…","Preparing IPA":"Preparando IPA…","Signing app":"Firmando la app…","Installing app":"Instalando la app…","Copying game data":"Copiando datos del juego…","Game data ready":"Datos del juego listos."]
+            let phases=["Exporting saves":"Exportando partidas…","Verifying saves":"Verificando el respaldo…","Registering device":"Registrando el dispositivo con Apple…","Verifying signature":"Verificando firma y vencimiento…","Preparing IPA":"Preparando IPA…","Signing app":"Firmando la app…","Installing app":"Instalando la app…","Copying game data":"Copiando datos del juego…","Game data ready":"Datos del juego listos."]
             phase=phases[event["phase"] as? String ?? ""] ?? phase;if let value=event["fraction"] as? Double,value.isFinite,value>=0,value<=1 {fraction=value}else{fraction=nil}
             let bucket=Int((fraction ?? 0)*10)
             if loggedPhase != phase || loggedBucket != bucket {record(phase,progress:fraction);loggedPhase=phase;loggedBucket=bucket}
+        case "saves_exported":
+            guard let requested=pendingExport,event["path"] as? String==requested.path,(event["files"] as? Int ?? 0)>0,FileManager.default.isReadableFile(atPath:requested.path) else {error="No pudimos verificar el ZIP exportado.";busy=false;pendingExport=nil;return}
+            exportedSaves=requested;pendingExport=nil;busy=false;fraction=1;phase="Partidas exportadas. El juego no se modificó.";record(phase)
+        case "content_copied":
+            guard let expected=pendingContentID,event["effective_id"] as? String==expected else {error="No pudimos verificar la copia de datos.";busy=false;return}
+            pendingContentID=nil;busy=false;fraction=1;phase="Datos del juego copiados. Tus partidas siguen intactas.";record(phase)
         case "installed":
             guard var job=installIntent,let actual=event["effective_id"] as? String,actual==job.effectiveID,let expiry=event["expires"] as? Double,expiry>Date().timeIntervalSince1970,let hash=event["sha256"] as? String,hash.count==64 else {
                 error="No pudimos verificar el resultado de la instalación. Revisa el dispositivo antes de continuar.";busy=false;activeRefresh=nil;installIntent=nil;return
@@ -280,8 +338,13 @@ enum RefreshPolicy {
         case "error":
             record("La operación se detuvo. Revisa el mensaje de error.")
             let op=event["operation"] as? String
-            let codes=["game_running":"El juego sigue abierto. La renovación espera para no interrumpir tu partida.","idle_unknown":"No pudimos comprobar si el juego está abierto. Guarda, ciérralo y renueva manualmente.","identity_mismatch":"Ese identificador no corresponde al equipo elegido. Detenido para conservar la app anterior.","not_installed":"No encontramos esa app instalada. Revisa el identificador antes de actualizar.","wrong_app":"La app elegida no corresponde a este juego. No se instaló encima.","storage":"No hay espacio suficiente para preparar los datos nuevos sin borrar los anteriores.","ipa_changed":"La IPA cambió. Prepara y aprueba la actualización antes de renovarla."]
+            let codes=["version_changed":"La versión del juego cambió o no está verificada. Instala la app con sus datos nuevos.","game_running":"El juego sigue abierto. La renovación espera para no interrumpir tu partida.","idle_unknown":"No pudimos comprobar si el juego está abierto. Guarda, ciérralo y renueva manualmente.","identity_mismatch":"Ese identificador no corresponde al equipo elegido. Detenido para conservar la app anterior.","not_installed":"No encontramos esa app instalada. Revisa el identificador antes de actualizar.","wrong_app":"La app elegida no corresponde a este juego. No se instaló encima.","storage":"No hay espacio suficiente para preparar los datos nuevos sin borrar los anteriores.","ipa_changed":"La IPA cambió. Prepara y aprueba la actualización antes de renovarla."]
             error=codes[event["code"] as? String ?? ""] ?? ((op=="login" || op=="restore") ? "No pudimos iniciar sesión o la sesión guardada caducó. Vuelve a iniciar sesión." : "No pudimos completar la instalación. Revisa el dispositivo, equipo y permisos. No se revocaron certificados automáticamente.")
+            if op=="export_saves" || op=="copy_romfs" {
+                let failures=["game_running":"Guarda y cierra el juego desde el selector de apps antes de continuar.","idle_unknown":"No pudimos verificar que el juego esté cerrado. Guárdalo y ciérralo antes de continuar.","no_saves":"Todavía no encontramos archivos de partida guardados en este juego.","save_changed":"La partida cambió durante la exportación. Cierra el juego y vuelve a intentar.","save_metadata":"Este guardado usa metadatos que la exportación no puede conservar. Usa un respaldo completo del dispositivo.","save_destination":"Elige un ZIP nuevo; no sobrescribimos respaldos.","version_changed":"Actualiza primero la app con la misma versión que los datos preparados.","save_limits":"El guardado supera el límite de exportación de 512 MB u 8192 entradas."]
+                error=failures[event["code"] as? String ?? ""] ?? "No pudimos completar la operación. Revisa la conexión y el espacio disponible. Las partidas no se modificaron."
+                pendingExport=nil;pendingContentID=nil
+            }
             if op=="installed_apps" {apps=[];error=(event["code"] as? String)=="scope_unavailable" ? "No pudimos limitar la consulta a tus juegos. No mostramos otras aplicaciones." : "No pudimos leer tus juegos. Desbloquea el dispositivo, confía en este Mac y vuelve a buscar."}
             if op=="devices" {error="No pudimos buscar dispositivos. Revisa la conexión y vuelve a intentar."}
             if op=="account_devices" {accountDevices=[];accountDeviceTeam="";error="Apple no devolvió los dispositivos de este equipo. Revisa tu sesión y vuelve a consultar."}
@@ -405,6 +468,10 @@ struct SideloadView:View {
                     Text(text("La renovación necesita este Mac encendido, nxnative Easy abierto, conexión a Internet y el dispositivo accesible. Conserva la IPA original.")) .font(.caption).foregroundStyle(.secondary)
                     Button(text(model.existing.isEmpty ? "Firmar e instalar" : "Firmar y actualizar")){model.install(autoRefresh:autoRefresh)}.buttonStyle(.borderedProminent).disabled(model.busy || model.device.isEmpty || model.team.isEmpty || model.originalID.isEmpty)
                     }
+                    if model.canUpdateAppOnly {
+                        Button(text("Actualizar sólo la app; conservar romfs")){model.install(autoRefresh:autoRefresh,includeContent:false)}.disabled(model.busy)
+                        Text(text("Para cambios de controles o de la app con la misma versión del juego. Si cambió el juego o DLC, usa la instalación con datos nuevos.")).font(.caption).foregroundStyle(.secondary)
+                    }
                     Button(text("Cerrar sesión")){model.signOut()}.disabled(model.busy)
                 }
                 if model.codeRequired {
@@ -428,13 +495,25 @@ struct SideloadLibraryView:View {
     let canInstall:Bool
     var prepareGame:()->Void={}
     var embedded=false
+    var artwork:(InstalledGame)->NSImage?={_ in nil}
     @Environment(\.dismiss) private var dismiss
     @State private var showInstaller=false
-    @State private var forgotten:RefreshJob?
+    private enum Confirmation {case export(InstalledGame),copy(InstalledGame),forget(RefreshJob)}
+    @State private var confirmation:Confirmation?
     @State private var search=""
     @State private var appLimit=8
     private var matchingApps:[InstalledGame] {model.apps.filter {search.isEmpty || ($0.name+" "+$0.id).localizedCaseInsensitiveContains(search)}}
     private let accent=Color(red:0.79,green:0.95,blue:0.37)
+    private var confirmationTitle:String {
+        switch confirmation {case .export:return "Exportar partidas";case .copy:return "Copiar datos del juego";case .forget:return "¿Quitar este registro?";case nil:return ""}
+    }
+    private func confirmationMessage(_ action:Confirmation)->String {
+        switch action {
+        case .export:return "Guarda tu progreso y cierra el juego desde el selector de apps. Copiaremos save y save_device a un ZIP local, sin modificar el dispositivo."
+        case .copy:return "Copiaremos el romfs preparado en este Mac al juego seleccionado. Conservamos tus partidas y no reinstalamos la app. Mantén el juego cerrado hasta terminar."
+        case .forget:return "Sólo detiene la renovación y quita el registro de este Mac. El juego, sus archivos y sus partidas siguen en tu dispositivo."
+        }
+    }
     private func prepare() {prepareGame();if !embedded {dismiss()}}
     var body:some View {
         VStack(spacing:0) {
@@ -485,9 +564,18 @@ struct SideloadLibraryView:View {
                         TextField(text("Buscar por nombre o identificador"),text:$search).textFieldStyle(.roundedBorder)
                         if model.apps.isEmpty && !model.busy {Text(text("No encontramos juegos vinculados. Añade su carpeta preparada a la biblioteca y vuelve a buscar.")).foregroundStyle(.secondary)}
                         ForEach(Array(matchingApps.prefix(appLimit))) {app in
-                            HStack {
+                            HStack(spacing:12) {
+                                if let image=artwork(app) {Image(nsImage:image).resizable().scaledToFill().frame(width:76,height:50).clipped().clipShape(RoundedRectangle(cornerRadius:8))}
+                                else {Image(systemName:"gamecontroller").font(.title2).frame(width:76,height:50).background(.white.opacity(0.04),in:RoundedRectangle(cornerRadius:8))}
                                 VStack(alignment:.leading,spacing:4) {Text(app.name).font(.headline);Text(app.id+(app.version.isEmpty ? "" : " · "+app.version)).font(.caption).foregroundStyle(.secondary).textSelection(.enabled)}
-                                Spacer();Button(text("Actualizar con mis archivos")){model.prepareUpdate(app);prepare()}.disabled(model.busy || !canInstall)
+                                Spacer()
+                                VStack(alignment:.trailing,spacing:7) {
+                                    Button(text("Actualizar con mis archivos")){model.prepareUpdate(app);prepare()}
+                                    HStack {
+                                        Button(text("Exportar partidas")){confirmation = .export(app)}.disabled(!model.supportsSaveExport)
+                                        if model.dataFolder(for:app) != nil {Button(text("Copiar datos del juego")){confirmation = .copy(app)}.disabled(!model.supportsContentCopy)}
+                                    }.font(.caption)
+                                }.disabled(model.busy || !canInstall)
                             }.padding(.vertical,6)
                             Divider()
                         }
@@ -503,7 +591,7 @@ struct SideloadLibraryView:View {
                                 Text(text(job.expires<=Date() ? "Firma vencida" : "La firma vence")+" "+job.expires.formatted(date:.abbreviated,time:.shortened)).font(.caption)
                                 if job.needsLogin {Text(text("Inicia sesión para renovar este juego.")).foregroundStyle(.orange)}
                                 Toggle(text("Renovar automáticamente antes de que caduque"),isOn:Binding(get:{model.jobs.first(where:{$0.id==job.id})?.enabled ?? false},set:{model.setRefresh(job,enabled:$0)}))
-                                HStack {Button(text("Renovar ahora")){model.renew(job)};Button(text("Revisar cuenta e instalación")){model.select(job);showInstaller=true};Spacer();Button(text("Quitar de esta lista")){forgotten=job}}
+                                HStack {Button(text("Renovar ahora")){model.renew(job)};Button(text("Revisar cuenta e instalación")){model.select(job);showInstaller=true};Spacer();Button(text("Quitar de esta lista")){confirmation = .forget(job)}}
                             }.padding(16).background(.white.opacity(0.04),in:RoundedRectangle(cornerRadius:14)).disabled(model.busy || !canInstall)
                         }
                     }
@@ -515,10 +603,18 @@ struct SideloadLibraryView:View {
         .onChange(of:model.device){_,_ in appLimit=8}
         .task {if canInstall && !model.busy {model.listDevices()}}
         .sheet(isPresented:$showInstaller){SideloadView(model:model,text:text)}
-        .alert(text("¿Quitar este registro?"),isPresented:Binding(get:{forgotten != nil},set:{if !$0 {forgotten=nil}})) {
-            Button(text("Cancelar"),role:.cancel){forgotten=nil}
-            Button(text("Quitar de esta lista"),role:.destructive){if let job=forgotten {model.forget(job)};forgotten=nil}
-        } message:{Text(text("Sólo detiene la renovación y quita el registro de este Mac. El juego, sus archivos y sus partidas siguen en tu dispositivo."))}
+        .alert(text(confirmationTitle),isPresented:Binding(get:{confirmation != nil},set:{if !$0 {confirmation=nil}}),presenting:confirmation) {action in
+            Button(text("Cancelar"),role:.cancel){confirmation=nil}
+            switch action {
+            case .export(let app):
+                Button(text("Ya guardé y cerré el juego")){confirmation=nil;DispatchQueue.main.async {model.chooseSaveDestination(app,text:text)}}
+            case .copy(let app):
+                Button(text("Ya guardé y cerré el juego")){confirmation=nil;model.copyData(app,confirmedClosed:true)}
+            case .forget(let job):
+                Button(text("Quitar de esta lista"),role:.destructive){model.forget(job);confirmation=nil}
+            }
+        } message:{action in Text(text(confirmationMessage(action)))}
+
     }
 }
 
@@ -534,6 +630,7 @@ struct InstallActivityView:View {
                 TimelineView(.periodic(from:.now,by:1)){context in Text(text("Tiempo transcurrido")+" "+String(Int(context.date.timeIntervalSince(model.startedAt ?? context.date)))+" s").font(.caption).foregroundStyle(.secondary)}
             }
             if let error=model.error {Label(text(error),systemImage:"exclamationmark.triangle").foregroundStyle(.orange).textSelection(.enabled)}
+            if let export=model.exportedSaves {Button(text("Mostrar ZIP de partidas")){NSWorkspace.shared.activateFileViewerSelecting([export])}}
             if !model.logs.isEmpty {
                 DisclosureGroup(text("Actividad de instalación"),isExpanded:$expanded) {
                     HStack {Button(text("Copiar registro")){model.copyLogs(text:text)};if let url=model.logURL {Button(text("Mostrar registro guardado")){NSWorkspace.shared.activateFileViewerSelecting([url])}};Spacer()}

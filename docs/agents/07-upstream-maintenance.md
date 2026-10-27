@@ -41,6 +41,11 @@ appear everywhere without being forgotten. No recurring schedule is implied.
    Never add automatic certificate revocation, account/team changes, save-folder
    writes or password logging. Helper tests use synthetic credentials and no device;
    compilation never counts as successful Apple login or physical installation.
+   Preserve read-only committed-save export as a separate capability from
+   RomFS transfer: no restore, save-folder writes or silent metadata loss.
+   Keep duplicate hash/inventory checks, new-backup-only publication and alias
+   refusal. Source/installed game versions must agree for app-only renewal and
+   standalone content copy; version equality does not prove asset equality.
    Keep local saves and control preferences separate from the optional save API;
    cloud login/export/restore must not be advertised until native integration and
    recovery are configured and device-tested. Never package a private save database.

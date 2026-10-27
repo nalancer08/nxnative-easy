@@ -83,7 +83,7 @@ async fn lookup(
     Ok(apps.into_iter().filter_map(|(id,app)|{
         let app=app.as_dictionary()?;
         let name=app.get("CFBundleDisplayName").or_else(||app.get("CFBundleName")).and_then(Plist::as_string).unwrap_or(&id);
-        Some(json!({"id":id,"name":name,"version":app.get("CFBundleShortVersionString").and_then(Plist::as_string).unwrap_or("")}))
+        Some(json!({"id":id,"name":name,"executable":app.get("CFBundleExecutable").and_then(Plist::as_string).unwrap_or(""),"version":app.get("CFBundleShortVersionString").and_then(Plist::as_string).unwrap_or("")}))
     }).collect())
 }
 pub async fn installed(udid: &str, scope: &Scope) -> Result<Vec<Value>, Report> {

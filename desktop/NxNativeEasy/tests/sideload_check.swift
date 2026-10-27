@@ -11,15 +11,15 @@ import Foundation
         let helper=root.appendingPathComponent("helper")
         try """
         #!/usr/bin/python3
-        import sys,json,time
+        import sys,json,time,zipfile,os
         def emit(value):print(json.dumps(value),flush=True)
-        emit({'event':'hello','protocol':1,'architecture':'aarch64','capabilities':['scoped-games-v1']})
+        emit({'event':'hello','protocol':1,'architecture':'aarch64','capabilities':['scoped-games-v1','save-export-v1','romfs-copy-v1']})
         for line in sys.stdin:
             value=json.loads(line)
             if value['op']=='devices':emit({'event':'devices','items':[{'udid':'SYNTHETIC-DEVICE','name':'Test iPad','model':'iPad-test','os':'26.0','connections':['Wi-Fi']},{'udid':'SYNTHETIC-DEVICE','name':'Test iPad','model':'iPad-test','os':'26.0','connections':['USB','Wi-Fi']}]})
             elif value['op']=='installed_apps':
                 assert value.get('original_ids') and 'known_ids' in value
-                emit({'event':'installed_apps','items':[{'id':'org.game.custom','name':'Test game'},{'id':'com.unrelated.private','name':'Test game'},{'id':'org.game.customevil','name':'Test game'}]})
+                emit({'event':'installed_apps','items':[{'id':'org.game.custom','name':'Test game','version':'2.1.0'},{'id':'com.unrelated.private','name':'Test game'},{'id':'org.game.customevil','name':'Test game'}]})
             elif value['op']=='login':
                 assert value['password']=='synthetic-password-only'
                 emit({'event':'two_factor'})
@@ -30,8 +30,17 @@ import Foundation
             elif value['op']=='install':
                 assert value['automatic']==False and value['update']==True
                 assert value['expected_id']=='org.game.custom'
-                assert value['sha256']=='a'*64 and 'romfs' not in value
+                assert 'romfs' not in value
+                if not value.get('app_only'):assert value['sha256']=='a'*64
                 emit({'event':'installed','effective_id':value['expected_id'],'expires':time.time()+86400,'sha256':'a'*64})
+            elif value['op']=='export_saves':
+                assert value['effective_id']=='org.game.custom' and value['confirmed_closed']==True
+                with zipfile.ZipFile(value['destination'],'x') as z:z.writestr('save/progress.bin',b'synthetic progress')
+                os.chmod(value['destination'],0o600)
+                emit({'event':'saves_exported','path':value['destination'],'files':1,'bytes':18})
+            elif value['op']=='copy_romfs':
+                assert value['effective_id']=='org.game.custom' and value['game_version']=='2.1.0' and value['confirmed_closed']==True
+                emit({'event':'content_copied','effective_id':value['effective_id']})
             elif value['op']=='account_devices':
                 assert value['team']=='ABCDE12345'
                 emit({'event':'account_devices','team':value['team'],'items':[{'udid':'REGISTERED-DEVICE','name':'Synthetic iPhone','status':'a'}]})
@@ -96,14 +105,26 @@ import Foundation
         assert(IOSPackageOutput.load(record:packaging,split:false)?.romfs==nil)
         assert(IOSPackageOutput.load(record:packaging,split:true)?.romfs==lightweight.appendingPathComponent("romfs"))
         assert(IOSPackageOutput.load(record:["full_ipa":ipa.path],split:false)==nil)
-        try JSONSerialization.data(withJSONObject:["schema":1,"bundle_id":"org.game"]).write(to:folder.appendingPathComponent("nxnative-ios.json"))
-        let selected=InstalledGame(id:"org.game.custom",name:"Test game")
+        try FileManager.default.createDirectory(at:lightweight.appendingPathComponent("romfs"),withIntermediateDirectories:true)
+        try JSONSerialization.data(withJSONObject:["schema":1,"bundle_id":"org.game","version":"2.1.0","light_dir":lightweight.path]).write(to:folder.appendingPathComponent("nxnative-ios.json"))
+        let selected=InstalledGame(id:"org.game.custom",name:"Test game",version:"2.1.0")
         model.prepareUpdate(selected);model.configure(ipa:ipa,folder:folder,romfs:nil)
         try await wait {!model.busy && model.apps.count==1}
         assert(model.existing==selected.id && model.device=="SYNTHETIC-DEVICE")
         assert(model.logURL != nil)
         let permissions=try FileManager.default.attributesOfItem(atPath:model.logURL!.path)[.posixPermissions] as! NSNumber
         assert(permissions.intValue==0o600)
+        model.preparedFolders=["010093801237C000":folder];model.romfs=lightweight.appendingPathComponent("romfs")
+        assert(model.titleID(for:InstalledGame(id:"org.nxnative.010093801237c000.ABCDE12345",name:"Metroid"))=="010093801237C000")
+        assert(model.dataFolder(for:selected)?.path==model.romfs?.path)
+        assert(model.canUpdateAppOnly)
+        model.install(autoRefresh:false,includeContent:false);try await wait {!model.busy}
+        let backup=root.appendingPathComponent("progress.zip")
+        model.exportSaves(selected,destination:backup,confirmedClosed:true);try await wait {!model.busy && model.exportedSaves != nil};assert(model.exportedSaves==backup)
+        model.copyData(selected,confirmedClosed:true);try await wait {!model.busy};assert(model.fraction==1 && model.error==nil)
+        model.copyData(InstalledGame(id:selected.id,name:selected.name,version:"9.0"),confirmedClosed:true);assert(!model.busy && model.error != nil)
+        let unrelated=root.appendingPathComponent("unrelated.zip")
+        model.exportSaves(InstalledGame(id:"com.unrelated.private",name:selected.name),destination:unrelated,confirmedClosed:true);assert(!FileManager.default.fileExists(atPath:unrelated.path))
         model.cancel()
         print("Sideload client PASS: multi-game persistence, explicit manual refresh with original identity/hash and no RomFS recopy, account guard, metadata-only removal; private stdio login/2FA, explicit team selection, logout, refresh account/expiry/backoff guards, custom update identity and save-location mapping")
     }

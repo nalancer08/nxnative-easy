@@ -145,6 +145,17 @@ Sideloadly features. The fallback below remains available.
 
 For updates, keep the same Apple account and effective bundle ID used in Sideloadly. **Install over the existing app; do not uninstall it**, to retain its saves. Reuse the existing `romfs` only when the game data have not changed. When using this alternative, signing happens in Sideloadly and copying happens in Finder; the integrated installer performs those operations itself. See the [official Sideloadly FAQ](https://sideloadly.io/faq).
 
+## Device saves and game data
+
+Recognized games show their artwork and offer **Export saves** to create a local
+ZIP of committed `save`/`save_device`, after saving and closing the game. Share it
+manually; cloud sync and automatic restore are not enabled.
+[Export format and limits](docs/saves.md#export-from-a-trusted-iphoneipad-111).
+
+**Copy game data** transfers prepared RomFS without reinstalling. For controls or
+app-only changes with the same game version, **Update app only; keep romfs** avoids
+recopying the data. A game update/DLC with changed assets still needs its new data.
+
 ## Updating a prepared game
 
 Add your own update files to the same game folder and prepare it again. The app
