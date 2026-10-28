@@ -51,6 +51,15 @@ class GameCatalogSync(unittest.TestCase):
             self.assertIn(other,text);self.assertIn(ID,text)
         self.assertEqual(sync.sync(self.root),[])
 
+    def test_upstream_bold_title_is_not_repeated_in_caption_and_blank_notes_are_stable(self):
+        source=self.source().replace('<sub>~1 GB</sub>', '<sub><b>Example</b><br>~1 GB</sub>')
+        sync.sync(self.root,write=True,upstream_html=source)
+        self.assertEqual(json.loads((self.root/sync.CATALOG).read_text())['games'][0]['caption'], '~1 GB')
+        source=source.replace('<br>~1 GB', '')
+        sync.sync(self.root,write=True,upstream_html=source)
+        self.assertEqual(json.loads((self.root/sync.CATALOG).read_text())['games'][0]['caption'], '')
+        self.assertEqual(sync.sync(self.root), [])
+
     def test_missing_image_or_game_note_stops_before_writing(self):
         original=(self.root/'README.md').read_text()
         with self.assertRaises(ValueError):sync.sync(self.root,write=True)

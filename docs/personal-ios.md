@@ -715,3 +715,21 @@ Validation used synthetic IPC/device/account fixtures, with rendered English/Spa
 Root cause: validated `installed` IPC events saved signing jobs, but did not update/persist `deviceGames`; the library therefore continued to show a local artifact and no installation until another device query. A successful event now updates the exact device/bundle observation and installed version immediately. Custom effective IDs are matched through their exact signing-job identity. Older signing receipts without presence history appear as historical records with unknown observation date/version, without pretending the phone was checked. Fresh negative scoped queries suppress these fallbacks. Restarted observations remain historical until checked again. Existing JSON dates decode through the now-optional observation date.
 
 Library rows distinguish local Mac apps, local IPA files, verified installations and historical records; rebuild advice remains separate. Detail uses separate prepared and installed versions. The completed build dock can be dismissed without discarding activity/transcripts, and the next build restores it. Current successful install text supersedes the preparation-only dock caption. Synthetic client tests cover immediate presence, offline reload, legacy receipt fallback, unrelated IDs and a negative query after installation. No real device install/signing or game/save mutation was performed.
+
+## Upstream main refresh, 1.18.0 / build 31
+
+Merged upstream main through `beea17cfdbd8fe6112de9d1c191c0488da7970bf`
+with 20 added profiles (98 total), graphics/runtime/controller/tooling changes
+and our existing Easy workflow intact. See the [commit review and validation](upstream-reviews/2026-10-28.md).
+Existing installed games and their saves are unchanged. To use the new runtime
+fixes, prepare the game again with Xcode 27.1, then update the existing app using
+the same Apple team and effective bundle identity; do not uninstall it. New game
+updates require their matching RomFS. Existing versions do not gain new runtime
+fixes just by updating the desktop frontend. The app's rebuild advice compares
+each platform's recorded source revision.
+
+The upstream image-based extraction remains available to its CLI; Easy keeps
+folder-based game content for its existing native transfer and IPA splitter.
+No automatic removal of old content is carried into the iOS boot locator.
+The standalone game route remains untested locally because the regression harness
+found no registered Mac build; compilation and synthetic checks are not gameplay.

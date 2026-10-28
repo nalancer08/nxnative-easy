@@ -26,8 +26,11 @@ def gallery_rows(source):
         image=re.search(r'<img\b[^>]*\bsrc="(docs/images/[^"<>]+)"[^>]*\balt="([^"]*)"',cell,re.I)
         if not image:continue
         caption=re.search(r'<sub>(.*?)</sub>',cell,re.S|re.I)
+        detail=re.sub(r'^\s*<b>.*?</b>(?:<br\s*/?>)?', '', caption[1], count=1, flags=re.S|re.I) if caption else ''
+        detail=html.unescape(re.sub('<[^>]+>','',detail))
+        if detail in ('See game notes','Ver ficha del juego'):detail=''
         rows.append(dict(image=html.unescape(image[1]),name=html.unescape(image[2]),
-                         caption=html.unescape(re.sub('<[^>]+>','',caption[1])) if caption else ''))
+                         caption=detail))
     return rows
 
 

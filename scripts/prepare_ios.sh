@@ -37,6 +37,14 @@ if [ ! -d "$nxi_developer/Platforms/iPhoneOS.platform" ]; then nxi_developer=/Ap
 [ -d "$nxi_developer/Platforms/iPhoneOS.platform" ] || { echo 'Install and open full Xcode first.' >&2; exit 1; }
 export DEVELOPER_DIR="$nxi_developer"
 /usr/bin/xcodebuild -version
+nxi_xcode=$(/usr/bin/xcodebuild -version | /usr/bin/awk '/^Xcode / {print $2}')
+nxi_xc_major=${nxi_xcode%%.*}
+nxi_xc_minor=${nxi_xcode#*.}; nxi_xc_minor=${nxi_xc_minor%%.*}
+if [ "${nxi_xc_major}" -lt 27 ] || { [ "${nxi_xc_major}" -eq 27 ] && [ "${nxi_xc_minor}" -lt 1 ]; }; then
+  echo 'Install Xcode 27.1 or newer and open it once. Game builds use the reviewed Metal toolchain.' >&2
+  echo 'Instala Xcode 27.1 o posterior y ábrelo una vez para preparar juegos.' >&2
+  exit 1
+fi
 nxi_sdk_name=iphoneos
 if [ "$nxi_target" = mac ]; then
   [ "$(uname -m)" = arm64 ] || { echo 'Mac games require an Apple silicon Mac.' >&2; exit 1; }
