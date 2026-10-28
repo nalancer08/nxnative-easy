@@ -92,6 +92,10 @@ class Pipeline(unittest.TestCase):
             with self.assertRaises(ValueError):
                 with build_ios.build_lock(): pass
 
+    def test_frontend_keeps_folder_content_protocol(self):
+        builder = build_ios.load_builder()
+        self.assertFalse(builder.ROMFS_IMAGE)
+
     def test_dry_run_never_loads_builder_or_keys(self):
         with tempfile.TemporaryDirectory() as temp:
             game=Path(temp);(game/'base.nsp').write_bytes(b'fixture')

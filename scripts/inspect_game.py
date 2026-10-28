@@ -9,6 +9,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+from typing import Any
 import shutil
 import subprocess
 import tempfile
@@ -17,7 +18,7 @@ REPO = Path(__file__).resolve().parents[1]
 EXTENSIONS = {'.nsp', '.xci', '.nsz', '.xcz'}
 
 
-def summarize(value):
+def summarize(value) -> dict[str, Any]:
     if value.get('schema') != 1 or not isinstance(value.get('packages'), list):
         raise ValueError('Invalid metadata response')
     packages = value['packages']
@@ -108,7 +109,7 @@ def family_from_metadata(folder, value):
     if signatures != value.get('sources'):
         raise ValueError('Game files changed after identification; identify the folder again.')
     application = int(value['title_id'], 16)
-    family = dict(base=None, updates=[], dlc=[])
+    family: dict[str, Any] = dict(base=None, updates=[], dlc=[])
     bases = []
     for package in value['packages']:
         name = package['file']

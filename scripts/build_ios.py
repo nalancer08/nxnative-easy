@@ -10,6 +10,7 @@ import importlib.util
 import json
 import os
 from pathlib import Path
+from typing import Any
 import plistlib
 import re
 import subprocess
@@ -37,13 +38,17 @@ def build_lock():
 def load_builder(package_metadata=None):
     spec = importlib.util.spec_from_file_location('nxnative_builder', REPO / 'scripts/build_ipa_from_nsp.py')
     assert spec is not None and spec.loader is not None
-    builder = importlib.util.module_from_spec(spec)
+    builder: Any = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = builder
     spec.loader.exec_module(builder)
+    # Our splitter and native transfer use directories; do not silently migrate
+    # existing working games to upstream's image-only content format.
+    builder.ROMFS_IMAGE = False
     # Preserve the venv executable path: resolving its symlink selects global Python.
     builder.TOOL_PATHS.insert(0, str(Path(sys.executable).parent))
     if package_metadata is not None:
         metadata_spec = importlib.util.spec_from_file_location('nxnative_inspection', REPO/'scripts/inspect_game.py')
+        assert metadata_spec is not None and metadata_spec.loader is not None
         metadata = importlib.util.module_from_spec(metadata_spec)
         metadata_spec.loader.exec_module(metadata)
         value = json.loads(Path(package_metadata).read_text())

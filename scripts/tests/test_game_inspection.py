@@ -7,6 +7,7 @@ import unittest
 
 ROOT=Path(__file__).resolve().parents[2]
 spec=importlib.util.spec_from_file_location('inspection',ROOT/'scripts/inspect_game.py')
+assert spec is not None and spec.loader is not None
 inspection=importlib.util.module_from_spec(spec);spec.loader.exec_module(inspection)
 
 
