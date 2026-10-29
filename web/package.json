@@ -1,0 +1,15 @@
+{
+  "name": "nxnative-easy-website",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "predev": "python3 ../scripts/build_website.py",
+    "dev": "astro dev",
+    "prebuild": "python3 ../scripts/build_website.py",
+    "build": "astro build",
+    "preview": "astro preview"
+  },
+  "dependencies": { "astro": "7.4.4" },
+  "engines": { "node": ">=22.23.4" }
+}

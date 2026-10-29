@@ -90,6 +90,10 @@ appear everywhere without being forgotten. No recurring schedule is implied.
    using the title ID, never substitute a different game's art or silently hide it.
    Do not hand-edit generated galleries or hard-code a profile count in Swift.
    Refresh app screenshots when visible labels or counts change.
+   The Astro website derives every card/count from the same generated catalog.
+   Build `web` with `npm ci && npm run build` and run
+   `python3 scripts/check_website.py`; Pages deploys on catalog/artwork changes.
+   Preserve both language routes, reduced motion and download links.
    Keep compatibility evidence attributed: upstream Mac testing does not prove
    iPhone gameplay, and a build does not prove online support. State limitations
    in game notes; all users still supply their own game files and keys.

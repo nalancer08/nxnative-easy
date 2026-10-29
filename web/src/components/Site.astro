@@ -1,0 +1,67 @@
+---
+import content from '../../content.json';
+import catalog from '../../../desktop/NxNativeEasy/game-catalog.json';
+const { lang = 'en' } = Astro.props;
+const t = content[lang];
+const base = import.meta.env.BASE_URL;
+const repo = 'https://github.com/nalancer08/nxnative-easy';
+const site = 'https://nalancer08.github.io/nxnative-easy/';
+const featured = ['010093801237C000','01006BB00C6F0000','010015100B514000','0100000000010000','01007EF00011E000','0100B8E016F76000','0100B7C00933A000','0100E65002BB8000'];
+const rank = id => featured.includes(id) ? featured.indexOf(id) : 999;
+const games = [...catalog.games].sort((a,b) => rank(a.id)-rank(b.id) || a.name.localeCompare(b.name));
+const data = {
+ ...t, lang, base, home:base, other:base+(lang==='es'?'':'es/'), otherLang:lang==='es'?'en':'es', otherLabel:lang==='es'?'EN':'ES',
+ canonical:site+(lang==='es'?'es/':''), downloadURL:repo+'/releases/latest/download/nxnative-Easy-macOS-arm64.zip', count:games.length,
+ navLabel:lang==='es'?'Principal':'Main navigation', platformLabel:lang==='es'?'Dónde jugar':'Where to play',
+ nav0:t.nav[0],nav1:t.nav[1],nav2:t.nav[2], readmeFile:lang==='es'?'README-es.md':'README.md', savesFile:lang==='es'?'saves-es.md':'saves.md',
+ catalogCopy:t.catalogCopy.replace('{count}',String(games.length)), all:t.all.replace('{count}',String(games.length))
+};
+---
+<!doctype html>
+<html lang={`${data.lang}`}>
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{data.title}</title><meta name="description" content={`${data.description}`}>
+<meta name="theme-color" content="#101410"><link rel="canonical" href={`${data.canonical}`}>
+<link rel="alternate" hreflang="en" href="https://nalancer08.github.io/nxnative-easy/"><link rel="alternate" hreflang="es" href="https://nalancer08.github.io/nxnative-easy/es/"><link rel="alternate" hreflang="x-default" href="https://nalancer08.github.io/nxnative-easy/">
+<meta property="og:type" content="website"><meta property="og:title" content={`${data.title}`}><meta property="og:description" content={`${data.description}`}><meta property="og:url" content={`${data.canonical}`}><meta property="og:image" content="https://nalancer08.github.io/nxnative-easy/assets/social.jpg"><meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href={`${data.base}assets/icon.png`}><link rel="preload" href={`${data.base}assets/outfit.ttf`} as="font" type="font/ttf" crossorigin><link rel="stylesheet" href={`${data.base}style.css`}><script is:inline defer src={`${data.base}app.js`}></script>
+</head>
+<body>
+<svg class="symbols" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><defs>
+<symbol id="arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+<symbol id="icon-download" viewBox="0 0 24 24"><path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5"/></symbol>
+<symbol id="pad" viewBox="0 0 24 24"><path d="M7 6h10c2 0 3 2 4 6s1 7-1 7-4-4-5-4H9c-1 0-3 4-5 4S2 16 3 12s2-6 4-6ZM7 9v5m-2.5-2.5h5M16 10h.1M18 13h.1"/></symbol>
+<symbol id="screen" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M12 17v4m-5 0h10"/></symbol>
+<symbol id="save" viewBox="0 0 24 24"><path d="m12 21-8-5V7l8-4 8 4v9l-8 5ZM4 7l8 5 8-5m-8 5v9"/></symbol>
+<symbol id="search" viewBox="0 0 24 24"><circle cx="10" cy="10" r="6.5"/><path d="m15 15 6 6"/></symbol>
+</defs></svg>
+<a class="skip" href="#main">{data.skip}</a><div class="scroll-progress" aria-hidden="true"></div>
+<header class="header"><a class="brand" href={`${data.home}`} aria-label="nxnative Easy"><img src={`${data.base}assets/icon.png`} width="38" height="38" alt=""><span>nxnative <b>Easy</b><i></i></span></a><nav aria-label={`${data.navLabel}`}><a href="#experience">{data.nav0}</a><a href="#games">{data.nav1}</a><a href="#how">{data.nav2}</a></nav><div class="header-actions"><a class="language" href={`${data.other}`} hreflang={`${data.otherLang}`} lang={`${data.otherLang}`}>{data.otherLabel} <span aria-hidden="true">↗</span></a><a class="button small" href={`${data.downloadURL}`}>{data.download} <svg><use href="#icon-download"/></svg></a></div></header>
+<main id="main">
+<section class="hero wrap">
+<div class="hero-copy"><div class="eyebrow hero-in"><span class="live-dot"></span> {data.eyebrow}</div><h1 class="hero-in"><Fragment set:html={data.headline} /></h1><p class="hero-intro hero-in">{data.intro}</p><div class="hero-in"><a class="button" href={`${data.downloadURL}`}>{data.download} <svg><use href="#icon-download"/></svg></a><p class="download-note">{data.downloadNote}</p></div><a class="text-link hero-in" href="#experience">{data.secondary} <span>↓</span></a></div>
+<div class="hero-stage" role="img" aria-label={`${data.stageLabel}`} data-tilt>
+<div class="orbital orbital-one"></div><div class="orbital orbital-two"></div><div class="orbit-word">PLAY / ANYWHERE / EASY /</div>
+<div class="mini-window"><div class="window-bar"><span></span><span></span><span></span><b>{data.libraryLabel}</b></div><img src={`${data.base}assets/library-${data.lang}.jpg`} width="1500" height="972" alt="" fetchpriority="high"></div>
+<div class="handheld"><div class="grip grip-left"><div class="stick"></div><div class="cross"></div><i></i></div><div class="handheld-screen"><div class="phone-camera"></div><img src={`${data.base}assets/zelda-links-awakening.jpg`} alt="" width="768" height="432"><span class="play-triangle"></span></div><div class="grip grip-right"><div class="face-buttons"><i></i><i></i><i></i><i></i></div><div class="stick"></div><i></i></div></div>
+<div class="stage-ticket"><span class="live-dot"></span> {data.float} <span class="ticket-spark">✳</span></div><div class="stage-platforms"><span>Mac</span><span>iPhone</span><span>iPad</span></div><span class="stage-index">01 / ∞</span>
+</div>
+<div class="hero-bottom"><span>{data.own}</span><span>{data.stageTag} <span aria-hidden="true">↘</span></span></div>
+</section>
+<div class="benefit-strip"><div class="wrap">{t.strip.map(label => <span>{label}</span>)}</div></div>
+<section id="experience" class="experience section wrap"><div class="section-top reveal"><div><p class="eyebrow">{data.experienceTag}</p><h2><Fragment set:html={data.experienceTitle} /></h2></div><p class="section-copy">{data.experienceCopy}</p></div>
+<div class="showcase reveal" data-tilt><div class="showcase-top"><span class="live-dot"></span> nxnative Easy <span>● ● ●</span></div><img src={`${data.base}assets/library-${data.lang}.jpg`} width="1500" height="972" alt={`${data.screenCaption}`} loading="lazy"><div class="showcase-caption">{data.screenCaption} <span>↗</span></div></div>
+<div class="features"><article class="reveal"><span class="feature-icon"><svg><use href="#screen"/></svg></span><span class="feature-index">01 /</span><h3>{data.featureOne}</h3><p>{data.featureOneCopy}</p></article><article class="reveal"><span class="feature-icon"><svg><use href="#pad"/></svg></span><span class="feature-index">02 /</span><h3>{data.featureTwo}</h3><p>{data.featureTwoCopy}</p></article><article class="reveal"><span class="feature-icon"><svg><use href="#save"/></svg></span><span class="feature-index">03 /</span><h3>{data.featureThree}</h3><p>{data.featureThreeCopy}</p></article></div></section>
+<section id="games" class="games-section section"><div class="wrap"><div class="section-top reveal"><div><p class="eyebrow">{data.catalogTag}</p><h2><Fragment set:html={data.catalogTitle} /></h2></div><p class="section-copy">{data.catalogCopy}</p></div>
+<div class="catalog-tools"><label class="search"><svg><use href="#search"/></svg><span class="sr-only">{data.searchLabel}</span><input type="search" id="game-search" placeholder={`${data.search}`} autocomplete="off"></label><span id="game-count" role="status" aria-live="polite" data-label={`${data.result}`}>{data.count} {data.result}</span></div>
+<div class="game-grid" id="game-grid">{games.map((game, i) => <a class="game-card" data-title-id={game.id} data-search={[game.name, game.id, ...game.versions].join(' ')} href={`${repo}/blob/main/${game.notes}`} hidden={i >= 12}><div class="game-art"><img src={`${base}assets/${game.artwork.split('/').pop()}`} alt="" width="480" height="300" loading="lazy" /><span aria-hidden="true">↗</span></div><h3>{game.name}</h3><p>{game.versions.join(' · ') || t.notes}</p></a>)}</div><p id="empty-games" hidden>{data.empty}</p><div class="catalog-footer"><button type="button" class="button outline" id="view-all" data-all={`${data.all}`} data-less={`${data.less}`} aria-expanded="false" aria-controls="game-grid">{data.all} <span>＋</span></button><p>{data.catalogFoot}</p></div><noscript><a href="https://github.com/nalancer08/nxnative-easy/blob/main/dm/games/README.md">{data.all} ↗</a></noscript>
+</div></section>
+<section id="how" class="section wrap how"><div class="section-top reveal"><div><p class="eyebrow">{data.flowTag}</p><h2><Fragment set:html={data.flowTitle} /></h2></div><div class="platform-tabs" role="tablist" aria-label={`${data.platformLabel}`}><button id="mac-tab" role="tab" aria-selected="true" aria-controls="mac-flow" tabindex="0">{data.mac}</button><button id="ios-tab" role="tab" aria-selected="false" aria-controls="ios-flow" tabindex="-1">{data.ios}</button></div></div>
+<div class="flow-layout"><div class="steps reveal"><div id="mac-flow" role="tabpanel" aria-labelledby="mac-tab">{t.macSteps.map(([title, copy], i) => <article class="step"><span>0{i + 1}</span><div><h3>{title}</h3><p>{copy}</p></div></article>)}</div><div id="ios-flow" role="tabpanel" aria-labelledby="ios-tab" hidden>{t.iosSteps.map(([title, copy], i) => <article class="step"><span>0{i + 1}</span><div><h3>{title}</h3><p>{copy}</p></div></article>)}</div></div><figure class="progress-shot reveal"><img src={`${data.base}assets/progress-${data.lang}.jpg`} width="1100" height="713" alt={`${data.progressCaption}`} loading="lazy"><figcaption><span class="live-dot"></span> {data.progressCaption}</figcaption></figure></div>
+</section>
+<section id="requirements" class="faq-section wrap"><h2 class="reveal">{data.faqTitle}</h2><div class="faq-list reveal">{t.faqs.map(([question, answer]) => <details><summary>{question}</summary><p>{answer}</p></details>)}</div></section>
+<section class="download-section" id="download"><div class="download-orbit" aria-hidden="true"></div><div class="wrap reveal"><p class="eyebrow">{data.ctaTag}</p><h2><Fragment set:html={data.ctaTitle} /></h2><p class="cta-copy">{data.ctaCopy}</p><a class="button dark" href={`${data.downloadURL}`}>{data.download} <svg><use href="#icon-download"/></svg></a><p class="cta-note">{data.downloadNote}</p><a class="requirements-link" href="#requirements">{data.requirements} ↗</a></div></section>
+</main>
+<footer class="footer wrap"><div class="footer-top"><a class="brand" href={`${data.home}`}><img src={`${data.base}assets/icon.png`} width="36" height="36" alt=""><span>nxnative <b>Easy</b></span></a><div><a href="https://github.com/nalancer08/nxnative-easy">{data.source} ↗</a><a href={`https://github.com/nalancer08/nxnative-easy/blob/main/${data.readmeFile}`}>{data.readme} ↗</a><a href={`https://github.com/nalancer08/nxnative-easy/blob/main/docs/${data.savesFile}`}>{data.saves} ↗</a></div></div><div class="footer-bottom"><div><p>{data.credits} <a href="https://github.com/seedds/nxnative">↗<span class="sr-only"> {data.upstream}</span></a></p><p>{data.footer}</p></div><button type="button" id="motion-toggle" aria-pressed="false">Ⅱ <span>{data.motion}</span></button></div></footer>
+</body></html>

@@ -1,6 +1,6 @@
 # nxnative Easy
 
-[English](README.md) · **Español**
+[English](README.md) · **Español** · **[Visita la web](https://nalancer08.github.io/nxnative-easy/es/)**
 
 **Tus juegos de Switch. En tu Mac, iPhone y iPad.**
 

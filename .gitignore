@@ -34,3 +34,11 @@ nxnative-mac.json
 
 # Native helper outputs are built in an external cache.
 /native/sideload-helper/target/
+
+# Generated GitHub Pages website
+/web/_site/
+
+/web/node_modules/
+/web/dist/
+/web/public/
+/web/.astro/
