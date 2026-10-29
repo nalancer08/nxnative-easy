@@ -2,232 +2,58 @@
 
 [English](README.md) · **Español**
 
-**Ejecuta tus propios juegos compatibles de Nintendo Switch de forma nativa en Mac, iPhone y iPad, con gráficos Metal, controles físicos y controles táctiles editables.**
+**Tus juegos de Switch. En tu Mac, iPhone y iPad.**
 
-## Empieza aquí
+Una biblioteca que te lleva de tus propios archivos a una app lista para jugar, con preparación guiada, progreso de compilación en vivo, soporte para controles y botones táctiles a tu gusto.
 
-1. **[Descarga la app para Mac](https://github.com/nalancer08/nxnative-easy/releases/latest/download/nxnative-Easy-macOS-arm64.zip)**, descomprime el ZIP y mueve **nxnative Easy.app** a Aplicaciones.
-2. Ábrela y añade tu juego. **La interfaz ya está compilada y trae sus herramientas; no necesitas Homebrew.**
-3. Para compilar los juegos sí necesitas **Xcode 27.1** y tus propios archivos y `prod.keys`.
+### [↓ Descargar nxnative Easy para Mac](https://github.com/nalancer08/nxnative-easy/releases/latest/download/nxnative-Easy-macOS-arm64.zip)
 
-[Qué incluye la descarga y cómo se actualiza](docs/portable-desktop.md).
+Descomprime → arrastra **nxnative Easy.app** a **Aplicaciones** → ábrela. **Sin Terminal ni compilar la interfaz.** La app incluye sus herramientas.
 
-<img src="docs/images/nxnative-options-es-v1.19.png" width="49%" alt="Per-game launch options"> <img src="docs/images/nxnative-settings-es-v1.19.png" width="49%" alt="Background renewal settings">
+![Tu biblioteca de juegos](docs/images/nxnative-library-es-v1.14.1.png)
 
-*Vistas de interfaz con datos de ejemplo. Las pruebas de cuenta y dispositivo son independientes.*
+## Antes de empezar
 
-### Alternativa: instalar desde el código fuente
+- **Una Mac con Apple silicon** (M1 o posterior), **macOS 26.6+** y **Xcode 27.1** instalado y abierto al menos una vez. Xcode compila tus juegos; tú no necesitas compilar nxnative Easy.
+- **Tus propios archivos del juego y `prod.keys`.** No se incluyen ni descargan juegos o llaves.
+- Para iPhone/iPad: **iOS/iPadOS 26+**, un **iPhone con A17 Pro o posterior**, o un **iPad con M1 o posterior**. Usas tu propia cuenta Apple para firmar e instalar.
 
-**Nuevo:** [opciones por juego y limpieza de cachés](docs/game-options-and-cleanup.md), [renovación con la app cerrada y diagnóstico USB/Wi-Fi](docs/background-renewal.md). La renovación requiere activarla y autorizarla en macOS.
+Si macOS bloquea la primera apertura, entra a **Configuración del Sistema → Privacidad y seguridad → Abrir de todos modos** para esta descarga. La app lleva firma ad hoc; no está notarizada con un Developer ID de pago.
 
-**Primero:** instala [Xcode](https://apps.apple.com/app/xcode/id497799835) 27.1 completo desde App Store y ábrelo una vez. **Xcode también compila los juegos**; una interfaz ya compilada no elimina ese requisito.
+## Añade tu juego. Sigue los pasos. Juega.
 
-**Después:** pega este único comando en Terminal:
+1. Abre **Mi biblioteca → Añadir juego** y elige **Mac** o **iPhone / iPad**.
+2. Elige la carpeta de tu juego o arrastra sus archivos. Selecciona tu **archivo `prod.keys`**. La app identifica el juego, su versión y los updates disponibles **antes de compilar**.
+3. Revisa y pulsa **Preparar juego**. Durante el proceso verás etapas, contadores y el registro en vivo.
+4. **Mac:** pulsa **Jugar en Mac**. **iPhone / iPad:** continúa con **dispositivo → cuenta Apple → revisar → instalar**. La app te guía con la firma, instalación y transferencia de los datos del juego.
 
-```bash
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/nalancer08/nxnative-easy/main/install.sh)"
-```
+<img src="docs/images/nxnative-prepare-es-v1.13.png" width="49%" alt="Preparación guiada del juego"> <img src="docs/images/nxnative-progress-es-v1.13.png" width="49%" alt="Etapas y progreso de compilación">
 
-Descarga nxnative Easy, instala Homebrew y las herramientas que falten, **compila tu interfaz de Mac y la abre**. Sigue las cuatro etapas numeradas y las solicitudes de contraseña o confirmación que aparezcan en Terminal. No usa una cuenta de desarrollador Apple. Si repites la instalación, verifica la app nueva antes de sustituir la existente y guarda la anterior como respaldo.
+| Juega en… | Qué obtienes |
+|---|---|
+| **Mac** | Una `.app` completa con los datos del juego incluidos. Ábrela desde tu biblioteca. |
+| **iPhone / iPad** | Una IPA para instalar en tu dispositivo. Elige una versión ligera con los datos por separado o inclúyelos dentro de la IPA. También puedes usar Sideloadly como alternativa. |
 
-**¿Ya descargaste el repositorio?** Abre **START-HERE.command** en la carpeta principal con doble clic. Hace la misma preparación; no necesitas buscar scripts dentro de `scripts/`. Si macOS bloquea ese archivo, usa el comando de arriba.
+**¿Ya lo tienes instalado?** Usa **Preparar o actualizar** para recompilar con un update del juego o un motor nuevo. En iOS, instala encima de la app existente con la misma cuenta/equipo Apple e identidad de la app para conservar sus datos. No desinstales primero el juego. [Detalles de actualización e instalación](docs/personal-ios.md).
 
-Cuando abra la app:
+## Todo en un lugar
 
-1. En **Mi biblioteca**, pulsa **Añadir juego** y elige **Mac** o **iPhone / iPad**.
-2. Sigue los pasos: carpeta del juego (o arrastra tus archivos), tus llaves y revisión.
-3. Pulsa **Preparar juego** y sigue las etapas, contadores y registro. En iOS continúa con dispositivo → cuenta Apple global si hace falta → revisión → instalación.
+- **Tu biblioteca:** imágenes, buscador, versiones preparadas e instalaciones verificadas en tus dispositivos conectados.
+- **Tus controles:** Xbox, PS5 y PS4, con una prueba de botones y sticks en **Configuración**. En iPhone/iPad puedes mover y cambiar el tamaño de los botones táctiles y guardar **cuatro perfiles con nombre** por juego.
+- **Tus ajustes:** opciones de inicio por juego en Mac y limpieza de cachés con una vista previa de lo que se borrará.
+- **Tus partidas:** se quedan en tu dispositivo y puedes exportarlas para compartirlas a mano o respaldarlas. Exportar partidas y copiar datos del juego **no** requieren iniciar sesión con Apple. [Guía de partidas](docs/saves-es.md).
+- **Tu cuenta Apple:** una para toda la app, con sesión recordada en el Llavero, revisión de dispositivos y renovación opcional de firmas en segundo plano. [Requisitos de renovación](docs/background-renewal.md).
+- **Actualizaciones de la app:** pulsa **Actualizar ahora** cuando aparezca una versión. La app descarga y verifica el paquete, conserva la app anterior como respaldo y mantiene tus juegos y partidas. Para aplicar un motor nuevo a un juego existente, vuelve a prepararlo.
 
-**Las siguientes veces:** abre **nxnative Easy.app** en la carpeta **Aplicaciones de tu usuario**. La preparación conserva su propia copia del código; puedes borrar el ZIP y la carpeta que descargaste.
+<img src="docs/images/nxnative-options-es-v1.19.png" width="49%" alt="Opciones de inicio por juego"> <img src="docs/images/nxnative-settings-es-v1.19.png" width="49%" alt="Configuración y renovación opcional en segundo plano">
 
-**Mac:** crea una sola `.app` completa, con todos los datos del juego dentro; pulsa **Jugar en Mac**. No necesitas copiar una carpeta RomFS aparte. No necesitas Sideloadly ni un iPhone. Las partidas quedan en `~/Library/Application Support/nxnative/<title ID>/`.
+La interfaz empieza en **inglés**; cámbiala a **Español** en **Settings → General**.
 
-**iPhone / iPad:** crea una IPA ligera sin firmar. Pulsa **Instalar en iPhone / iPad** para firmarla, instalarla y copiar los datos desde nuestra app. El flujo nativo es experimental; Sideloadly sigue disponible como alternativa probada. [Ver pantalla de preparación para iPhone/iPad](docs/images/nxnative-ios-es-v1.4.png).
+## Encuentra tu juego
 
-**Necesitas:** Mac con Apple silicon (M1 o posterior), macOS 26.6+ y Xcode 27.1. El comando instala las otras herramientas. Los juegos y las llaves los aportas tú. La primera compilación puede tardar.
+Consulta **Compatibilidad** en la app o abre una ficha de abajo para ver versiones compatibles, dispositivos probados y notas específicas. El soporte depende del juego, versión y dispositivo. El motor actual permite jugar sin conexión; los servicios en línea de Nintendo y LAN/netplay no están disponibles.
 
-![Biblioteca personal de juegos](docs/images/nxnative-library-es-v1.14.1.png)
-
-*Ejemplos de interfaz con registros de prueba. Cada usuario aporta sus juegos.*
-
-<img src="docs/images/nxnative-prepare-es-v1.13.png" width="49%" alt="Primero eliges dónde jugar"> <img src="docs/images/nxnative-progress-es-v1.13.png" width="49%" alt="Etapas, contadores reales y estimación cuando existe">
-
-## Qué aporta esta versión
-
-Partimos de [seedds/nxnative](https://github.com/seedds/nxnative): el motor, los perfiles y la compatibilidad son trabajo del proyecto original. **nxnative Easy** añade:
-
-- **Preparación guiada:** destino → identificar tu juego → revisión → compilación con avance y registro. Con tu `prod.keys`, muestra el nombre real, la versión base, los updates y la versión que se preparará antes de compilar. Tus originales se conservan.
-- **Biblioteca con estados claros:** app/IPA preparada, instalaciones verificadas y última comprobación de dispositivos desconectados.
-- **Avisos para recompilar, diagnósticos sin datos sensibles y notificaciones al terminar.** La cuenta Apple es global; los cupos de cuentas gratuitas son estimaciones identificadas, con aviso antes de registrar un dispositivo nuevo.
-- **Controles editables en iPhone:** posición, tamaño y opacidad, guardados por juego y layout.
-- **IPA ligera sólo para iPhone/iPad:** los datos `romfs` van aparte; se conservan salidas y cachés válidas.
-- **Llaves del usuario:** selecciona directamente tu archivo `prod.keys`. No incluimos, descargamos ni distribuimos llaves o juegos.
-- **Preparación local:** sin cuenta Apple, sin certificados de empresa y sin servicio que reciba tus archivos.
-
-Entregamos **código, una interfaz de preparación y herramientas de compilación**. El resultado es una app local para Mac o una IPA para iPhone/iPad sin firmar, que firmas e instalas con tu cuenta mediante el instalador integrado experimental o Sideloadly. No ofrecemos juegos, llaves, firma de Apple ni compatibilidad garantizada con cualquier juego.
-
-## Actualizaciones del motor y multijugador
-
-Nuestro main incorpora la revisión del original registrada en el [informe de integración](docs/personal-pr-review.md). Las siguientes actualizaciones del motor se integran y prueban en una copia separada, conservando nuestra interfaz y controles. Cada juego aceptado se sincroniza en la app, imágenes, fichas y ambas galerías del README; CI comprueba que no falte ninguno. **Actualizar ahora** instala nuestras versiones probadas, no cambios del original sin revisar.
-
-El motor actual funciona **sin conexión**. No admite los servicios en línea de Nintendo, LAN/netplay ni Windows. Una suscripción a Nintendo Switch Online no los activa aquí. Usar varios controles en un mismo Mac es una función distinta. [Cómo funcionan el código, los mods y la red](docs/development.md#game-binaries-mods-and-networking).
-
-Con **Recordar sesión**, la app intenta recuperar tu cuenta Apple del Llavero de este Mac al volver a abrir. Si falla, puedes reintentar o identificarte de nuevo; no se guarda la contraseña.
-
-## Idioma
-
-La app inicia en **English**. Cambia a **Español** en **Configuración → General**; la elección se guarda en este Mac. Cambia el idioma de la interfaz, no el del juego. Los detalles técnicos se muestran en su idioma original.
-
-## Actualizar la app
-
-Desde la **versión 1.4**, la app busca versiones nuevas al abrirse y cada seis horas mientras está abierta. Cuando haya una, pulsa **Actualizar ahora**. La versión portátil descarga y verifica la app y sus herramientas ya compiladas y la reinicia. Las instalaciones desde código conservan el flujo de compilación. Verás el avance dentro de la ventana. También puedes usar **nxnative Easy → Buscar actualizaciones…**.
-
-La actualización usa una carpeta separada y guarda la app anterior como respaldo. No restablece tu checkout ni modifica tus juegos, llaves o partidas. No se puede actualizar mientras se prepara un juego. Para aplicar cambios del motor o de un perfil a un juego que ya habías preparado, vuelve a prepararlo.
-
-![Aviso de actualización dentro de la app](docs/images/nxnative-update-es-v1.4.png)
-
-**¿Tienes la versión 1.3 o anterior?** Ejecuta una vez el comando de arriba o abre **START-HERE.command**. Las siguientes actualizaciones ya aparecerán dentro de la app.
-
-## ¿Qué pasa al pulsar Preparar juego?
-
-La app prepara las herramientas y compila para el dispositivo que elegiste. **Mac** genera una app del juego con los botones **Abrir juego** y **Mostrar app**. **iPhone / iPad** genera una IPA ligera y ofrece **Instalar en iPhone / iPad**, incluyendo la copia de datos. Tus archivos y salidas anteriores se conservan en la carpeta del juego.
-
-La preparación conserva una copia separada del código y respeta los cambios locales. Para desarrollo sigue disponible [`scripts/Abrir-interfaz.command`](scripts/Abrir-interfaz.command).
-
-## Cómo se compila la app de Mac
-
-El acceso de apertura usa el compilador Swift de tu Xcode. La firma de la app es **ad hoc**, local y sin cuenta, certificado ni equipo Apple (`TeamIdentifier` no asignado). No usa cuentas de empresa. Sólo al firmar e instalar la **IPA de iPhone/iPad** introduces tu cuenta personal en el instalador integrado, o en Sideloadly si eliges esa alternativa.
-
-El icono del teléfono con controles es original. Las tarjetas usan las capturas de upstream que ya están en este repositorio como referencia de soporte; no proporcionan ni descargan juegos.
-
-## Tu biblioteca de juegos
-
-**Mi biblioteca** es el inicio: tus propias carpetas, imágenes, buscador y estados
-separados para Mac e iPhone/iPad. Abre un juego de Mac o instala una IPA preparada
-desde su tarjeta. **Preparar o actualizar** usa el mismo flujo de compilación;
-quitar una tarjeta sólo elimina el acceso, nunca los archivos ni las partidas.
-El catálogo de juegos compatibles está separado de tu colección.
-
-Mientras navegas, una barra mantiene visible la compilación con la etapa,
-contadores y ETA informados. **Ver actividad** abre la línea de etapas y los logs.
-El porcentaje corresponde a la etapa actual; no inventamos un porcentaje global.
-[Funcionamiento y contrato del frontend](docs/frontend-library.md).
-
-![La compilación sigue visible al navegar](docs/images/nxnative-build-dock-es-v1.10.png)
-
-*Ejemplo de progreso simulado; en la app, los contadores y ETA vienen de la compilación real.*
-
-## Instalar y renovar desde la app (experimental)
-
-La versión 1.8 agrega **Instalar en iPhone / iPad**: inicio de sesión y 2FA de tu
-cuenta Apple, selección explícita del equipo y app existente, firma/instalación
-nativa ARM64, copia de `romfs` y renovación opcional antes de que caduque el perfil.
-Este flujo usa un motor abierto y no necesita la app de Sideloadly. **Todavía
-falta validarlo con una cuenta y dispositivo reales**; conservamos la alternativa
-con Sideloadly que ya funciona. La contraseña no se guarda; la sesión opcional y
-las claves de firma usan el Llavero de macOS.
-
-La renovación necesita el Mac encendido, nxnative Easy abierto, Internet y el
-dispositivo emparejado accesible. Conserva la IPA original. Puedes optar por abrir
-nxnative Easy al iniciar sesión. [Qué está implementado y qué falta validar](docs/sideloading.md).
-
-**Tus partidas** en la pantalla de resultado explica dónde están: `save` y, en
-ciertos juegos, `save_device`. En Mac están fuera de la `.app`; en iPhone/iPad,
-dentro de cada juego en ese dispositivo. No son `romfs`, ni los perfiles de
-controles, ni los archivos JSON de preparación. [Guía detallada de partidas y respaldos](docs/saves-es.md).
-
-## Pon tu juego en iPhone o iPad
-
-1. Elige iPhone/iPad, tu carpeta del juego y tus llaves. Deja IPA ligera o desactívala para incluir todo en la IPA; pulsa **Preparar juego**. La instalación continúa en la misma pantalla al terminar: dispositivo → cuenta → revisión → instalación.
-2. Conecta y desbloquea tu dispositivo. Confía en el Mac y activa Modo de desarrollador cuando iOS lo pida.
-3. Inicia sesión con tu cuenta Apple, introduce el código y selecciona tu equipo personal.
-4. Si ya tienes el juego instalado, elige esa app existente para conservar su identidad. Pulsa **Firmar y actualizar**; no desinstales el juego anterior.
-5. Mantén cerrado el juego hasta que termine la firma, instalación y copia de datos. La renovación opcional recuerda la sesión en el Llavero.
-
-**Firmar e instalar** queda visible durante la revisión y explica qué falta. Si instalas después desde la biblioteca, se abre el mismo instalador guiado como modal. La sesión global del Mac está en **Configuración → Cuenta Apple**. El registro completo está en **Actividad**, cerrado por defecto. **IPA lista para instalar** se refiere al archivo del Mac; **Instalado en…**, a una instalación comprobada en el dispositivo. Los registros antiguos se distinguen de una comprobación actual. Puedes cerrar el aviso al terminar sin borrar los logs.
-
-![Selección guiada del dispositivo](docs/images/nxnative-install-es-v1.17.png)
-
-<details>
-<summary>Pantalla de Cuenta Apple</summary>
-
-![Formulario de Cuenta Apple](docs/images/nxnative-account-es-v1.17.png)
-
-</details>
-
-*Las vistas de ejemplo usan datos ficticios de juego, dispositivo y cuenta.*
-
-En **Dispositivos**, en la barra lateral, abres una sección dentro de la ventana.
-Ves dispositivos conectados (identificador de modelo, sistema y USB/Wi-Fi), juegos
-reconocidos con buscador y firmas registradas. Las demás apps no se
-muestran; para reconocer instalaciones antiguas, añade la carpeta preparada del
-juego a tu biblioteca o conserva su registro de instalación. **Actualizar con mis archivos** inicia la preparación para una app
-existente. Pulsa **Renovar ahora**
-sin recompilar ni copiar RomFS otra vez; también puedes pausar la renovación
-por juego. **Leer dispositivos de mi cuenta Apple** consulta los registros del
-equipo después de iniciar sesión; es distinto a ver dispositivos conectados.
-**Actividad de instalación** muestra avance, tiempo y logs copiables/guardados
-sin credenciales. **Revisar cuenta e instalación** recupera su dispositivo, equipo e
-identificador. **Usar sesión del Llavero** permite volver a entrar sin escribir
-la contraseña cuando esa sesión todavía sea válida. Quitar un registro sólo
-detiene su renovación; no desinstala el juego ni elimina partidas.
-
-Este flujo nativo todavía necesita validación con una cuenta y dispositivo
-reales. Reemplaza el flujo para nuestros juegos preparados; no es una copia de
-todas las funciones propietarias de Sideloadly. La alternativa sigue disponible.
-
-## Alternativa: Sideloadly + Finder
-
-1. Con la IPA lista, conecta tu iPhone y pulsa **Enviar a Sideloadly**. La app abre allí el archivo preparado.
-2. Dentro de Sideloadly pulsa **Start** con tu cuenta Apple **personal**. Si hace falta buscar el archivo manualmente, usa **Mostrar IPA**.
-3. La primera vez, pulsa **Mostrar datos del juego** y copia la carpeta `romfs` completa por **Finder → iPhone → Archivos → tu juego**.
-
-Para actualizar, usa la misma cuenta y el mismo bundle ID efectivo de Sideloadly. **Instala encima; no desinstales la app**, para conservar tus partidas. Si los datos del juego no cambiaron, puedes reutilizar el `romfs` existente. En esta alternativa la firma se hace en Sideloadly y la copia en Finder; el instalador integrado realiza esas operaciones desde nuestra app.
-
-## Partidas y datos desde Dispositivos
-
-Cada juego reconocido muestra su imagen y ofrece **Exportar partidas** para
-crear un ZIP local de `save` y `save_device`, con el juego guardado y cerrado.
-Puedes compartir ese ZIP a mano; no hay nube ni restauración automática.
-[Formato y límites del respaldo](docs/saves-es.md#exportar-del-iphoneipad-desde-la-app-111).
-
-**Copiar datos del juego** pasa el `romfs` preparado al dispositivo sin reinstalar
-la app. Si sólo cambió el editor o la app y sigue siendo la misma versión del
-juego, **Actualizar sólo la app; conservar romfs** evita reenviar esos datos.
-Un update del juego o DLC con archivos nuevos sí necesita sus datos nuevos.
-
-## Actualizar un juego preparado
-
-Añade tus propios archivos de actualización a la misma carpeta del juego y
-prepáralo de nuevo. La app reconoce la preparación anterior y explica que será
-una actualización. La preparación no consulta el iPhone; el instalador sí puede listar las apps del dispositivo conectado. Una versión
-nueva del juego sigue necesitando soporte compatible del motor y su perfil.
-
-- **Mac:** se crea otra `.app` completa y se conserva la anterior. Cierra el juego
-  viejo y abre la nueva. Se mantienen el Title ID y la identidad de la app; las
-  partidas siguen fuera de ella, en Application Support.
-- **iPhone / iPad:** instala la IPA encima usando la misma cuenta e identificador
-  efectivo. El instalador integrado copia el RomFS nuevo mediante preparación
-  temporal y recuperación; con la alternativa de Sideloadly, usa Finder. Conserva `save`, `save_device` y la
-  app instalada; no los borres.
-
-Durante la preparación puedes ver la etapa, contadores reales cuando existen,
-tiempo transcurrido y el log en vivo. **Mostrar logs guardados** abre el registro
-de la sesión y **Mostrar logs del compilador** muestra los originales completos.
-
-El análisis opcional está en **Herramientas de análisis → Analizar con REA**.
-Exporta código original para un motor de análisis instalado; no hace compatibles
-los juegos automáticamente. [Flujo y requisitos de análisis](docs/game-analysis.md).
-
-## Perfiles de juegos con soporte
-
-El carrusel muestra los perfiles de esta copia; no proporciona ni descarga juegos. Debes añadir tus propios archivos del juego. Pulsa **Ver todos** arriba a la derecha para consultar la lista completa de soporte. Busca por nombre, versión o Title ID; cada resultado enlaza a su ficha. El catálogo vuelve a leer los perfiles locales cada vez que lo abres. El carrusel rota automáticamente y se pausa al colocar el cursor encima.
-
-**Las pruebas propias cubren compilación y empaquetado en Mac, no una verificación automática de juego en iPhone.** Los perfiles y reportes de juego proceden de upstream; revisa [la ficha de tu juego](dm/games/README.md#games) antes de prepararlo. Un perfil no garantiza que cualquier versión funcione en cualquier iPhone.
-
-Esta base requiere iOS/iPadOS 26 o posterior, iPhone con A17 Pro o posterior o iPad con M1 o posterior. Los datos de los juegos y las llaves los aportas tú.
-
-![Consulta los 98 perfiles en la app; las fichas conservan el alcance de las pruebas de upstream.](docs/images/nxnative-compatibility-es-v1.18.png)
+Las imágenes de abajo muestran perfiles de juegos con soporte. **Tú debes aportar los archivos del juego.**
 
 <!-- BEGIN GENERATED GAME GALLERY -->
 98 perfiles. Consulta la ficha de cada juego para ver versiones y dispositivos probados.
@@ -400,44 +226,27 @@ Esta base requiere iOS/iPadOS 26 o posterior, iPhone con A17 Pro o posterior o i
 </table>
 <!-- END GENERATED GAME GALLERY -->
 
-## Controles Xbox, PS5 y PS4
+## Créditos y más
 
-Los juegos preparados usan GameController de Apple en **Mac, iPhone y iPad**:
-
-- **Xbox:** Xbox Wireless Controller con Bluetooth (modelo 1708), Series X/S y Elite Series 2.
-- **PS5:** DualSense y DualSense Edge.
-- **PS4:** DualShock 4.
-
-La app muestra automáticamente el nombre del control conectado y **Listo en este Mac** cuando Apple reconoce un perfil compatible. Se actualiza al conectar o desconectar el control. El panel de controles del Mac no aparece al elegir iPhone/iPad. Conecta el control directamente al dispositivo donde vas a jugar.
-
-En modo **Mac**, pulsa **Probar control**: se iluminan botones y cruceta, se mueven ambos sticks y las barras muestran la presión de los gatillos. **¡Está respondiendo!** aparece después de recibir una pulsación o movimiento. Si hay varios controles, puedes elegir cuál probar. La prueba sólo lee entradas mientras está abierta y no reemplaza los manejadores de entrada de los juegos.
-
-![Prueba visual del control en Mac](docs/images/nxnative-controller-test-es.png)
-
-Conecta el control desde **Bluetooth del dispositivo** y abre tu juego. No necesitas instalar drivers ni activar opciones en la herramienta. Se mapean sticks, cruceta, botones, gatillos, botones superiores, clics de sticks y menús. En iPhone/iPad los controles táctiles se ocultan al conectar uno físico.
-
-Los botones siguen las **posiciones de Nintendo**, no las letras impresas en Xbox: A de Switch = B de Xbox / círculo de PlayStation; B = A / cruz; X = Y / triángulo; Y = X / cuadrado.
-
-Se admite la entrada estándar del control; no se mapean gatillos adaptativos de DualSense, movimiento del mando ni gestos del panel táctil. La vibración depende de lo que expongan el control y el sistema. En Mac puede haber varios jugadores locales si el juego lo permite; en iPhone/iPad los controles se combinan como jugador 1.
-
-Guías de Apple para [conectar Xbox](https://support.apple.com/en-us/111101) y [conectar PlayStation](https://support.apple.com/en-us/111100). Revisamos el código y las pruebas automáticas; no hemos probado físicamente estos modelos en este checkout.
-
-## Controles a tu gusto
-
-En el juego pulsa **Edit controls**. Mueve los botones, ajusta tamaño y opacidad y pulsa **Save**. **Cancel** descarta y **Reset control / Reset all** restaura. Cada juego tiene **cuatro perfiles con nombre**, cada uno con su acomodo 2D y 3D. Usa el menú de perfiles para cambiar o renombrar uno (por ejemplo iPhone, iPad o Grande), y **Save as…** para copiar ambos acomodos a otro espacio. Se avisa antes de descartar cambios sin guardar o sustituir un perfil. Tu acomodo anterior se conserva en Profile 1. Los perfiles se guardan localmente en cada dispositivo. El juego sigue corriendo mientras editas. El selector de idioma de la app de Mac no traduce este editor dentro del juego.
-
-## Prototipo de API para partidas en la nube
-
-Hay una [API portable de prueba](dm/cloud/README.md) con versiones privadas de partidas, detección de conflictos y enlaces para compartir con caducidad y revocación. **Todavía falta conectar el inicio de sesión, la subida y la restauración dentro del juego**; no se ha desplegado un servidor ni creado una cuenta de proveedor. Tus partidas y perfiles de controles siguen en tu dispositivo. Esto es independiente del multijugador en línea.
+Basado en **[seedds/nxnative](https://github.com/seedds/nxnative)**, que aporta el motor, los perfiles y el trabajo de compatibilidad. **nxnative Easy** añade la biblioteca de escritorio, preparación e instalación guiadas, editor de controles táctiles y automatización. Conservamos la [licencia MIT](LICENSE), los [créditos originales](README-original.md#acknowledgements) y los avisos de terceros. Nuestras aportaciones llevan la autoría de **nalancer08**; los commits de upstream conservan sus autores.
 
 <details>
-<summary>Guías, comandos y detalles técnicos</summary>
+<summary>Instalación desde código y guías técnicas</summary>
 
-- [Guía de comandos e instalación detallada](README-comandos.md).
-- [Automatización y solución de problemas](docs/personal-ios.md).
-- [Revisión de los PR de upstream](docs/personal-pr-review.md).
-- [README anterior y créditos completos](README-original.md).
+La descarga de arriba es la forma más fácil de empezar. Si prefieres compilar la interfaz desde el código, instala y abre Xcode 27.1 y ejecuta:
+
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/nalancer08/nxnative-easy/main/install.sh)"
+```
+
+¿Ya clonaste el repositorio? Abre **START-HERE.command**. Esta alternativa instala las herramientas que falten y compila la interfaz en tu Mac.
+
+- [App portable y actualizaciones](docs/portable-desktop.md)
+- [Guía de comandos](README-comandos.md)
+- [Instalación y solución de problemas](docs/personal-ios.md)
+- [Opciones por juego y limpieza segura](docs/game-options-and-cleanup.md)
+- [Revisión de integración del motor](docs/personal-pr-review.md)
+- [Desarrollo](docs/development.md) · [Sistema de diseño](docs/design-system.md)
+- [README original](README-original.md)
 
 </details>
-
-Basado en [seedds/nxnative](https://github.com/seedds/nxnative), con nuestro editor de controles y automatización. Conservamos la [licencia MIT](LICENSE) y los [créditos originales](README-original.md#acknowledgements). Nuestros cambios pertenecen a la cuenta de GitHub **nalancer08**; los commits históricos de upstream conservan su autoría.
