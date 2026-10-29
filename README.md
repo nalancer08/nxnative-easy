@@ -6,6 +6,18 @@
 
 ## Start here
 
+1. **[Download the Mac app](https://github.com/nalancer08/nxnative-easy/releases/latest/download/nxnative-Easy-macOS-arm64.zip)**, unzip it and move **nxnative Easy.app** to Applications.
+2. Open it and add your game. **The launcher is already compiled and includes its tools; Homebrew is not required.**
+3. Building games still requires **Xcode 27.1**, your own game files and `prod.keys`.
+
+[Included tools and portable updates](docs/portable-desktop.md).
+
+<img src="docs/images/nxnative-options-en-v1.19.png" width="49%" alt="Per-game launch options"> <img src="docs/images/nxnative-settings-en-v1.19.png" width="49%" alt="Background renewal settings">
+
+*Interface previews with example data. Account/device testing is separate.*
+
+### Alternative: install from source
+
 **First:** install full [Xcode](https://apps.apple.com/app/xcode/id497799835) 27.1 from the Mac App Store and open it once. **Xcode compiles the games too**, so a prebuilt launcher cannot remove this requirement.
 
 **Then:** paste this single command into Terminal:
@@ -40,6 +52,8 @@ When the app opens:
 
 ## What this version adds
 
+**New:** [per-game options and cache cleanup](docs/game-options-and-cleanup.md), [closed-app renewal and USB/Wi-Fi checks](docs/background-renewal.md). Background renewal is opt-in and may require macOS approval.
+
 Built on [seedds/nxnative](https://github.com/seedds/nxnative). The original project provides the engine, game profiles and compatibility work. **nxnative Easy** adds:
 
 - **Guided preparation:** platform → identify your game → review → live build progress. Choose `prod.keys` to read the real game name, base version, updates and selected version before compiling. Your originals stay in place.
@@ -66,7 +80,7 @@ The app starts in **English**. Choose **Español** under **Settings → General*
 
 ## Updating the app
 
-From **version 1.4**, the app checks for new releases at launch and every six hours while open. When one is available, click **Update now**. It downloads the new source and game profiles, builds and verifies the new Mac interface, then restarts it. Progress stays in the window. You can also use **nxnative Easy → Check for updates…**.
+From **version 1.4**, the app checks for new releases at launch and every six hours while open. When one is available, click **Update now**. Portable releases download and verify the ready-made app and tools, then restart. Source installations keep the source-build update route. Progress stays in the window. You can also use **nxnative Easy → Check for updates…**.
 
 The update uses a separate source folder and keeps the previous app as a backup. It does not reset your checkout or modify your game files, keys or saves. Updates are disabled while preparing a game. To apply new engine or profile changes to a previously prepared game, prepare that game again.
 

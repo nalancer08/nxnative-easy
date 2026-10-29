@@ -133,16 +133,18 @@ def sync(root,write=False,upstream_html=''):
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--root',type=Path,default=ROOT,help='explicit candidate checkout; generator code stays in the reviewed checkout')
     mode=parser.add_mutually_exclusive_group(required=True)
     mode.add_argument('--write',action='store_true');mode.add_argument('--check',action='store_true')
     parser.add_argument('--upstream-ref',help='pinned, already fetched commit used only to discover upstream screenshot/caption mappings')
     args=parser.parse_args()
+    root=args.root.resolve()
     source=''
     if args.upstream_ref:
         if not re.fullmatch('[0-9a-fA-F]{7,40}',args.upstream_ref):parser.error('Use a pinned upstream commit SHA.')
-        source=subprocess.check_output(['git','-C',str(ROOT),'show',args.upstream_ref+':README.md'],text=True)
-    changed=sync(ROOT,args.write,source)
-    print(f'Game catalog: {len(inventory(ROOT))} profiles, '+('updated '+', '.join(changed) if changed else 'all mappings and galleries current'))
+        source=subprocess.check_output(['git','-C',str(root),'show',args.upstream_ref+':README.md'],text=True)
+    changed=sync(root,args.write,source)
+    print(f'Game catalog: {len(inventory(root))} profiles, '+('updated '+', '.join(changed) if changed else 'all mappings and galleries current'))
 
 
 if __name__=='__main__':

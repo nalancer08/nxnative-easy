@@ -6,6 +6,20 @@
 
 ## Empieza aquí
 
+1. **[Descarga la app para Mac](https://github.com/nalancer08/nxnative-easy/releases/latest/download/nxnative-Easy-macOS-arm64.zip)**, descomprime el ZIP y mueve **nxnative Easy.app** a Aplicaciones.
+2. Ábrela y añade tu juego. **La interfaz ya está compilada y trae sus herramientas; no necesitas Homebrew.**
+3. Para compilar los juegos sí necesitas **Xcode 27.1** y tus propios archivos y `prod.keys`.
+
+[Qué incluye la descarga y cómo se actualiza](docs/portable-desktop.md).
+
+<img src="docs/images/nxnative-options-es-v1.19.png" width="49%" alt="Per-game launch options"> <img src="docs/images/nxnative-settings-es-v1.19.png" width="49%" alt="Background renewal settings">
+
+*Vistas de interfaz con datos de ejemplo. Las pruebas de cuenta y dispositivo son independientes.*
+
+### Alternativa: instalar desde el código fuente
+
+**Nuevo:** [opciones por juego y limpieza de cachés](docs/game-options-and-cleanup.md), [renovación con la app cerrada y diagnóstico USB/Wi-Fi](docs/background-renewal.md). La renovación requiere activarla y autorizarla en macOS.
+
 **Primero:** instala [Xcode](https://apps.apple.com/app/xcode/id497799835) 27.1 completo desde App Store y ábrelo una vez. **Xcode también compila los juegos**; una interfaz ya compilada no elimina ese requisito.
 
 **Después:** pega este único comando en Terminal:
@@ -66,7 +80,7 @@ La app inicia en **English**. Cambia a **Español** en **Configuración → Gene
 
 ## Actualizar la app
 
-Desde la **versión 1.4**, la app busca versiones nuevas al abrirse y cada seis horas mientras está abierta. Cuando haya una, pulsa **Actualizar ahora**. Descarga el código y los perfiles nuevos, compila y verifica la interfaz y la reinicia. Verás el avance dentro de la ventana. También puedes usar **nxnative Easy → Buscar actualizaciones…**.
+Desde la **versión 1.4**, la app busca versiones nuevas al abrirse y cada seis horas mientras está abierta. Cuando haya una, pulsa **Actualizar ahora**. La versión portátil descarga y verifica la app y sus herramientas ya compiladas y la reinicia. Las instalaciones desde código conservan el flujo de compilación. Verás el avance dentro de la ventana. También puedes usar **nxnative Easy → Buscar actualizaciones…**.
 
 La actualización usa una carpeta separada y guarda la app anterior como respaldo. No restablece tu checkout ni modifica tus juegos, llaves o partidas. No se puede actualizar mientras se prepara un juego. Para aplicar cambios del motor o de un perfil a un juego que ya habías preparado, vuelve a prepararlo.
 

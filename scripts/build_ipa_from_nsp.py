@@ -379,6 +379,14 @@ def build_nx_extract(repo, work, logs, env):
     """Build nx_extract into <work>/tools/nx_extract/. It is built in a temporary folder and copied over: with an apostrophe in the output path (e.g. "Bowser's Fury") MSBuild's conditions break,
     LibHac.dll and the executable are not copied, and the build still reports success"""
     nx = work / 'tools/nx_extract/nx_extract'
+    bundled=env.get('NXE_BUNDLED_TOOLS')
+    if bundled:
+        tools=Path(bundled)
+        expected=hashlib.sha256(b''.join((repo/'dm/tools/nx_extract'/name).read_bytes() for name in ('Program.cs','nx_extract.csproj'))).hexdigest()
+        metadata=json.loads((tools/'manifest.json').read_text())
+        if metadata.get('reader_source_sha256')==expected and (tools/'nx_extract/nx_extract').is_file():
+            rmtree(nx.parent);shutil.copytree(tools/'nx_extract',nx.parent)
+            return nx
     with tempfile.TemporaryDirectory(prefix='nx_extract_') as t:
         run(['dotnet', 'build', repo / 'dm/tools/nx_extract', '-c', 'Release', '-o', t, '-v', 'quiet', '-nologo'], logs / 'nx_extract_build.log', env=env)
         if not (Path(t) / 'nx_extract').exists(): raise BuildError(f'nx_extract built without an executable (see {logs / "nx_extract_build.log"})')

@@ -50,7 +50,7 @@ def inspect(folder, keys, cache, setup_tools=False):
     if any(p.resolve() == REPO or REPO in p.resolve().parents for p in files):
         return dict(schema=1, status='invalid_location')
     env = dict(os.environ)
-    env['PATH'] = '/opt/homebrew/bin:/usr/local/bin:/usr/local/share/dotnet:' + env.get('PATH', '')
+    if not env.get('NXE_BUNDLED_TOOLS'):env['PATH'] = '/opt/homebrew/bin:/usr/local/bin:/usr/local/share/dotnet:' + env.get('PATH', '')
     env.update(DOTNET_CLI_TELEMETRY_OPTOUT='1', DOTNET_NOLOGO='1')
     dotnet = shutil.which('dotnet', path=env['PATH'])
     if setup_tools:
@@ -67,6 +67,10 @@ def inspect(folder, keys, cache, setup_tools=False):
     source = REPO / 'dm/tools/nx_extract'
     digest = hashlib.sha256(b''.join(p.read_bytes() for p in (source/'Program.cs', source/'nx_extract.csproj'))).hexdigest()
     tool = cache / digest / 'nx_extract.dll'
+    if env.get('NXE_BUNDLED_TOOLS'):
+        bundled=Path(env['NXE_BUNDLED_TOOLS'])
+        metadata=json.loads((bundled/'manifest.json').read_text())
+        if metadata.get('reader_source_sha256')==digest:tool=bundled/'nx_extract/nx_extract.dll'
     if not tool.is_file():
         cache.mkdir(parents=True, exist_ok=True)
         # Both the build output and MSBuild's intermediate files stay outside the checkout.

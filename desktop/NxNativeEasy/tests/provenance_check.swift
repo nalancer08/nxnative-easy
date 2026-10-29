@@ -1,4 +1,5 @@
 import Foundation
+import CryptoKit
 @main struct ProvenanceCheck {
     @MainActor static func main() throws {
         let root=FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
@@ -33,6 +34,20 @@ import Foundation
         let restored=GameLibrary(file:index)
         assert(restored.games[0].iosRevision==sha && restored.games[0].macRevision==nil)
         let retained=try Data(contentsOf:libraryFolder.appendingPathComponent("game.nsp"));assert(retained==Data("original input".utf8))
+        let standalone=root.appendingPathComponent("portable"),old=String(repeating:"a",count:40),new=String(repeating:"b",count:40)
+        let oldSource=standalone.appendingPathComponent(old),newSource=standalone.appendingPathComponent(new)
+        for (location,revision) in [(oldSource,old),(newSource,new)] {
+            try FileManager.default.createDirectory(at:location.appendingPathComponent("dm/host"),withIntermediateDirectories:true)
+            try Data("same".utf8).write(to:location.appendingPathComponent("dm/host/example.c"))
+            let hash=SHA256.hash(data:Data("same".utf8)).map {String(format:"%02x",$0)}.joined()
+            try JSONEncoder().encode(["dm/host/example.c":hash]).write(to:location.appendingPathComponent("SOURCE_INDEX.json"))
+            try Data(revision.utf8).write(to:location.appendingPathComponent("SOURCE_REVISION"))
+        }
+        assert(BuildProvenance.head(newSource)==new)
+        assert(BuildProvenance.recommendation(repo:newSource,revision:old,titleID:title)==false)
+        try Data("changed runtime".utf8).write(to:newSource.appendingPathComponent("dm/host/example.c"))
+        assert(BuildProvenance.recommendation(repo:newSource,revision:old,titleID:title)==true)
+        assert(BuildProvenance.recommendation(repo:newSource,revision:String(repeating:"c",count:40),titleID:title)==nil)
         print("Provenance/diagnostics PASS: actual Git comparisons, unknown history, per-platform persistence, original-byte preservation and secret redaction")
     }
 }

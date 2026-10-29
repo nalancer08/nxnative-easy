@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+import CryptoKit
 
 private func boundedLibraryData(_ url:URL)throws->Data {
     let stream=try FileHandle(forReadingFrom:url)
@@ -132,14 +133,29 @@ enum BuildProvenance {
         return path.hasPrefix("dm/games/"+titleID.uppercased()+"/") || ["dm/host/","dm/gfx/","dm/tools/","dm/ios/","dm/mac/","dm/third_party/","dm/games/game.py","dm/games/profile_guess.py","dm/games/settings.","scripts/build_ipa_from_nsp.py","scripts/build_ios.py","scripts/build_mac.py"].contains(where:path.hasPrefix)
     }
     static func git(_ repo:URL,_ args:[String])->String? {
+        guard FileManager.default.fileExists(atPath:repo.appendingPathComponent(".git").path) else{return nil}
         let task=Process(),pipe=Pipe();task.executableURL=URL(fileURLWithPath:"/usr/bin/git");task.arguments=["-C",repo.path]+args;task.standardOutput=pipe;task.standardError=FileHandle.nullDevice;task.standardInput=FileHandle.nullDevice
         do {try task.run();let data=pipe.fileHandleForReading.readDataToEndOfFile();task.waitUntilExit();return task.terminationStatus==0 ? String(decoding:data,as:UTF8.self).trimmingCharacters(in:.whitespacesAndNewlines) : nil}catch{return nil}
     }
-    static func head(_ repo:URL)->String? {git(repo,["rev-parse","HEAD"])}
+    static func sourceIndex(_ repo:URL)->[String:String]? {
+        guard let data=try? Data(contentsOf:repo.appendingPathComponent("SOURCE_INDEX.json")),data.count<2*1024*1024,let index=try? JSONDecoder().decode([String:String].self,from:data),index.count<20000,index.keys.allSatisfy({!$0.hasPrefix("/") && !$0.split(separator:"/").contains("..")}) else{return nil}
+        return index
+    }
+    static func head(_ repo:URL)->String? {
+        if let value=git(repo,["rev-parse","HEAD"]) {return value}
+        guard sourceIndex(repo) != nil,let value=try? String(contentsOf:repo.appendingPathComponent("SOURCE_REVISION"),encoding:.utf8).trimmingCharacters(in:.whitespacesAndNewlines),value.range(of:"^[0-9a-f]{40}$",options:.regularExpression) != nil else{return nil}
+        return value
+    }
     static func recommendation(repo:URL,revision:String?,titleID:String)->Bool? {
-        guard let revision,revision.range(of:"^[0-9a-fA-F]{40}$",options:.regularExpression) != nil,
-              let paths=git(repo,["diff","--name-only","--no-renames",revision,"--"]) else {return nil}
-        return paths.split(separator:"\n").contains {affects(String($0),titleID:titleID)}
+        guard let revision,revision.range(of:"^[0-9a-fA-F]{40}$",options:.regularExpression) != nil else{return nil}
+        if let paths=git(repo,["diff","--name-only","--no-renames",revision,"--"]) {return paths.split(separator:"\n").contains {affects(String($0),titleID:titleID)}}
+        guard let current=sourceIndex(repo),let previous=sourceIndex(repo.deletingLastPathComponent().appendingPathComponent(revision)) else{return nil}
+        for path in Set(current.keys).union(previous.keys) where affects(path,titleID:titleID) {
+            let file=repo.appendingPathComponent(path)
+            guard file.resolvingSymlinksInPath().path.hasPrefix(repo.resolvingSymlinksInPath().path+"/"),let expected=previous[path],current[path] != nil,let data=try? Data(contentsOf:file) else{return true}
+            if SHA256.hash(data:data).map({String(format:"%02x",$0)}).joined() != expected {return true}
+        }
+        return false
     }
 }
 

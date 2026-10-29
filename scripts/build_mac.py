@@ -45,8 +45,8 @@ def main(argv=None):
         raise ValueError('Mac games require an Apple silicon Mac.')
     args.keys=None
     keys=select_keys(args)
-    with build_lock():
-        if any(p.suffix.lower() in {'.nsz','.xcz'} for p in packages):
+    with build_lock(game):
+        if any(p.suffix.lower() in {'.nsz','.xcz'} for p in packages) and not __import__('importlib.util',fromlist=['find_spec']).find_spec('nsz'):
             import subprocess
             subprocess.run([sys.executable,'-m','pip','install','nsz'],check=True)
         builder=load_builder(args.package_metadata) if args.package_metadata else load_builder()

@@ -147,6 +147,7 @@ import Foundation
         job.id="SYNTHETIC-DEVICE:org.game.custom";job.ipa=ipa.path;job.udid="SYNTHETIC-DEVICE";job.sha256=String(repeating:"a",count:64);job.needsLogin=false;job.enabled=false
         var second=job;second.id="SECOND-DEVICE:org.other";second.udid="SECOND-DEVICE";second.originalID="org.other";second.effectiveID="org.other"
         model.jobs=[job,second]
+        try JSONEncoder().encode(model.jobs).write(to:root.appendingPathComponent("jobs.json"))
         model.setRefresh(job,enabled:true);assert(model.jobs[0].enabled)
         model.setRefresh(job,enabled:false);assert(!model.jobs[0].enabled)
         let reloaded=SideloadModel(stateURL:root.appendingPathComponent("jobs.json"),defaults:defaults,helperURL:helper)

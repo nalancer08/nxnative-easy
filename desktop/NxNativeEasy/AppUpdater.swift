@@ -52,6 +52,12 @@ import Foundation
             try release.validate()
             let current=Int(Bundle.main.object(forInfoDictionaryKey:"CFBundleVersion") as? String ?? "0") ?? 0
             if release.isNewer(than:current) {
+                if PortableRuntime.tools != nil {
+                    let data=try await fetch("https://api.github.com/repos/nalancer08/nxnative-easy/releases/tags/v\(release.version)")
+                    let listing=try JSONSerialization.jsonObject(with:data) as? [String:Any]
+                    let names=(listing?["assets"] as? [[String:Any]] ?? []).compactMap {$0["name"] as? String}
+                    guard names.contains("nxnative-Easy-macOS-arm64.zip"),names.contains("SHA256SUMS") else {throw URLError(.resourceUnavailable)}
+                }
                 available=release;revision=commit.sha;error=nil
             } else if manual {showNotice=true}
         } catch {if manual {self.error="No pudimos buscar actualizaciones. Intenta de nuevo más tarde."}}
@@ -66,7 +72,7 @@ import Foundation
         }
         error=nil;busy=true;phase="download";progress=nil;buffered=""
         let task=Process();let pipe=Pipe()
-        task.executableURL=URL(fileURLWithPath:"/usr/bin/python3")
+        task.executableURL=PortableRuntime.python
         task.arguments=[helper.path,"--revision",revision,"--build",String(release.build),
                         "--target",Bundle.main.bundleURL.path,"--parent-pid",String(ProcessInfo.processInfo.processIdentifier)]
         // Optional local validation cache; ordinary installs use the helper's Application Support default.
@@ -74,7 +80,7 @@ import Foundation
             task.arguments! += ["--cache",cache]
         }
         task.standardOutput=pipe;task.standardError=pipe
-        var environment=ProcessInfo.processInfo.environment;environment["PYTHONUNBUFFERED"]="1";task.environment=environment
+        var environment=PortableRuntime.environment();environment["PYTHONUNBUFFERED"]="1";task.environment=environment
         pipe.fileHandleForReading.readabilityHandler={ [weak self] handle in
             let bytes=handle.availableData
             if bytes.isEmpty {handle.readabilityHandler=nil;return}

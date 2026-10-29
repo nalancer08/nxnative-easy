@@ -124,6 +124,7 @@ enum RefreshPolicy {
     @Published var anisette="https://ani.iloader.app"
     @Published var authenticated=false
     @Published private(set) var completedInstallation=false
+    @Published private(set) var increasedMemoryLimit:Bool?
     @Published private(set) var recoveringSession=false
     private var recoveryRequested=false
     private var automaticRecoveryAttempted=false
@@ -134,6 +135,7 @@ enum RefreshPolicy {
     @Published var smsNumbers:[TrustedSMS]=[]
     @Published var error:String?
     @Published var phase="Conecta y desbloquea tu iPhone/iPad."
+    @Published var connectionSummary=""
     @Published var fraction:Double?
     @Published var startedAt:Date?
     @Published var jobs:[RefreshJob]=[]
@@ -142,6 +144,7 @@ enum RefreshPolicy {
     var gameFolder:URL?
     var romfs:URL?
     var originalID=""
+    private var installerLease:Int32 = -1
     private var process:Process?
     private var input:FileHandle?
     private var pending=Data()
@@ -169,7 +172,7 @@ enum RefreshPolicy {
         timer=Timer.publish(every:1800,on:.main,in:.common).autoconnect().sink { [weak self] _ in Task {@MainActor in self?.checkRefresh()}}
     }
     func configure(ipa:URL,folder:URL,romfs:URL?) {
-        completedInstallation=false
+        completedInstallation=false;increasedMemoryLimit=nil
         self.ipa=ipa;gameFolder=folder;self.romfs=romfs
         originalID=PreviousPreparation.load(folder:folder,target:"ios")?.bundleID ?? ""
         existing=pendingUpdate?.id ?? ""
@@ -285,9 +288,12 @@ enum RefreshPolicy {
     func connect() {
         if let process,process.isRunning {return}
         process=nil;input=nil;scopedDiscovery=false
+        if installerLease>=0 {Darwin.close(installerLease);installerLease = -1}
+        guard let acquired=InstallerLease.acquire(at:stateURL.appendingPathExtension("lock")) else {error="Hay una instalación o renovación en curso. Intenta de nuevo en un momento.";busy=false;return}
+        installerLease=acquired
         guard let root=Bundle.main.executableURL?.deletingLastPathComponent() else {return}
         let helper=helperURL ?? root.appendingPathComponent("nxnative-sideload")
-        guard FileManager.default.isExecutableFile(atPath:helper.path) else {error="Falta el instalador nativo. Actualiza nxnative Easy.";return}
+        guard FileManager.default.isExecutableFile(atPath:helper.path) else {Darwin.close(installerLease);installerLease = -1;error="Falta el instalador nativo. Actualiza nxnative Easy.";return}
         let task=Process(),pipe=Pipe(),requests=Pipe();task.executableURL=helper
         task.standardOutput=pipe;task.standardError=FileHandle.nullDevice;task.standardInput=requests
         var environment=ProcessInfo.processInfo.environment;environment.removeValue(forKey:"RUST_LOG");environment.removeValue(forKey:"RUST_BACKTRACE");task.environment=environment
@@ -299,17 +305,24 @@ enum RefreshPolicy {
         task.terminationHandler={ [weak self] finished in Task {@MainActor in
             guard let self,self.process === finished else {return}
             let recovering=self.recoveringSession
+            if self.installerLease>=0 {Darwin.close(self.installerLease);self.installerLease = -1}
             self.process=nil;self.input=nil;self.scopedDiscovery=false;self.authenticated=false;self.codeRequired=false;self.recoveringSession=false;self.pendingRemember=nil
             if self.busy {self.error=recovering ? "No pudimos recuperar la sesión guardada. Revisa Internet y el acceso al Llavero, o vuelve a iniciar sesión." : "Instalación detenida. Vuelve a intentar; las partidas no se tocaron."}
             self.busy=false;self.activeRefresh=nil;self.installIntent=nil;self.refreshAuthenticated=false
         }}
         do {process=task;try task.run()}
-        catch {process=nil;input=nil;self.error="No pudimos iniciar el instalador nativo."}
+        catch {Darwin.close(installerLease);installerLease = -1;process=nil;input=nil;self.error="No pudimos iniciar el instalador nativo."}
     }
     private func send(_ value:[String:Any]) {
         connect();guard let input,let process,process.isRunning else {recoveringSession=false;busy=false;return}
         do {var data=try JSONSerialization.data(withJSONObject:value);data.append(10);try input.write(contentsOf:data)}
         catch {self.error="No pudimos comunicarnos con el instalador.";recoveringSession=false;busy=false}
+    }
+    private func textConnection(_ reachable:Bool?)->String {reachable==true ? "✓" : reachable==false ? "✗" : "—"}
+    func checkConnections() {
+        guard !busy,!device.isEmpty else{return}
+        busy=true;connectionSummary="";startedAt=Date();phase="Comprobando USB y Wi-Fi…"
+        send(["op":"connection_diagnostics","udid":device])
     }
     func listDevices() {guard !busy else {return};error=nil;busy=true;startedAt=Date();fraction=nil;phase="Buscando dispositivos conectados…";record(phase);send(["op":"devices"])}
     func inspectApps() {
@@ -338,7 +351,7 @@ enum RefreshPolicy {
     func sendToDevices() {phase="Solicitando un nuevo código…";codeRequired=false;send(["op":"send_to_devices"])}
     func sendSMS(_ number:Int) {phase="Solicitando un nuevo código…";codeRequired=false;send(["op":"sms","number":number])}
     func resend() {phase="Solicitando un nuevo código…";codeRequired=false;send(["op":"resend"])}
-    func signOut() {guard !busy else {return};recoveryRequested=false;automaticRecoveryAttempted=true;defaults.removeObject(forKey:"sideloadTeam."+RefreshPolicy.account(email));send(["op":"logout","email":email]);defaults.removeObject(forKey:"sideloadEmail");for index in jobs.indices {jobs[index].enabled=false};saveJobs()}
+    func signOut() {guard !busy else {return};connect();guard process?.isRunning==true else{return};recoveryRequested=false;automaticRecoveryAttempted=true;defaults.removeObject(forKey:"sideloadTeam."+RefreshPolicy.account(email));send(["op":"logout","email":email]);defaults.removeObject(forKey:"sideloadEmail");for index in jobs.indices {jobs[index].enabled=false};saveJobs()}
     func cancel() {recoveryRequested=false;automaticRecoveryAttempted=true;pendingRemember=nil;record("Operación cancelada; puedes volver a intentar.");if let refresh=activeRefresh,let index=jobs.firstIndex(where:{$0.id==refresh.id}) {jobs[index].retryAfter=Date().addingTimeInterval(6*3600);saveJobs()};if let process,process.isRunning {if kill(-process.processIdentifier,SIGTERM) != 0 {process.terminate()}}}
     var canUpdateAppOnly:Bool {
         guard let folder=gameFolder,let version=PreviousPreparation.load(folder:folder,target:"ios")?.version,!version.isEmpty,
@@ -377,6 +390,11 @@ enum RefreshPolicy {
     private func handle(_ event:[String:Any]) {
         switch event["event"] as? String {
         case "hello":helperCapabilities=Set(event["capabilities"] as? [String] ?? []);scopedDiscovery=(event["capabilities"] as? [String] ?? []).contains("scoped-games-v1");if (event["protocol"] as? Int) != 1 || event["architecture"] as? String != "aarch64" {error="El instalador debe compilarse para Apple silicon.";cancel()}
+        case "connection_diagnostics":
+            guard event["udid"] as? String==device else{return}
+            let results=(event["items"] as? [[String:Any]]) ?? []
+            connectionSummary=["USB","Wi-Fi"].map {kind in kind+": "+textConnection(results.first {$0["connection"] as? String==kind}?["reachable"] as? Bool)}.joined(separator:" · ")
+            busy=false;phase="Comprobación de conexión terminada.";record(phase)
         case "devices":
             devices=SideloadDevice.decode((event["items"] as? [[String:Any]]) ?? []);record("Búsqueda de dispositivos terminada.")
             busy=false
@@ -405,7 +423,9 @@ enum RefreshPolicy {
             accountDeviceLimit=(event["free_device_limit"] as? Int)==3 ? 3 : nil;accountDevicesCheckedAt=Date()
             accountDevices=((event["items"] as? [[String:Any]]) ?? []).compactMap {item in guard let id=item["udid"] as? String else {return nil};return AccountDevice(id:id,name:item["name"] as? String ?? String(id.suffix(8)),status:item["status"] as? String ?? "")}
             busy=false;record("Dispositivos registrados consultados.")
-        case "two_factor":record("Introduce el código de Apple.");codeRequired=true;phase="Introduce el código de Apple.";smsNumbers=((event["numbers"] as? [[String:Any]]) ?? []).compactMap {number in guard let id=number["id"] as? Int,let digits=number["last_digits"] as? String else {return nil};return TrustedSMS(id:id,digits:digits)}
+        case "two_factor":
+            if let refresh=activeRefresh,!manualRefresh,let index=jobs.firstIndex(where:{$0.id==refresh.id}) {jobs[index].needsLogin=true;saveJobs()}
+            record("Introduce el código de Apple.");codeRequired=true;phase="Introduce el código de Apple.";smsNumbers=((event["numbers"] as? [[String:Any]]) ?? []).compactMap {number in guard let id=number["id"] as? Int,let digits=number["last_digits"] as? String else {return nil};return TrustedSMS(id:id,digits:digits)}
         case "signed_in":
             recoveringSession=false;recoveryRequested=false;automaticRecoveryAttempted=true
             record("Sesión iniciada. Elige tu equipo personal.");authenticated=true;busy=false;codeRequired=false;error=nil;phase="Sesión iniciada. Elige tu equipo personal."
@@ -445,7 +465,7 @@ enum RefreshPolicy {
                 apps.append(InstalledGame(id:actual,name:installedFolder.lastPathComponent,version:installedVersion))
             }
             let confirmsCurrentInstall=activeRefresh==nil && job.ipa==ipa?.path && job.gameFolder==gameFolder?.path && job.originalID==originalID && job.udid==device && job.team==team
-            installIntent=nil;activeRefresh=nil;refreshAuthenticated=false;busy=false;fraction=1;completedInstallation=confirmsCurrentInstall;phase="Instalado. Tus partidas se conservan en el dispositivo.";record(phase)
+            installIntent=nil;activeRefresh=nil;refreshAuthenticated=false;busy=false;fraction=1;completedInstallation=confirmsCurrentInstall;increasedMemoryLimit=event["increased_memory_limit"] as? Bool;phase="Instalado. Tus partidas se conservan en el dispositivo.";record(phase)
         case "error":
             record("La operación se detuvo. Revisa el mensaje de error.")
             let op=event["operation"] as? String
@@ -498,12 +518,26 @@ enum RefreshPolicy {
         ipa=URL(fileURLWithPath:job.ipa);gameFolder=URL(fileURLWithPath:job.gameFolder);romfs=nil
         originalID=job.originalID;device=job.udid;team=job.team;existing=job.effectiveID
     }
+    private func metadataLease()->Int32? {
+        installerLease>=0 ? Darwin.dup(installerLease) : InstallerLease.acquire(at:stateURL.appendingPathExtension("lock"))
+    }
+    private func reloadJobsForEdit()->Bool {
+        guard FileManager.default.fileExists(atPath:stateURL.path) else{return true}
+        guard let data=try? Data(contentsOf:stateURL),let saved=try? JSONDecoder().decode([RefreshJob].self,from:data) else {error="No pudimos leer el registro de renovaciones. Se conservó sin cambios.";return false}
+        jobs=saved;return true
+    }
     func setRefresh(_ job:RefreshJob,enabled:Bool) {
-        guard !busy,let index=jobs.firstIndex(where:{$0.id==job.id}) else {return}
+        guard !busy else{return}
+        guard let lease=metadataLease() else {error="Hay una instalación o renovación en curso. Intenta de nuevo en un momento.";return}
+        defer {Darwin.close(lease)}
+        guard reloadJobsForEdit(),let index=jobs.firstIndex(where:{$0.id==job.id}) else{return}
         jobs[index].enabled=enabled;saveJobs()
     }
     func forget(_ job:RefreshJob) {
         guard !busy else {return}
+        guard let lease=metadataLease() else {error="Hay una instalación o renovación en curso. Intenta de nuevo en un momento.";return}
+        defer {Darwin.close(lease)}
+        guard reloadJobsForEdit() else{return}
         jobs.removeAll {$0.id==job.id};saveJobs()
     }
     func renew(_ job:RefreshJob) {
@@ -525,13 +559,17 @@ enum RefreshPolicy {
         activeRefresh=job;manualRefresh=false;refreshAuthenticated=false;listDevices()
     }
     private func continueRefresh(_ job:RefreshJob) {
+        if !manualRefresh {
+            guard let data=try? Data(contentsOf:stateURL),let saved=try? JSONDecoder().decode([RefreshJob].self,from:data),saved.contains(where:{$0.id==job.id && $0.enabled && $0.sha256==job.sha256 && $0.ipa==job.ipa && $0.account==job.account && $0.team==job.team}) else {activeRefresh=nil;return}
+        }
         guard devices.contains(where:{$0.id==job.udid}) else {if manualRefresh {error="Conecta y desbloquea el dispositivo donde instalaste este juego."};activeRefresh=nil;return}
         guard teams.contains(where:{$0.id==job.team}) || !refreshAuthenticated else {error="La cuenta actual no tiene el equipo original de este juego. No cambiamos su identidad.";activeRefresh=nil;return}
         if !refreshAuthenticated {recoveryRequested=false;automaticRecoveryAttempted=true;recoveringSession=true;busy=true;phase="Recuperando tu sesión del Llavero…";send(["op":"restore","email":email,"anisette_url":anisette])}
         else {startInstall(job,updating:true,content:nil)}
     }
+    static var backgroundEnabled:Bool {SMAppService.agent(plistName:"com.nalancer08.nxnative.refresh.plist").status == .enabled}
     func setLoginItem(_ enabled:Bool) {
-        do {if enabled {try SMAppService.mainApp.register();if SMAppService.mainApp.status == .requiresApproval {SMAppService.openSystemSettingsLoginItems()}}else{try SMAppService.mainApp.unregister()}}
+        do {if enabled {try SMAppService.agent(plistName:"com.nalancer08.nxnative.refresh.plist").register();if SMAppService.agent(plistName:"com.nalancer08.nxnative.refresh.plist").status == .requiresApproval {SMAppService.openSystemSettingsLoginItems()}}else{try SMAppService.agent(plistName:"com.nalancer08.nxnative.refresh.plist").unregister()}}
         catch {self.error="Revisa Elementos de inicio en Ajustes del Sistema para permitir la renovación al iniciar sesión."}
     }
 }
@@ -552,7 +590,7 @@ struct SideloadView:View {
     @State private var remember=true
     @State private var autoRefresh=true
     @State private var includeGameData=true
-    @State private var loginItem=SMAppService.mainApp.status == .enabled
+    @State private var loginItem=SMAppService.agent(plistName:"com.nalancer08.nxnative.refresh.plist").status == .enabled
     init(model:SideloadModel,text:@escaping (String)->String,accountOnly:Bool=false,embedded:Bool=false,guided:Bool=false,gameName:String?=nil,onReturn:@escaping ()->Void={},initialStep:Int=0) {
         self.model=model;self.text=text;self.accountOnly=accountOnly;self.embedded=embedded;self.guided=guided;self.gameName=gameName;self.onReturn=onReturn
         _installStep=State(initialValue:max(0,min(3,initialStep)))
@@ -729,7 +767,7 @@ struct SideloadView:View {
                     Text(text("La renovación necesita este Mac encendido, nxnative Easy abierto, conexión a Internet y el dispositivo accesible. Conserva la IPA original.")).font(.caption).foregroundStyle(.secondary)
                     DisclosureGroup(text("Más opciones")) {
                         VStack(alignment:.leading,spacing:14) {
-                            Toggle(text("Abrir nxnative Easy al iniciar sesión"),isOn:$loginItem).onChange(of:loginItem){_,value in model.setLoginItem(value)}
+                            Toggle(text("Renovar aunque la ventana esté cerrada"),isOn:$loginItem).onChange(of:loginItem){_,value in model.setLoginItem(value)}
                             if model.canUpdateAppOnly {Toggle(text("Copiar también los datos del juego"),isOn:$includeGameData);Text(text("Para cambios de controles o de la app con la misma versión del juego. Si cambió el juego o DLC, usa la instalación con datos nuevos.")).font(.caption).foregroundStyle(.secondary)}
                         }.padding(.top,12)
                     }.font(.callout)
@@ -906,7 +944,11 @@ struct SideloadLibraryView:View {
                         VStack(alignment:.leading,spacing:10) {
                             Text(text("Conecta tu iPhone o iPad")).font(.headline)
                             Text(text("Desbloquea el dispositivo, confía en este Mac y activa Modo de desarrollador si iOS lo pide.")).foregroundStyle(.secondary)
-                            Button(text("Buscar dispositivos")){model.listDevices()}
+                            if !model.device.isEmpty {
+                        Button(text("Comprobar USB y Wi-Fi")){model.checkConnections()}.disabled(model.busy)
+                        if !model.connectionSummary.isEmpty {Text(model.connectionSummary).font(.callout.monospaced());Text(text("Esto verifica la conexión, no la firma ni la instalación. Para Wi-Fi, empareja por USB y activa la sincronización en Finder.")).font(.caption).foregroundStyle(.secondary)}
+                    }
+                    Button(text("Buscar dispositivos")){model.listDevices()}
                         }.padding(18).frame(maxWidth:.infinity,minHeight:136,alignment:.topLeading).background(.white.opacity(0.04),in:RoundedRectangle(cornerRadius:14))
                     }
                     ForEach(model.devices) {device in
@@ -998,6 +1040,9 @@ struct InstallActivityView:View {
                     }
                 }
             }
+            if let memory=model.increasedMemoryLimit,model.completedInstallation {
+                Text(text(memory ? "Memoria ampliada: confirmada en la firma." : "La firma no incluye memoria ampliada. Algunos juegos grandes pueden cerrarse por falta de memoria.")).font(.caption).foregroundStyle(memory ? Color.secondary : Color.orange)
+            }
             if let error=model.error {
                 EasyCard {VStack(alignment:.leading,spacing:8) {Label(text("Necesitamos revisar algo"),systemImage:"exclamationmark.triangle").font(.headline).foregroundStyle(.orange);Text(text(error)).font(.callout).textSelection(.enabled)}}
             }
@@ -1011,5 +1056,36 @@ struct InstallActivityView:View {
                 }.font(.callout).padding(18).background(EasyDesign.surface,in:RoundedRectangle(cornerRadius:14))
             }
         }
+    }
+}
+
+// Shared across foreground and the optional launchd worker, without credentials.
+enum InstallerLease {
+    static func acquire(at location:URL?=nil)->Int32? {
+        let root=location?.deletingLastPathComponent() ?? FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Library/Application Support/nxnative Easy")
+        do {try FileManager.default.createDirectory(at:root,withIntermediateDirectories:true,attributes:[.posixPermissions:0o700])}catch{return nil}
+        let fd=Darwin.open((location ?? root.appendingPathComponent("refresh-jobs.json.lock")).path,O_CREAT|O_RDWR|O_NOFOLLOW|O_CLOEXEC,0o600)
+        guard fd>=0 else{return nil}
+        guard flock(fd,LOCK_EX|LOCK_NB)==0 else {Darwin.close(fd);return nil}
+        return fd
+    }
+}
+
+@MainActor enum BackgroundRenewal {
+    static func run() {
+        let identifier="com.nalancer08.nxnative.easy"
+        let defaults=Bundle.main.bundleIdentifier==identifier ? UserDefaults.standard : (UserDefaults(suiteName:identifier) ?? .standard)
+        guard let executable=Bundle.main.executableURL else{return}
+        let helper=executable.deletingLastPathComponent().appendingPathComponent("nxnative-sideload")
+        let model=SideloadModel(defaults:defaults,helperURL:helper)
+        if CommandLine.arguments.contains("--dry-run") {
+            print("Background renewal: \(model.jobs.filter {$0.enabled}.count) enabled jobs; no account/device operation performed")
+            return
+        }
+        if NSRunningApplication.runningApplications(withBundleIdentifier:"com.nalancer08.nxnative.easy").contains(where:{$0.processIdentifier != ProcessInfo.processInfo.processIdentifier && $0.executableURL?.lastPathComponent=="NxNativeEasy"}) {return}
+        model.checkRefresh()
+        let deadline=Date().addingTimeInterval(240)
+        while model.busy && Date()<deadline && !model.codeRequired {RunLoop.current.run(until:Date().addingTimeInterval(0.2))}
+        if model.busy {model.cancel()}
     }
 }

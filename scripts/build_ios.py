@@ -21,18 +21,23 @@ REPO = Path(__file__).resolve().parents[1]
 
 
 @contextmanager
-def build_lock():
-    # Separate game folders still share the checkout's generated source files.
-    digest = hashlib.sha256(str(REPO).encode()).hexdigest()[:20]
-    with open(Path(tempfile.gettempdir()) / ('nxnative-ios-'+digest+'.lock'),'a') as lock:
-        try:
-            fcntl.flock(lock,fcntl.LOCK_EX | fcntl.LOCK_NB)
-        except BlockingIOError as error:
-            raise ValueError('Another build is using this checkout; wait for it to finish.') from error
-        try:
-            yield
-        finally:
-            fcntl.flock(lock,fcntl.LOCK_UN)
+def build_lock(game=None):
+    # Coordinate generated checkout files and a game's caches across app versions.
+    identities=[str(REPO)]
+    if game is not None:identities.append('game:'+str(Path(game).resolve()))
+    held=[]
+    try:
+        for identity in identities:
+            digest=hashlib.sha256(identity.encode()).hexdigest()[:20]
+            lock=open(Path(tempfile.gettempdir())/('nxnative-ios-'+digest+'.lock'),'a')
+            try:fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
+            except BlockingIOError as error:
+                lock.close()
+                raise ValueError('Another build or cache operation is active; wait for it to finish.') from error
+            held.append(lock)
+        yield
+    finally:
+        for lock in reversed(held):fcntl.flock(lock,fcntl.LOCK_UN);lock.close()
 
 
 def load_builder(package_metadata=None):
@@ -46,6 +51,9 @@ def load_builder(package_metadata=None):
     builder.ROMFS_IMAGE = False
     # Preserve the venv executable path: resolving its symlink selects global Python.
     builder.TOOL_PATHS.insert(0, str(Path(sys.executable).parent))
+    if os.environ.get('NXE_BUNDLED_TOOLS'):
+        tools=Path(os.environ['NXE_BUNDLED_TOOLS'])
+        builder.TOOL_PATHS[:0]=[str(tools/'bin'),str(tools/'dotnet')]
     if package_metadata is not None:
         metadata_spec = importlib.util.spec_from_file_location('nxnative_inspection', REPO/'scripts/inspect_game.py')
         assert metadata_spec is not None and metadata_spec.loader is not None
@@ -173,7 +181,7 @@ def main(argv=None):
         print('Dry run: no build, no key access, no data changes.')
         return 0
     if sys.platform != 'darwin': raise ValueError('Builds require macOS and Xcode.')
-    with build_lock():
+    with build_lock(game):
         if args.app_only:
             works = [p for p in game.glob('*_build') if re.fullmatch(r'[0-9a-fA-F]{16}_build',p.name)]
             if len(works)!=1: raise ValueError('App-only needs exactly one existing title build directory.')
@@ -194,7 +202,7 @@ def main(argv=None):
             subprocess.run(['bash',str(REPO/'dm/ios/tools/build_ipa.sh'),str(output)],cwd=REPO,env=env,check=True)
         else:
             keys = select_keys(args)
-            if any(p.suffix.lower() in {'.nsz','.xcz'} for p in packages):
+            if any(p.suffix.lower() in {'.nsz','.xcz'} for p in packages) and not __import__('importlib.util',fromlist=['find_spec']).find_spec('nsz'):
                 subprocess.run([sys.executable,'-m','pip','install','nsz'],check=True)
             builder = load_builder(args.package_metadata) if args.package_metadata else load_builder()
             code = builder.cli(command + ['-k',str(keys)])

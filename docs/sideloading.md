@@ -81,7 +81,7 @@ IPA path/hash, game-folder path, device UDID, team/effective ID, hashed account,
 expiry and opt-in status. No password or Apple session token is in that file.
 The original IPA remains in the user's game folder; keep it for future refreshes.
 
-Every 30 minutes while the app runs, opted-in jobs are considered within 48 hours
+Every 30 minutes while the app runs, or through the optional background worker, opted-in jobs are considered within 48 hours
 of their **actual** profile expiry. The Mac must be awake, online and able to reach
 the already paired device by USB or configured Wi-Fi. The app does not create a
 permanent signature or work while the Mac is off. Opening the app at login is an
@@ -406,3 +406,7 @@ unavailable sessions, explicit retry, logout, helper absence and a cancelled
 non-remembering login followed by recovery. They verify authentication-only
 transport, no retry loop and preservation of saved preference metadata. They do
 not access the user's Keychain or authenticate against Apple.
+
+## Independent worker and signature checks (1.19.0)
+
+See [background renewal](background-renewal.md) for the optional closed-app worker, per-route connection checks, actual signed memory entitlement verification and the physical validation boundary. The shared account, exact identifiers, new-device refusal and read-only save export policies remain unchanged.

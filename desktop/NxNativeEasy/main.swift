@@ -257,7 +257,7 @@ struct PackageIdentityView:View {
         self.defaults=defaults
         language=EasyLanguage.load(defaults:defaults)
         let configured=Bundle.main.object(forInfoDictionaryKey:"NxNativeSource") as? String ?? ""
-        repo=sourceRepo ?? URL(fileURLWithPath:configured)
+        repo=sourceRepo ?? PortableRuntime.source(configured:configured)
         splitIOS=defaults.object(forKey:"iosSplitGameData") as? Bool ?? true
         refreshCatalog()
         if let path=defaults.string(forKey:"keysDirectory"), FileManager.default.fileExists(atPath:path+"/prod.keys") {
@@ -284,10 +284,10 @@ struct PackageIdentityView:View {
         let script=repo.appendingPathComponent("scripts/inspect_game.py")
         guard FileManager.default.fileExists(atPath:script.path),let keysFolder else {return}
         let generation=inspectionGeneration,task=Process(),pipe=Pipe()
-        task.executableURL=URL(fileURLWithPath:"/usr/bin/python3")
+        task.executableURL=PortableRuntime.python
         task.arguments=[repo.appendingPathComponent("desktop/NxNativeEasy/build_session.py").path,script.path,folder.path,"--keys",keysFolder.appendingPathComponent("prod.keys").path]+(setupTools ? ["--setup-tools"] : [])
         task.standardOutput=pipe;task.standardError=FileHandle.nullDevice
-        var env=ProcessInfo.processInfo.environment
+        var env=PortableRuntime.environment()
         env.removeValue(forKey:"NXE_BUILD_LOG");env.removeValue(forKey:"NXE_GAME_DIR")
         task.environment=env
         do {try task.run();inspectionProcess=task;inspecting=true}
@@ -380,7 +380,7 @@ struct PackageIdentityView:View {
         if !readableKeys {chooseKeysFolder()}
         guard readableKeys,let keysFolder else {return}
         let task=Process();let pipe=Pipe()
-        task.executableURL=URL(fileURLWithPath:"/usr/bin/python3")
+        task.executableURL=PortableRuntime.python
         var arguments=[repo.appendingPathComponent("desktop/NxNativeEasy/build_session.py").path,script.path,"--target",target,folder.path]
         guard let inspectionData else {return}
         let manifest=FileManager.default.temporaryDirectory.appendingPathComponent("nxnative-inspection-"+UUID().uuidString+".json")
@@ -390,7 +390,7 @@ struct PackageIdentityView:View {
         if target=="ios" && !splitIOS {arguments.append("--full-only")}
         task.arguments=arguments;task.currentDirectoryURL=repo
         task.standardOutput=pipe;task.standardError=pipe
-        var environment=ProcessInfo.processInfo.environment
+        var environment=PortableRuntime.environment()
         environment["PYTHONUNBUFFERED"]="1"
         environment["NXE_PROGRESS"]="json"
         let log=folder.appendingPathComponent("nxnative-tools/logs/build-"+UUID().uuidString+".log")
@@ -427,6 +427,8 @@ struct PackageIdentityView:View {
                     let log=self.transcript.lowercased()
                     if log.contains("install and open full xcode") {
                         self.detail="Instala Xcode y ábrelo una vez. Después vuelve a intentar."
+                    } else if log.contains("install xcode 27.1") {
+                        self.detail="Instala Xcode 27.1 o posterior y ábrelo una vez. Después vuelve a intentar."
                     } else if log.contains("install homebrew") {
                         self.detail="Instala Homebrew desde brew.sh y vuelve a intentar."
                     } else if log.contains("ios sdk 26 or newer") {

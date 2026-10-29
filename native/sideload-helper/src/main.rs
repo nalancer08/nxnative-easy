@@ -159,6 +159,25 @@ async fn device_details(p: &UsbmuxdProvider) -> Result<plist::Dictionary, Report
         .into_dictionary()
         .ok_or_else(|| report!("Missing device metadata"))
 }
+async fn connection_diagnostics(udid: &str) -> Result<(), Report> {
+    let mut mux = UsbmuxdConnection::default().await?;
+    let all = mux.get_devices().await?;
+    let mut items = Vec::new();
+    for device in all.into_iter().filter(|d| d.udid == udid) {
+        let kind = match device.connection_type {
+            Connection::Usb => "USB",
+            Connection::Network(_) => "Wi-Fi",
+            Connection::Unknown(_) => continue,
+        };
+        let p = device.to_provider(UsbmuxdAddr::from_env_var()?, "nxnative-easy");
+        let reachable = tokio::time::timeout(Duration::from_secs(5), device_details(&p))
+            .await
+            .is_ok_and(|result| result.is_ok());
+        items.push(json!({"connection":kind,"reachable":reachable}));
+    }
+    emit(json!({"event":"connection_diagnostics","udid":udid,"items":items}));
+    Ok(())
+}
 async fn devices() -> Result<(), Report> {
     let mut mux = UsbmuxdConnection::default().await?;
     let all = mux.get_devices().await?;
@@ -361,7 +380,7 @@ fn extract(ipa: &Path, stage: &Path) -> Result<PathBuf, Report> {
     };
     Ok(apps[0].clone())
 }
-fn profile_details(app: &Path, effective: &str, team: &str) -> Result<u64, Report> {
+fn profile_details(app: &Path, effective: &str, team: &str) -> Result<(u64, bool), Report> {
     let output = std::process::Command::new("/usr/bin/security")
         .args(["cms", "-D", "-i"])
         .arg(app.join("embedded.mobileprovision"))
@@ -387,7 +406,13 @@ fn profile_details(app: &Path, effective: &str, team: &str) -> Result<u64, Repor
     if expiry <= SystemTime::now() {
         bail!("Expired provisioning profile")
     };
-    Ok(timestamp)
+    let memory = value
+        .get("Entitlements")
+        .and_then(plist::Value::as_dictionary)
+        .and_then(|e| e.get("com.apple.developer.kernel.increased-memory-limit"))
+        .and_then(plist::Value::as_boolean)
+        .unwrap_or(false);
+    Ok((timestamp, memory))
 }
 async fn install(session: &mut Session, request: &Value) -> Result<(), Report> {
     let ipa = PathBuf::from(text(request, "ipa")?);
@@ -535,13 +560,29 @@ async fn install(session: &mut Session, request: &Value) -> Result<(), Report> {
         bail!("Signed identity mismatch; not installed")
     }
     emit(json!({"event":"progress","phase":"Verifying signature"}));
-    let expires = profile_details(&signed, &effective, team_id)?;
+    let (expires, profile_memory) = profile_details(&signed, &effective, team_id)?;
     let verify = std::process::Command::new("/usr/bin/codesign")
         .args(["--verify", "--deep", "--strict"])
         .arg(&signed)
         .output()?;
     if !verify.status.success() {
         bail!("Signed application verification failed")
+    }
+    // Verify what is actually in the signature, without logging entitlement payloads.
+    let entitlement_output = std::process::Command::new("/usr/bin/codesign")
+        .args(["--display", "--entitlements", ":-"])
+        .arg(&signed)
+        .output()?;
+    if !entitlement_output.status.success() {
+        bail!("Cannot verify signed memory entitlement")
+    }
+    let entitlements: plist::Dictionary = plist::from_bytes(&entitlement_output.stdout)?;
+    let signed_memory = entitlements
+        .get("com.apple.developer.kernel.increased-memory-limit")
+        .and_then(plist::Value::as_boolean)
+        .unwrap_or(false);
+    if signed_memory != profile_memory {
+        bail!("Signed memory entitlement differs from provisioning profile")
     }
     if automatic {
         idle::require_idle(udid, &executable)?;
@@ -554,7 +595,7 @@ async fn install(session: &mut Session, request: &Value) -> Result<(), Report> {
         romfs::transfer(&p, &effective, Path::new(path)).await?;
     }
     emit(
-        json!({"event":"installed","sha256":source_sha,"effective_id":effective,"expires":expires,"udid":udid,"email":session.email}),
+        json!({"event":"installed","sha256":source_sha,"effective_id":effective,"expires":expires,"udid":udid,"email":session.email,"increased_memory_limit":signed_memory}),
     );
     Ok(())
 }
@@ -614,6 +655,7 @@ async fn main() {
         let op = request["op"].as_str().unwrap_or("").to_string();
         let result = match op.as_str() {
             "devices" => devices().await,
+            "connection_diagnostics" => async {connection_diagnostics(text(&request,"udid")?).await}.await,
             "installed_apps" => match text(&request, "udid") {
                 Ok(udid) => match async {
                     let scope:games::Scope=serde_json::from_value(request.clone())?;

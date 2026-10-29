@@ -53,6 +53,11 @@ else
   nxi_sdk=$(/usr/bin/xcrun --sdk iphoneos --show-sdk-version)
   [ "${nxi_sdk%%.*}" -ge 26 ] || { echo 'iOS SDK 26 or newer is required.' >&2; exit 1; }
 fi
+if [ -n "${NXE_BUNDLED_TOOLS:-}" ] && [ -x "$NXE_BUNDLED_TOOLS/python/bin/python3" ]; then
+  export DOTNET_ROOT="$NXE_BUNDLED_TOOLS/dotnet"
+  export PATH="$NXE_BUNDLED_TOOLS/bin:$NXE_BUNDLED_TOOLS/python/bin:$DOTNET_ROOT:$PATH"
+  nxi_venv="$NXE_BUNDLED_TOOLS/python"
+else
 nxi_brew=$(command -v brew || true)
 if [ -z "$nxi_brew" ] && [ -x /opt/homebrew/bin/brew ]; then nxi_brew=/opt/homebrew/bin/brew; fi
 if [ -z "$nxi_brew" ] && [ -x /usr/local/bin/brew ]; then nxi_brew=/usr/local/bin/brew; fi
@@ -78,6 +83,7 @@ if [ ! -e "$nxi_venv" ]; then "$nxi_python_prefix/bin/python3.13" -m venv "$nxi_
 [ -x "$nxi_venv/bin/python" ] || { echo 'Existing Python environment is incomplete; preserved without changes.' >&2; exit 1; }
 "$nxi_venv/bin/python" -m pip install lz4 capstone fonttools 'backports.zstd; python_version < "3.14"'
 export PATH="$nxi_venv/bin:$PATH"
+fi
 if [ "$nxi_setup" -eq 1 ]; then
   echo "Ready. Source checkout preserved: $nxi_repo"
   exit 0

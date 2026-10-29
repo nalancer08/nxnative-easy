@@ -141,7 +141,7 @@ struct LibraryWorkspace:View {
                                     Divider()
                                     if let game=selectedResult {
                                         ScrollView {
-                                            GameLibraryDetail(game:game,title:name(game),catalog:model.catalog.first(where:{$0.id==game.titleID}),text:model.text,building:model.running && model.folder?.resolvingSymlinksInPath().path==game.folder.resolvingSymlinksInPath().path,disabled:occupied,observations:sideload.observations(titleID:game.titleID,originalID:game.originalBundleID),isVerified:sideload.isVerified,needsRebuild:needsRebuild(game),advice:["Mac","iPhone / iPad"].compactMap {platform in rebuildAdvice[game.id+platform].map {value in platform+": "+model.text(value=="rebuild" ? "Conviene recompilar: cambiaron herramientas o el perfil de este juego." : "No hay historial suficiente para comparar esta preparación.") }},checkDevices:{if sideload.devices.count>1 && sideload.device.isEmpty {page = .devices}else{sideload.listDevices()}},open:{if let mac=game.macApp {NSWorkspace.shared.open(mac)}},prepare:{configure(game)},install:{install(game)},remove:{removing=game})
+                                            GameLibraryDetail(game:game,title:name(game),catalog:model.catalog.first(where:{$0.id==game.titleID}),text:model.text,building:model.running && model.folder?.resolvingSymlinksInPath().path==game.folder.resolvingSymlinksInPath().path,disabled:occupied,observations:sideload.observations(titleID:game.titleID,originalID:game.originalBundleID),isVerified:sideload.isVerified,needsRebuild:needsRebuild(game),advice:["Mac","iPhone / iPad"].compactMap {platform in rebuildAdvice[game.id+platform].map {value in platform+": "+model.text(value=="rebuild" ? "Conviene recompilar: cambiaron herramientas o el perfil de este juego." : "No hay historial suficiente para comparar esta preparación.") }},sourceRepo:model.repo,checkDevices:{if sideload.devices.count>1 && sideload.device.isEmpty {page = .devices}else{sideload.listDevices()}},open:{if let mac=game.macApp {NSWorkspace.shared.open(mac)}},prepare:{configure(game)},install:{install(game)},remove:{removing=game})
                                         }.padding(.leading,20)
                                     }
                                 }
@@ -208,6 +208,7 @@ struct WorkspaceSettingsView:View {
     enum Section:String,CaseIterable {case general,apple,controllers}
     @State var section=Section.general
     @State private var copiedDiagnostics=false
+    @State private var backgroundRenewal=SideloadModel.backgroundEnabled
     @AppStorage("buildNotifications") private var buildNotifications=true
     private var version:String {Bundle.main.object(forInfoDictionaryKey:"CFBundleShortVersionString") as? String ?? "development"}
     private func title(_ section:Section)->String {
@@ -235,6 +236,10 @@ struct WorkspaceSettingsView:View {
                             }
                             Divider()
                             Toggle(model.text("Notificar cuando termine una preparación"),isOn:$buildNotifications).toggleStyle(.switch)
+                            Divider()
+                            Toggle(model.text("Renovar aunque la ventana esté cerrada"),isOn:$backgroundRenewal).toggleStyle(.switch).onChange(of:backgroundRenewal){_,value in sideload.setLoginItem(value)}
+                            Text(model.text("Sólo renueva los juegos que hayas autorizado. Requiere este Mac despierto, sesión guardada y el dispositivo emparejado accesible por USB o Wi-Fi. macOS puede pedir permiso en Elementos de inicio.")).font(.caption).foregroundStyle(.secondary)
+
                         }.padding(22).frame(maxWidth:.infinity,alignment:.leading).background(.white.opacity(0.035),in:RoundedRectangle(cornerRadius:16))
                         VStack(alignment:.leading,spacing:16) {
                             Label(model.text("Ayuda y diagnóstico"),systemImage:"lifepreserver").font(.headline)
@@ -269,6 +274,7 @@ struct GameLibraryDetail:View {
     var isVerified:(DeviceGameObservation)->Bool={_ in false}
     var needsRebuild=false
     var advice:[String]=[]
+    var sourceRepo:URL?=nil
     var checkDevices:()->Void={}
     let open:()->Void
     let prepare:()->Void
@@ -318,7 +324,9 @@ struct GameLibraryDetail:View {
                     }
                 }
             }.padding(14).frame(maxWidth:.infinity,alignment:.leading).background(.white.opacity(0.035),in:RoundedRectangle(cornerRadius:12))
+            if let app=game.macApp {GameLaunchOptionsView(app:app,text:text).id(app.path).disabled(disabled)}
             ForEach(advice,id:\.self) {note in Label(note,systemImage:"arrow.triangle.2.circlepath").font(.caption).foregroundStyle(.secondary)}
+            if let repo=sourceRepo {CacheCleanupView(folder:game.folder,repo:repo,text:text,disabled:disabled).id(game.folder.path)}
             if let version=game.version {Text(text("Versión preparada")+" · "+version).font(.callout).foregroundStyle(.secondary)}
             if game.missing {Label(text("Carpeta no disponible"),systemImage:"externaldrive.badge.exclamationmark").foregroundStyle(.orange)}
             Divider()

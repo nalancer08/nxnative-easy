@@ -105,11 +105,66 @@ def replace_bundle(staged,target):
     return backup
 
 
+def portable_update(revision,build,target,cache):
+    release=manifest_url('https://raw.githubusercontent.com/nalancer08/nxnative-easy/'+revision+'/desktop/release.json')
+    if release['build']!=build:raise ValueError('Release metadata changed.')
+    version=release['version']
+    if not re.fullmatch(r'\d+\.\d+\.\d+',version):raise ValueError('Invalid release version.')
+    base='https://github.com/nalancer08/nxnative-easy/releases/download/v'+version+'/'
+    checks=urllib.request.urlopen(base+'SHA256SUMS',timeout=30).read(16385)
+    if len(checks)>16384:raise ValueError('Invalid release checksums.')
+    expected=next((line.split()[0] for line in checks.decode('ascii').splitlines() if line.split()[-1:] == ['nxnative-Easy-macOS-arm64.zip']),None)
+    if expected is None or not re.fullmatch('[0-9a-f]{64}',expected):raise ValueError('Missing portable release checksum.')
+    staging=Path(tempfile.mkdtemp(prefix='.nxnative-update-',dir=target.parent)).resolve()
+    try:
+        archive=staging/'release.zip';digest=hashlib.sha256();received=0
+        emit('download')
+        with urllib.request.urlopen(base+'nxnative-Easy-macOS-arm64.zip',timeout=90) as reader,archive.open('xb') as writer:
+            while block:=reader.read(1024*1024):
+                received+=len(block)
+                if received>1024**3:raise ValueError('Portable release too large.')
+                digest.update(block);writer.write(block)
+        if digest.hexdigest()!=expected:raise ValueError('Portable release checksum mismatch.')
+        emit('extract')
+        with zipfile.ZipFile(archive) as packed:
+            total=0;seen=set();links={}
+            for entry in packed.infolist():
+                name=entry.filename;parts=PurePosixPath(name).parts
+                if not parts or parts[0] not in ('nxnative Easy.app','__MACOSX') or name.startswith('/') or '\\' in name or any(p in ('.','..') for p in parts):raise ValueError('Unsafe portable archive path.')
+                folded=name.rstrip('/').casefold()
+                if folded in seen:raise ValueError('Duplicate portable archive path.')
+                seen.add(folded);total+=entry.file_size
+                if total>4*1024**3:raise ValueError('Expanded portable release too large.')
+                if stat.S_ISLNK(entry.external_attr>>16):
+                    if entry.file_size>4096:raise ValueError('Invalid portable symlink.')
+                    links[name]=packed.read(entry).decode('utf-8')
+            for name,link in links.items():
+                if link.startswith('/') or not (staging/Path(name).parent/link).resolve().is_relative_to(staging/'nxnative Easy.app'):raise ValueError('External portable symlink.')
+                if any(other.startswith(name.rstrip('/')+'/') for other in packed.namelist()):raise ValueError('Archive writes through symlink.')
+            if shutil.disk_usage(staging).free<total+128*1024**2:raise ValueError('Insufficient update space.')
+        subprocess.run(['/usr/bin/ditto','-x','-k',str(archive),str(staging)],check=True,capture_output=True)
+        archive.unlink();app=staging/'nxnative Easy.app';emit('verify');validate_app(app,build,version)
+        info=plistlib.loads((app/'Contents/Info.plist').read_bytes())
+        tag=manifest_url('https://api.github.com/repos/nalancer08/nxnative-easy/commits/v'+version)
+        if info.get('NxNativeSourceRevision')!=tag['sha']:raise ValueError('Portable release source identity mismatch.')
+        return app,app/'Contents/Resources/Source'
+    except BaseException:
+        shutil.rmtree(staging,ignore_errors=True);raise
+
+
+def manifest_url(url):
+    request=urllib.request.Request(url,headers={'User-Agent':'nxnative-Easy-Updater'})
+    with urllib.request.urlopen(request,timeout=30) as reader:data=reader.read(131073)
+    if len(data)>131072:raise ValueError('Release response too large.')
+    return json.loads(data)
+
+
 def prepare(revision,build,target,cache):
     cache.mkdir(parents=True,exist_ok=True)
+    if (target/'Contents/Resources/Tools/manifest.json').is_file():return portable_update(revision,build,target,cache)
     source=cache/'Sources'/(revision+'-'+uuid.uuid4().hex[:8])
     source.parent.mkdir(parents=True,exist_ok=True)
-    staging=Path(tempfile.mkdtemp(prefix='.nxnative-update-',dir=target.parent))
+    staging=Path(tempfile.mkdtemp(prefix='.nxnative-update-',dir=target.parent)).resolve()
     try:
         with tempfile.TemporaryDirectory(prefix='download-',dir=cache) as temporary:
             archive=Path(temporary)/'source.zip'
@@ -171,7 +226,12 @@ def main():
             except ProcessLookupError:break
             if time.monotonic()>deadline:raise TimeoutError('The app did not close; the old version was preserved.')
             time.sleep(0.2)
-        replace_bundle(staged,target)
+        lease_root=Path.home()/'Library/Application Support/nxnative Easy'
+        lease_root.mkdir(parents=True,exist_ok=True)
+        with (lease_root/'refresh-jobs.json.lock').open('a') as installer_lease:
+            try:fcntl.flock(installer_lease,fcntl.LOCK_EX|fcntl.LOCK_NB)
+            except BlockingIOError:raise ValueError('A background installation is active; retry the update later.')
+            replace_bundle(staged,target)
         open_app(target)
     except BaseException as error:
         (args.cache/'last-error.json').write_text(json.dumps({'message':str(error)}))

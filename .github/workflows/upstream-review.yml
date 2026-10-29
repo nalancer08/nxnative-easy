@@ -1,0 +1,22 @@
+name: Propose upstream updates
+on:
+  schedule:
+    - cron: '23 9 * * *'
+  workflow_dispatch:
+permissions:
+  contents: write
+  pull-requests: write
+concurrency:
+  group: upstream-review
+  cancel-in-progress: false
+jobs:
+  propose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+      - name: Build review proposal without changing main
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 scripts/propose_upstream.py

@@ -130,3 +130,11 @@ legacy RomFS deletion into the iOS locator. The upstream gallery-table validator
 delegates fork README generation to `sync_game_catalog.py`; there must be only
 one writer of each bilingual gallery. Keep Xcode prerequisites and the supported
 Metal compiler lock aligned in bootstrap scripts, README and CI.
+
+Preserve portable source/runtime separation, digest-matched prebuilt extraction,
+versioned binary updates and retained source indexes for rebuild advice. The
+opt-in renewal agent shares the foreground installer lease/policy and must never
+register devices or prompt for secrets. Verify actual signed memory entitlements.
+Preserve schema-driven per-game choices and explicit preview-based cache cleanup
+with per-game build locks. Automated upstream proposals are draft branches only;
+never advance integration metadata or publish releases from that proposal job.
