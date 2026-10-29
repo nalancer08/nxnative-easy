@@ -28,12 +28,22 @@ def build_reader(destination,cache):
     return reader_hash
 
 
+def copy_notices(destination):
+    licenses=destination/'Licenses';licenses.mkdir(exist_ok=True)
+    for formula in ['xcodegen','zstd','glslang','xz','lz4','spirv-tools']:
+        prefix=Path(run('brew','--prefix',formula))
+        for file in prefix.glob('*'):
+            if file.is_file() and (file.name=='sbom.spdx.json' or file.name.upper().startswith(('LICENSE','COPYING','NOTICE'))):shutil.copy2(file,licenses/(formula+'-'+file.name))
+    for file in (Path(__file__).resolve().parents[1]/'desktop/ToolsLicenses').glob('*'):shutil.copy2(file,licenses/file.name)
+
+
 def bundle(destination,cache):
     cache.mkdir(parents=True,exist_ok=True)
     if destination.exists():
         manifest=json.loads((destination/'manifest.json').read_text())
         if manifest['python']['sha256']!=PYTHON_SHA:raise ValueError('Wrong cached runtime')
         manifest['reader_source_sha256']=build_reader(destination,cache)
+        copy_notices(destination)
         manifest['dotnet_sdks']=[line.split(' [')[0] for line in run(str(destination/'dotnet/dotnet'),'--list-sdks').splitlines()]
         (destination/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
         return
@@ -85,5 +95,6 @@ def bundle(destination,cache):
         for file in source.glob('*'):
             if file.is_file() and file.name.upper().startswith(('LICENSE','COPYING','NOTICE')):shutil.copy2(file,licenses/(source.name+'-'+file.name))
     reader_hash=build_reader(destination,cache)
+    copy_notices(destination)
     manifest={'reader_source_sha256':reader_hash,'schema':1,'architecture':'arm64','python':{'source':PYTHON_URL,'sha256':PYTHON_SHA},'tools':sources,'dotnet_sdks':[line.split(' [')[0] for line in run(str(destination/'dotnet/dotnet'),'--list-sdks').splitlines()]}
     (destination/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
