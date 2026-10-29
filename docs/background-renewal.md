@@ -23,7 +23,7 @@ sessions and failures preserve the saved session marker; no password is stored.
 A worker attempt is bounded to four minutes and retains normal retry/backoff.
 
 The foreground installation review and Settings continue to manage the shared
-Apple account. The worker never presents a password or verification-code prompt.
+Apple account. The worker never presents a password or verification-code prompt. If an attempt needs attention, it posts a generic local notification when macOS has already granted notification permission; it does not request permission in the background.
 A changed ad-hoc helper may require a fresh Keychain permission approval through
 the foreground app; unattended recovery is not guaranteed by compilation.
 

@@ -646,6 +646,8 @@ struct EasyStrings {
         "Estándar": "Standard",
         "Instala Xcode 27.1 o posterior y ábrelo una vez. Después vuelve a intentar.": "Install Xcode 27.1 or newer and open it once, then try again.",
         "Menos opciones": "Fewer options",
+        "La renovación necesita tu atención": "Renewal needs your attention",
+        "Abre nxnative Easy para revisar tu cuenta o la conexión del dispositivo.": "Open nxnative Easy to check your account or device connection.",
     ]
     static func text(_ source:String, language:EasyLanguage) -> String {
         language == .spanish ? source : (english[source] ?? source)

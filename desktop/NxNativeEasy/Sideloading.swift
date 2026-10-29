@@ -3,6 +3,7 @@ import AppKit
 import Combine
 import CryptoKit
 import ServiceManagement
+import UserNotifications
 import Darwin
 
 struct SideloadDevice:Identifiable {
@@ -1086,6 +1087,15 @@ enum InstallerLease {
         model.checkRefresh()
         let deadline=Date().addingTimeInterval(240)
         while model.busy && Date()<deadline && !model.codeRequired {RunLoop.current.run(until:Date().addingTimeInterval(0.2))}
+        let needsAttention=model.error != nil || model.codeRequired || model.busy
         if model.busy {model.cancel()}
+        if needsAttention,Bundle.main.bundleIdentifier != nil {
+            let language=EasyLanguage.load(defaults:defaults)
+            let content=UNMutableNotificationContent()
+            content.title=EasyStrings.text("La renovación necesita tu atención",language:language)
+            content.body=EasyStrings.text("Abre nxnative Easy para revisar tu cuenta o la conexión del dispositivo.",language:language)
+            content.userInfo=["kind":"renewal"]
+            UNUserNotificationCenter.current().add(UNNotificationRequest(identifier:"nxnative-renewal-attention",content:content,trigger:nil))
+        }
     }
 }

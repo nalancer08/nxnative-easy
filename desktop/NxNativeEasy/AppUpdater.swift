@@ -34,6 +34,7 @@ import Foundation
             try? FileManager.default.removeItem(at:failure)
         }
     }
+    private var binaryAvailable=false
     private func fetch(_ url:String) async throws -> Data {
         var request=URLRequest(url:URL(string:url)!,timeoutInterval:20)
         request.setValue("nxnative-Easy-Updater",forHTTPHeaderField:"User-Agent")
@@ -52,12 +53,12 @@ import Foundation
             try release.validate()
             let current=Int(Bundle.main.object(forInfoDictionaryKey:"CFBundleVersion") as? String ?? "0") ?? 0
             if release.isNewer(than:current) {
-                if PortableRuntime.tools != nil {
-                    let data=try await fetch("https://api.github.com/repos/nalancer08/nxnative-easy/releases/tags/v\(release.version)")
-                    let listing=try JSONSerialization.jsonObject(with:data) as? [String:Any]
-                    let names=(listing?["assets"] as? [[String:Any]] ?? []).compactMap {$0["name"] as? String}
-                    guard names.contains("nxnative-Easy-macOS-arm64.zip"),names.contains("SHA256SUMS") else {throw URLError(.resourceUnavailable)}
+                binaryAvailable=false
+                if let data=try? await fetch("https://api.github.com/repos/nalancer08/nxnative-easy/releases/tags/v\(release.version)"),let listing=try? JSONSerialization.jsonObject(with:data) as? [String:Any] {
+                    let names=(listing["assets"] as? [[String:Any]] ?? []).compactMap {$0["name"] as? String}
+                    binaryAvailable=names.contains("nxnative-Easy-macOS-arm64.zip") && names.contains("SHA256SUMS")
                 }
+                if PortableRuntime.tools != nil && !binaryAvailable {throw URLError(.resourceUnavailable)}
                 available=release;revision=commit.sha;error=nil
             } else if manual {showNotice=true}
         } catch {if manual {self.error="No pudimos buscar actualizaciones. Intenta de nuevo más tarde."}}
@@ -80,7 +81,7 @@ import Foundation
             task.arguments! += ["--cache",cache]
         }
         task.standardOutput=pipe;task.standardError=pipe
-        var environment=PortableRuntime.environment();environment["PYTHONUNBUFFERED"]="1";task.environment=environment
+        var environment=PortableRuntime.environment();environment["PYTHONUNBUFFERED"]="1";if binaryAvailable {environment["NXE_PREFER_PORTABLE"]="1"}else{environment.removeValue(forKey:"NXE_PREFER_PORTABLE")};task.environment=environment
         pipe.fileHandleForReading.readabilityHandler={ [weak self] handle in
             let bytes=handle.availableData
             if bytes.isEmpty {handle.readabilityHandler=nil;return}

@@ -907,6 +907,10 @@ struct GameCatalogView: View {
         UNUserNotificationCenter.current().add(UNNotificationRequest(identifier:"build-"+UUID().uuidString,content:content,trigger:nil))
     }
     nonisolated func userNotificationCenter(_ center:UNUserNotificationCenter,didReceive response:UNNotificationResponse,withCompletionHandler completionHandler:@escaping()->Void) {
+        if response.notification.request.content.userInfo["kind"] as? String=="renewal" {
+            Task {@MainActor in NSApp.activate(ignoringOtherApps:true);NotificationCenter.default.post(name:Notification.Name("nxnative.showDevices"),object:nil)}
+            completionHandler();return
+        }
         let success=response.notification.request.content.userInfo["success"] as? Bool ?? false
         Task {@MainActor in NSApp.activate(ignoringOtherApps:true);NSApp.windows.first(where:{$0.isVisible})?.makeKeyAndOrderFront(nil);NotificationCenter.default.post(name:Notification.Name(success ? "nxnative.showLibrary" : "nxnative.showBuildActivity"),object:nil)}
         completionHandler()

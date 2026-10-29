@@ -177,6 +177,7 @@ struct LibraryWorkspace:View {
             if page != .prepare {model.target="";model.folder=nil;model.preparationStep=0}
             model.acceptDrop(items);if !model.failed {remember()};page = .prepare;return true
         }
+        .onReceive(NotificationCenter.default.publisher(for:Notification.Name("nxnative.showDevices"))){_ in page = .devices}
         .onReceive(NotificationCenter.default.publisher(for:Notification.Name("nxnative.openSettings"))){_ in page = .settings}
         .onChange(of:model.installingInline){_,inline in if inline {page = .prepare}}
         .onReceive(NotificationCenter.default.publisher(for:Notification.Name("nxnative.showLibrary"))){_ in page = .library;if !sideload.busy {model.showSideload=false};library.refresh()}

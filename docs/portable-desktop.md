@@ -33,7 +33,7 @@ and source revision against the release tag. The app is staged before the old
 one is replaced; the previous app remains as a backup. User games and source
 folders are not replaced. No Homebrew or frontend compilation is needed for this
 route. A portable update is offered only once its ZIP and checksum assets exist.
-Source-built installations retain the staged source-build updater.
+Source-built installations prefer a published portable package on their next update as well; the staged source-build route remains available when no binary release exists.
 
 An in-progress installer/worker owns a shared per-user lease. Final replacement
 refuses while another installation holds that lease. Updating the desktop app does

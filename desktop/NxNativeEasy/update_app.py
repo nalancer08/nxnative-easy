@@ -161,7 +161,7 @@ def manifest_url(url):
 
 def prepare(revision,build,target,cache):
     cache.mkdir(parents=True,exist_ok=True)
-    if (target/'Contents/Resources/Tools/manifest.json').is_file():return portable_update(revision,build,target,cache)
+    if os.environ.get('NXE_PREFER_PORTABLE')=='1' or (target/'Contents/Resources/Tools/manifest.json').is_file():return portable_update(revision,build,target,cache)
     source=cache/'Sources'/(revision+'-'+uuid.uuid4().hex[:8])
     source.parent.mkdir(parents=True,exist_ok=True)
     staging=Path(tempfile.mkdtemp(prefix='.nxnative-update-',dir=target.parent)).resolve()
