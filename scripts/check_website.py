@@ -22,10 +22,11 @@ class Page(HTMLParser):
         values = dict(attrs)
         if tag == 'html':
             self.lang = values.get('lang')
-        if 'id' in values:
-            if values['id'] in self.ids:
-                raise ValueError('Duplicate element ID: ' + values['id'])
-            self.ids.add(values['id'])
+        element_id = values.get('id')
+        if element_id is not None:
+            if element_id in self.ids:
+                raise ValueError('Duplicate element ID: ' + element_id)
+            self.ids.add(element_id)
         if 'data-title-id' in values:
             self.profiles.append(values['data-title-id'])
         for key in ['src', 'href']:
