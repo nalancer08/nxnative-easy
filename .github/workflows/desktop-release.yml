@@ -19,7 +19,7 @@ jobs:
       - name: Release Python environment
         run: |
           python3 -m venv "$RUNNER_TEMP/release-python"
-          "$RUNNER_TEMP/release-python/bin/pip" install lz4 capstone fonttools backports.zstd
+          "$RUNNER_TEMP/release-python/bin/pip" install lz4 "capstone>=5,<6" fonttools backports.zstd
           echo "$RUNNER_TEMP/release-python/bin" >> "$GITHUB_PATH"
       - name: Build and validate
         run: |

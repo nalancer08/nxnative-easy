@@ -2,7 +2,7 @@
   "schema": 1,
   "repository": "seedds/nxnative",
   "baseline": "ecbeae164c0b419d1ba1031248fe1402050a3eb0",
-  "reviewed_head": "beea17cfdbd8fe6112de9d1c191c0488da7970bf",
+  "reviewed_head": "8e0916bf04f6fb8542c52ed01b166a8796158ca0",
   "integrated": [
     {
       "upstream_sha": "4639c5114cbb8a8f250645941fa3a25c1ba08cc6",
@@ -21,152 +21,124 @@
       "title": "Make repeated IPA and Mac app builds incremental (#279)"
     }
   ],
-  "note": "Full upstream main integrated through integrated_head. Earlier selective imports are retained for provenance. Future comparisons start at integrated_head; all fork features and game catalog gates remain required.",
-  "integrated_head": "beea17cfdbd8fe6112de9d1c191c0488da7970bf",
+  "note": "Upstream history integrated through integrated_head, with explicitly deferred features listed separately. Preserve the Easy frontend, save/data policies and catalog gates; future comparisons start at integrated_head.",
+  "integrated_head": "8e0916bf04f6fb8542c52ed01b166a8796158ca0",
   "latest_full_integration": {
-    "from_fork": "543fe1830190108123c3acd8f25dfe01cbd3a84d",
-    "previous_integrated_head": "8334fdfb50a9900d8a5fc950d099fde46d85135f",
-    "upstream_head": "beea17cfdbd8fe6112de9d1c191c0488da7970bf",
-    "commit_count": 160,
+    "from_fork": "b416f5134d036488126f45f2afaaeacd28b87b51",
+    "previous_integrated_head": "beea17cfdbd8fe6112de9d1c191c0488da7970bf",
+    "upstream_head": "8e0916bf04f6fb8542c52ed01b166a8796158ca0",
+    "commit_count": 91,
     "added_games": [
       {
-        "id": "01001F5010DFA000",
-        "name": "Pokémon Legends: Arceus",
+        "id": "010014C011146000",
+        "name": "Subnautica: Below Zero",
+        "versions": [
+          "1.23.55063"
+        ]
+      },
+      {
+        "id": "010016100A186000",
+        "name": "SteamWorld Heist: Ultimate Edition",
+        "versions": [
+          "2.2.1"
+        ]
+      },
+      {
+        "id": "0100217023F6C000",
+        "name": "Well Dweller",
+        "versions": [
+          "1.0.0"
+        ]
+      },
+      {
+        "id": "010029B0118E8000",
+        "name": "Need For Speed™ Hot Pursuit Remastered",
+        "versions": [
+          "1.0.3"
+        ]
+      },
+      {
+        "id": "01002CD00A51C000",
+        "name": "Baba Is You",
+        "versions": [
+          "1.0.12"
+        ]
+      },
+      {
+        "id": "010038600B27E000",
+        "name": "Bastion",
+        "versions": [
+          "1.0.0"
+        ]
+      },
+      {
+        "id": "0100429011144000",
+        "name": "Subnautica",
+        "versions": [
+          "1.23.83358"
+        ]
+      },
+      {
+        "id": "01006FE013472000",
+        "name": "Mario Party Superstars",
         "versions": [
           "1.1.1"
         ]
       },
       {
-        "id": "01002E7016C46000",
-        "name": "Cult of the Lamb",
+        "id": "010089C01E9CA000",
+        "name": "SteamWorld Heist II",
         "versions": [
-          "1.5.28"
+          "1.5.1"
         ]
       },
       {
-        "id": "010032E00E6E2000",
-        "name": "Return of the Obra Dinn",
-        "versions": [
-          "1.0.1"
-        ]
-      },
-      {
-        "id": "010040801A4C8000",
-        "name": "Blasphemous 2",
-        "versions": [
-          "1.0.8"
-        ]
-      },
-      {
-        "id": "010045C014650000",
-        "name": "13 Sentinels: Aegis Rim (Japan)",
-        "versions": [
-          "1.00"
-        ]
-      },
-      {
-        "id": "010054B01AD92000",
-        "name": "Unicorn Overlord (Asia)",
-        "versions": [
-          "1.05"
-        ]
-      },
-      {
-        "id": "01006000040C2000",
-        "name": "Yoshi's Crafted World",
-        "versions": [
-          "1.0.1"
-        ]
-      },
-      {
-        "id": "010062B01525C000",
-        "name": "Persona 4 Golden",
-        "versions": [
-          "1.0.2"
-        ]
-      },
-      {
-        "id": "010067300059A000",
-        "name": "Mario + Rabbids Kingdom Battle",
-        "versions": [
-          "1.9.589692"
-        ]
-      },
-      {
-        "id": "0100698009C6E000",
-        "name": "Blasphemous",
-        "versions": [
-          "1.0.8"
-        ]
-      },
-      {
-        "id": "0100965017338000",
-        "name": "Super Mario Party Jamboree",
-        "versions": [
-          "2.3.0"
-        ]
-      },
-      {
-        "id": "0100A3900C3E2000",
-        "name": "Paper Mario: The Origami King",
-        "versions": [
-          "1.0.1"
-        ]
-      },
-      {
-        "id": "0100A3D008C5C000",
-        "name": "Pokémon Scarlet",
-        "versions": [
-          "1.0.0"
-        ]
-      },
-      {
-        "id": "0100B8A026F14000",
-        "name": "FINAL FANTASY RESONANCE (Asian release)",
-        "versions": [
-          "1.0.1"
-        ]
-      },
-      {
-        "id": "0100B8E016F76000",
-        "name": "NieR:Automata The End of YoRHa Edition",
+        "id": "010092B0091D0000",
+        "name": "Team Sonic Racing",
         "versions": [
           "1.0.3"
         ]
       },
       {
-        "id": "0100BC300CB48000",
-        "name": "FINAL FANTASY X/X-2 HD Remaster",
+        "id": "01009320084A4000",
+        "name": "SteamWorld Dig",
         "versions": [
-          "1.0.0"
+          "1.12.0"
         ]
       },
       {
-        "id": "0100CE4010AAC000",
-        "name": "FINAL FANTASY CRYSTAL CHRONICLES Remastered Edition",
+        "id": "0100ABD01785C000",
+        "name": "Portal 2",
         "versions": [
           "1.0.3"
         ]
       },
       {
-        "id": "0100D5B026844000",
-        "name": "Silver Pines",
+        "id": "0100ACD0163D0000",
+        "name": "Batman: Arkham Knight",
         "versions": [
-          "1.0.0"
+          "1.0.5"
         ]
       },
       {
-        "id": "0100E95004038000",
-        "name": "Xenoblade Chronicles 2",
+        "id": "0100C49025D3E000",
+        "name": "EA SPORTS FC 27",
         "versions": [
-          "2.1.0"
+          "1.8d.310c"
         ]
       },
       {
-        "id": "0100FF500E34A000",
-        "name": "Xenoblade Chronicles: Definitive Edition",
+        "id": "0100CA9002322000",
+        "name": "SteamWorld Dig 2",
         "versions": [
-          "1.1.2"
+          "4.1.1"
+        ]
+      },
+      {
+        "id": "0100EC9010258000",
+        "name": "Streets of Rage 4",
+        "versions": [
+          "1.0.9"
         ]
       }
     ],
@@ -181,11 +153,17 @@
         ]
       },
       {
-        "id": "0100152000022000",
-        "name": "Mario Kart 8 Deluxe",
+        "id": "010028600EBDA000",
+        "name": "Super Mario 3D World + Bowser's Fury",
         "versions": [
-          "4.0.0",
-          "4.0.1"
+          "1.2.2"
+        ]
+      },
+      {
+        "id": "01005270232F2000",
+        "name": "OCTOPATH TRAVELER 0",
+        "versions": [
+          "1.0.5"
         ]
       },
       {
@@ -196,23 +174,53 @@
         ]
       },
       {
-        "id": "01007EF00011E000",
-        "name": "The Legend of Zelda: Breath of the Wild",
+        "id": "01009BF0072D4000",
+        "name": "Captain Toad: Treasure Tracker",
         "versions": [
-          "1.9.0"
+          "1.4.2"
         ]
       },
       {
-        "id": "0100A83022A22000",
-        "name": "Absolum",
+        "id": "0100A3900C3E2000",
+        "name": "Paper Mario: The Origami King",
         "versions": [
-          "1.1.1",
-          "1.1.2"
+          "1.0.1"
+        ]
+      },
+      {
+        "id": "0100A9D01C446000",
+        "name": "DRAGON QUEST VII Reimagined",
+        "versions": [
+          "1.2.0"
+        ]
+      },
+      {
+        "id": "0100B8E016F76000",
+        "name": "NieR:Automata The End of YoRHa Edition",
+        "versions": [
+          "1.0.3"
+        ]
+      },
+      {
+        "id": "0100DCA0064A6000",
+        "name": "Luigi's Mansion 3",
+        "versions": [
+          "1.4.0"
+        ]
+      },
+      {
+        "id": "0100ECD018EBE000",
+        "name": "Paper Mario: The Thousand-Year Door",
+        "versions": [
+          "1.0.1"
         ]
       }
     ],
-    "translation_chain": "fda42ce035db",
-    "review": "docs/upstream-reviews/2026-10-28.md"
+    "translation_chain": "b3ca4b7c621f",
+    "review": "docs/upstream-reviews/2026-10-29.md",
+    "deferred_features": [
+      "123c7ff0ddcc188319da5bd035ac2cb2a86e1213"
+    ]
   },
   "latest_incremental_integration": {
     "upstream_head": "8334fdfb50a9900d8a5fc950d099fde46d85135f",
@@ -221,5 +229,205 @@
     "translation_chain": "d374e783beec",
     "added_games": [],
     "validation_note": "See docs/personal-ios.md; existing game caches, packages and saves are preserved."
-  }
+  },
+  "integration_history": [
+    {
+      "from_fork": "543fe1830190108123c3acd8f25dfe01cbd3a84d",
+      "previous_integrated_head": "8334fdfb50a9900d8a5fc950d099fde46d85135f",
+      "upstream_head": "beea17cfdbd8fe6112de9d1c191c0488da7970bf",
+      "commit_count": 160,
+      "added_games": [
+        {
+          "id": "01001F5010DFA000",
+          "name": "Pokémon Legends: Arceus",
+          "versions": [
+            "1.1.1"
+          ]
+        },
+        {
+          "id": "01002E7016C46000",
+          "name": "Cult of the Lamb",
+          "versions": [
+            "1.5.28"
+          ]
+        },
+        {
+          "id": "010032E00E6E2000",
+          "name": "Return of the Obra Dinn",
+          "versions": [
+            "1.0.1"
+          ]
+        },
+        {
+          "id": "010040801A4C8000",
+          "name": "Blasphemous 2",
+          "versions": [
+            "1.0.8"
+          ]
+        },
+        {
+          "id": "010045C014650000",
+          "name": "13 Sentinels: Aegis Rim (Japan)",
+          "versions": [
+            "1.00"
+          ]
+        },
+        {
+          "id": "010054B01AD92000",
+          "name": "Unicorn Overlord (Asia)",
+          "versions": [
+            "1.05"
+          ]
+        },
+        {
+          "id": "01006000040C2000",
+          "name": "Yoshi's Crafted World",
+          "versions": [
+            "1.0.1"
+          ]
+        },
+        {
+          "id": "010062B01525C000",
+          "name": "Persona 4 Golden",
+          "versions": [
+            "1.0.2"
+          ]
+        },
+        {
+          "id": "010067300059A000",
+          "name": "Mario + Rabbids Kingdom Battle",
+          "versions": [
+            "1.9.589692"
+          ]
+        },
+        {
+          "id": "0100698009C6E000",
+          "name": "Blasphemous",
+          "versions": [
+            "1.0.8"
+          ]
+        },
+        {
+          "id": "0100965017338000",
+          "name": "Super Mario Party Jamboree",
+          "versions": [
+            "2.3.0"
+          ]
+        },
+        {
+          "id": "0100A3900C3E2000",
+          "name": "Paper Mario: The Origami King",
+          "versions": [
+            "1.0.1"
+          ]
+        },
+        {
+          "id": "0100A3D008C5C000",
+          "name": "Pokémon Scarlet",
+          "versions": [
+            "1.0.0"
+          ]
+        },
+        {
+          "id": "0100B8A026F14000",
+          "name": "FINAL FANTASY RESONANCE (Asian release)",
+          "versions": [
+            "1.0.1"
+          ]
+        },
+        {
+          "id": "0100B8E016F76000",
+          "name": "NieR:Automata The End of YoRHa Edition",
+          "versions": [
+            "1.0.3"
+          ]
+        },
+        {
+          "id": "0100BC300CB48000",
+          "name": "FINAL FANTASY X/X-2 HD Remaster",
+          "versions": [
+            "1.0.0"
+          ]
+        },
+        {
+          "id": "0100CE4010AAC000",
+          "name": "FINAL FANTASY CRYSTAL CHRONICLES Remastered Edition",
+          "versions": [
+            "1.0.3"
+          ]
+        },
+        {
+          "id": "0100D5B026844000",
+          "name": "Silver Pines",
+          "versions": [
+            "1.0.0"
+          ]
+        },
+        {
+          "id": "0100E95004038000",
+          "name": "Xenoblade Chronicles 2",
+          "versions": [
+            "2.1.0"
+          ]
+        },
+        {
+          "id": "0100FF500E34A000",
+          "name": "Xenoblade Chronicles: Definitive Edition",
+          "versions": [
+            "1.1.2"
+          ]
+        }
+      ],
+      "updated_games": [
+        {
+          "id": "010015100B514000",
+          "name": "Super Mario Bros. Wonder",
+          "versions": [
+            "1.0.0",
+            "1.0.1",
+            "1.2.1"
+          ]
+        },
+        {
+          "id": "0100152000022000",
+          "name": "Mario Kart 8 Deluxe",
+          "versions": [
+            "4.0.0",
+            "4.0.1"
+          ]
+        },
+        {
+          "id": "010056B015FE8000",
+          "name": "NieR:Automata The End of YoRHa Edition",
+          "versions": [
+            "1.0.3"
+          ]
+        },
+        {
+          "id": "01007EF00011E000",
+          "name": "The Legend of Zelda: Breath of the Wild",
+          "versions": [
+            "1.9.0"
+          ]
+        },
+        {
+          "id": "0100A83022A22000",
+          "name": "Absolum",
+          "versions": [
+            "1.1.1",
+            "1.1.2"
+          ]
+        }
+      ],
+      "translation_chain": "fda42ce035db",
+      "review": "docs/upstream-reviews/2026-10-28.md"
+    }
+  ],
+  "deferred_features": [
+    {
+      "upstream_sha": "123c7ff0ddcc188319da5bd035ac2cb2a86e1213",
+      "feature": "iCloud save synchronization",
+      "reason": "Owner keeps saves local with manual export; cloud sync remains deferred. Upstream feature reverted in this fork, including its UI and save-write hooks."
+    }
+  ]
 }

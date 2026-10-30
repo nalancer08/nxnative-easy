@@ -15,10 +15,10 @@ import analyze_game
 
 def nso():
     header=bytearray(0x100);header[:4]=b'NSO0'
-    for i in range(3):struct.pack_into('<III',header,0x10+i*0x10,0x100+i*0x100,i*0x100,0x100)
+    for i in range(3):struct.pack_into('<III',header,0x10+i*0x10,0x100+i*0x100,i*0x1000,0x100)
     struct.pack_into('<III',header,0x60,0x100,0x100,0x100);header[0x40:0x60]=bytes(range(32))
     image=bytearray(0x300);struct.pack_into('<I',image,4,0x40);image[0x40:0x44]=b'MOD0'
-    struct.pack_into('<iiiii',image,0x44,0xc0,0x2c0,0x2c0,0,0)
+    struct.pack_into('<iiiii',image,0x44,0xfc0,0x20c0,0x20c0,0,0)
     return bytes(header+image)
 
 
