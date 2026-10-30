@@ -143,4 +143,24 @@ Preserve schema-driven per-game choices and explicit preview-based cache cleanup
 with per-game build locks. Automated upstream proposals are draft branches only;
 never advance integration metadata or publish releases from that proposal job.
 
-Cloud-save integration `123c7ff0` is deferred by owner policy and reverted in this fork. Preserve local saves/manual export; do not reintroduce its sync UI, imports or write hooks through a future merge without a new owner request. `docs/upstream-sync.json` records this exception. Bootstrap and release Python dependencies must retain Capstone 5.x while the rewriter requires that major version.
+On 2026-10-29 the owner approved pursuing optional iCloud save continuity between
+iPhone/iPad and Mac, superseding the earlier local-only preference. The upstream
+`123c7ff0` implementation remains reverted pending safety fixes, not owner refusal.
+Follow [the ecosystem review](../upstream-reviews/2026-10-29-ecosystem.md): preserve
+both divergent saves, make restoration of `save` and `save_device` recover as one
+transaction, retain verified backups, and test interruption/offline/version cases
+before enabling write hooks. A selected shared folder is explicit opt-in; never
+move the active local save into iCloud or enable synchronization during an update.
+Keep local/manual export working and distinguish the device's iCloud account from
+the desktop signing account. Rebuild both game apps for runtime integration;
+updating the Easy launcher alone cannot add it to already installed games.
+
+The owner accepts substantial changes and recompilation when justified by user
+benefit. Audit sibling implementations at pinned revisions; classify features as
+already present, worth adapting, needing validation, or unsuitable as implemented.
+Record provenance, licensing, dependencies and validation before importing code.
+Do not replace the working frontend or reject a useful change solely for size.
+Document evidence and separately record reviewed, implemented and released work;
+an audit is not an integration. `docs/upstream-sync.json` records deferred work.
+Bootstrap and release Python dependencies must retain Capstone 5.x while the
+rewriter requires that major version.

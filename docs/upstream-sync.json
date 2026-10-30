@@ -427,7 +427,42 @@
     {
       "upstream_sha": "123c7ff0ddcc188319da5bd035ac2cb2a86e1213",
       "feature": "iCloud save synchronization",
-      "reason": "Owner keeps saves local with manual export; cloud sync remains deferred. Upstream feature reverted in this fork, including its UI and save-write hooks."
+      "reason": "Owner approved pursuing optional iCloud continuity on 2026-10-29, superseding local-only policy. Runtime remains reverted pending recoverable two-folder restore, conflict preservation and native validation; not released.",
+      "status": "approved_direction_pending_safety_fixes",
+      "review": "docs/upstream-reviews/2026-10-29-ecosystem.md"
     }
-  ]
+  ],
+  "latest_ecosystem_review": {
+    "date": "2026-10-29",
+    "upstream_head": "17f670a77e4faa3512c1441ebeedcbccb2deb3b3",
+    "review": "docs/upstream-reviews/2026-10-29-ecosystem.md",
+    "status": "audit_only_not_integrated",
+    "repositories": [
+      {
+        "repository": "LNPANDY/NX2Apple",
+        "sha": "46ea54c6e2cf543cae3c88577692626669c73a58",
+        "license": "MIT"
+      },
+      {
+        "repository": "varyform/nx-native-wrapper",
+        "sha": "eac0fb51819566cc3c76e550731056eebf1f29b1",
+        "license": "MIT"
+      },
+      {
+        "repository": "rennan101/nxnative_Launcher",
+        "sha": "5dc672687bf09d95fbcb9b444a49d9e43ce4c4da",
+        "license": "MIT"
+      },
+      {
+        "repository": "Xc1Ym/LumaNX",
+        "sha": "56c794538d02bf9a04fab0898b66f740702f25c7",
+        "license": "MIT"
+      },
+      {
+        "repository": "ly05010419/MacNativeGames",
+        "sha": "f1d00772df1ac3230268f3124bdeb6b7cc81a61c",
+        "license": "MIT"
+      }
+    ]
+  }
 }
