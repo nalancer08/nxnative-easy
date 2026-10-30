@@ -81,7 +81,7 @@ nxi_python_prefix=$("$nxi_brew" --prefix python@3.13)
 nxi_venv="$nxi_game/nxnative-tools/venv"
 if [ ! -e "$nxi_venv" ]; then "$nxi_python_prefix/bin/python3.13" -m venv "$nxi_venv"; fi
 [ -x "$nxi_venv/bin/python" ] || { echo 'Existing Python environment is incomplete; preserved without changes.' >&2; exit 1; }
-"$nxi_venv/bin/python" -m pip install lz4 capstone fonttools 'backports.zstd; python_version < "3.14"'
+"$nxi_venv/bin/python" -m pip install lz4 "capstone>=5,<6" fonttools 'backports.zstd; python_version < "3.14"'
 export PATH="$nxi_venv/bin:$PATH"
 fi
 if [ "$nxi_setup" -eq 1 ]; then

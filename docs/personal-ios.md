@@ -733,3 +733,9 @@ folder-based game content for its existing native transfer and IPA splitter.
 No automatic removal of old content is carried into the iOS boot locator.
 The standalone game route remains untested locally because the regression harness
 found no registered Mac build; compilation and synthetic checks are not gameplay.
+
+## Upstream refresh, 1.20.0 / build 33
+
+Reviewed upstream main through `8e0916bf04f6fb8542c52ed01b166a8796158ca0`, with 16 new profiles (114 total), graphics/audio/controller/tooling fixes and our Easy workflows preserved. See the [review and validation](upstream-reviews/2026-10-29.md). iCloud save synchronization remains deferred; local saves and manual export are unchanged.
+
+Updating the desktop app refreshes tools/catalogs. Prepare an existing game again to use the new engine, then update the same installed app with the same Apple team and identity. Keep matching game data and do not uninstall the app. The update never rebuilds or installs a game automatically.

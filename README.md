@@ -14,7 +14,7 @@ Unzip → drag **nxnative Easy.app** to **Applications** → open it. **No Termi
 
 ## Before you start
 
-- **A Mac with Apple silicon** (M1 or newer), **macOS 26.6+**, and **Xcode 27.1** installed and opened once. Xcode builds your games; you do not need to build nxnative Easy itself.
+- **A Mac with Apple silicon** (M1 or newer), **macOS 26.6+**, and **[Xcode](https://apps.apple.com/app/xcode/id497799835) 27.1** installed and opened once. Xcode builds your games; you do not need to build nxnative Easy itself.
 - **Your own game files and `prod.keys`.** No games or keys are included or downloaded.
 - For iPhone/iPad: **iOS/iPadOS 26+**, an **A17 Pro or newer iPhone**, or an **M1 or newer iPad**. You use your own Apple account to sign and install.
 
