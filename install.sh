@@ -23,8 +23,8 @@ nxe_xcode=$(/usr/bin/xcodebuild -version | /usr/bin/awk '/^Xcode / {print $2}')
 nxe_xc_major=${nxe_xcode%%.*}
 nxe_xc_minor=${nxe_xcode#*.}; nxe_xc_minor=${nxe_xc_minor%%.*}
 if [ "${nxe_xc_major}" -lt 27 ] || { [ "${nxe_xc_major}" -eq 27 ] && [ "${nxe_xc_minor}" -lt 1 ]; }; then
-  echo 'Install Xcode 27.1 or newer and open it once. Game builds use the reviewed Metal toolchain.' >&2
-  echo 'Instala Xcode 27.1 o posterior y ábrelo una vez para preparar juegos.' >&2
+  echo 'Install Xcode 27.2 or newer and open it once. Game builds use the reviewed Metal toolchain.' >&2
+  echo 'Instala Xcode 27.2 o posterior y ábrelo una vez para preparar juegos.' >&2
   exit 1
 fi
 nxe_sdk=$(/usr/bin/xcrun --sdk macosx --show-sdk-version)

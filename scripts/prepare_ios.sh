@@ -40,9 +40,9 @@ export DEVELOPER_DIR="$nxi_developer"
 nxi_xcode=$(/usr/bin/xcodebuild -version | /usr/bin/awk '/^Xcode / {print $2}')
 nxi_xc_major=${nxi_xcode%%.*}
 nxi_xc_minor=${nxi_xcode#*.}; nxi_xc_minor=${nxi_xc_minor%%.*}
-if [ "${nxi_xc_major}" -lt 27 ] || { [ "${nxi_xc_major}" -eq 27 ] && [ "${nxi_xc_minor}" -lt 1 ]; }; then
-  echo 'Install Xcode 27.1 or newer and open it once. Game builds use the reviewed Metal toolchain.' >&2
-  echo 'Instala Xcode 27.1 o posterior y ábrelo una vez para preparar juegos.' >&2
+if [ "${nxi_xc_major}" -lt 27 ] || { [ "${nxi_xc_major}" -eq 27 ] && [ "${nxi_xc_minor}" -lt 2 ]; }; then
+  echo 'Install Xcode 27.2 or newer and open it once. Game builds use the reviewed Metal toolchain.' >&2
+  echo 'Instala Xcode 27.2 o posterior y ábrelo una vez para preparar juegos.' >&2
   exit 1
 fi
 nxi_sdk_name=iphoneos
@@ -52,6 +52,10 @@ if [ "$nxi_target" = mac ]; then
 else
   nxi_sdk=$(/usr/bin/xcrun --sdk iphoneos --show-sdk-version)
   [ "${nxi_sdk%%.*}" -ge 26 ] || { echo 'iOS SDK 26 or newer is required.' >&2; exit 1; }
+fi
+if ! /usr/bin/xcrun --sdk "$nxi_sdk_name" metal --version; then
+  /usr/bin/xcodebuild -downloadComponent MetalToolchain
+  /usr/bin/xcrun --sdk "$nxi_sdk_name" metal --version
 fi
 if [ -n "${NXE_BUNDLED_TOOLS:-}" ] && [ -x "$NXE_BUNDLED_TOOLS/python/bin/python3" ]; then
   export DOTNET_ROOT="$NXE_BUNDLED_TOOLS/dotnet"
@@ -64,10 +68,6 @@ if [ -z "$nxi_brew" ] && [ -x /usr/local/bin/brew ]; then nxi_brew=/usr/local/bi
 [ -n "$nxi_brew" ] || { echo 'Install Homebrew from https://brew.sh first.' >&2; exit 1; }
 nxi_prefix=$("$nxi_brew" --prefix)
 export PATH="$nxi_prefix/bin:$nxi_prefix/sbin:/usr/local/share/dotnet:$PATH"
-if ! /usr/bin/xcrun --sdk "$nxi_sdk_name" metal --version; then
-  /usr/bin/xcodebuild -downloadComponent MetalToolchain
-  /usr/bin/xcrun --sdk "$nxi_sdk_name" metal --version
-fi
 for nxi_formula in python@3.13 xcodegen zstd spirv-cross glslang; do
   if ! "$nxi_brew" list --versions "$nxi_formula" >/dev/null 2>&1; then "$nxi_brew" install "$nxi_formula"; fi
 done

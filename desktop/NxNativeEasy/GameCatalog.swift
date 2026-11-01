@@ -5,6 +5,7 @@ struct CatalogGame: Identifiable, Equatable {
     let name: String
     let versions: [String]
     let artworkURL: URL?
+    var isSwitch2:Bool {id.hasPrefix("04")}
     init(id:String,name:String,versions:[String],artworkURL:URL? = nil) {
         self.id=id;self.name=name;self.versions=versions;self.artworkURL=artworkURL
     }
@@ -13,7 +14,7 @@ struct CatalogGame: Identifiable, Equatable {
         let normalize: (String) -> String = {
             $0.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: Locale(identifier:"en_US_POSIX"))
         }
-        let haystack=normalize(([name,id]+versions).joined(separator:" "))
+        let haystack=normalize(([name,id]+versions+(isSwitch2 ? ["Switch 2 Mac dump"] : [])).joined(separator:" "))
         return normalize(query).split(whereSeparator: {$0.isWhitespace}).allSatisfy {haystack.contains($0)}
     }
     var notesURL: URL {

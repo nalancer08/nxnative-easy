@@ -49,6 +49,8 @@ def load_builder(package_metadata=None):
     # Our splitter and native transfer use directories; do not silently migrate
     # existing working games to upstream's image-only content format.
     builder.ROMFS_IMAGE = False
+    # Easy's explicit cleanup preview owns deletion; preserve previous chains.
+    builder.PRUNE_STALE_CHAINS = False
     # Preserve the venv executable path: resolving its symlink selects global Python.
     builder.TOOL_PATHS.insert(0, str(Path(sys.executable).parent))
     if os.environ.get('NXE_BUNDLED_TOOLS'):
@@ -60,7 +62,12 @@ def load_builder(package_metadata=None):
         metadata = importlib.util.module_from_spec(metadata_spec)
         metadata_spec.loader.exec_module(metadata)
         value = json.loads(Path(package_metadata).read_text())
-        builder.scan_nsps = lambda folder: metadata.family_from_metadata(folder, value)
+        def checked_family(folder, from_package=None, from_contents=None, want=None):
+            application,family = metadata.family_from_metadata(folder, value)
+            if want is not None and want != application:
+                raise ValueError('Requested game differs from the verified metadata.')
+            return application,family
+        builder.scan_nsps = checked_family
     return builder
 
 

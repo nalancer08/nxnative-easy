@@ -41,7 +41,17 @@ def summarize(value) -> dict[str, Any]:
 
 
 def inspect(folder, keys, cache, setup_tools=False):
-    folder, keys = folder.resolve(), keys.resolve()
+    from inspect_dump import inspect_dump
+    folder = folder.resolve()
+    try:
+        dump = inspect_dump(folder)
+    except (OSError, ValueError):
+        return dict(schema=1, status='dump_invalid', input_kind='dump')
+    if dump is not None:
+        return dump
+    if keys is None:
+        return dict(schema=1, status='keys_unreadable')
+    keys = keys.resolve()
     if folder == REPO or REPO in folder.parents or REPO in keys.parents:
         return dict(schema=1, status='invalid_location')
     files = sorted(p for p in folder.iterdir() if p.suffix.lower() in EXTENSIONS and p.is_file())
@@ -138,13 +148,13 @@ def family_from_metadata(folder, value):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('folder', type=Path)
-    parser.add_argument('--keys', type=Path, required=True)
+    parser.add_argument('--keys', type=Path, help='Required for encrypted packages, unnecessary for an extracted dump')
     parser.add_argument('--setup-tools', action='store_true')
     parser.add_argument('--cache', type=Path, default=Path.home()/'Library/Caches/nxnative Easy/metadata')
     args = parser.parse_args()
     try:
         value = inspect(args.folder, args.keys, args.cache, args.setup_tools)
-    except (OSError, subprocess.SubprocessError):
+    except (OSError, ValueError, subprocess.SubprocessError):
         value = dict(schema=1, status='metadata_unreadable')
     print(json.dumps(value))
 

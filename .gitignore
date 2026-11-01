@@ -42,3 +42,8 @@ nxnative-mac.json
 /web/dist/
 /web/public/
 /web/.astro/
+
+# coverage.py data and its JSON report (pyproject.toml, [tool.coverage.run])
+.coverage
+.coverage.*
+/coverage.json

@@ -164,3 +164,16 @@ Document evidence and separately record reviewed, implemented and released work;
 an audit is not an integration. `docs/upstream-sync.json` records deferred work.
 Bootstrap and release Python dependencies must retain Capstone 5.x while the
 rewriter requires that major version.
+
+Preserve the extracted-game Mac flow: inspect NPDM/NSO identity without keys,
+check the source manifest again before packing, retain complete update trees,
+and accept embedded RomFS images in Mac output discovery. Unknown dump profiles
+must not be advertised as supported. Switch 2 Mac evidence is not iOS evidence;
+keep that limit visible in the app, generated galleries and website. Preserve
+both `<sub>` and `<small>` gallery captions when upstream changes markup.
+Use structured `shaders_stale` events for rebuild explanations, never log-text
+guesses. Successful builds preserve older shader caches by default; the CLI's
+`--prune-stale-caches` is explicit opt-in, and Easy keeps its cleanup preview.
+Full iOS packages prefer bundled DLC as well as bundled RomFS without removing
+external data. A selected shared iOS shell is a separate migration, not a silent
+replacement of existing signed app identities or saved-game containers.

@@ -1,4 +1,20 @@
 import Foundation
+
+enum GameInputShape {
+    static func isDump(_ folder:URL)->Bool {
+        var directory:ObjCBool=false
+        return FileManager.default.fileExists(atPath:folder.appendingPathComponent("base/exefs/main.npdm").path)
+            && FileManager.default.fileExists(atPath:folder.appendingPathComponent("base/romfs").path,isDirectory:&directory) && directory.boolValue
+    }
+    static func hasMacContent(_ bundle:URL)->Bool {
+        let resources=bundle.appendingPathComponent("Contents/Resources")
+        let folder=resources.appendingPathComponent("romfs"),image=resources.appendingPathComponent("romfs.img")
+        let keys:Set<URLResourceKey>=[.isDirectoryKey,.isRegularFileKey,.isSymbolicLinkKey,.fileSizeKey]
+        if let value=try? folder.resourceValues(forKeys:keys),value.isDirectory==true,value.isSymbolicLink != true {return true}
+        if let value=try? image.resourceValues(forKeys:keys),value.isRegularFile==true,value.isSymbolicLink != true,(value.fileSize ?? 0)>0 {return true}
+        return false
+    }
+}
 import Combine
 import CryptoKit
 
@@ -52,7 +68,7 @@ struct OwnedGameOutput:Identifiable {
                let identifier=info["CFBundleIdentifier"] as? String,!identifier.isEmpty,
                (mac["bundle_id"] as? String).map({$0==identifier}) ?? true,
                fm.fileExists(atPath:bundle.appendingPathComponent("Contents/MacOS/dmhost").path),
-               (try? bundle.appendingPathComponent("Contents/Resources/romfs").resourceValues(forKeys:[.isDirectoryKey]).isDirectory)==true {
+               GameInputShape.hasMacContent(bundle) {
                 output.macApp=bundle;output.titleID=info["DMTitleID"] as? String ?? mac["title_id"] as? String
                 output.version=info["CFBundleShortVersionString"] as? String ?? mac["version"] as? String
             }
@@ -103,7 +119,7 @@ struct OwnedGameOutput:Identifiable {
         if let known=items.first(where:{$0.folder==path}) {refresh();return known.id}
         let url=URL(fileURLWithPath:path)
         let files=try FileManager.default.contentsOfDirectory(at:url,includingPropertiesForKeys:nil)
-        guard files.contains(where:{["nsp","xci","nsz","xcz"].contains($0.pathExtension.lowercased()) || ["nxnative-mac.json","nxnative-ios.json"].contains($0.lastPathComponent)}) else {throw CocoaError(.fileReadUnknown)}
+        guard GameInputShape.isDump(url) || files.contains(where:{["nsp","xci","nsz","xcz"].contains($0.pathExtension.lowercased()) || ["nxnative-mac.json","nxnative-ios.json"].contains($0.lastPathComponent)}) else {throw CocoaError(.fileReadUnknown)}
         let item=OwnedGame(id:UUID().uuidString,folder:path,added:Date())
         try persist(items+[item]);return item.id
     }

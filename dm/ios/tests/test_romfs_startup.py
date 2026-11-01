@@ -20,7 +20,8 @@ class Startup(unittest.TestCase):
         cls.tools = tempfile.TemporaryDirectory(); cls.addClassCleanup(cls.tools.cleanup)
         root = Path(cls.tools.name)
         main = (REPO / 'dm/ios/Sources/main.m').read_text()
-        locator = main[main.index('static int romfs_image_complete'):main.index('// Boot prerequisites')]
+        locator = main[main.index('static int romfs_image_complete'):main.index('// Add-on content (DLC)')]
+        locator += main[main.index('static void aoc_locate'):main.index('// Boot prerequisites')]
         source = root / 'locator.m'
         source.write_text('#import <Foundation/Foundation.h>\n#include <stdio.h>\n#include "romfs_image.h"\n#include "romfs_identity.h"\n'
                           'static NSString *fixture_doc, *fixture_tmp, *fixture_bundle;\n#define DM_GAME_ROMFS_MARKER "marker"\n'
@@ -29,11 +30,26 @@ class Startup(unittest.TestCase):
                           '- (NSString *)resourcePath { return fixture_bundle; }\n- (NSDictionary *)infoDictionary { return @{ @"DMPreferBundledRomFS": @([NSFileManager.defaultManager fileExistsAtPath:[fixture_bundle stringByAppendingPathComponent:@"prefer-bundled"]]) }; }\n@end\n#define NSBundle FixtureBundle\n'
                           '#define NSSearchPathForDirectoriesInDomains(a,b,c) @[fixture_doc]\n#define NSTemporaryDirectory() fixture_tmp\n' + locator +
                           '\nint main(int argc, char **argv) { @autoreleasepool { if (argc < 3) return 2;\n'
-                          'fixture_doc = @(argv[1]); fixture_tmp = @(argv[2]); fixture_bundle = argc > 3 ? @(argv[3]) : @"/nonexistent-fixture"; NSString *p = romfs_locate();\n'
+                          'fixture_doc = @(argv[1]); fixture_tmp = @(argv[2]); fixture_bundle = argc > 3 ? @(argv[3]) : @"/nonexistent-fixture";\n'
+                          'if (argc > 4) { unsetenv("DM_AOC_DIR"); aoc_locate(); const char *p = getenv("DM_AOC_DIR"); if (!p) return 1; puts(p); return 0; }\n'
+                          'NSString *p = romfs_locate();\n'
                           'if (!p) return 1; puts(p.fileSystemRepresentation); return 0; }}\n')
         cls.locator = root / 'locator'
         subprocess.run(['clang', '-fobjc-arc', '-Wall', '-Werror', '-I', str(REPO / 'dm/host'),
                         str(source), '-framework', 'Foundation', '-o', str(cls.locator)], check=True)
+
+    def test_full_update_prefers_its_dlc_and_keeps_external_content(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root=Path(temporary);doc=root/'Documents';bundle=root/'Bundle';tmp=root/'temp';tmp.mkdir()
+            for parent in (doc,bundle):
+                (parent/'aoc').mkdir(parents=True)
+                (parent/'aoc/1.img').write_bytes(b'synthetic DLC')
+            for prefer,want in [(False,doc/'aoc'),(True,bundle/'aoc')]:
+                if prefer:(bundle/'prefer-bundled').touch()
+                result=subprocess.run([str(self.locator),str(doc),str(tmp),str(bundle),'aoc'],capture_output=True,text=True,check=True)
+                self.assertEqual(result.stdout.strip(),str(want))
+                self.assertEqual((doc/'aoc/1.img').read_bytes(),b'synthetic DLC')
+                self.assertEqual((bundle/'aoc/1.img').read_bytes(),b'synthetic DLC')
 
     def test_invalid_image_preserves_working_folder_and_valid_image_keeps_it(self):
         with tempfile.TemporaryDirectory() as temporary:

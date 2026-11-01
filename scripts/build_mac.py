@@ -9,12 +9,13 @@ from pathlib import Path
 import platform
 import sys
 from build_ios import REPO, build_lock, load_builder, select_keys
+from inspect_dump import inspect_dump, validate_dump
 
 
 def main(argv=None):
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('game_dir',type=Path)
-    parser.add_argument('--keys-folder',type=Path,required=True)
+    parser.add_argument('--keys-folder',type=Path)
     parser.add_argument('--package-metadata',type=Path)
     parser.add_argument('--dry-run',action='store_true')
     args=parser.parse_args(argv)
@@ -22,7 +23,12 @@ def main(argv=None):
     if not game.is_dir() or game==REPO or REPO in game.parents:
         raise ValueError('Keep game folders outside the source repository.')
     packages=[p for p in game.iterdir() if p.is_file() and p.suffix.lower() in {'.nsp','.xci','.nsz','.xcz'}]
-    if not packages: raise ValueError('No NSP/XCI/NSZ/XCZ files directly in this game folder.')
+    dump=inspect_dump(game)
+    if dump is not None and dump.get('status') != 'ready':
+        raise ValueError('Extracted game has no supported profile or is ambiguous; no files were modified.')
+    if not packages and dump is None: raise ValueError('No game packages or extracted base/exefs and base/romfs folders.')
+    if dump is not None and args.package_metadata:
+        validate_dump(game,json.loads(args.package_metadata.read_text()))
     state=game/'nxnative-mac.json'
     previous=json.loads(state.read_text()) if state.exists() else {}
     if not isinstance(previous,dict) or previous.get('schema',1)!=1:raise ValueError('Unsupported nxnative-mac.json; previous record was preserved.')
@@ -44,16 +50,20 @@ def main(argv=None):
     if sys.platform!='darwin' or platform.machine()!='arm64':
         raise ValueError('Mac games require an Apple silicon Mac.')
     args.keys=None
-    keys=select_keys(args)
+    keys=None if dump is not None else select_keys(args)
     with build_lock(game):
         if any(p.suffix.lower() in {'.nsz','.xcz'} for p in packages) and not __import__('importlib.util',fromlist=['find_spec']).find_spec('nsz'):
             import subprocess
             subprocess.run([sys.executable,'-m','pip','install','nsz'],check=True)
-        builder=load_builder(args.package_metadata) if args.package_metadata else load_builder()
-        code=builder.cli(command+['-k',str(keys)])
+        builder=load_builder(args.package_metadata if dump is None else None)
+        if dump is not None:
+            validate_dump(game,dump)
+        code=builder.cli(command+(['-k',str(keys)] if keys is not None else []))
         if code: return code
         romfs=output/'Contents/Resources/romfs'
-        if not (output/'Contents/MacOS/dmhost').is_file() or not romfs.is_dir() or romfs.is_symlink():
+        image=output/'Contents/Resources/romfs.img'
+        content_ready=(romfs.is_dir() and not romfs.is_symlink()) or (dump is not None and image.is_file() and not image.is_symlink())
+        if not (output/'Contents/MacOS/dmhost').is_file() or not content_ready:
             raise ValueError('Build finished without a complete Mac game app (embedded game data required).')
         info=plistlib.loads((output/'Contents/Info.plist').read_bytes())
         if old_id and info.get('CFBundleIdentifier')!=old_id:raise ValueError('Mac bundle identity changed; previous app record was preserved.')

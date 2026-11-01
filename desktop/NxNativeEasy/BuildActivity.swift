@@ -23,6 +23,8 @@ struct BuildActivity {
     private(set) var history:[BuildStage]=[]
     private(set) var eta:Double?
     private(set) var estimated=false
+    private(set) var shaderCacheReason:String?
+    private(set) var scheduledShaders:Int?
     mutating func receive(_ data:Data) {
         pending.append(data)
         while let end=pending.firstIndex(of:10) {
@@ -40,10 +42,11 @@ struct BuildActivity {
             if let size=try? handle.seekToEnd() {
                 try? handle.seek(toOffset:size>524288 ? size-524288 : 0)
                 if let data=try? handle.readToEnd() {
-                    let previous=history
+                    let previous=history,previousReason=shaderCacheReason,previousScheduled=scheduledShaders
                     self=BuildActivity();receive(data)
                     let recovered=history
                     history=previous.filter {old in !recovered.contains(where:{$0.id==old.id})}+recovered
+                    if shaderCacheReason==nil {shaderCacheReason=previousReason;scheduledShaders=previousScheduled}
                 }
             }
         }
@@ -64,6 +67,11 @@ struct BuildActivity {
         if let k=obj["k"] as? Int {stageNumber=k}
         if let n=obj["n"] as? Int {stages=n}
         if event=="stage" || event=="step" {fraction=nil;count="";eta=nil;estimated=false}
+        if event=="shaders_stale",let reason=obj["reason"] as? String,["chain","inputs"].contains(reason) {
+            shaderCacheReason=reason
+            scheduledShaders=(obj["count"] as? Int).flatMap {$0>=0 ? $0 : nil}
+            record("Shader rebuild: "+reason+(scheduledShaders.map {" · \($0) scheduled libraries"} ?? ""))
+        }
         if event=="progress" {
             eta=(obj["eta"] as? Double).flatMap {$0.isFinite && $0>=0 && $0<Double(Int.max) ? $0 : nil}
             estimated=(obj["est"] as? Bool)==true

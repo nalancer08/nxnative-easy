@@ -644,10 +644,22 @@ struct EasyStrings {
         "Ventana": "Window",
         "Pantalla completa": "Fullscreen",
         "Estándar": "Standard",
-        "Instala Xcode 27.1 o posterior y ábrelo una vez. Después vuelve a intentar.": "Install Xcode 27.1 or newer and open it once, then try again.",
+        "Instala Xcode 27.2 o posterior y ábrelo una vez. Después vuelve a intentar.": "Install Xcode 27.2 or newer and open it once, then try again.",
         "Menos opciones": "Fewer options",
         "La renovación necesita tu atención": "Renewal needs your attention",
         "Abre nxnative Easy para revisar tu cuenta o la conexión del dispositivo.": "Open nxnative Easy to check your account or device connection.",
+        "Identificamos la carpeta extraída, pero este juego aún no tiene un perfil compatible. No se compilará como si ya tuviera soporte.": "We identified this extracted game, but it has no supported profile yet. It cannot be prepared as a supported game.",
+        "Hay paquetes y una carpeta extraída en el mismo lugar. Elige una sola fuente para preparar el juego.": "This folder contains both packages and an extracted game. Choose one input source.",
+        "Carpeta extraída · Mac · No necesita prod.keys": "Extracted game · Mac · No prod.keys needed",
+        "Las carpetas extraídas de Switch 2 se preparan para Mac. iPhone/iPad aún no están probados.": "Extracted Switch 2 games are prepared for Mac. iPhone/iPad are not tested yet.",
+        "Preparar en Mac": "Prepare for Mac",
+        "No necesita prod.keys": "No prod.keys needed",
+        "Selecciona tus paquetes o una carpeta extraída con base/exefs y base/romfs.": "Choose your packages or an extracted game folder containing base/exefs and base/romfs.",
+        "El motor cambió: estamos actualizando los shaders del juego.": "The engine changed: updating your game’s shaders.",
+        "El perfil cambió: estamos actualizando los shaders necesarios.": "The game profile changed: updating the required shaders.",
+        "Bibliotecas programadas": "Scheduled libraries",
+        "Switch 2 · Sólo Mac · Carpeta extraída": "Switch 2 · Mac only · Extracted game",
+        "La carpeta extraída está incompleta o mezcla archivos incompatibles. Revisa base/exefs, base/romfs y sus updates; no necesita llaves.": "The extracted game is incomplete or contains incompatible files. Check base/exefs, base/romfs and its updates; no keys are needed.",
     ]
     static func text(_ source:String, language:EasyLanguage) -> String {
         language == .spanish ? source : (english[source] ?? source)

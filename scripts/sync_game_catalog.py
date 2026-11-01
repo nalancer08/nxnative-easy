@@ -25,9 +25,10 @@ def gallery_rows(source):
     for cell in re.findall(r'<td\b[^>]*>(.*?)</td>',source,re.S|re.I):
         image=re.search(r'<img\b[^>]*\bsrc="(docs/images/[^"<>]+)"[^>]*\balt="([^"]*)"',cell,re.I)
         if not image:continue
-        caption=re.search(r'<sub>(.*?)</sub>',cell,re.S|re.I)
-        detail=re.sub(r'^\s*<b>.*?</b>(?:<br\s*/?>)?', '', caption[1], count=1, flags=re.S|re.I) if caption else ''
+        caption=re.search(r'<(sub|small)>(.*?)</\1>',cell,re.S|re.I)
+        detail=re.sub(r'^\s*<b>.*?</b>(?:<br\s*/?>)?', '', caption[2], count=1, flags=re.S|re.I) if caption else ''
         detail=html.unescape(re.sub('<[^>]+>','',detail))
+        if detail=='Switch 2, sólo Mac, carpeta extraída':detail='Switch 2, Mac only, from a dump'
         if detail in ('See game notes','Ver ficha del juego'):detail=''
         rows.append(dict(image=html.unescape(image[1]),name=html.unescape(image[2]),
                          caption=detail))
@@ -82,7 +83,9 @@ def render(games,spanish):
     for i,game in enumerate(games):
         if i%3==0:lines.append('<tr>')
         name=html.escape(game['name'],quote=True);image=html.escape(game['artwork'],quote=True);notes=game['notes']
-        caption=html.escape(game['caption'] or ('Ver ficha del juego' if spanish else 'See game notes'))
+        detail=game['caption']
+        if spanish and detail=='Switch 2, Mac only, from a dump':detail='Switch 2, sólo Mac, carpeta extraída'
+        caption=html.escape(detail or ('Ver ficha del juego' if spanish else 'See game notes'))
         lines.append(f'<td align="center" valign="top" width="33%" data-title-id="{game["id"]}"><a href="{notes}"><img src="{image}" width="256" alt="{name}"></a><br><a href="{notes}">{name}</a><br><sub>{caption}</sub></td>')
         if i%3==2 or i==len(games)-1:lines.append('</tr>')
     return '\n'.join(lines+['</table>',END])

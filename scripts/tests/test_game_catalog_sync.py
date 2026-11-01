@@ -13,6 +13,11 @@ sync=importlib.util.module_from_spec(spec);spec.loader.exec_module(sync)
 ID='0100000000000001'
 
 class GameCatalogSync(unittest.TestCase):
+    def test_switch2_small_caption_and_spanish_render_keep_the_platform_limit(self):
+        source='<td><img src="docs/images/bananza.jpg" alt="Donkey Kong Bananza"><small><b><a href="notes">Donkey Kong Bananza</a></b><br>Switch 2, Mac only, from a dump</small></td>'
+        row=sync.gallery_rows(source)[0]
+        self.assertEqual(row['caption'],'Switch 2, Mac only, from a dump')
+        self.assertEqual(sync.gallery_rows(source.replace('Switch 2, Mac only, from a dump','Switch 2, sólo Mac, carpeta extraída'))[0]['caption'],row['caption'])
     def setUp(self):
         self.temp=tempfile.TemporaryDirectory();self.addCleanup(self.temp.cleanup)
         self.root=Path(self.temp.name)

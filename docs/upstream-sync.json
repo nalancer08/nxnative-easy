@@ -2,7 +2,7 @@
   "schema": 1,
   "repository": "seedds/nxnative",
   "baseline": "ecbeae164c0b419d1ba1031248fe1402050a3eb0",
-  "reviewed_head": "8e0916bf04f6fb8542c52ed01b166a8796158ca0",
+  "reviewed_head": "cd859c38a8f8890ddbb57a23d6f45e23ba9e6651",
   "integrated": [
     {
       "upstream_sha": "4639c5114cbb8a8f250645941fa3a25c1ba08cc6",
@@ -22,13 +22,85 @@
     }
   ],
   "note": "Upstream history integrated through integrated_head, with explicitly deferred features listed separately. Preserve the Easy frontend, save/data policies and catalog gates; future comparisons start at integrated_head.",
-  "integrated_head": "8e0916bf04f6fb8542c52ed01b166a8796158ca0",
+  "integrated_head": "cd859c38a8f8890ddbb57a23d6f45e23ba9e6651",
   "latest_full_integration": {
-    "from_fork": "b416f5134d036488126f45f2afaaeacd28b87b51",
-    "previous_integrated_head": "beea17cfdbd8fe6112de9d1c191c0488da7970bf",
-    "upstream_head": "8e0916bf04f6fb8542c52ed01b166a8796158ca0",
-    "commit_count": 91,
+    "from_fork": "9efb3c80e5bde35f663dcfc0c2c1689a27e84106",
+    "previous_integrated_head": "8e0916bf04f6fb8542c52ed01b166a8796158ca0",
+    "upstream_head": "cd859c38a8f8890ddbb57a23d6f45e23ba9e6651",
+    "commit_count": 106,
     "added_games": [
+      {
+        "id": "010012101468C000",
+        "name": "Metroid Prime Remastered",
+        "versions": [
+          "1.0.0"
+        ]
+      },
+      {
+        "id": "0100199023B2E000",
+        "name": "Atelier Ryza: Ever Darkness & the Secret Hideout DX",
+        "versions": [
+          "1.2.0"
+        ]
+      },
+      {
+        "id": "010031F019294000",
+        "name": "Super Monkey Ball Banana Rumble",
+        "versions": [
+          "2.20"
+        ]
+      },
+      {
+        "id": "01003E601E324000",
+        "name": "DRAGON QUEST III HD-2D Remake",
+        "versions": [
+          "1.1.2"
+        ]
+      },
+      {
+        "id": "0100633007D48000",
+        "name": "Hollow Knight",
+        "versions": [
+          "1.5.12620"
+        ]
+      },
+      {
+        "id": "0100646009FBE000",
+        "name": "Dead Cells",
+        "versions": [
+          "1.25.0"
+        ]
+      },
+      {
+        "id": "01008F6008C5E000",
+        "name": "Pokémon Violet",
+        "versions": [
+          "1.0.0"
+        ]
+      },
+      {
+        "id": "0100AE00096EA000",
+        "name": "Hyrule Warriors: Definitive Edition",
+        "versions": [
+          "1.0.1"
+        ]
+      },
+      {
+        "id": "0100D7C01F254000",
+        "name": "DRAGON QUEST I & II HD-2D Remake",
+        "versions": [
+          "1.0.2"
+        ]
+      },
+      {
+        "id": "040074A01BF12000",
+        "name": "Donkey Kong Bananza",
+        "versions": [
+          "v458752"
+        ]
+      }
+    ],
+    "updated_games": [
       {
         "id": "010014C011146000",
         "name": "Subnautica: Below Zero",
@@ -37,36 +109,8 @@
         ]
       },
       {
-        "id": "010016100A186000",
-        "name": "SteamWorld Heist: Ultimate Edition",
-        "versions": [
-          "2.2.1"
-        ]
-      },
-      {
-        "id": "0100217023F6C000",
-        "name": "Well Dweller",
-        "versions": [
-          "1.0.0"
-        ]
-      },
-      {
-        "id": "010029B0118E8000",
-        "name": "Need For Speed™ Hot Pursuit Remastered",
-        "versions": [
-          "1.0.3"
-        ]
-      },
-      {
-        "id": "01002CD00A51C000",
-        "name": "Baba Is You",
-        "versions": [
-          "1.0.12"
-        ]
-      },
-      {
-        "id": "010038600B27E000",
-        "name": "Bastion",
+        "id": "010020400E1C2000",
+        "name": "Raging Loop",
         "versions": [
           "1.0.0"
         ]
@@ -76,87 +120,6 @@
         "name": "Subnautica",
         "versions": [
           "1.23.83358"
-        ]
-      },
-      {
-        "id": "01006FE013472000",
-        "name": "Mario Party Superstars",
-        "versions": [
-          "1.1.1"
-        ]
-      },
-      {
-        "id": "010089C01E9CA000",
-        "name": "SteamWorld Heist II",
-        "versions": [
-          "1.5.1"
-        ]
-      },
-      {
-        "id": "010092B0091D0000",
-        "name": "Team Sonic Racing",
-        "versions": [
-          "1.0.3"
-        ]
-      },
-      {
-        "id": "01009320084A4000",
-        "name": "SteamWorld Dig",
-        "versions": [
-          "1.12.0"
-        ]
-      },
-      {
-        "id": "0100ABD01785C000",
-        "name": "Portal 2",
-        "versions": [
-          "1.0.3"
-        ]
-      },
-      {
-        "id": "0100ACD0163D0000",
-        "name": "Batman: Arkham Knight",
-        "versions": [
-          "1.0.5"
-        ]
-      },
-      {
-        "id": "0100C49025D3E000",
-        "name": "EA SPORTS FC 27",
-        "versions": [
-          "1.8d.310c"
-        ]
-      },
-      {
-        "id": "0100CA9002322000",
-        "name": "SteamWorld Dig 2",
-        "versions": [
-          "4.1.1"
-        ]
-      },
-      {
-        "id": "0100EC9010258000",
-        "name": "Streets of Rage 4",
-        "versions": [
-          "1.0.9"
-        ]
-      }
-    ],
-    "updated_games": [
-      {
-        "id": "010015100B514000",
-        "name": "Super Mario Bros. Wonder",
-        "versions": [
-          "1.0.0",
-          "1.0.1",
-          "1.2.1"
-        ]
-      },
-      {
-        "id": "010028600EBDA000",
-        "name": "Super Mario 3D World + Bowser's Fury",
-        "versions": [
-          "1.2.2"
         ]
       },
       {
@@ -174,17 +137,52 @@
         ]
       },
       {
-        "id": "01009BF0072D4000",
-        "name": "Captain Toad: Treasure Tracker",
+        "id": "0100606026F12000",
+        "name": "FINAL FANTASY RESONANCE",
         "versions": [
-          "1.4.2"
+          "1.0.1"
         ]
       },
       {
-        "id": "0100A3900C3E2000",
-        "name": "Paper Mario: The Origami King",
+        "id": "010069C01AB82000",
+        "name": "SHIN MEGAMI TENSEI V: Vengeance",
         "versions": [
-          "1.0.1"
+          "1.0.3"
+        ]
+      },
+      {
+        "id": "01006C300E9F0000",
+        "name": "DRAGON QUEST XI S: Echoes of an Elusive Age – Definitive Edition",
+        "versions": [
+          "1.0.4"
+        ]
+      },
+      {
+        "id": "01007BB017812000",
+        "name": "Portal",
+        "versions": [
+          "1.0.3"
+        ]
+      },
+      {
+        "id": "010089C01E9CA000",
+        "name": "SteamWorld Heist II",
+        "versions": [
+          "1.5.1"
+        ]
+      },
+      {
+        "id": "01008CF01BAAC000",
+        "name": "The Legend of Zelda: Echoes of Wisdom",
+        "versions": [
+          "1.1.0"
+        ]
+      },
+      {
+        "id": "0100A3501946E000",
+        "name": "OCTOPATH TRAVELER II",
+        "versions": [
+          "1.1.1"
         ]
       },
       {
@@ -195,29 +193,29 @@
         ]
       },
       {
-        "id": "0100B8E016F76000",
-        "name": "NieR:Automata The End of YoRHa Edition",
+        "id": "0100B7C00933A000",
+        "name": "Pikmin 4",
         "versions": [
-          "1.0.3"
+          "1.1.1"
         ]
       },
       {
-        "id": "0100DCA0064A6000",
-        "name": "Luigi's Mansion 3",
-        "versions": [
-          "1.4.0"
-        ]
-      },
-      {
-        "id": "0100ECD018EBE000",
-        "name": "Paper Mario: The Thousand-Year Door",
+        "id": "0100B8A026F14000",
+        "name": "FINAL FANTASY RESONANCE (Asian release)",
         "versions": [
           "1.0.1"
         ]
+      },
+      {
+        "id": "0100F43008C44000",
+        "name": "Pokémon Legends: Z-A",
+        "versions": [
+          "2.0.2"
+        ]
       }
     ],
-    "translation_chain": "b3ca4b7c621f",
-    "review": "docs/upstream-reviews/2026-10-29.md",
+    "translation_chain": "b7cd656abd7c",
+    "review": "docs/upstream-reviews/2026-11-01.md",
     "deferred_features": [
       "123c7ff0ddcc188319da5bd035ac2cb2a86e1213"
     ]
@@ -421,6 +419,205 @@
       ],
       "translation_chain": "fda42ce035db",
       "review": "docs/upstream-reviews/2026-10-28.md"
+    },
+    {
+      "from_fork": "b416f5134d036488126f45f2afaaeacd28b87b51",
+      "previous_integrated_head": "beea17cfdbd8fe6112de9d1c191c0488da7970bf",
+      "upstream_head": "8e0916bf04f6fb8542c52ed01b166a8796158ca0",
+      "commit_count": 91,
+      "added_games": [
+        {
+          "id": "010014C011146000",
+          "name": "Subnautica: Below Zero",
+          "versions": [
+            "1.23.55063"
+          ]
+        },
+        {
+          "id": "010016100A186000",
+          "name": "SteamWorld Heist: Ultimate Edition",
+          "versions": [
+            "2.2.1"
+          ]
+        },
+        {
+          "id": "0100217023F6C000",
+          "name": "Well Dweller",
+          "versions": [
+            "1.0.0"
+          ]
+        },
+        {
+          "id": "010029B0118E8000",
+          "name": "Need For Speed™ Hot Pursuit Remastered",
+          "versions": [
+            "1.0.3"
+          ]
+        },
+        {
+          "id": "01002CD00A51C000",
+          "name": "Baba Is You",
+          "versions": [
+            "1.0.12"
+          ]
+        },
+        {
+          "id": "010038600B27E000",
+          "name": "Bastion",
+          "versions": [
+            "1.0.0"
+          ]
+        },
+        {
+          "id": "0100429011144000",
+          "name": "Subnautica",
+          "versions": [
+            "1.23.83358"
+          ]
+        },
+        {
+          "id": "01006FE013472000",
+          "name": "Mario Party Superstars",
+          "versions": [
+            "1.1.1"
+          ]
+        },
+        {
+          "id": "010089C01E9CA000",
+          "name": "SteamWorld Heist II",
+          "versions": [
+            "1.5.1"
+          ]
+        },
+        {
+          "id": "010092B0091D0000",
+          "name": "Team Sonic Racing",
+          "versions": [
+            "1.0.3"
+          ]
+        },
+        {
+          "id": "01009320084A4000",
+          "name": "SteamWorld Dig",
+          "versions": [
+            "1.12.0"
+          ]
+        },
+        {
+          "id": "0100ABD01785C000",
+          "name": "Portal 2",
+          "versions": [
+            "1.0.3"
+          ]
+        },
+        {
+          "id": "0100ACD0163D0000",
+          "name": "Batman: Arkham Knight",
+          "versions": [
+            "1.0.5"
+          ]
+        },
+        {
+          "id": "0100C49025D3E000",
+          "name": "EA SPORTS FC 27",
+          "versions": [
+            "1.8d.310c"
+          ]
+        },
+        {
+          "id": "0100CA9002322000",
+          "name": "SteamWorld Dig 2",
+          "versions": [
+            "4.1.1"
+          ]
+        },
+        {
+          "id": "0100EC9010258000",
+          "name": "Streets of Rage 4",
+          "versions": [
+            "1.0.9"
+          ]
+        }
+      ],
+      "updated_games": [
+        {
+          "id": "010015100B514000",
+          "name": "Super Mario Bros. Wonder",
+          "versions": [
+            "1.0.0",
+            "1.0.1",
+            "1.2.1"
+          ]
+        },
+        {
+          "id": "010028600EBDA000",
+          "name": "Super Mario 3D World + Bowser's Fury",
+          "versions": [
+            "1.2.2"
+          ]
+        },
+        {
+          "id": "01005270232F2000",
+          "name": "OCTOPATH TRAVELER 0",
+          "versions": [
+            "1.0.5"
+          ]
+        },
+        {
+          "id": "010056B015FE8000",
+          "name": "NieR:Automata The End of YoRHa Edition",
+          "versions": [
+            "1.0.3"
+          ]
+        },
+        {
+          "id": "01009BF0072D4000",
+          "name": "Captain Toad: Treasure Tracker",
+          "versions": [
+            "1.4.2"
+          ]
+        },
+        {
+          "id": "0100A3900C3E2000",
+          "name": "Paper Mario: The Origami King",
+          "versions": [
+            "1.0.1"
+          ]
+        },
+        {
+          "id": "0100A9D01C446000",
+          "name": "DRAGON QUEST VII Reimagined",
+          "versions": [
+            "1.2.0"
+          ]
+        },
+        {
+          "id": "0100B8E016F76000",
+          "name": "NieR:Automata The End of YoRHa Edition",
+          "versions": [
+            "1.0.3"
+          ]
+        },
+        {
+          "id": "0100DCA0064A6000",
+          "name": "Luigi's Mansion 3",
+          "versions": [
+            "1.4.0"
+          ]
+        },
+        {
+          "id": "0100ECD018EBE000",
+          "name": "Paper Mario: The Thousand-Year Door",
+          "versions": [
+            "1.0.1"
+          ]
+        }
+      ],
+      "translation_chain": "b3ca4b7c621f",
+      "review": "docs/upstream-reviews/2026-10-29.md",
+      "deferred_features": [
+        "123c7ff0ddcc188319da5bd035ac2cb2a86e1213"
+      ]
     }
   ],
   "deferred_features": [
@@ -429,38 +626,48 @@
       "feature": "iCloud save synchronization",
       "reason": "Owner approved pursuing optional iCloud continuity on 2026-10-29, superseding local-only policy. Runtime remains reverted pending recoverable two-folder restore, conflict preservation and native validation; not released.",
       "status": "approved_direction_pending_safety_fixes",
-      "review": "docs/upstream-reviews/2026-10-29-ecosystem.md"
+      "review": "docs/upstream-reviews/2026-10-29-ecosystem.md",
+      "latest_recheck": "2026-11-01",
+      "latest_review": "docs/upstream-reviews/2026-11-01.md"
     }
   ],
   "latest_ecosystem_review": {
-    "date": "2026-10-29",
-    "upstream_head": "17f670a77e4faa3512c1441ebeedcbccb2deb3b3",
-    "review": "docs/upstream-reviews/2026-10-29-ecosystem.md",
-    "status": "audit_only_not_integrated",
+    "date": "2026-11-01",
+    "upstream_head": "cd859c38a8f8890ddbb57a23d6f45e23ba9e6651",
+    "review": "docs/upstream-reviews/2026-11-01.md",
+    "status": "integrated_via_reviewed_original_with_explicit_exceptions",
     "repositories": [
       {
         "repository": "LNPANDY/NX2Apple",
-        "sha": "46ea54c6e2cf543cae3c88577692626669c73a58",
+        "previous_sha": "46ea54c6e2cf543cae3c88577692626669c73a58",
+        "sha": "1c55c699be9ca9b9b3f1f9bad8cbc5ba208bf026",
+        "commits": 433,
         "license": "MIT"
       },
       {
         "repository": "varyform/nx-native-wrapper",
-        "sha": "eac0fb51819566cc3c76e550731056eebf1f29b1",
+        "previous_sha": "eac0fb51819566cc3c76e550731056eebf1f29b1",
+        "sha": "5bbb89ebb4c8b78d93348b6cae47d8e223a019ac",
+        "commits": 36,
         "license": "MIT"
       },
       {
         "repository": "rennan101/nxnative_Launcher",
-        "sha": "5dc672687bf09d95fbcb9b444a49d9e43ce4c4da",
-        "license": "MIT"
+        "status": "unavailable_404",
+        "previous_sha": "5dc672687bf09d95fbcb9b444a49d9e43ce4c4da"
       },
       {
         "repository": "Xc1Ym/LumaNX",
-        "sha": "56c794538d02bf9a04fab0898b66f740702f25c7",
+        "previous_sha": "56c794538d02bf9a04fab0898b66f740702f25c7",
+        "sha": "ffc56c191e89a2b09b711276d918e035bba45397",
+        "commits": 4,
         "license": "MIT"
       },
       {
         "repository": "ly05010419/MacNativeGames",
-        "sha": "f1d00772df1ac3230268f3124bdeb6b7cc81a61c",
+        "previous_sha": "f1d00772df1ac3230268f3124bdeb6b7cc81a61c",
+        "sha": "380fcab1da13d2576a2bb96af55f521bc2ec30c4",
+        "commits": 216,
         "license": "MIT"
       }
     ]

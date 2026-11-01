@@ -110,6 +110,16 @@
       ],
       "notes": "dm/games/01007300020FA000/README.md",
       "artwork": "docs/images/astral-chain.png",
+      "caption": "60 fps target with 1.0.1"
+    },
+    {
+      "id": "0100199023B2E000",
+      "name": "Atelier Ryza: Ever Darkness & the Secret Hideout DX",
+      "versions": [
+        "1.2.0"
+      ],
+      "notes": "dm/games/0100199023B2E000/README.md",
+      "artwork": "docs/images/atelier-ryza-dx.jpg",
       "caption": ""
     },
     {
@@ -130,7 +140,7 @@
       ],
       "notes": "dm/games/0100CD801CE5E000/README.md",
       "artwork": "docs/images/balatro.jpg",
-      "caption": ""
+      "caption": "played by touch"
     },
     {
       "id": "010086A022444000",
@@ -290,6 +300,16 @@
       ],
       "notes": "dm/games/01004AB00A260000/README.md",
       "artwork": "docs/images/dark-souls-remastered-creation.jpg",
+      "caption": "60 fps with 1.0.3"
+    },
+    {
+      "id": "0100646009FBE000",
+      "name": "Dead Cells",
+      "versions": [
+        "1.25.0"
+      ],
+      "notes": "dm/games/0100646009FBE000/README.md",
+      "artwork": "docs/images/dead-cells.jpg",
       "caption": ""
     },
     {
@@ -301,6 +321,16 @@
       "notes": "dm/games/010014E00DB56000/README.md",
       "artwork": "docs/images/digimon-story-cyber-sleuth.jpg",
       "caption": ""
+    },
+    {
+      "id": "040074A01BF12000",
+      "name": "Donkey Kong Bananza",
+      "versions": [
+        "v458752"
+      ],
+      "notes": "dm/games/040074A01BF12000/README.md",
+      "artwork": "docs/images/donkey-kong-bananza.jpg",
+      "caption": "Switch 2, Mac only, from a dump"
     },
     {
       "id": "01009D901BC56000",
@@ -323,6 +353,26 @@
       "caption": ""
     },
     {
+      "id": "01003E601E324000",
+      "name": "DRAGON QUEST III HD-2D Remake",
+      "versions": [
+        "1.1.2"
+      ],
+      "notes": "dm/games/01003E601E324000/README.md",
+      "artwork": "docs/images/dragon-quest-i-ii-hd-2d-remake.jpg",
+      "caption": ""
+    },
+    {
+      "id": "0100D7C01F254000",
+      "name": "DRAGON QUEST I & II HD-2D Remake",
+      "versions": [
+        "1.0.2"
+      ],
+      "notes": "dm/games/0100D7C01F254000/README.md",
+      "artwork": "docs/images/dragon-quest-i-ii-hd-2d-remake.jpg",
+      "caption": ""
+    },
+    {
       "id": "0100A9D01C446000",
       "name": "DRAGON QUEST VII Reimagined",
       "versions": [
@@ -340,7 +390,7 @@
       ],
       "notes": "dm/games/01006C300E9F0000/README.md",
       "artwork": "docs/images/dragon-quest-xi-s.jpg",
-      "caption": ""
+      "caption": "60 fps with 1.0.4"
     },
     {
       "id": "0100C49025D3E000",
@@ -350,7 +400,7 @@
       ],
       "notes": "dm/games/0100C49025D3E000/README.md",
       "artwork": "docs/images/ea-sports-fc-27.jpg",
-      "caption": ""
+      "caption": "60 fps with 1.8d.310c"
     },
     {
       "id": "0100CE4010AAC000",
@@ -370,7 +420,7 @@
       ],
       "notes": "dm/games/0100606026F12000/README.md",
       "artwork": "docs/images/final-fantasy-resonance.jpg",
-      "caption": ""
+      "caption": "60 fps with 1.0.1"
     },
     {
       "id": "0100B8A026F14000",
@@ -410,7 +460,7 @@
       ],
       "notes": "dm/games/0100A6301214E000/README.md",
       "artwork": "docs/images/fire-emblem-engage.jpg",
-      "caption": ""
+      "caption": "60 fps with 2.0.0"
     },
     {
       "id": "010055D009F78000",
@@ -420,7 +470,7 @@
       ],
       "notes": "dm/games/010055D009F78000/README.md",
       "artwork": "docs/images/fire-emblem-three-houses.jpg",
-      "caption": ""
+      "caption": "60 fps with 1.2.0"
     },
     {
       "id": "010029B018432000",
@@ -453,6 +503,16 @@
       "caption": ""
     },
     {
+      "id": "0100633007D48000",
+      "name": "Hollow Knight",
+      "versions": [
+        "1.5.12620"
+      ],
+      "notes": "dm/games/0100633007D48000/README.md",
+      "artwork": "docs/images/hollow-knight.jpg",
+      "caption": ""
+    },
+    {
       "id": "010013C00E930000",
       "name": "Hollow Knight: Silksong",
       "versions": [
@@ -470,6 +530,16 @@
       ],
       "notes": "dm/games/01002B00111A2000/README.md",
       "artwork": "docs/images/hyrule-warriors-age-of-calamity.jpg",
+      "caption": "60 fps with 1.3.0"
+    },
+    {
+      "id": "0100AE00096EA000",
+      "name": "Hyrule Warriors: Definitive Edition",
+      "versions": [
+        "1.0.1"
+      ],
+      "notes": "dm/games/0100AE00096EA000/README.md",
+      "artwork": "docs/images/hyrule-warriors-definitive-edition.jpg",
       "caption": ""
     },
     {
@@ -490,7 +560,7 @@
       ],
       "notes": "dm/games/0100DCA0064A6000/README.md",
       "artwork": "docs/images/luigis-mansion-3.jpg",
-      "caption": ""
+      "caption": "60 fps with 1.4.0"
     },
     {
       "id": "0100152000022000",
@@ -501,7 +571,7 @@
       ],
       "notes": "dm/games/0100152000022000/README.md",
       "artwork": "docs/images/mario-kart-8-deluxe.jpg",
-      "caption": ""
+      "caption": "no Mii heads"
     },
     {
       "id": "01006FE013472000",
@@ -554,6 +624,16 @@
       "caption": ""
     },
     {
+      "id": "010012101468C000",
+      "name": "Metroid Prime Remastered",
+      "versions": [
+        "1.0.0"
+      ],
+      "notes": "dm/games/010012101468C000/README.md",
+      "artwork": "docs/images/metroid-prime-remastered.jpg",
+      "caption": ""
+    },
+    {
       "id": "0100B04011742000",
       "name": "Monster Hunter Rise",
       "versions": [
@@ -561,7 +641,7 @@
       ],
       "notes": "dm/games/0100B04011742000/README.md",
       "artwork": "docs/images/monster-hunter-rise.jpg",
-      "caption": ""
+      "caption": "60 fps with 16.0.2"
     },
     {
       "id": "010051701FB46000",
@@ -571,7 +651,7 @@
       ],
       "notes": "dm/games/010051701FB46000/README.md",
       "artwork": "docs/images/monster-train-2.jpg",
-      "caption": ""
+      "caption": "60 fps with 1.1.1"
     },
     {
       "id": "010029B0118E8000",
@@ -591,7 +671,7 @@
       ],
       "notes": "dm/games/010056B015FE8000/README.md",
       "artwork": "docs/images/nier-automata.png",
-      "caption": ""
+      "caption": "60 fps with 1.0.3"
     },
     {
       "id": "0100B8E016F76000",
@@ -601,7 +681,7 @@
       ],
       "notes": "dm/games/0100B8E016F76000/README.md",
       "artwork": "docs/images/nier-automata.png",
-      "caption": ""
+      "caption": "60 fps with 1.0.3"
     },
     {
       "id": "010057D006492000",
@@ -621,7 +701,7 @@
       ],
       "notes": "dm/games/01005270232F2000/README.md",
       "artwork": "docs/images/octopath-traveler-0.jpg",
-      "caption": ""
+      "caption": "60 fps with 1.0.5"
     },
     {
       "id": "0100A3501946E000",
@@ -631,7 +711,7 @@
       ],
       "notes": "dm/games/0100A3501946E000/README.md",
       "artwork": "docs/images/octopath-traveler-ii.jpg",
-      "caption": ""
+      "caption": "60 fps with 1.1.1"
     },
     {
       "id": "0100A3900C3E2000",
@@ -651,7 +731,7 @@
       ],
       "notes": "dm/games/0100ECD018EBE000/README.md",
       "artwork": "docs/images/paper-mario-the-thousand-year-door.jpg",
-      "caption": ""
+      "caption": "60 fps with 1.0.1"
     },
     {
       "id": "0100E44016C22000",
@@ -701,7 +781,7 @@
       ],
       "notes": "dm/games/0100000011D90000/README.md",
       "artwork": "docs/images/pokemon-brilliant-diamond.jpg",
-      "caption": ""
+      "caption": "60 fps with 1.3.0"
     },
     {
       "id": "01001F5010DFA000",
@@ -751,6 +831,16 @@
       ],
       "notes": "dm/games/0100ABF008968000/README.md",
       "artwork": "docs/images/pokemon-sword.jpg",
+      "caption": ""
+    },
+    {
+      "id": "01008F6008C5E000",
+      "name": "Pokémon Violet",
+      "versions": [
+        "1.0.0"
+      ],
+      "notes": "dm/games/01008F6008C5E000/README.md",
+      "artwork": "docs/images/pokemon-violet.jpg",
       "caption": ""
     },
     {
@@ -811,7 +901,7 @@
       ],
       "notes": "dm/games/0100C2A01A730000/README.md",
       "artwork": "docs/images/romance-of-the-three-kingdoms-8-remake.jpg",
-      "caption": ""
+      "caption": "controller only"
     },
     {
       "id": "01008C0016544000",
@@ -831,7 +921,7 @@
       ],
       "notes": "dm/games/010069C01AB82000/README.md",
       "artwork": "docs/images/shin-megami-tensei-v-vengeance.jpg",
-      "caption": ""
+      "caption": "60 fps with 1.0.3"
     },
     {
       "id": "0100D5B026844000",
@@ -996,6 +1086,16 @@
       "caption": ""
     },
     {
+      "id": "010031F019294000",
+      "name": "Super Monkey Ball Banana Rumble",
+      "versions": [
+        "2.20"
+      ],
+      "notes": "dm/games/010031F019294000/README.md",
+      "artwork": "docs/images/super-monkey-ball-banana-rumble.jpg",
+      "caption": ""
+    },
+    {
       "id": "01006A800016E000",
       "name": "Super Smash Bros. Ultimate",
       "versions": [
@@ -1003,7 +1103,7 @@
       ],
       "notes": "dm/games/01006A800016E000/README.md",
       "artwork": "docs/images/super-smash-bros-ultimate.jpg",
-      "caption": ""
+      "caption": "offline"
     },
     {
       "id": "0100346017304000",
@@ -1013,7 +1113,7 @@
       ],
       "notes": "dm/games/0100346017304000/README.md",
       "artwork": "docs/images/taiko-risshiden-v-dx.jpg",
-      "caption": ""
+      "caption": "Japanese · played by touch"
     },
     {
       "id": "010092B0091D0000",
@@ -1043,7 +1143,7 @@
       ],
       "notes": "dm/games/01007EF00011E000/README.md",
       "artwork": "docs/images/zelda-breath-of-the-wild.jpg",
-      "caption": ""
+      "caption": "60 fps with 1.9.0"
     },
     {
       "id": "01008CF01BAAC000",
@@ -1073,7 +1173,7 @@
       ],
       "notes": "dm/games/0100F2C0115B6000/README.md",
       "artwork": "docs/images/zelda-tears-of-the-kingdom.jpg",
-      "caption": ""
+      "caption": "60 fps with 1.4.3"
     },
     {
       "id": "010069401ADB8000",
