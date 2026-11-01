@@ -24,7 +24,6 @@ import Foundation
         }
     }
     private var checking=false
-    private struct Commit: Decodable {let sha:String}
     private struct Event: Decodable {let phase:String;let progress:Double?;let message:String?}
     init() {
         let failure=FileManager.default.homeDirectoryForCurrentUser
@@ -47,9 +46,9 @@ import Foundation
         guard !busy,!checking else {return}
         checking=true;defer {checking=false}
         do {
-            let commit=try JSONDecoder().decode(Commit.self,from:await fetch("https://api.github.com/repos/nalancer08/nxnative-easy/commits/main"))
-            guard commit.sha.range(of:"^[0-9a-f]{40}$",options:.regularExpression) != nil else {throw URLError(.cannotParseResponse)}
-            let release=try JSONDecoder().decode(UpdateRelease.self,from:await fetch("https://raw.githubusercontent.com/nalancer08/nxnative-easy/\(commit.sha)/desktop/release.json"))
+            let reference=try JSONDecoder().decode(RepositoryReference.self,from:await fetch("https://api.github.com/repos/nalancer08/nxnative-easy/git/ref/heads/main"))
+            let sha=try reference.commitSHA()
+            let release=try JSONDecoder().decode(UpdateRelease.self,from:await fetch("https://raw.githubusercontent.com/nalancer08/nxnative-easy/\(sha)/desktop/release.json"))
             try release.validate()
             let current=Int(Bundle.main.object(forInfoDictionaryKey:"CFBundleVersion") as? String ?? "0") ?? 0
             if release.isNewer(than:current) {
@@ -59,7 +58,7 @@ import Foundation
                     binaryAvailable=names.contains("nxnative-Easy-macOS-arm64.zip") && names.contains("SHA256SUMS")
                 }
                 if PortableRuntime.tools != nil && !binaryAvailable {throw URLError(.resourceUnavailable)}
-                available=release;revision=commit.sha;error=nil
+                available=release;revision=sha;error=nil
             } else if manual {showNotice=true}
         } catch {if manual {self.error="No pudimos buscar actualizaciones. Intenta de nuevo más tarde."}}
     }

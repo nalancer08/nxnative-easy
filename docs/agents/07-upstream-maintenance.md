@@ -177,3 +177,11 @@ guesses. Successful builds preserve older shader caches by default; the CLI's
 Full iOS packages prefer bundled DLC as well as bundled RomFS without removing
 external data. A selected shared iOS shell is a separate migration, not a silent
 replacement of existing signed app identities or saved-game containers.
+
+Resolve updater identities through bounded Git ref/tag objects, not full commit
+responses (large engine merges exceed the metadata size limit). Until legacy
+updaters are retired, finish a release with a small, validated release commit:
+their `/commits/main` and `/commits/v<version>` responses must remain under 128 KiB.
+Test the actual portable ZIP with current and installed-version updater code;
+check its signature, tag/source identity and source hashes. Run portable Python
+checks with `PYTHONDONTWRITEBYTECODE=1`, as the app does, to preserve sealed tools.

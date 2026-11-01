@@ -10,6 +10,13 @@ import Foundation
             do {try UpdateRelease(version:version,build:5,minimumMacOSMajor:26).validate();fatalError("Invalid version accepted")}
             catch {}
         }
+        let sha=String(repeating:"a",count:40)
+        let reference=try JSONDecoder().decode(RepositoryReference.self,from:Data("{\"object\":{\"type\":\"commit\",\"sha\":\"\(sha)\"}}".utf8))
+        let resolved=try reference.commitSHA();precondition(resolved==sha)
+        for object in [("tag",sha),("commit","bad")] {
+            let bad=RepositoryReference(object:.init(type:object.0,sha:object.1))
+            do {_=try bad.commitSHA();fatalError("Invalid branch reference accepted")}catch {}
+        }
         print("Release metadata: new, equal, older and malformed versions passed")
     }
 }

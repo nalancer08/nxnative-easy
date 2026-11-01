@@ -95,6 +95,23 @@ def validate_app(path,expected_build,expected_version):
     subprocess.run(['/usr/bin/codesign','--verify','--deep','--strict',str(path)],check=True,capture_output=True)
 
 
+def release_revision(version):
+    # /commits/<tag> includes patches and can exceed the metadata limit after a
+    # large engine merge. Git refs/tag objects contain only the identity needed.
+    if not isinstance(version,str) or not re.fullmatch(r'\d+\.\d+\.\d+',version):raise ValueError('Invalid release version.')
+    obj=manifest_url('https://api.github.com/repos/nalancer08/nxnative-easy/git/ref/tags/v'+version).get('object',{})
+    seen=set()
+    for _ in range(5):
+        if not isinstance(obj,dict):raise ValueError('Invalid release tag object.')
+        sha=obj.get('sha','')
+        if not isinstance(sha,str) or not re.fullmatch('[0-9a-f]{40}',sha):raise ValueError('Invalid release tag identity.')
+        if obj.get('type')=='commit':return sha
+        if obj.get('type')!='tag' or sha in seen:raise ValueError('Invalid release tag chain.')
+        seen.add(sha)
+        obj=manifest_url('https://api.github.com/repos/nalancer08/nxnative-easy/git/tags/'+sha).get('object',{})
+    raise ValueError('Release tag chain is too deep.')
+
+
 def replace_bundle(staged,target):
     backup=target.with_name('.'+target.name+'.previous-'+uuid.uuid4().hex[:10])
     os.replace(target,backup)
@@ -145,8 +162,7 @@ def portable_update(revision,build,target,cache):
         subprocess.run(['/usr/bin/ditto','-x','-k',str(archive),str(staging)],check=True,capture_output=True)
         archive.unlink();app=staging/'nxnative Easy.app';emit('verify');validate_app(app,build,version)
         info=plistlib.loads((app/'Contents/Info.plist').read_bytes())
-        tag=manifest_url('https://api.github.com/repos/nalancer08/nxnative-easy/commits/v'+version)
-        if info.get('NxNativeSourceRevision')!=tag['sha']:raise ValueError('Portable release source identity mismatch.')
+        if info.get('NxNativeSourceRevision')!=release_revision(version):raise ValueError('Portable release source identity mismatch.')
         return app,app/'Contents/Resources/Source'
     except BaseException:
         shutil.rmtree(staging,ignore_errors=True);raise
