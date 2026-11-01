@@ -20,9 +20,9 @@ class AocStartup(unittest.TestCase):
         source = root / 'aoc.m'
         source.write_text('#import <Foundation/Foundation.h>\n#include <stdio.h>\n#include <stdlib.h>\n'
                           'static NSString *fixture_doc, *fixture_bundle;\n'
-                          '@interface FixtureBundle : NSObject\n+ (instancetype)mainBundle;\n- (NSString *)resourcePath;\n@end\n'
+                          '@interface FixtureBundle : NSObject\n+ (instancetype)mainBundle;\n- (NSString *)resourcePath;\n- (NSDictionary *)infoDictionary;\n@end\n'
                           '@implementation FixtureBundle\n+ (instancetype)mainBundle { return [self new]; }\n'
-                          '- (NSString *)resourcePath { return fixture_bundle; }\n@end\n#define NSBundle FixtureBundle\n'
+                          '- (NSString *)resourcePath { return fixture_bundle; }\n- (NSDictionary *)infoDictionary { return @{}; }\n@end\n#define NSBundle FixtureBundle\n'
                           '#define NSSearchPathForDirectoriesInDomains(a,b,c) @[fixture_doc]\n' + locator +
                           '\nint main(int argc, char **argv) { @autoreleasepool { if (argc < 3) return 2;\n'
                           'fixture_doc = @(argv[1]); fixture_bundle = @(argv[2]); aoc_locate();\n'
