@@ -47,6 +47,15 @@ struct Data {
     session: Option<Vec<u8>>,
     values: BTreeMap<String, String>,
 }
+impl Data {
+    fn packed(&self) -> Result<Zeroizing<Vec<u8>>, Report> {
+        let bytes = Zeroizing::new(serde_json::to_vec(self)?);
+        if bytes.len() > 2 * 1024 * 1024 {
+            bail!("Account vault size limit")
+        }
+        Ok(bytes)
+    }
+}
 impl Drop for Data {
     fn drop(&mut self) {
         if let Some(value) = &mut self.session {
@@ -100,7 +109,7 @@ impl Vault {
                 }
             }
             // Only publish after every legacy read succeeds. Never remove old identities.
-            let bytes = Zeroizing::new(serde_json::to_vec(&value)?);
+            let bytes = value.packed()?;
             backend.write(account, &bytes)?;
             value
         };
@@ -117,7 +126,7 @@ impl Vault {
             .map_err(|_| report!("Account vault unavailable"))?;
         let mut next = current.clone();
         edit(&mut next);
-        let bytes = Zeroizing::new(serde_json::to_vec(&next)?);
+        let bytes = next.packed()?;
         self.0.backend.write(&next.account, &bytes)?;
         *current = next;
         Ok(())
@@ -350,6 +359,16 @@ mod tests {
             &**Vault::load("a", false, b).unwrap().session().unwrap(),
             b"old"
         );
+    }
+    #[test]
+    fn oversized_update_preserves_the_previous_vault() {
+        let b = Arc::new(Fake::default());
+        let v = Vault::load("a", true, b.clone()).unwrap();
+        v.remember(b"old").unwrap();
+        assert!(v.store("large", &"x".repeat(2 * 1024 * 1024)).is_err());
+        let reloaded = Vault::load("a", false, b).unwrap();
+        assert_eq!(&**reloaded.session().unwrap(), b"old");
+        assert!(reloaded.retrieve("large").unwrap().is_none());
     }
     #[test]
     fn logout_retains_identity_but_removes_both_session_copies() {
