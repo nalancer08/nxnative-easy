@@ -61,8 +61,9 @@ and code fields after submission; helper errors expose fixed messages/codes rath
 than raw HTTP bodies, tokens or provisioning contents.
 
 **Remember session** stores session data in macOS Keychain, not the Apple password.
-Anisette state and our signing private key/certificate cache also use Keychain in
-separate namespaces. Forgetting login removes the remembered session and disables
+Since 1.23 the session, anisette state and signing private key share one
+protected Keychain vault per account; old entries migrate only with foreground
+permission. They are cached in memory for the helper session. Forgetting login removes the remembered session and disables
 our refresh jobs; it does not revoke certificates or delete the reusable identity
 keys. Updates of an ad-hoc-signed app/helper may require Keychain access approval.
 
@@ -410,3 +411,50 @@ not access the user's Keychain or authenticate against Apple.
 ## Independent worker and signature checks (1.19.0)
 
 See [background renewal](background-renewal.md) for the optional closed-app worker, per-route connection checks, actual signed memory entitlement verification and the physical validation boundary. The shared account, exact identifiers, new-device refusal and read-only save export policies remain unchanged.
+
+
+## Quiet startup and grouped Keychain access (1.23)
+
+Earlier releases used separate Keychain records for session, anisette state and
+signing key. A changed ad-hoc helper identity can require fresh macOS approval for
+each record, while automatic recovery at launch made that feel like repeated
+login. A remembered account is still remembered even when access is unavailable.
+
+Startup still queues at most one authentication-only recovery, but sends
+`interactive: false` only to a helper advertising `quiet-keychain-v1`. The helper
+suppresses Keychain UI for the complete automatic operation (including writes),
+restoring the previous process-local policy on exit. It uses the legacy
+[Security API](https://developer.apple.com/documentation/security/seckeychainsetuserinteractionallowed(_:))
+because the pinned keyring backend uses `SecKeychain` calls. This does not unlock
+a keychain, approve a prompt, weaken an ACL, or grant any other application access.
+Due background restores and automatic installs use the same quiet policy.
+
+If access needs permission, a legacy migration, or network recovery, startup stops
+quietly, preserves the remembered account and tokens, and leaves the library and
+preparation usable. Installation remains disabled while the helper is occupied.
+The Apple account page offers **Connect saved account** as an explicit foreground
+action. Automatic recovery never registers, signs, installs or copies game data.
+An older helper without this capability is never sent a silent-recovery request.
+
+The helper stores one bounded, schema/account-validated secret under
+`com.nalancer08.nxnative.sideload.vault.v1`, keyed by the normalized account hash.
+It contains the existing private session and SDK identity values, never the Apple
+password. The anisette provider and signer share an in-memory vault, so repeated
+field reads do not re-open separate Keychain entries. Writes publish a complete
+new value before replacing the cached state; a denied write retains the old state.
+Transient buffers and replaced cached secrets are cleared when released.
+
+The first explicit connection can still require approval for the old records.
+Migration reads all required legacy session/identity records before publishing
+the vault and retains the originals. It does not generate a new signing identity,
+change app IDs, revoke certificates, or delete old keys. Logout clears the new
+and legacy session tokens while retaining reusable identity keys. macOS remains
+in charge of authorization: a locked Keychain, changed app signature or user
+choice can require permission again. We do not promise a permanent global grant.
+
+Validation uses a fake credential backend: migration/identity preservation,
+missing vault without legacy access, one-read reuse, failed writes, logout and
+malformed/account-mismatched data. A native test verifies process policy restoration
+without reading any credential. Swift fake-helper tests verify quiet versus
+foreground requests, saved-marker preservation and no automatic retry/install.
+No user Keychain credentials or Apple account were accessed by these tests.

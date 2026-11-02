@@ -3,6 +3,7 @@ mod games;
 mod idle;
 mod romfs;
 mod saves;
+mod vault;
 use idevice::{
     IdeviceService,
     provider::{IdeviceProvider, UsbmuxdProvider},
@@ -16,7 +17,6 @@ use isideload::{
     util::{
         callbacks::{ExtensionsBehaviorCallbackBox, MaxCertsCallbackBox},
         device::IdeviceInfo,
-        keyring_storage::KeyringStorage,
     },
 };
 use rootcause::prelude::*;
@@ -30,8 +30,6 @@ use std::{
 };
 use zeroize::Zeroize;
 
-const SESSION_SERVICE: &str = "com.nalancer08.nxnative.sideload.session";
-const IDENTITY_SERVICE: &str = "com.nalancer08.nxnative.sideload.identity";
 static INPUT: LazyLock<Mutex<io::BufReader<io::Stdin>>> =
     LazyLock::new(|| Mutex::new(io::BufReader::new(io::stdin())));
 type Loader = Sideloader<MaxCertsCallbackBox, ExtensionsBehaviorCallbackBox>;
@@ -217,17 +215,17 @@ async fn login(request: &mut Value, restore: bool) -> Result<Session, Report> {
     let email = text(request, "email")?.trim().to_lowercase();
     let endpoint = text(request, "anisette_url")?.to_string();
     validate_anisette(&endpoint)?;
+    let vault = vault::Vault::open(&session_key(&email), request["interactive"].as_bool().unwrap_or(true))?;
     let anisette = RemoteV3AnisetteProvider::default()?
         .set_url(&endpoint)
-        .set_storage(Box::new(KeyringStorage::new(IDENTITY_SERVICE.into())));
+        .set_storage(Box::new(vault.clone()));
     let mut account = AppleAccount::builder(&email)
         .anisette_provider(anisette)
         .err_429_retries(Some(1))
         .build()
         .await?;
-    let entry = keyring::Entry::new(SESSION_SERVICE, &session_key(&email))?;
     if restore {
-        account.spd = Some(plist::from_bytes(&entry.get_secret()?)?)
+        account.spd = Some(plist::from_bytes(&vault.session()?)?)
     } else {
         let mut password = text(request, "password")?.to_string();
         request["password"] = Value::Null;
@@ -266,7 +264,7 @@ async fn login(request: &mut Value, restore: bool) -> Result<Session, Report> {
     if !restore && request["remember"].as_bool() == Some(true) {
         let mut bytes = Vec::new();
         plist::to_writer_binary(&mut bytes, &account.spd)?;
-        entry.set_secret(&bytes)?;
+        vault.remember(&bytes)?;
         bytes.zeroize();
     }
     use isideload::dev::teams::TeamsApi;
@@ -277,7 +275,7 @@ async fn login(request: &mut Value, restore: bool) -> Result<Session, Report> {
         developer,
         email.clone(),
     )
-    .storage(Box::new(KeyringStorage::new(IDENTITY_SERVICE.into())))
+    .storage(Box::new(vault))
     .machine_name("nxnative Easy".into())
     .max_certs_behavior(MaxCertsBehavior::Prompt(callback))
     .build();
@@ -648,11 +646,16 @@ async fn main() {
     let _ = rustls::crypto::ring::default_provider().install_default();
     let _ = isideload::init();
     emit(
-        json!({"event":"hello","protocol":1,"architecture":std::env::consts::ARCH,"capabilities":["scoped-games-v1","save-export-v1","romfs-copy-v1","registration-consent-v1"]}),
+        json!({"event":"hello","protocol":1,"architecture":std::env::consts::ARCH,"capabilities":["scoped-games-v1","save-export-v1","romfs-copy-v1","registration-consent-v1","quiet-keychain-v1","account-vault-v1"]}),
     );
     let mut session: Option<Session> = None;
     while let Ok(mut request) = read_request() {
         let op = request["op"].as_str().unwrap_or("").to_string();
+        let quiet = request["interactive"].as_bool() == Some(false) || request["automatic"].as_bool() == Some(true);
+        let _quiet = if quiet { match vault::QuietKeychain::begin() {
+            Ok(guard) => Some(guard),
+            Err(_) => { emit(json!({"event":"error","code":"keychain_access","operation":op})); continue; }
+        }} else {None};
         let result = match op.as_str() {
             "devices" => devices().await,
             "connection_diagnostics" => async {connection_diagnostics(text(&request,"udid")?).await}.await,
@@ -698,16 +701,14 @@ async fn main() {
                 Some(value) => install(value, &request).await,
                 None => Err(report!("Sign in first")),
             },
-            "logout" => {
+            "logout" => async {
                 if let Ok(email) = text(&request, "email") {
-                    if let Ok(entry) = keyring::Entry::new(SESSION_SERVICE, &session_key(email)) {
-                        let _ = entry.delete_credential();
-                    }
+                    vault::Vault::open(&session_key(email), true)?.forget()?;
                 };
                 session = None;
                 emit(json!({"event":"signed_out"}));
                 Ok(())
-            }
+            }.await,
             "quit" => break,
             _ => Err(report!("Unknown operation")),
         };
@@ -720,7 +721,9 @@ async fn main() {
                 }
             });
             let detail = error.to_string();
-            let code = if detail.contains("Game version differs") {
+            let code = if detail.contains(vault::NEEDS_ACCESS) {
+                "keychain_access"
+            } else if detail.contains("Game version differs") {
                 "version_changed"
             } else if detail.contains("No committed save") {
                 "no_saves"

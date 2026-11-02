@@ -12,6 +12,15 @@ enum EasyLanguage: String, CaseIterable {
 
 struct EasyStrings {
     static let english: [String:String] = [
+        "En tu colección":"In your collection",
+        "Apps listas en Mac":"Mac apps ready",
+        "IPA listas para instalar":"IPAs ready to install",
+        "Conectar cuenta guardada":"Connect saved account",
+        "Si vienes de una versión anterior, la primera conexión puede pedir permisos para conservar tu cuenta.":"If you upgraded from an earlier version, the first connection may request access to preserve your account.",
+        "Conecta tu cuenta cuando la necesites. La biblioteca y tus partidas no requieren acceso al Llavero.":"Connect your account when you need it. Your library and saves do not need Keychain access.",
+        "Tu cuenta sigue guardada. Conecta el Llavero cuando vayas a instalar.":"Your account is still saved. Connect Keychain when you want to install.",
+        "Tu cuenta sigue guardada. Conecta el Llavero desde tu cuenta Apple para continuar.":"Your account is still saved. Connect Keychain from your Apple account to continue.",
+        "Actualiza la app para renovar sin abrir avisos del Llavero.":"Update the app to refresh without opening Keychain prompts.",
         "Instalación registrada en":"Installation recorded on",
         "Instalación registrada":"Recorded installation",
         "Hay un registro de instalación. Conecta el dispositivo para comprobar su estado actual.":"An installation was recorded. Connect the device to check its current status.",

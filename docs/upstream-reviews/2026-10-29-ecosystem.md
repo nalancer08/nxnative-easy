@@ -198,3 +198,18 @@ approval and these safety requirements are standing instructions for future work
 - Catalog gate: 114 profiles; artwork and bilingual galleries remain current.
 - Python lint/type ratchet: 392 existing baseline findings, zero new findings.
 - No game-runtime release or gameplay validation is claimed for this audit.
+
+
+## Status checked 2026-11-02 after the library/Keychain work
+
+Optional native iCloud continuity is still not integrated or advertised as ready.
+The runtime write hooks remain reverted, and the 33-commit engine update through
+`4a2a81a64f02` did not change the two audited save implementations. Local saves and
+manual device export continue to work independently of the desktop Apple account.
+The account vault changes do not add iCloud save credentials or touch game saves.
+
+The next cloud implementation must first deliver immutable parented snapshots,
+conflict preservation and a journal that restores `save` plus `save_device` as one
+recoverable transaction, then pass the interruption/offline/version tests above.
+Physical opt-in testing on both rebuilt game apps is still required before a
+player-facing release. No cloud folder or real saved game was accessed here.

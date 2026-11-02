@@ -66,3 +66,19 @@ Use fake accounts, helper messages and devices for screenshots/tests. Do not ini
 A local IPA is **ready to install**, not proof of device installation. A local Mac app is **ready to play on Mac**. Show per-device installation/version separately and update it immediately from the validated receipt. Persist observations; after restart distinguish historical evidence from a current device query. Older signing records may be displayed as recorded installations without invented dates or versions. A fresh scoped query that reports absence overrides a historical receipt. Rebuild advice is a separate line and must not replace the installation state.
 
 Completed preparation notices have a labelled dismiss action that hides only the notice. Retain logs, timeline, source files and outputs. Do not allow dismissal to obscure a running build; the next actual build resets the dismissal. Viewing completed activity must not label the job as still building.
+
+
+## Collection welcome (1.23)
+
+`LibraryWelcomeHeader`, `EasyCollectionArtwork` and `EasyLibraryMetric` reuse the
+existing tokens. The cover fan draws only the player's added game artwork;
+empty libraries use original native device/controller geometry. Decoration is
+static, hidden from accessibility, and never introduces an animation requirement.
+
+Show collection count, discoverable Mac apps and discoverable IPAs separately.
+An IPA count is not an installation count. Per-device proof remains in the game
+detail. The empty state hides search/counters and has one primary Add game action.
+At 1000 × 640 the shorter detail artwork keeps the main action visible; further
+detail still scrolls. Keep keyboard/selection semantics and translated labels.
+Quiet account recovery must not block browsing or preparing games, nor display
+an intrusive global account spinner. Actual installer operations keep their guards.

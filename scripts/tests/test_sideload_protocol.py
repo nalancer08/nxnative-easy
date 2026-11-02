@@ -24,4 +24,6 @@ class SideloadProtocol(unittest.TestCase):
         events=[json.loads(line) for line in result.stdout.splitlines()]
         self.assertIn('scoped-games-v1',events[0]['capabilities'])
         self.assertIn('registration-consent-v1',events[0]['capabilities'])
+        self.assertIn('quiet-keychain-v1',events[0]['capabilities'])
+        self.assertIn('account-vault-v1',events[0]['capabilities'])
         self.assertEqual(events[1],{'event':'installed_apps','items':[]})

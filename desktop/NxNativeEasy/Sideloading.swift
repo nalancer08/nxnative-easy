@@ -127,6 +127,8 @@ enum RefreshPolicy {
     @Published private(set) var completedInstallation=false
     @Published private(set) var increasedMemoryLimit:Bool?
     @Published private(set) var recoveringSession=false
+    @Published private(set) var quietSessionRecovery=false
+    var blocksGameWork:Bool {busy && !(recoveringSession && quietSessionRecovery)}
     private var recoveryRequested=false
     private var automaticRecoveryAttempted=false
     @Published var busy=false {
@@ -288,7 +290,7 @@ enum RefreshPolicy {
     }
     func connect() {
         if let process,process.isRunning {return}
-        process=nil;input=nil;scopedDiscovery=false
+        process=nil;input=nil;scopedDiscovery=false;helperCapabilities=[]
         if installerLease>=0 {Darwin.close(installerLease);installerLease = -1}
         guard let acquired=InstallerLease.acquire(at:stateURL.appendingPathExtension("lock")) else {error="Hay una instalación o renovación en curso. Intenta de nuevo en un momento.";busy=false;return}
         installerLease=acquired
@@ -307,7 +309,7 @@ enum RefreshPolicy {
             guard let self,self.process === finished else {return}
             let recovering=self.recoveringSession
             if self.installerLease>=0 {Darwin.close(self.installerLease);self.installerLease = -1}
-            self.process=nil;self.input=nil;self.scopedDiscovery=false;self.authenticated=false;self.codeRequired=false;self.recoveringSession=false;self.pendingRemember=nil
+            self.process=nil;self.input=nil;self.scopedDiscovery=false;self.authenticated=false;self.codeRequired=false;self.recoveringSession=false;self.quietSessionRecovery=false;self.pendingRemember=nil
             if self.busy {self.error=recovering ? "No pudimos recuperar la sesión guardada. Revisa Internet y el acceso al Llavero, o vuelve a iniciar sesión." : "Instalación detenida. Vuelve a intentar; las partidas no se tocaron."}
             self.busy=false;self.activeRefresh=nil;self.installIntent=nil;self.refreshAuthenticated=false
         }}
@@ -315,7 +317,7 @@ enum RefreshPolicy {
         catch {Darwin.close(installerLease);installerLease = -1;process=nil;input=nil;self.error="No pudimos iniciar el instalador nativo."}
     }
     private func send(_ value:[String:Any]) {
-        connect();guard let input,let process,process.isRunning else {recoveringSession=false;busy=false;return}
+        connect();guard let input,let process,process.isRunning else {recoveringSession=false;quietSessionRecovery=false;busy=false;return}
         do {var data=try JSONSerialization.data(withJSONObject:value);data.append(10);try input.write(contentsOf:data)}
         catch {self.error="No pudimos comunicarnos con el instalador.";recoveringSession=false;busy=false}
     }
@@ -341,7 +343,7 @@ enum RefreshPolicy {
 
     func signIn(password:String,remember:Bool) {
         guard !busy,!email.isEmpty,!password.isEmpty else {return}
-        recoveryRequested=false;automaticRecoveryAttempted=true;recoveringSession=false
+        recoveryRequested=false;automaticRecoveryAttempted=true;recoveringSession=false;quietSessionRecovery=false
         email=email.trimmingCharacters(in:.whitespacesAndNewlines).lowercased()
         busy=true;error=nil;startedAt=Date();fraction=nil;phase="Iniciando sesión con Apple…"
         record("Iniciando sesión con Apple…")
@@ -390,7 +392,7 @@ enum RefreshPolicy {
     }
     private func handle(_ event:[String:Any]) {
         switch event["event"] as? String {
-        case "hello":helperCapabilities=Set(event["capabilities"] as? [String] ?? []);scopedDiscovery=(event["capabilities"] as? [String] ?? []).contains("scoped-games-v1");if (event["protocol"] as? Int) != 1 || event["architecture"] as? String != "aarch64" {error="El instalador debe compilarse para Apple silicon.";cancel()}
+        case "hello":helperCapabilities=Set(event["capabilities"] as? [String] ?? []);scopedDiscovery=(event["capabilities"] as? [String] ?? []).contains("scoped-games-v1");if (event["protocol"] as? Int) != 1 || event["architecture"] as? String != "aarch64" {error="El instalador debe compilarse para Apple silicon.";cancel()};if recoveryRequested {Task {@MainActor [weak self] in self?.recoverRememberedSessionIfNeeded()}}
         case "connection_diagnostics":
             guard event["udid"] as? String==device else{return}
             let results=(event["items"] as? [[String:Any]]) ?? []
@@ -428,7 +430,7 @@ enum RefreshPolicy {
             if let refresh=activeRefresh,!manualRefresh,let index=jobs.firstIndex(where:{$0.id==refresh.id}) {jobs[index].needsLogin=true;saveJobs()}
             record("Introduce el código de Apple.");codeRequired=true;phase="Introduce el código de Apple.";smsNumbers=((event["numbers"] as? [[String:Any]]) ?? []).compactMap {number in guard let id=number["id"] as? Int,let digits=number["last_digits"] as? String else {return nil};return TrustedSMS(id:id,digits:digits)}
         case "signed_in":
-            recoveringSession=false;recoveryRequested=false;automaticRecoveryAttempted=true
+            recoveringSession=false;quietSessionRecovery=false;recoveryRequested=false;automaticRecoveryAttempted=true
             record("Sesión iniciada. Elige tu equipo personal.");authenticated=true;busy=false;codeRequired=false;error=nil;phase="Sesión iniciada. Elige tu equipo personal."
             if let remember=pendingRemember {if remember {defaults.set(email,forKey:"sideloadEmail");defaults.set(anisette,forKey:"sideloadAnisette")}else{defaults.removeObject(forKey:"sideloadEmail")};pendingRemember=nil}
             teams=((event["teams"] as? [[String:Any]]) ?? []).compactMap {item in guard let id=item["id"] as? String else {return nil};return SideloadTeam(id:id,name:item["name"] as? String ?? id,kind:item["kind"] as? String ?? "",freeDeviceLimit:(item["free_device_limit"] as? Int)==3 ? 3 : nil)}
@@ -436,7 +438,7 @@ enum RefreshPolicy {
             if activeRefresh==nil,team.isEmpty,hasRememberedSession,let saved=defaults.string(forKey:"sideloadTeam."+RefreshPolicy.account(email)),teams.contains(where:{$0.id==saved}) {team=saved}
             for index in jobs.indices where jobs[index].account==RefreshPolicy.account(email) {jobs[index].needsLogin=false};saveJobs()
             if let refresh=activeRefresh {refreshAuthenticated=true;continueRefresh(refresh)}
-        case "signed_out":recoveringSession=false;recoveryRequested=false;automaticRecoveryAttempted=true;authenticated=false;accountDevices=[];accountDeviceTeam="";accountDeviceLimit=nil;accountDevicesCheckedAt=nil;teams=[];team="";busy=false
+        case "signed_out":recoveringSession=false;quietSessionRecovery=false;recoveryRequested=false;automaticRecoveryAttempted=true;authenticated=false;accountDevices=[];accountDeviceTeam="";accountDeviceLimit=nil;accountDevicesCheckedAt=nil;teams=[];team="";busy=false
         case "progress":
             let phases=["Exporting saves":"Exportando partidas…","Verifying saves":"Verificando el respaldo…","Registering device":"Registrando el dispositivo con Apple…","Verifying signature":"Verificando firma y vencimiento…","Preparing IPA":"Preparando IPA…","Signing app":"Firmando la app…","Installing app":"Instalando la app…","Copying game data":"Copiando datos del juego…","Game data ready":"Datos del juego listos."]
             phase=phases[event["phase"] as? String ?? ""] ?? phase;if let value=event["fraction"] as? Double,value.isFinite,value>=0,value<=1 {fraction=value}else{fraction=nil}
@@ -468,9 +470,15 @@ enum RefreshPolicy {
             let confirmsCurrentInstall=activeRefresh==nil && job.ipa==ipa?.path && job.gameFolder==gameFolder?.path && job.originalID==originalID && job.udid==device && job.team==team
             installIntent=nil;activeRefresh=nil;refreshAuthenticated=false;busy=false;fraction=1;completedInstallation=confirmsCurrentInstall;increasedMemoryLimit=event["increased_memory_limit"] as? Bool;phase="Instalado. Tus partidas se conservan en el dispositivo.";record(phase)
         case "error":
+            if quietSessionRecovery && activeRefresh==nil {
+                quietSessionRecovery=false;recoveringSession=false;recoveryRequested=false
+                authenticated=false;pendingRemember=nil;busy=false;error=nil
+                record("Tu cuenta sigue guardada. Conecta el Llavero cuando vayas a instalar.")
+                return
+            }
             record("La operación se detuvo. Revisa el mensaje de error.")
             let op=event["operation"] as? String
-            let codes=["registration_consent":"Este dispositivo necesita registro. Revisa el consumo de un cupo y confirma antes de instalar.","version_changed":"La versión del juego cambió o no está verificada. Instala la app con sus datos nuevos.","game_running":"El juego sigue abierto. La renovación espera para no interrumpir tu partida.","idle_unknown":"No pudimos comprobar si el juego está abierto. Guarda, ciérralo y renueva manualmente.","identity_mismatch":"Ese identificador no corresponde al equipo elegido. Detenido para conservar la app anterior.","not_installed":"No encontramos esa app instalada. Revisa el identificador antes de actualizar.","wrong_app":"La app elegida no corresponde a este juego. No se instaló encima.","storage":"No hay espacio suficiente para preparar los datos nuevos sin borrar los anteriores.","ipa_changed":"La IPA cambió. Prepara y aprueba la actualización antes de renovarla."]
+            let codes=["keychain_access":"Tu cuenta sigue guardada. Conecta el Llavero desde tu cuenta Apple para continuar.","registration_consent":"Este dispositivo necesita registro. Revisa el consumo de un cupo y confirma antes de instalar.","version_changed":"La versión del juego cambió o no está verificada. Instala la app con sus datos nuevos.","game_running":"El juego sigue abierto. La renovación espera para no interrumpir tu partida.","idle_unknown":"No pudimos comprobar si el juego está abierto. Guarda, ciérralo y renueva manualmente.","identity_mismatch":"Ese identificador no corresponde al equipo elegido. Detenido para conservar la app anterior.","not_installed":"No encontramos esa app instalada. Revisa el identificador antes de actualizar.","wrong_app":"La app elegida no corresponde a este juego. No se instaló encima.","storage":"No hay espacio suficiente para preparar los datos nuevos sin borrar los anteriores.","ipa_changed":"La IPA cambió. Prepara y aprueba la actualización antes de renovarla."]
             error=codes[event["code"] as? String ?? ""] ?? ((op=="login" || op=="restore") ? "No pudimos iniciar sesión o la sesión guardada caducó. Vuelve a iniciar sesión." : "No pudimos completar la instalación. Revisa el dispositivo, equipo y permisos. No se revocaron certificados automáticamente.")
             if op=="export_saves" || op=="copy_romfs" {
                 let failures=["game_running":"Guarda y cierra el juego desde el selector de apps antes de continuar.","idle_unknown":"No pudimos verificar que el juego esté cerrado. Guárdalo y ciérralo antes de continuar.","no_saves":"Todavía no encontramos archivos de partida guardados en este juego.","save_changed":"La partida cambió durante la exportación. Cierra el juego y vuelve a intentar.","save_metadata":"Este guardado usa metadatos que la exportación no puede conservar. Usa un respaldo completo del dispositivo.","save_destination":"Elige un ZIP nuevo; no sobrescribimos respaldos.","version_changed":"Actualiza primero la app con la misma versión que los datos preparados.","save_limits":"El guardado supera el límite de exportación de 512 MB u 8192 entradas."]
@@ -480,10 +488,10 @@ enum RefreshPolicy {
             if op=="installed_apps" {apps=[];error=(event["code"] as? String)=="scope_unavailable" ? "No pudimos limitar la consulta a tus juegos. No mostramos otras aplicaciones." : "No pudimos leer tus juegos. Desbloquea el dispositivo, confía en este Mac y vuelve a buscar."}
             if op=="devices" {error="No pudimos buscar dispositivos. Revisa la conexión y vuelve a intentar."}
             if op=="account_devices" {accountDevices=[];accountDeviceTeam="";error="Apple no devolvió los dispositivos de este equipo. Revisa tu sesión y vuelve a consultar."}
-            if op=="restore" {error="No pudimos recuperar la sesión guardada. Revisa Internet y el acceso al Llavero, o vuelve a iniciar sesión."}
+            if op=="restore" && event["code"] as? String != "keychain_access" {error="No pudimos recuperar la sesión guardada. Revisa Internet y el acceso al Llavero, o vuelve a iniciar sesión."}
             if let code=event["apple_code"] as? Int {error=(error ?? "")+" · Apple: \(code)"}
-            if op=="login" || op=="restore" {authenticated=false;pendingRemember=nil;recoveringSession=false}
-            if let refresh=activeRefresh,let index=jobs.firstIndex(where:{$0.id==refresh.id}) {jobs[index].retryAfter=Date().addingTimeInterval((event["code"] as? String)=="game_running" ? 600 : 6*3600);jobs[index].needsLogin=(op=="restore");saveJobs()}
+            if op=="login" || op=="restore" {authenticated=false;pendingRemember=nil;recoveringSession=false;quietSessionRecovery=false}
+            if let refresh=activeRefresh,let index=jobs.firstIndex(where:{$0.id==refresh.id}) {jobs[index].retryAfter=Date().addingTimeInterval((event["code"] as? String)=="game_running" ? 600 : 6*3600);jobs[index].needsLogin=(op=="restore" || event["code"] as? String=="keychain_access");saveJobs()}
             if let error {record(error)}
             activeRefresh=nil;installIntent=nil;refreshAuthenticated=false;codeRequired=false;busy=false
         default:break
@@ -503,13 +511,16 @@ enum RefreshPolicy {
         guard !automaticRecoveryAttempted,!authenticated,hasRememberedSession else {recoveryRequested=false;return}
         recoveryRequested=true
         guard !busy,activeRefresh==nil else {return}
-        restoreSession()
+        connect()
+        guard process?.isRunning==true else {recoveryRequested=false;automaticRecoveryAttempted=true;return}
+        guard helperCapabilities.contains("quiet-keychain-v1") else {return}
+        restoreSession(interactive:false)
     }
-    func restoreSession() {
+    func restoreSession(interactive:Bool=true) {
         guard !busy,!email.isEmpty,defaults.string(forKey:"sideloadEmail")==email else {return}
-        recoveryRequested=false;automaticRecoveryAttempted=true;recoveringSession=true;pendingRemember=nil
+        recoveryRequested=false;automaticRecoveryAttempted=true;recoveringSession=true;quietSessionRecovery = !interactive;pendingRemember=nil
         busy=true;error=nil;startedAt=Date();fraction=nil;phase="Recuperando tu sesión del Llavero…";record(phase)
-        send(["op":"restore","email":email,"anisette_url":anisette])
+        send(["op":"restore","email":email,"anisette_url":anisette,"interactive":interactive])
     }
     // This is an opt-in marker, not proof that Keychain or Apple will accept the saved session.
     var hasRememberedSession:Bool {defaults.string(forKey:"sideloadEmail")==email && !email.isEmpty}
@@ -565,7 +576,8 @@ enum RefreshPolicy {
         }
         guard devices.contains(where:{$0.id==job.udid}) else {if manualRefresh {error="Conecta y desbloquea el dispositivo donde instalaste este juego."};activeRefresh=nil;return}
         guard teams.contains(where:{$0.id==job.team}) || !refreshAuthenticated else {error="La cuenta actual no tiene el equipo original de este juego. No cambiamos su identidad.";activeRefresh=nil;return}
-        if !refreshAuthenticated {recoveryRequested=false;automaticRecoveryAttempted=true;recoveringSession=true;busy=true;phase="Recuperando tu sesión del Llavero…";send(["op":"restore","email":email,"anisette_url":anisette])}
+        if !manualRefresh && !helperCapabilities.contains("quiet-keychain-v1") {error="Actualiza la app para renovar sin abrir avisos del Llavero.";activeRefresh=nil;return}
+        if !refreshAuthenticated {quietSessionRecovery = !manualRefresh;recoveryRequested=false;automaticRecoveryAttempted=true;recoveringSession=true;busy=true;phase="Recuperando tu sesión del Llavero…";send(["op":"restore","email":email,"anisette_url":anisette,"interactive":manualRefresh])}
         else {startInstall(job,updating:true,content:nil)}
     }
     static var backgroundEnabled:Bool {SMAppService.agent(plistName:"com.nalancer08.nxnative.refresh.plist").status == .enabled}
@@ -684,8 +696,9 @@ struct SideloadView:View {
                     VStack(alignment:.leading,spacing:16) {
                         Label(text("Tu cuenta está guardada en este Mac"),systemImage:"key.horizontal").font(.headline)
                         Text(model.email).font(.callout).textSelection(.enabled)
-                        Text(text("Recupera la sesión del Llavero. Si Apple vuelve a pedir acceso, inicia sesión con tu contraseña.")).font(.callout).foregroundStyle(.secondary)
-                        Button(text("Reintentar sesión guardada")){model.restoreSession()}.buttonStyle(EasyPrimaryStyle())
+                        Text(text("Conecta tu cuenta cuando la necesites. La biblioteca y tus partidas no requieren acceso al Llavero.")).font(.callout).foregroundStyle(.secondary)
+                        Text(text("Si vienes de una versión anterior, la primera conexión puede pedir permisos para conservar tu cuenta.")).font(.caption).foregroundStyle(.secondary)
+                        Button(text("Conectar cuenta guardada")){model.restoreSession()}.buttonStyle(EasyPrimaryStyle())
                         Button(text("Entrar con contraseña")){usePassword=true}.buttonStyle(EasyLinkStyle())
                     }
                 }

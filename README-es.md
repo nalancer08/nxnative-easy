@@ -10,7 +10,7 @@ Una biblioteca que te lleva de tus propios archivos a una app lista para jugar, 
 
 Descomprime → arrastra **nxnative Easy.app** a **Aplicaciones** → ábrela. **Sin Terminal ni compilar la interfaz.** La app incluye sus herramientas.
 
-![Tu biblioteca de juegos](docs/images/nxnative-library-es-v1.14.1.png)
+![Tu biblioteca de juegos](docs/images/nxnative-library-es-v1.23.png)
 
 ## Switch 2 en Mac
 

@@ -662,7 +662,7 @@ struct ContentView: View {
                         HStack {
                             Text(model.text(["¿Dónde quieres jugar?","Añade tu juego","Tus llaves, en tu Mac","Todo listo para preparar","Creando tu juego","Tu juego está preparado"][min(5,model.preparationStep)])).font(.system(size:32,weight:.bold,design:.rounded)).foregroundStyle(ink)
                             Spacer()
-                            if model.preparationStep>0 && model.preparationStep<4 {Button(model.text("Atrás")){model.preparationStep-=1}.disabled(model.running || sideload.busy || updater.busy)}
+                            if model.preparationStep>0 && model.preparationStep<4 {Button(model.text("Atrás")){model.preparationStep-=1}.disabled(model.running || sideload.blocksGameWork || updater.busy)}
                         }
                         HStack(spacing:6) {
                             ForEach(0..<5) {step in Capsule().fill(step<=model.preparationStep ? lime : .white.opacity(0.08)).frame(height:4)}
@@ -678,10 +678,10 @@ struct ContentView: View {
                                     VStack(spacing:16) {Image(systemName:target=="ios" ? "ipad.and.iphone" : "desktopcomputer").font(.system(size:46,weight:.light));Text(target == "ios" ? "iPhone / iPad" : "Mac").font(.title2.bold());Text(model.text(target=="ios" ? "Prepara la IPA y te guiamos para instalarla." : "Una app completa. Preparar y jugar en este Mac.")).font(.callout).multilineTextAlignment(.center)}.frame(maxWidth:.infinity,minHeight:200).padding(20)
                                         .foregroundStyle(model.target == target ? Color.black : ink)
                                         .background(model.target == target ? lime : Color.white.opacity(0.06),in:RoundedRectangle(cornerRadius:9))
-                                }.buttonStyle(.plain).disabled(model.running || updater.busy || sideload.busy).accessibilityIdentifier("target-"+target)
+                                }.buttonStyle(.plain).disabled(model.running || updater.busy || sideload.blocksGameWork).accessibilityIdentifier("target-"+target)
                             }
                         }
-                        Button(model.text("Continuar")){model.preparationStep=1}.buttonStyle(LibraryPrimaryButtonStyle()).disabled(model.target.isEmpty || model.running || sideload.busy || updater.busy)
+                        Button(model.text("Continuar")){model.preparationStep=1}.buttonStyle(LibraryPrimaryButtonStyle()).disabled(model.target.isEmpty || model.running || sideload.blocksGameWork || updater.busy)
                         }
                         if model.preparationStep==1 {
                         HStack(spacing:12) {
@@ -694,7 +694,7 @@ struct ContentView: View {
                                 }
                             }
                             Spacer()
-                            Button(model.folder == nil ? model.text("Elegir") : model.text("Cambiar")) {model.chooseFolder()}.disabled(model.running || updater.busy || sideload.busy).accessibilityLabel(model.text("Carpeta de tu juego"))
+                            Button(model.folder == nil ? model.text("Elegir") : model.text("Cambiar")) {model.chooseFolder()}.disabled(model.running || updater.busy || sideload.blocksGameWork).accessibilityLabel(model.text("Carpeta de tu juego"))
                         }
                         PackageIdentityView(inspection:model.inspection,inspecting:model.inspecting,hasKeys:model.readableKeys || model.isDumpFolder,catalog:model.catalog,text:model.text,chooseKeys:{model.chooseKeysFolder()},retry:{model.identifyGame()},setup:{model.identifyGame(setupTools:true)},cancel:{model.cancelInspection()})
                         if model.isDumpFolder && model.target != "mac" {
@@ -704,7 +704,7 @@ struct ContentView: View {
                         if model.inspection?.ready==true {
                             DisclosureGroup(model.text("Ver archivos detectados")) {PreparationInventory(files:model.detectedFiles,text:model.text)}.font(.callout).foregroundStyle(.secondary)
                         } else {PreparationInventory(files:model.detectedFiles,text:model.text)}
-                        Button(model.text("Continuar")){model.preparationStep=(model.readableKeys || model.isDumpFolder) ? 3 : 2}.buttonStyle(LibraryPrimaryButtonStyle()).disabled(model.inspecting || model.inspection?.ready != true || (model.isDumpFolder && model.target != "mac") || model.failed || model.folder==nil || (model.detectedFiles.isEmpty || model.detectedFiles.contains(where:{!$0.readable})) || model.running || sideload.busy || updater.busy)
+                        Button(model.text("Continuar")){model.preparationStep=(model.readableKeys || model.isDumpFolder) ? 3 : 2}.buttonStyle(LibraryPrimaryButtonStyle()).disabled(model.inspecting || model.inspection?.ready != true || (model.isDumpFolder && model.target != "mac") || model.failed || model.folder==nil || (model.detectedFiles.isEmpty || model.detectedFiles.contains(where:{!$0.readable})) || model.running || sideload.blocksGameWork || updater.busy)
                         }
                         if model.preparationStep==2 {
                         HStack(spacing:12) {
@@ -715,11 +715,11 @@ struct ContentView: View {
                                     .font(.system(size:12)).foregroundStyle(.secondary)
                             }
                             Spacer()
-                            Button(model.keysFolder == nil ? model.text("Elegir") : model.text("Cambiar")) {model.chooseKeysFolder()}.disabled(model.running || updater.busy || sideload.busy).accessibilityLabel(model.text("Seleccionar prod.keys"))
+                            Button(model.keysFolder == nil ? model.text("Elegir") : model.text("Cambiar")) {model.chooseKeysFolder()}.disabled(model.running || updater.busy || sideload.blocksGameWork).accessibilityLabel(model.text("Seleccionar prod.keys"))
                         }
                         Label(model.text(model.readableKeys ? "Recordamos su ubicación. La compatibilidad de las llaves se comprueba al preparar." : "Elige prod.keys o arrástralo aquí. No necesitas seleccionar una carpeta."),systemImage:model.readableKeys ? "checkmark.shield" : "hand.draw").font(.callout).foregroundStyle(.secondary)
                         if model.folder != nil {PackageIdentityView(inspection:model.inspection,inspecting:model.inspecting,hasKeys:model.readableKeys || model.isDumpFolder,catalog:model.catalog,text:model.text,chooseKeys:{model.chooseKeysFolder()},retry:{model.identifyGame()},setup:{model.identifyGame(setupTools:true)},cancel:{model.cancelInspection()})}
-                        Button(model.text("Continuar")){model.preparationStep=3}.buttonStyle(LibraryPrimaryButtonStyle()).disabled(model.inspecting || model.inspection?.ready != true || model.failed || !model.readableKeys || model.running || sideload.busy || updater.busy)
+                        Button(model.text("Continuar")){model.preparationStep=3}.buttonStyle(LibraryPrimaryButtonStyle()).disabled(model.inspecting || model.inspection?.ready != true || model.failed || !model.readableKeys || model.running || sideload.blocksGameWork || updater.busy)
                         }
                         if model.preparationStep==3 {
                             Label(model.isMac ? "Mac" : "iPhone / iPad",systemImage:model.isMac ? "desktopcomputer" : "ipad.and.iphone").font(.title2.bold())
@@ -728,7 +728,7 @@ struct ContentView: View {
                             Label(model.text(model.isDumpFolder ? "No necesita prod.keys" : "Llaves seleccionadas"),systemImage: model.isDumpFolder ? "checkmark.shield" : "key.horizontal").foregroundStyle(.secondary)
                         }
                         if model.target=="ios" && model.preparationStep==3 {
-                            Toggle(model.text("IPA ligera: separar los datos del juego"),isOn:$model.splitIOS).disabled(model.running || updater.busy || sideload.busy)
+                            Toggle(model.text("IPA ligera: separar los datos del juego"),isOn:$model.splitIOS).disabled(model.running || updater.busy || sideload.blocksGameWork)
                             Text(model.text(model.splitIOS ? "Recomendado: la app pesa menos y el instalador copia romfs por separado." : "IPA completa: incluye el juego dentro. Ocupa más y cada renovación vuelve a transferir toda la app.")).font(.caption).foregroundStyle(.secondary)
                             Label(model.text("Carpeta y llaves → Preparar → Cuenta Apple → Instalar y copiar datos"),systemImage:"arrow.right.circle").font(.caption).foregroundStyle(.secondary)
                         }
@@ -776,9 +776,9 @@ struct ContentView: View {
                                     Image(systemName:"arrow.right")
                                 }.font(.system(size:15,weight:.bold)).padding(15).foregroundStyle(Color.black)
                                     .background(model.folder == nil || model.target.isEmpty ? Color.gray : lime,in:RoundedRectangle(cornerRadius:10))
-                            }.buttonStyle(.plain).disabled(model.folder == nil || model.target.isEmpty || updater.busy || sideload.busy)
+                            }.buttonStyle(.plain).disabled(model.folder == nil || model.target.isEmpty || updater.busy || sideload.blocksGameWork)
                         }
-                        if model.output != nil && model.preparationStep==3 {Button(model.text("Usar la preparación existente")){model.preparationStep=5}.disabled(sideload.busy || updater.busy)}
+                        if model.output != nil && model.preparationStep==3 {Button(model.text("Usar la preparación existente")){model.preparationStep=5}.disabled(sideload.blocksGameWork || updater.busy)}
                         if model.failed && model.preparationStep==4 {Button(model.text("Revisar e intentar de nuevo")){model.preparationStep=3}.disabled(model.running)}
                         if model.preparationStep==4 && model.activity.eta==nil {Text(model.text("Esta etapa todavía no informa cuánto falta. Mostramos el avance real y el tiempo transcurrido.")).font(.caption).foregroundStyle(.secondary)}
                         if let eta=model.activity.eta,model.running {Text(model.text("Tiempo restante de esta etapa")+": ~"+String(Int(eta))+" s").font(.callout).monospacedDigit()}
@@ -817,7 +817,7 @@ struct ContentView: View {
                             }.font(.system(size:12))
                             }
                             Button(model.text("Tus partidas")){model.showSaves=true}
-                            Button(model.text(model.previous == nil ? "Preparar de nuevo" : "Preparar actualización")){model.preparationStep=3}.buttonStyle(.link).disabled(updater.busy || sideload.busy)
+                            Button(model.text(model.previous == nil ? "Preparar de nuevo" : "Preparar actualización")){model.preparationStep=3}.buttonStyle(.link).disabled(updater.busy || sideload.blocksGameWork)
                         }.padding(22).frame(maxWidth:.infinity,alignment:.leading)
                             .background(lime.opacity(0.045),in:RoundedRectangle(cornerRadius:16))
                     }

@@ -25,8 +25,8 @@ import Foundation
     }
     private var checking=false
     private struct Event: Decodable {let phase:String;let progress:Double?;let message:String?}
-    init() {
-        let failure=FileManager.default.homeDirectoryForCurrentUser
+    init(failureURL:URL?=nil) {
+        let failure=failureURL ?? FileManager.default.homeDirectoryForCurrentUser
             .appendingPathComponent("Library/Application Support/nxnative Easy/Updates/last-error.json")
         if FileManager.default.fileExists(atPath:failure.path) {
             error="No pudimos actualizar. Tu versión anterior se conservó."

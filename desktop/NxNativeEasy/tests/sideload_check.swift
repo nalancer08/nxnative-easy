@@ -13,7 +13,7 @@ import Foundation
         #!/usr/bin/python3
         import sys,json,time,zipfile,os
         def emit(value):print(json.dumps(value),flush=True)
-        emit({'event':'hello','protocol':1,'architecture':'aarch64','capabilities':['scoped-games-v1','save-export-v1','romfs-copy-v1','registration-consent-v1']})
+        emit({'event':'hello','protocol':1,'architecture':'aarch64','capabilities':['scoped-games-v1','save-export-v1','romfs-copy-v1','registration-consent-v1','quiet-keychain-v1','account-vault-v1']})
         for line in sys.stdin:
             value=json.loads(line)
             with open(os.path.join(os.path.dirname(__file__),'operations.log'),'a') as audit:audit.write(value['op']+'\\n')
@@ -28,7 +28,10 @@ import Foundation
                 assert value['code']=='123456'
                 emit({'event':'signed_in','teams':[{'id':'ABCDE12345','name':'Personal test team'}]})
             elif value['op']=='restore':
-                if value['email']=='unavailable@example.invalid':emit({'event':'error','operation':'restore','code':'failed'})
+                with open(os.path.join(os.path.dirname(__file__),'restore-flags.log'),'a') as f:f.write(str(value.get('interactive'))+'\\n')
+                if value['email']=='slow@example.invalid':time.sleep(0.2)
+                if value['email']=='slow@example.invalid':emit({'event':'error','operation':'restore','code':'keychain_access'})
+                elif value['email']=='unavailable@example.invalid':emit({'event':'error','operation':'restore','code':'failed'})
                 else:emit({'event':'signed_in','teams':[{'id':'ABCDE12345','name':'Personal test team'}]})
             elif value['op']=='install':
                 assert value['automatic']==False and value['update']==True
@@ -78,12 +81,14 @@ import Foundation
         restarted.recoverRememberedSessionIfNeeded();assert(!restarted.busy && restoredCount()==2);restarted.cancel()
         recoveryDefaults.set("unavailable@example.invalid",forKey:"sideloadEmail")
         let unavailable=SideloadModel(stateURL:root.appendingPathComponent("recovery/unavailable.json"),defaults:recoveryDefaults,helperURL:helper)
-        unavailable.recoverRememberedSessionIfNeeded();try await wait {!unavailable.busy && unavailable.error != nil}
-        assert(restoredCount()==3 && unavailable.hasRememberedSession && !unavailable.recoveringSession)
+        unavailable.recoverRememberedSessionIfNeeded();try await wait {!unavailable.busy && restoredCount()==3}
+        assert(restoredCount()==3 && unavailable.hasRememberedSession && !unavailable.recoveringSession && unavailable.error==nil && !unavailable.blocksGameWork)
         unavailable.recoverRememberedSessionIfNeeded();try await Task.sleep(nanoseconds:50_000_000);assert(restoredCount()==3)
         unavailable.restoreSession();try await wait {!unavailable.busy};assert(restoredCount()==4 && unavailable.hasRememberedSession);unavailable.cancel()
         let unavailableHelper=SideloadModel(stateURL:root.appendingPathComponent("recovery/missing.json"),defaults:recoveryDefaults,helperURL:root.appendingPathComponent("missing-helper"))
         unavailableHelper.recoverRememberedSessionIfNeeded();assert(!unavailableHelper.busy && !unavailableHelper.recoveringSession && unavailableHelper.hasRememberedSession)
+        let flags=try String(contentsOf:root.appendingPathComponent("restore-flags.log"),encoding:.utf8)
+        assert(flags.split(separator:"\n").prefix(4).map(String.init)==["False","False","False","True"])
         let recoveryOperations=try String(contentsOf:root.appendingPathComponent("operations.log"),encoding:.utf8)
         assert(!recoveryOperations.split(separator:"\n").contains("install") && !recoveryOperations.split(separator:"\n").contains("login"))
         recoveryDefaults.set("saved@example.invalid",forKey:"sideloadEmail")
@@ -207,6 +212,20 @@ import Foundation
         let unrelated=root.appendingPathComponent("unrelated.zip")
         model.exportSaves(InstalledGame(id:"com.unrelated.private",name:selected.name),destination:unrelated,confirmedClosed:true);assert(!FileManager.default.fileExists(atPath:unrelated.path))
         model.cancel()
+        recoveryDefaults.set("slow@example.invalid",forKey:"sideloadEmail")
+        let quiet=SideloadModel(stateURL:root.appendingPathComponent("quiet/jobs.json"),defaults:recoveryDefaults,helperURL:helper)
+        quiet.recoverRememberedSessionIfNeeded();try await wait {quiet.recoveringSession}
+        assert(quiet.busy && quiet.quietSessionRecovery && !quiet.blocksGameWork)
+        try await wait {!quiet.busy};assert(quiet.hasRememberedSession && quiet.error==nil && !quiet.quietSessionRecovery)
+        quiet.restoreSession();try await wait {quiet.recoveringSession}
+        assert(quiet.blocksGameWork && !quiet.quietSessionRecovery)
+        try await wait {!quiet.busy};assert(quiet.hasRememberedSession && quiet.error != nil);quiet.cancel()
+        let oldHelper=root.appendingPathComponent("old-helper")
+        let oldScript=try String(contentsOf:helper,encoding:.utf8).replacingOccurrences(of:",'quiet-keychain-v1'",with:"").replacingOccurrences(of:",'account-vault-v1'",with:"")
+        try oldScript.write(to:oldHelper,atomically:true,encoding:.utf8);try FileManager.default.setAttributes([.posixPermissions:0o700],ofItemAtPath:oldHelper.path)
+        let old=SideloadModel(stateURL:root.appendingPathComponent("old/jobs.json"),defaults:recoveryDefaults,helperURL:oldHelper)
+        let beforeOld=restoredCount();old.recoverRememberedSessionIfNeeded();try await Task.sleep(nanoseconds:150_000_000)
+        old.recoverRememberedSessionIfNeeded();assert(!old.busy && old.hasRememberedSession && restoredCount()==beforeOld);old.cancel()
         print("Sideload client PASS: multi-game persistence, explicit manual refresh with original identity/hash and no RomFS recopy, account guard, metadata-only removal; private stdio login/2FA, explicit team selection, logout, refresh account/expiry/backoff guards, custom update identity and save-location mapping")
     }
     @MainActor static func wait(_ condition:()->Bool) async throws {
