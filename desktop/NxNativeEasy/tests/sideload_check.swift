@@ -220,6 +220,14 @@ import Foundation
         quiet.restoreSession();try await wait {quiet.recoveringSession}
         assert(quiet.blocksGameWork && !quiet.quietSessionRecovery)
         try await wait {!quiet.busy};assert(quiet.hasRememberedSession && quiet.error != nil);quiet.cancel()
+        let autoState=root.appendingPathComponent("automatic/jobs.json")
+        try FileManager.default.createDirectory(at:autoState.deletingLastPathComponent(),withIntermediateDirectories:true)
+        var autoJob=job;autoJob.account=RefreshPolicy.account("slow@example.invalid");autoJob.enabled=true;autoJob.expires=Date().addingTimeInterval(100);autoJob.needsLogin=false;autoJob.retryAfter=nil
+        try JSONEncoder().encode([autoJob]).write(to:autoState)
+        let automatic=SideloadModel(stateURL:autoState,defaults:recoveryDefaults,helperURL:helper)
+        automatic.checkRefresh();try await wait {automatic.recoveringSession}
+        assert(automatic.quietSessionRecovery && !automatic.recoveringQuietlyAtStartup && automatic.blocksGameWork)
+        try await wait {!automatic.busy};assert(automatic.jobs[0].needsLogin && automatic.hasRememberedSession);automatic.cancel()
         let oldHelper=root.appendingPathComponent("old-helper")
         let oldScript=try String(contentsOf:helper,encoding:.utf8).replacingOccurrences(of:",'quiet-keychain-v1'",with:"").replacingOccurrences(of:",'account-vault-v1'",with:"")
         try oldScript.write(to:oldHelper,atomically:true,encoding:.utf8);try FileManager.default.setAttributes([.posixPermissions:0o700],ofItemAtPath:oldHelper.path)

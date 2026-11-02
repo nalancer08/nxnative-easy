@@ -80,5 +80,5 @@ An IPA count is not an installation count. Per-device proof remains in the game
 detail. The empty state hides search/counters and has one primary Add game action.
 At 1000 × 640 the shorter detail artwork keeps the main action visible; further
 detail still scrolls. Keep keyboard/selection semantics and translated labels.
-Quiet account recovery must not block browsing or preparing games, nor display
+Quiet startup account recovery must not block browsing or preparing games, nor display
 an intrusive global account spinner. Actual installer operations keep their guards.

@@ -128,7 +128,8 @@ enum RefreshPolicy {
     @Published private(set) var increasedMemoryLimit:Bool?
     @Published private(set) var recoveringSession=false
     @Published private(set) var quietSessionRecovery=false
-    var blocksGameWork:Bool {busy && !(recoveringSession && quietSessionRecovery)}
+    var recoveringQuietlyAtStartup:Bool {recoveringSession && quietSessionRecovery && activeRefresh==nil}
+    var blocksGameWork:Bool {busy && !recoveringQuietlyAtStartup}
     private var recoveryRequested=false
     private var automaticRecoveryAttempted=false
     @Published var busy=false {
@@ -470,7 +471,7 @@ enum RefreshPolicy {
             let confirmsCurrentInstall=activeRefresh==nil && job.ipa==ipa?.path && job.gameFolder==gameFolder?.path && job.originalID==originalID && job.udid==device && job.team==team
             installIntent=nil;activeRefresh=nil;refreshAuthenticated=false;busy=false;fraction=1;completedInstallation=confirmsCurrentInstall;increasedMemoryLimit=event["increased_memory_limit"] as? Bool;phase="Instalado. Tus partidas se conservan en el dispositivo.";record(phase)
         case "error":
-            if quietSessionRecovery && activeRefresh==nil {
+            if recoveringQuietlyAtStartup {
                 quietSessionRecovery=false;recoveringSession=false;recoveryRequested=false
                 authenticated=false;pendingRemember=nil;busy=false;error=nil
                 record("Tu cuenta sigue guardada. Conecta el Llavero cuando vayas a instalar.")

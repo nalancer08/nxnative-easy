@@ -156,7 +156,7 @@ struct LibraryWorkspace:View {
                     }
                 }
             }
-            if sideload.recoveringSession && !sideload.quietSessionRecovery && page != .settings && !model.showSideload && !model.installingInline {
+            if sideload.recoveringSession && !sideload.recoveringQuietlyAtStartup && page != .settings && !model.showSideload && !model.installingInline {
                 Divider()
                 HStack(spacing:12) {
                     ProgressView().controlSize(.small)
