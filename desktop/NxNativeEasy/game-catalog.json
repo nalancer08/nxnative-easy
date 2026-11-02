@@ -253,6 +253,16 @@
       "caption": ""
     },
     {
+      "id": "0100BA4026E94000",
+      "name": "Castlevania: Belmont's Curse",
+      "versions": [
+        "1.1.0"
+      ],
+      "notes": "dm/games/0100BA4026E94000/README.md",
+      "artwork": "docs/images/castlevania-belmonts-curse.jpg",
+      "caption": ""
+    },
+    {
       "id": "0100BF00112C0000",
       "name": "Catherine: Full Body",
       "versions": [
@@ -461,6 +471,16 @@
       "notes": "dm/games/0100A6301214E000/README.md",
       "artwork": "docs/images/fire-emblem-engage.jpg",
       "caption": "60 fps with 2.0.0"
+    },
+    {
+      "id": "04007EF01F8AE000",
+      "name": "Fire Emblem Fortune's Weave",
+      "versions": [
+        "v131072"
+      ],
+      "notes": "dm/games/04007EF01F8AE000/README.md",
+      "artwork": "docs/images/fire-emblem-fortunes-weave.jpg",
+      "caption": "Switch 2, Mac only, from a dump"
     },
     {
       "id": "010055D009F78000",
@@ -934,6 +954,16 @@
       "caption": ""
     },
     {
+      "id": "0400380020056000",
+      "name": "Splatoon Raiders",
+      "versions": [
+        "v65536"
+      ],
+      "notes": "dm/games/0400380020056000/README.md",
+      "artwork": "docs/images/splatoon-raiders.jpg",
+      "caption": "Switch 2, Mac only, from a dump"
+    },
+    {
       "id": "0100E65002BB8000",
       "name": "Stardew Valley",
       "versions": [
@@ -1086,6 +1116,16 @@
       "caption": ""
     },
     {
+      "id": "0100BC0018138000",
+      "name": "Super Mario RPG",
+      "versions": [
+        "1.0.1"
+      ],
+      "notes": "dm/games/0100BC0018138000/README.md",
+      "artwork": "docs/images/super-mario-rpg.jpg",
+      "caption": ""
+    },
+    {
       "id": "010031F019294000",
       "name": "Super Monkey Ball Banana Rumble",
       "versions": [
@@ -1093,6 +1133,16 @@
       ],
       "notes": "dm/games/010031F019294000/README.md",
       "artwork": "docs/images/super-monkey-ball-banana-rumble.jpg",
+      "caption": ""
+    },
+    {
+      "id": "010063301BD50000",
+      "name": "SUPER ROBOT WARS Y",
+      "versions": [
+        "1.4.1"
+      ],
+      "notes": "dm/games/010063301BD50000/README.md",
+      "artwork": "docs/images/super-robot-wars-y.jpg",
       "caption": ""
     },
     {
@@ -1174,6 +1224,16 @@
       "notes": "dm/games/0100F2C0115B6000/README.md",
       "artwork": "docs/images/zelda-tears-of-the-kingdom.jpg",
       "caption": "60 fps with 1.4.3"
+    },
+    {
+      "id": "0100CC80140F8000",
+      "name": "TRIANGLE STRATEGY",
+      "versions": [
+        "1.1.1"
+      ],
+      "notes": "dm/games/0100CC80140F8000/README.md",
+      "artwork": "docs/images/triangle-strategy.jpg",
+      "caption": ""
     },
     {
       "id": "010069401ADB8000",

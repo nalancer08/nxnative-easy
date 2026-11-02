@@ -50,6 +50,7 @@
   "0100620012D6E000": "docs/images/big-brain-academy-brain-vs-brain.jpg",
   "010062B01525C000": "docs/images/persona-4-golden.jpg",
   "0100633007D48000": "docs/images/hollow-knight.jpg",
+  "010063301BD50000": "docs/images/super-robot-wars-y.jpg",
   "0100646009FBE000": "docs/images/dead-cells.jpg",
   "010067300059A000": "docs/images/mario-rabbids-kingdom-battle.jpg",
   "010069401ADB8000": "docs/images/unicorn-overlord.jpg",
@@ -100,12 +101,15 @@
   "0100B8A026F14000": "docs/images/final-fantasy-resonance.jpg",
   "0100B8E016F76000": "docs/images/nier-automata.png",
   "0100B99019412000": "docs/images/mario-vs-donkey-kong.jpg",
+  "0100BA4026E94000": "docs/images/castlevania-belmonts-curse.jpg",
+  "0100BC0018138000": "docs/images/super-mario-rpg.jpg",
   "0100BC300CB48000": "docs/images/final-fantasy-x-x2-hd-remaster.jpg",
   "0100BF00112C0000": "docs/images/catherine-full-body.jpg",
   "0100C1F0051B6000": "docs/images/donkey-kong-country-tropical-freeze.jpg",
   "0100C2A01A730000": "docs/images/romance-of-the-three-kingdoms-8-remake.jpg",
   "0100C49025D3E000": "docs/images/ea-sports-fc-27.jpg",
   "0100CA9002322000": "docs/images/steamworld-dig-2.jpg",
+  "0100CC80140F8000": "docs/images/triangle-strategy.jpg",
   "0100CD801CE5E000": "docs/images/balatro.jpg",
   "0100CE4010AAC000": "docs/images/final-fantasy-crystal-chronicles.jpg",
   "0100D5B026844000": "docs/images/silver-pines.jpg",
@@ -122,5 +126,7 @@
   "0100F5D01DA3A000": "docs/images/brain-memory-training-academy.jpg",
   "0100FD8022DAA000": "docs/images/super-mario-galaxy-2.jpg",
   "0100FF500E34A000": "docs/images/xenoblade-chronicles-definitive-edition.jpg",
-  "040074A01BF12000": "docs/images/donkey-kong-bananza.jpg"
+  "0400380020056000": "docs/images/splatoon-raiders.jpg",
+  "040074A01BF12000": "docs/images/donkey-kong-bananza.jpg",
+  "04007EF01F8AE000": "docs/images/fire-emblem-fortunes-weave.jpg"
 }

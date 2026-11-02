@@ -12,9 +12,36 @@ import urllib.request
 
 PYTHON_URL='https://github.com/astral-sh/python-build-standalone/releases/download/20261026/cpython-3.13.18%2B20261026-aarch64-apple-darwin-install_only_stripped.tar.gz'
 PYTHON_SHA='8392b6ea51d94391befb2c31ebe75463f045d0b69dfcf5e1bb3234e1f5fa3405'
+ZBIC_SOURCE_URL='https://files.pythonhosted.org/packages/51/34/a108004438db175641f13b9d9de8b6b57c96911c582e8f39fc57b277f9d8/zbic-1.0.1.post1.tar.gz'
+ZBIC_SOURCE_SHA='a798c24aea58f81a0b4bb0226f0f383b7e7f07a9a0150732cb45dc65ac541ff3'
 
 
 def run(*args):return subprocess.check_output(args,text=True).strip()
+
+
+def python_dependencies(destination):
+    # A copied tool bundle may predate a new engine dependency. Reconcile the
+    # staged copy too; never install into the user's currently installed app.
+    requirements=Path(__file__).resolve().parents[1]/'desktop/portable-requirements.txt'
+    subprocess.run([str(destination/'python/bin/python3'),'-m','pip','install','--disable-pip-version-check',
+                    '--no-compile','--only-binary=:all:','-r',str(requirements)],check=True)
+    return hashlib.sha256(requirements.read_bytes()).hexdigest()
+
+
+def dependency_sources(destination,cache):
+    # Ship the exact corresponding source alongside the GPL ZBIC decoder wheel.
+    # The archive includes its license and the modified compression sources.
+    archive=cache/'zbic-1.0.1.post1.tar.gz'
+    if not archive.exists():
+        with urllib.request.urlopen(ZBIC_SOURCE_URL,timeout=60) as reader:payload=reader.read(2*1024*1024+1)
+        if len(payload)>2*1024*1024 or hashlib.sha256(payload).hexdigest()!=ZBIC_SOURCE_SHA:
+            raise ValueError('ZBIC corresponding-source checksum mismatch')
+        part=archive.with_suffix('.download');part.write_bytes(payload);part.replace(archive)
+    if hashlib.sha256(archive.read_bytes()).hexdigest()!=ZBIC_SOURCE_SHA:
+        raise ValueError('ZBIC corresponding-source checksum mismatch')
+    notices=destination/'Licenses';notices.mkdir(exist_ok=True)
+    shutil.copy2(archive,notices/archive.name)
+    return {'zbic':{'version':'1.0.1.post1','source':ZBIC_SOURCE_URL,'sha256':ZBIC_SOURCE_SHA,'archive':archive.name}}
 
 
 def build_reader(destination,cache):
@@ -42,8 +69,10 @@ def bundle(destination,cache):
     if destination.exists():
         manifest=json.loads((destination/'manifest.json').read_text())
         if manifest['python']['sha256']!=PYTHON_SHA:raise ValueError('Wrong cached runtime')
+        manifest['python_requirements_sha256']=python_dependencies(destination)
         manifest['reader_source_sha256']=build_reader(destination,cache)
         copy_notices(destination)
+        manifest['dependency_sources']=dependency_sources(destination,cache)
         manifest['dotnet_sdks']=[line.split(' [')[0] for line in run(str(destination/'dotnet/dotnet'),'--list-sdks').splitlines()]
         (destination/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
         return
@@ -55,8 +84,7 @@ def bundle(destination,cache):
         temporary.replace(archive)
     if hashlib.sha256(archive.read_bytes()).hexdigest()!=PYTHON_SHA:raise ValueError('Python runtime checksum mismatch')
     with tarfile.open(archive) as source:source.extractall(destination,filter='data')
-    python=destination/'python/bin/python3'
-    subprocess.run([str(python),'-m','pip','install','--disable-pip-version-check','--only-binary=:all:','-r',str(Path(__file__).resolve().parents[1]/'desktop/portable-requirements.txt')],check=True)
+    requirements_hash=python_dependencies(destination)
     bin_dir=destination/'bin';lib_dir=destination/'lib';licenses=destination/'Licenses'
     for folder in (bin_dir,lib_dir,licenses):folder.mkdir()
     sources={};copied={}
@@ -97,4 +125,6 @@ def bundle(destination,cache):
     reader_hash=build_reader(destination,cache)
     copy_notices(destination)
     manifest={'reader_source_sha256':reader_hash,'schema':1,'architecture':'arm64','python':{'source':PYTHON_URL,'sha256':PYTHON_SHA},'tools':sources,'dotnet_sdks':[line.split(' [')[0] for line in run(str(destination/'dotnet/dotnet'),'--list-sdks').splitlines()]}
+    manifest['python_requirements_sha256']=requirements_hash
+    manifest['dependency_sources']=dependency_sources(destination,cache)
     (destination/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')

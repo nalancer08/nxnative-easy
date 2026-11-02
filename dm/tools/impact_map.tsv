@@ -115,6 +115,15 @@ dm/gfx/tools/uepak.py	shader:stage:*	Unreal archive input to shader scanning
 dm/host/romfs_image.h	hle:*fs*	RomFS image index validation shared by mounts and iOS startup
 dm/host/romfs_identity.h	*:*	RomFS identity checks at iOS startup for every game's separate deployment
 dm/host/hle_fs.c	hle:*fs*	filesystem mounts, paths and file operations
+dm/host/hle_audio.c:(notify_release|event_notify)	hle:*AudioOutE*	guest AudioOut buffer-release notifications; the host renderer uses rel_sem
+dm/host/hle_movie_av1.*	hle:*codec*	AV1 VideoToolbox helper used by Switch 2 codec clients
+dm/host/hle_movie_avc.c	hle:*codec*	H.264 VideoToolbox helper used by codec clients
+dm/host/hle_movie_avc.c	hle:*movie*	H.264 VideoToolbox helper used by movie clients
+dm/host/dm.h	*:*	shared host ABI and declarations
+dm/host/hle.h	hle:*	shared HLE declarations and service boundaries
+dm/mac/Launcher.swift	present:*	the Mac game settings and launch window
+dm/tools/ue_region.py	*:*	conservative shared rewriter impact for Unreal region discovery
+dm/tools/lint_c_baseline.tsv	-	static-analysis test configuration
 dm/host/Makefile	*:*	the shared host build
 dm/host/hle_thread.c	svc:*	threads and synchronization
 dm/host/hle_svc.c	svc:*	SVCs

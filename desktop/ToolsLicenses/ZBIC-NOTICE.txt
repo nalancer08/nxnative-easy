@@ -1,0 +1,15 @@
+ZBIC Python decoder 1.0.1.post1
+Copyright Yannik Marchand and the upstream compression-source contributors.
+License: GNU General Public License version 2; see the license in the source archive.
+
+Project: https://github.com/kinnay/zbic
+Release: https://pypi.org/project/zbic/1.0.1.post1/
+
+The portable tool bundle includes zbic-1.0.1.post1.tar.gz in this directory.
+It is the exact corresponding source of the pinned Python wheel, including
+the compression implementation, build files and license. Its SHA-256 is
+a798c24aea58f81a0b4bb0226f0f383b7e7f07a9a0150732cb45dc65ac541ff3.
+The installed wheel also retains its package metadata and license.
+
+This separate build-tool dependency decodes ZBIC-compressed NSO segments.
+No console firmware, game code, keys or player data are included.

@@ -185,3 +185,9 @@ their `/commits/main` and `/commits/v<version>` responses must remain under 128 
 Test the actual portable ZIP with current and installed-version updater code;
 check its signature, tag/source identity and source hashes. Run portable Python
 checks with `PYTHONDONTWRITEBYTECODE=1`, as the app does, to preserve sealed tools.
+
+Reconcile pinned Python dependencies even when reusing a portable tool bundle;
+an older app cache may lack a newly required codec. Keep source setup and CI
+aligned. Ship the exact corresponding source and notice for the pinned ZBIC
+wheel, verify its source-archive digest, and test the bundled codec with synthetic
+bytes without writing into the sealed application.

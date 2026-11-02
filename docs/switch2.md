@@ -1,9 +1,11 @@
 # Switch 2 games in nxnative Easy
 
 The integrated engine includes upstream Switch 2 execution and Ampere shader
-translation through `cd859c38a8f8890ddbb57a23d6f45e23ba9e6651`.
-[Donkey Kong Bananza](../dm/games/040074A01BF12000/README.md) has a Mac profile and
-upstream gameplay evidence. That evidence does not establish iPhone/iPad support
+translation through `4a2a81a64f029d0a75ade9523c8ffc6c89465375`.
+[Donkey Kong Bananza](../dm/games/040074A01BF12000/README.md),
+[Splatoon Raiders](../dm/games/0400380020056000/README.md) and
+[Fire Emblem Fortune’s Weave](../dm/games/04007EF01F8AE000/README.md) have Mac
+profiles and limited upstream gameplay evidence. That evidence does not establish iPhone/iPad support
 or compatibility with every Switch 2 game. Mario Kart World has no registered
 profile in this release.
 
@@ -54,6 +56,12 @@ would not establish compatibility.
 
 Encrypted Switch 2 NSP/XCI extraction is not provided by this integration. This
 project does not supply game files, keys, firmware or a dumping service.
+
+Fire Emblem’s SDK 22 modules use ZBIC compression. Easy includes its pinned
+decoder in the portable tools; source-checkout setup installs the same package.
+Its AV1 movies require a hardware AV1 decoder: the upstream note reports black
+movies on Macs without it. Read each game note for remaining shader, performance
+and route-coverage limits; these profiles are not whole-game certification.
 
 ## What changed in the core
 
