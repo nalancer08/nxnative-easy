@@ -2,7 +2,8 @@
 
 Game progress is local to the device on which you played. nxnative Easy on the
 Mac prepares the game; it does not receive the iPhone's progress automatically.
-There is no active cloud synchronization yet.
+Rebuilt game apps now include optional [iCloud continuity](icloud-saves.md).
+Existing game apps need rebuilding once; updating Easy alone does not add sync.
 
 ## Mac
 
@@ -46,8 +47,9 @@ trust your Mac, then use **Finder → your iPhone/iPad → Files → the game**.
 Finder shows the contents of Documents directly. Depending on iOS settings, the
 game may also appear under **Files → On My iPhone/iPad**.
 
-An iPad and an iPhone have independent copies. Playing on one does not update
-the other. Signature expiry stops the app from launching but is not an instruction
+An iPad and an iPhone keep independent local copies. With iCloud continuity
+explicitly enabled in both rebuilt games, checked snapshots connect that progress.
+Without it, playing on one does not update the other. Signature expiry stops the app from launching but is not an instruction
 to remove its data: renew the same app rather than deleting it.
 
 ## Updating without losing progress
@@ -108,14 +110,17 @@ The four named control profiles are app preferences, keyed by
 Documents. Updating the same app keeps them; copying only `save` does not copy
 them to another device. Profile cloud sync/export is not implemented.
 
-## Future cloud sync
+## iCloud continuity
 
-The [API prototype](../dm/cloud/README.md) has authenticated immutable snapshots,
-revision checks and revocable sharing. Native export/login/restore is not wired
-to the game. A safe implementation needs a stopped game, both committed roots,
-metadata-preserving packages, a local recovery backup and a durable restore
-journal. This is separate from Apple-ID signing and signature renewal.
+Choose the same iCloud Drive folder in each rebuilt game's launcher. Save in the
+game and close before switching devices. The destination checks complete revision
+history before play; conflicting progress needs an explicit choice and both
+versions remain available. See the [setup, history and recovery guide](icloud-saves.md).
 
+Local history is next to the committed save, in `save.nxe-cloud/`. It contains
+`revisions/`, verified `backups/`, retained displaced trees and, only during an
+unfinished restore, `restore.json`. These are progress, **not disposable caches**.
+Do not delete this directory to repair a sync error or while recovery is pending.
 
 ## Future portable server
 
@@ -123,8 +128,8 @@ No cloud host is selected. The API foundation is provider-independent: Python,
 HTTP, configurable OIDC identity and SQLite. Its consistent database backup can
 move snapshot history and ownership to another server.
 [Configuration, backup and relocation](../dm/cloud/README.md#portable-hosting-and-migration).
-This does not activate in-game sync: native login and safe device snapshot/import
-flows are still pending.
+This separate server prototype is not used by the iCloud feature and does not
+receive any saves automatically.
 
 
 ## Export from a trusted iPhone/iPad (1.11)

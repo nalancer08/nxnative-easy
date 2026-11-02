@@ -10,6 +10,7 @@
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <limits.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <stdio.h>
@@ -17,6 +18,8 @@
 #include <sys/clonefile.h>
 #include <sys/xattr.h>
 #include "romfs_image.h"
+#include "cloud_saves.h"
+__attribute__((weak)) void nxe_cloud_committed(void) {}
 
 // Every take-over in this file runs on the big host stack (hle_bigstack.c): path buffers are sized by PATH_MAX and one file open takes 6-7 KB of stack, while a game's save thread can have as little as 8 KB (Super Mario 3D World + Bowser's Fury)
 #undef HLE_FORCE
@@ -667,10 +670,24 @@ static Result commit_mount_locked(int i, int *notify_error) {
     // Timing readouts (integer microseconds, no floating point): how long the clone + atomic swap took; how long in total from this transaction's first save write to the end of the commit (the game writing files + the commit; 0 = no save write in this transaction)
     static int n; if (r == RES_OK) { uint64_t tc2 = clock_gettime_nsec_np(CLOCK_MONOTONIC);
         LOG("save commit #%d: %s swapped atomically into %s (%d save writes so far) (clone + swap %llu us, since this transaction's first write %llu us)", ++n, g_mnt[i].dir, g_mnt[i].commit, atomic_load(&g_save_writes),
-            (unsigned long long)((tc2 - tc1) / 1000), (unsigned long long)(tw0 ? (tc2 - tw0) / 1000 : 0)); atomic_fetch_add(&g_save_commits, 1);
+            (unsigned long long)((tc2 - tc1) / 1000), (unsigned long long)(tw0 ? (tc2 - tw0) / 1000 : 0)); atomic_fetch_add(&g_save_commits, 1); nxe_cloud_committed();
     }
     return r;
 }
+int dm_fs_clone_save_pair(const char *source, const char *into) {
+    PATH_LOCK(); pthread_mutex_lock(&g_lock);
+    int result = 0;
+    for (int i = 0; i < 2; i++) {
+        char src[PATH_MAX], dst[PATH_MAX]; struct stat st;
+        snprintf(src, sizeof src, i ? "%s_device" : "%s", source);
+        snprintf(dst, sizeof dst, "%s/%s", into, i ? "save_device" : "save");
+        if (lstat(src, &st)) { if (errno != ENOENT) result = -1; }
+        else if (!S_ISDIR(st.st_mode) || clonefile(src, dst, 0)) result = -1;
+        if (result) break;
+    }
+    pthread_mutex_unlock(&g_lock); return result;
+}
+
 HLE_FORCE("_ZN2nn2fs6CommitEPKc", "fsp-srv; transactional save: the whole work directory tree is cloned, then swapped atomically with the committed directory (renamex_np RENAME_SWAP)", Result, h_fs_Commit, const char *name) { dm_thread_service_request();
     PATH_LOCK(); pthread_mutex_lock(&g_lock);
     int i = 0; while (i < g_nmnt && strcmp(g_mnt[i].name, name)) i++;

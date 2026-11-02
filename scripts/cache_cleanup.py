@@ -10,7 +10,7 @@ import stat
 import sys
 from build_ios import build_lock
 
-PROTECTED={'.nsp','.xci','.nsz','.xcz','.ipa','.img','.keys','.zip','.app'}
+PROTECTED={'.nsp','.xci','.nsz','.xcz','.ipa','.img','.keys','.zip','.app','.nxsave','.nxe-cloud'}
 
 
 def inventory(path):

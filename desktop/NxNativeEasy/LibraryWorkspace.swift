@@ -330,6 +330,15 @@ struct GameLibraryDetail:View {
                     }
                 }
             }.padding(14).frame(maxWidth:.infinity,alignment:.leading).background(.white.opacity(0.035),in:RoundedRectangle(cornerRadius:12))
+            DisclosureGroup {
+                VStack(alignment:.leading,spacing:10) {
+                    Text(text("Prepara las versiones para Mac y iPhone / iPad con esta actualización. Instala sobre la app existente para conservar sus partidas."))
+                    Text(text("Abre cada juego y elige la misma carpeta de iCloud Drive. Usa la misma versión y contenido del juego en ambos dispositivos."))
+                    Text(text("Guarda y cierra antes de cambiar de dispositivo. Si hay dos progresos distintos, eliges con cuál seguir y se conservan ambos."))
+                    Text(text("No requiere iniciar sesión con tu cuenta de firma. iCloud usa la cuenta del propio dispositivo.")).foregroundStyle(.secondary)
+                }.font(.callout).padding(.top,10)
+            } label:{Label(text("Continuar entre iPhone y Mac"),systemImage:"icloud")}
+            .padding(16).background(.white.opacity(0.035),in:RoundedRectangle(cornerRadius:12))
             if let app=game.macApp {GameLaunchOptionsView(app:app,text:text).id(app.path).disabled(disabled)}
             ForEach(advice,id:\.self) {note in Label(note,systemImage:"arrow.triangle.2.circlepath").font(.caption).foregroundStyle(.secondary)}
             if let repo=sourceRepo {CacheCleanupView(folder:game.folder,repo:repo,text:text,disabled:disabled).id(game.folder.path)}

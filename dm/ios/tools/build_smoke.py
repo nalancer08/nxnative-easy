@@ -47,7 +47,7 @@ def main():
     for name in modules:
         (patched / f'{name}.patched.bin').write_bytes(bytes(0x10000))
         fixups = patched / f'{name}.fixups.tsv'
-        fixups.write_text('# TEXT_END 0x4000\n# PATCH_OFF 0xc000\n'
+        fixups.write_text('# BUILD_ID\t' + '0' * 32 + '\n# TEXT_END 0x4000\n# PATCH_OFF 0xc000\n'
                           '# KEY_PAGE_OFF 0x8000\n# KEY_PAGE_SIZE 0x4000\n')
         shutil.copyfile(fixups, tables / fixups.name)
 
@@ -74,6 +74,7 @@ def main():
     marker = 'ci-fixture.txt'
     (romfs / marker).write_text('Synthetic CI resource; no game data.\n')
     (shaders / marker).write_text('Synthetic CI resource; no shader library.\n')
+    run(sys.executable, REPO / 'dm/tools/save_compat.py', '--title', profile.id, '--version', '1.0', '--patched', patched, '--romfs', romfs, '--output', tables / 'save-compat.json')
     chain_h = REPO / 'dm/gfx/nvn/dmsh_chain.h'
     chain = next(line.split('"')[1] for line in chain_h.read_text().splitlines()
                  if line.startswith('#define DMSH_CHAIN "'))
@@ -93,7 +94,8 @@ def main():
     if not executable.is_file():
         raise RuntimeError(f'No linked executable: {executable}')
     for source, packed in ((romfs / marker, app / 'romfs' / marker),
-                           (shaders / marker, app / 'msl' / f'b-{chain}' / marker)):
+                           (shaders / marker, app / 'msl' / f'b-{chain}' / marker),
+                           (tables / 'save-compat.json', app / 'dm/save-compat.json')):
         if source.read_bytes() != packed.read_bytes():
             raise RuntimeError(f'Resource staging failed: {packed}')
     if (app / '_CodeSignature').exists() or (app / 'embedded.mobileprovision').exists():

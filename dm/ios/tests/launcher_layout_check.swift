@@ -2,14 +2,16 @@
 import AppKit
 import SwiftUI
 
-func checkLauncherLayout(_ model: LauncherModel, defaults: UserDefaults) -> Int {
+@MainActor func checkLauncherLayout(_ model: LauncherModel, defaults: UserDefaults) -> Int {
     NSApplication.shared.setActivationPolicy(.prohibited)
+    let cloud = CloudSaveModel.shared
+    cloud.ready = true; cloud.blocked = false // Synthetic UI only: no folder or real save access.
     var failed = 0
     func expect(_ c: Bool, _ what: String) { print((c ? "PASS " : "FAIL ") + what); if !c { failed += 1 } }
     func measure(_ advanced: Bool, width: CGFloat) -> CGFloat {
         defaults.set(advanced, forKey: "window.advanced")
         var extra: CGFloat?
-        let view = NSHostingView(rootView: LauncherView(m: model, done: { _ in }, fit: { extra = $0 }).defaultAppStorage(defaults))
+        let view = NSHostingView(rootView: LauncherView(m: model, cloud: cloud, done: { _ in }, fit: { extra = $0 }).defaultAppStorage(defaults))
         view.sizingOptions = []
         // SwiftUI reports the Form's scroll geometry on a later pass, an estimate first and the measured rows a few ms after it, later still on a slow runner (issue #445): run the
         // loop until the report meets the step's expectation and has held for 0.2 s; after 5 s the check sees whatever was reported last

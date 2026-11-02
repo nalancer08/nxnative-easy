@@ -10,6 +10,7 @@ private func info(_ key: String) -> Any? { Bundle.main.object(forInfoDictionaryK
 
 private struct LauncherView: View {
     @ObservedObject var m: LauncherModel
+    @ObservedObject var cloud: CloudSaveModel
     let play: () -> Void
     @State private var memory = os_proc_available_memory()
 
@@ -31,6 +32,7 @@ private struct LauncherView: View {
                 .padding(16)
                 .frame(width: geometry.size.width / 3, height: geometry.size.height)
                 List {
+                    Section { CloudSavePanel(model: cloud) }
                     ForEach(m.sections, id: \.self) { section in
                         let rows = m.rows(in: section)
                         if !rows.isEmpty {
@@ -68,7 +70,7 @@ private struct LauncherView: View {
     }
 
     @ViewBuilder var playButton: some View {
-        let button = Button(action: play) { Text("Play").font(.title3.weight(.semibold)).frame(maxWidth: 220) }.controlSize(.large)
+        let button = Button { cloud.start(play) } label: { Text(cloud.status == "conflict" || cloud.status == "error" || cloud.status == "waiting" ? "Play local save" : "Play").font(.title3.weight(.semibold)).frame(maxWidth: 220) }.controlSize(.large).disabled(!cloud.ready || cloud.busy || cloud.blocked)
         if #available(iOS 26.0, *) { button.buttonStyle(.glassProminent) } else { button.buttonStyle(.borderedProminent) }
     }
 
@@ -82,14 +84,16 @@ private struct LauncherView: View {
 
 // Shows the launcher over the root view controller and calls done once the settings are in the environment; false (done is not called) when there is no launcher
 @_cdecl("dm_show_launcher")
-public func dmShowLauncher(_ viewController: UnsafeMutableRawPointer, _ done: @convention(c) () -> Void) -> Bool {
-    guard let url = Bundle.main.resourceURL?.appendingPathComponent("dm/launcher.json"), let data = try? Data(contentsOf: url) else { return false }
-    guard let file = try? JSONDecoder().decode(SettingsFile.self, from: data), !file.settings.isEmpty else { fputs("[RED] launcher: dm/launcher.json cannot be read; starting the game\n", stderr); return false }
-    if ProcessInfo.processInfo.environment["DM_LAUNCHER"] == "0" { fputs("launcher: off (DM_LAUNCHER=0)\n", stderr); LauncherModel(file.settings).applySaved(); return false }
+@MainActor public func dmShowLauncher(_ viewController: UnsafeMutableRawPointer, _ done: @convention(c) () -> Void) -> Bool {
+    let file = Bundle.main.resourceURL.map { $0.appendingPathComponent("dm/launcher.json") }.flatMap { try? Data(contentsOf: $0) }.flatMap { try? JSONDecoder().decode(SettingsFile.self, from: $0) } ?? SettingsFile(settings: [])
+    if ProcessInfo.processInfo.environment["DM_LAUNCHER"] == "0" && !CloudSaveModel.hasFolder {
+        LauncherModel(file.settings).applySaved()
+        return false // startGame performs the mandatory recovery/lease gate.
+    }
     let parent = Unmanaged<UIViewController>.fromOpaque(viewController).takeUnretainedValue()
     let model = LauncherModel(file.settings)
     var host: UIViewController?
-    let view = LauncherView(m: model) {
+    let view = LauncherView(m: model, cloud: .shared) {
         guard let h = host else { return }
         host = nil
         model.apply()

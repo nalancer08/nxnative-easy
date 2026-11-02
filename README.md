@@ -47,7 +47,7 @@ If macOS blocks the first opening, open **System Settings → Privacy & Security
 - **Your library:** artwork, search, prepared versions and installations verified on your connected devices.
 - **Your controls:** Xbox, PS5 and PS4 controllers, plus an input tester in **Settings**. On iPhone/iPad, move and resize touch buttons and save **four named profiles** per game.
 - **Your settings:** per-game Mac launch options and cache cleanup with a preview of exactly what will be removed.
-- **Your saves:** keep them on your device and export them for manual sharing or backup. Exporting saves and copying game data do **not** require Apple sign-in. [Save guide](docs/saves.md).
+- **Your saves:** keep them locally, export a backup, or enable [iCloud continuity](docs/icloud-saves.md) in rebuilt Mac/iPhone/iPad games. Conflicting versions are kept so you can choose which to continue. Exporting saves and copying game data do **not** require Apple sign-in. [Save guide](docs/saves.md).
 - **Your Apple account:** shared across the app, with a remembered Keychain session, device review and optional background signature renewal. [Renewal requirements](docs/background-renewal.md).
 - **App updates:** click **Update now** when a release appears. The app downloads and checks the new package, keeps the previous app as a backup and leaves your games and saves in place. To use a new engine in an existing game, prepare that game again.
 

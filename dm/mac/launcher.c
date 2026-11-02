@@ -27,6 +27,7 @@
 #include "romfs_image.h"
 
 extern char **environ;
+#include "../host/cloud_saves.h"
 int dm_mac_launcher(void);   // Launcher.swift: 1 = Play (the settings are in the environment), 0 = the player quit, 2 = no window (apply the saved choices here)
 static pid_t g_child;
 static char *g_file_keys, *g_launch_keys;   // the variables the env files set, and the settings the launch environment set (DM_ENV_FILE_KEYS, DM_ENV_LAUNCH_KEYS)
@@ -171,10 +172,13 @@ int main(int argc, char **argv) {
     snprintf(p, sizeof p, "%s/env.txt", dm); env_file(p);
     setenv("DM_ENV_FILE_KEYS", g_file_keys ? g_file_keys : "", 1); setenv("DM_ENV_LAUNCH_KEYS", g_launch_keys ? g_launch_keys : "", 1);
     free(g_file_keys); free(g_launch_keys);
+    setenv("DM_SAVE", save, 0);
+    snprintf(p, sizeof p, "%s/save-compat.json", dm); setenv("NXE_SAVE_COMPAT", p, 1);
     int window = !(getenv("DM_LAUNCHER") && !strcmp(getenv("DM_LAUNCHER"), "0"));
     for (int i = 1; i < argc; i++) if (!strcmp(argv[i], "--no-launcher")) window = 0;
     if (!window) fprintf(stderr, "launcher: no settings window (DM_LAUNCHER=0 or --no-launcher)\n");
-    int shown = window ? dm_mac_launcher() : 2;
+    if (!window) setenv("DM_LAUNCHER", "0", 1);
+    int shown = dm_mac_launcher();
     if (!shown) return 0;   // Quit: no game
     if (shown == 2) saved_choices();
     setenv("DM_ROOT", sup, 0); setenv("DM_ROMFS", romfs, 0); setenv("DM_SAVE", save, 0); setenv("DM_TEMP", temp, 0);
@@ -194,6 +198,7 @@ int main(int argc, char **argv) {
     if (err) { fprintf(stderr, "[RED] launcher: cannot start %s: %s\n", host, strerror(err)); return 1; }
     int status;
     while (waitpid(g_child, &status, 0) < 0) if (errno != EINTR) return 1;
+    char *cloud_result = nxe_cloud_command("check", ""); free(cloud_result);
     if (WIFSIGNALED(status)) { fprintf(stderr, "launcher: the host stopped on signal %d\n", WTERMSIG(status)); return 128 + WTERMSIG(status); }
     fprintf(stderr, "launcher: the host exited with %d\n", WEXITSTATUS(status));
     return WEXITSTATUS(status);

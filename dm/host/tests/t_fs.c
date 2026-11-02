@@ -251,6 +251,18 @@ int main(void) {
         CHECK(rm_tree(lnk) == -1 && errno == ENOTDIR && same(vf, "keep"), "rm_tree of a symlink to a directory refuses it (ENOTDIR) and leaves the target alone");
     }
 
+    printf("⑨ cloud snapshots clone both committed roots, never open work trees\n");
+    {
+        char pair[1200], devsave[1200], file[1400];
+        snprintf(pair, sizeof pair, "%s/cloud-pair", root); mkdir(pair, 0755);
+        snprintf(devsave, sizeof devsave, "%s_device", save); mkdir(devsave, 0755);
+        snprintf(file, sizeof file, "%s/nxe-device-test", devsave); put(file, "committed device");
+        CHECK(write_save("save:/a", "uncommitted") == RES_OK, "stage a change without Commit");
+        CHECK(dm_fs_clone_save_pair(save, pair) == 0, "clone the complete committed pair under commit locks");
+        snprintf(file, sizeof file, "%s/save/a", pair); CHECK(same(file, "ok3"), "cloud account snapshot excludes the open uncommitted transaction");
+        snprintf(file, sizeof file, "%s/save_device/nxe-device-test", pair); CHECK(same(file, "committed device"), "cloud snapshot includes device progress in the same pair");
+    }
+
     char cmd[1200]; snprintf(cmd, sizeof cmd, "rm -rf '%s'", root); system(cmd);
     printf("== %d checks, %d failed ==\n", checks, fails);
     return fails != 0;

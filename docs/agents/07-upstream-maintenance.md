@@ -150,7 +150,12 @@ iPhone/iPad and Mac, superseding the earlier local-only preference. The upstream
 Follow [the ecosystem review](../upstream-reviews/2026-10-29-ecosystem.md): preserve
 both divergent saves, make restoration of `save` and `save_device` recover as one
 transaction, retain verified backups, and test interruption/offline/version cases
-before enabling write hooks. A selected shared folder is explicit opt-in; never
+before enabling write hooks. The custom runtime implemented on 2026-11-02 is
+documented in [the iCloud guide](../icloud-saves.md); preserve its immutable
+parented history, content identity, lease and recovery-before-play gates during
+future merges. Never reintroduce upstream newer-wins arbitration or automatic
+backup pruning. Real iCloud/device validation remains separate from native
+synthetic tests; do not claim a physical round trip without evidence. A selected shared folder is explicit opt-in; never
 move the active local save into iCloud or enable synchronization during an update.
 Keep local/manual export working and distinguish the device's iCloud account from
 the desktop signing account. Rebuild both game apps for runtime integration;

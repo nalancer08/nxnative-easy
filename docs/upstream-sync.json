@@ -110,11 +110,11 @@
       {
         "upstream_sha": "123c7ff0ddcc188319da5bd035ac2cb2a86e1213",
         "feature": "iCloud save synchronization",
-        "reason": "Owner approved pursuing optional iCloud continuity on 2026-10-29, superseding local-only policy. Runtime remains reverted pending recoverable two-folder restore, conflict preservation and native validation; not released.",
-        "status": "approved_direction_pending_safety_fixes",
+        "reason": "Original cloud policy remains excluded. Custom append-only revisions, explicit conflict resolution, two-folder recovery journal, verified backups and native launcher integration implemented on 2026-11-02. Synthetic native tests and unsigned builds do not establish real iCloud/device delivery.",
+        "status": "custom_runtime_implemented_pending_physical_validation",
         "review": "docs/upstream-reviews/2026-10-29-ecosystem.md",
-        "latest_recheck": "2026-11-01",
-        "latest_review": "docs/upstream-reviews/2026-11-01.md"
+        "latest_recheck": "2026-11-02",
+        "latest_review": "docs/icloud-saves.md"
       }
     ]
   },
@@ -135,7 +135,7 @@
       "added_games": [
         {
           "id": "01001F5010DFA000",
-          "name": "Pokémon Legends: Arceus",
+          "name": "Pok\u00e9mon Legends: Arceus",
           "versions": [
             "1.1.1"
           ]
@@ -219,7 +219,7 @@
         },
         {
           "id": "0100A3D008C5C000",
-          "name": "Pokémon Scarlet",
+          "name": "Pok\u00e9mon Scarlet",
           "versions": [
             "1.0.0"
           ]
@@ -347,7 +347,7 @@
         },
         {
           "id": "010029B0118E8000",
-          "name": "Need For Speed™ Hot Pursuit Remastered",
+          "name": "Need For Speed\u2122 Hot Pursuit Remastered",
           "versions": [
             "1.0.3"
           ]
@@ -567,7 +567,7 @@
         },
         {
           "id": "01008F6008C5E000",
-          "name": "Pokémon Violet",
+          "name": "Pok\u00e9mon Violet",
           "versions": [
             "1.0.0"
           ]
@@ -646,7 +646,7 @@
         },
         {
           "id": "01006C300E9F0000",
-          "name": "DRAGON QUEST XI S: Echoes of an Elusive Age – Definitive Edition",
+          "name": "DRAGON QUEST XI S: Echoes of an Elusive Age \u2013 Definitive Edition",
           "versions": [
             "1.0.4"
           ]
@@ -702,7 +702,7 @@
         },
         {
           "id": "0100F43008C44000",
-          "name": "Pokémon Legends: Z-A",
+          "name": "Pok\u00e9mon Legends: Z-A",
           "versions": [
             "2.0.2"
           ]
@@ -719,11 +719,11 @@
     {
       "upstream_sha": "123c7ff0ddcc188319da5bd035ac2cb2a86e1213",
       "feature": "iCloud save synchronization",
-      "reason": "Owner approved pursuing optional iCloud continuity on 2026-10-29, superseding local-only policy. Runtime remains reverted pending recoverable two-folder restore, conflict preservation and native validation; not released.",
-      "status": "approved_direction_pending_safety_fixes",
+      "reason": "Original cloud policy remains excluded. Custom append-only revisions, explicit conflict resolution, two-folder recovery journal, verified backups and native launcher integration implemented on 2026-11-02. Synthetic native tests and unsigned builds do not establish real iCloud/device delivery.",
+      "status": "custom_runtime_implemented_pending_physical_validation",
       "review": "docs/upstream-reviews/2026-10-29-ecosystem.md",
-      "latest_recheck": "2026-11-01",
-      "latest_review": "docs/upstream-reviews/2026-11-01.md"
+      "latest_recheck": "2026-11-02",
+      "latest_review": "docs/icloud-saves.md"
     }
   ],
   "latest_ecosystem_review": {

@@ -669,6 +669,11 @@ struct EasyStrings {
         "Bibliotecas programadas": "Scheduled libraries",
         "Switch 2 · Sólo Mac · Carpeta extraída": "Switch 2 · Mac only · Extracted game",
         "La carpeta extraída está incompleta o mezcla archivos incompatibles. Revisa base/exefs, base/romfs y sus updates; no necesita llaves.": "The extracted game is incomplete or contains incompatible files. Check base/exefs, base/romfs and its updates; no keys are needed.",
+        "Continuar entre iPhone y Mac": "Continue between iPhone and Mac",
+        "Prepara las versiones para Mac y iPhone / iPad con esta actualización. Instala sobre la app existente para conservar sus partidas.": "Prepare the Mac and iPhone / iPad versions with this update. Install over the existing app to keep its saves.",
+        "Abre cada juego y elige la misma carpeta de iCloud Drive. Usa la misma versión y contenido del juego en ambos dispositivos.": "Open each game and choose the same iCloud Drive folder. Use the same game version and content on both devices.",
+        "Guarda y cierra antes de cambiar de dispositivo. Si hay dos progresos distintos, eliges con cuál seguir y se conservan ambos.": "Save and close before switching devices. If progress differs, choose which save to continue; both are kept.",
+        "No requiere iniciar sesión con tu cuenta de firma. iCloud usa la cuenta del propio dispositivo.": "No signing-account login is needed. iCloud uses the device’s own account.",
     ]
     static func text(_ source:String, language:EasyLanguage) -> String {
         language == .spanish ? source : (english[source] ?? source)

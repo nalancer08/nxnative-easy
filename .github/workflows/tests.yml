@@ -44,6 +44,8 @@ jobs:
           python3 -m unittest discover -s scripts/tests
           python3 -m unittest dm.tools.tests.test_nsp_space
           python3 -m unittest discover -s dm/ios/tests -p test_pad_geometry.py
+      - name: Native iCloud save conflicts and crash recovery (synthetic folders)
+        run: python3 -m unittest discover -s dm/host/tests -p test_cloud_saves.py -v
       - name: Host unit tests (dm/host/tests)
         run: |
           mkdir -p logs
@@ -128,6 +130,8 @@ jobs:
           cache-dependency-path: .github/requirements/coverage.txt
       - name: Install coverage.py and the packages the tools import
         run: python -m pip install -r .github/requirements/coverage.txt
+      - name: Native iCloud save conflicts and crash recovery (synthetic folders)
+        run: python3 -m unittest discover -s dm/host/tests -p test_cloud_saves.py -v
       - name: Host unit tests (dm/host/tests), llvm-cov
         continue-on-error: true
         run: |

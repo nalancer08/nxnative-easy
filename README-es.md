@@ -47,7 +47,7 @@ Si macOS bloquea la primera apertura, entra a **Configuración del Sistema → P
 - **Tu biblioteca:** imágenes, buscador, versiones preparadas e instalaciones verificadas en tus dispositivos conectados.
 - **Tus controles:** Xbox, PS5 y PS4, con una prueba de botones y sticks en **Configuración**. En iPhone/iPad puedes mover y cambiar el tamaño de los botones táctiles y guardar **cuatro perfiles con nombre** por juego.
 - **Tus ajustes:** opciones de inicio por juego en Mac y limpieza de cachés con una vista previa de lo que se borrará.
-- **Tus partidas:** se quedan en tu dispositivo y puedes exportarlas para compartirlas a mano o respaldarlas. Exportar partidas y copiar datos del juego **no** requieren iniciar sesión con Apple. [Guía de partidas](docs/saves-es.md).
+- **Tus partidas:** guárdalas localmente, exporta un respaldo o activa la [continuidad con iCloud](docs/icloud-saves.md) al preparar de nuevo tus juegos para Mac, iPhone y iPad. Si hay conflicto, se conservan ambas versiones para que elijas con cuál seguir. No necesitas iniciar sesión con tu cuenta de firma.
 - **Tu cuenta Apple:** una para toda la app, con sesión recordada en el Llavero, revisión de dispositivos y renovación opcional de firmas en segundo plano. [Requisitos de renovación](docs/background-renewal.md).
 - **Actualizaciones de la app:** pulsa **Actualizar ahora** cuando aparezca una versión. La app descarga y verifica el paquete, conserva la app anterior como respaldo y mantiene tus juegos y partidas. Para aplicar un motor nuevo a un juego existente, vuelve a prepararlo.
 

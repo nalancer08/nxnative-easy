@@ -82,3 +82,18 @@ At 1000 × 640 the shorter detail artwork keeps the main action visible; further
 detail still scrolls. Keep keyboard/selection semantics and translated labels.
 Quiet startup account recovery must not block browsing or preparing games, nor display
 an intrusive global account spinner. Actual installer operations keep their guards.
+
+
+## Save continuity in rebuilt games (1.24)
+
+`dm/ios/Sources/CloudSavePanel.swift` is shared by the native iOS and Mac game
+launchers. Reuse the dark surface, 18-point radius, rounded hierarchy and lime
+accent; orange plus a branch symbol identifies a conflict without relying on
+color alone. Keep one explicit Use save action per revision, a confirmation that
+explains retention, and collapsed history/details. No invented progress or cloud
+delivery claim: distinguish a local snapshot, provider download and a file
+available in the selected folder. Play rechecks before starting; discovering a
+new conflict stays on this screen. Running games never import remote progress.
+The desktop library offers a collapsed bilingual setup guide. Folder permission
+is distinct from Apple signing-account login. Synthetic preview images are not
+evidence of iCloud/device synchronization.

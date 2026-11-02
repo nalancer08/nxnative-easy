@@ -111,13 +111,14 @@ class PackReuse(unittest.TestCase):
         for d in ('patched', 'romfs/empty', 'msl', 'profile', 'font', 'aoc/1', 'pso', 'bin', 'sdk', 'source', 'host', 'tools', 'ios/Sources'):
             (t / d).mkdir(parents=True)
         files = {
-            'dmhost': b'host', 'patched/main.patched.bin': b'code', 'patched/main.fixups.tsv': b'fixups',
+            'dmhost': b'host', 'patched/main.patched.bin': b'code', 'patched/main.fixups.tsv': b'fixture\n# BUILD_ID\t' + b'a' * 32 + b'\n',
             'patched/main.gates.tsv': b'gates', 'patched/main.cuts.tsv': b'cuts', 'patched/main.obs.tsv': b'obs', 'patched/nro.tsv': b'nro',
             'romfs/marker': b'game', 'msl/k.metallib': b'lib', 'msl/k.json': b'{}', 'msl/inputs.tsv': b'stamp',
             'font/nintendo_ext.ttf': b'font', 'aoc/1/data': b'dlc', 'pso/gpu.mtl4a': b'archive',
             'pso/prebuilt.tsv': b'prebuilt', 'pso/rest_pairs.tsv': b'rest', 'pso/archive.tsv': b'index',
             'env.txt': b'DM_TEST=1', 'split.tsv': b'split', 'icon.jpg': b'jpeg', 'source/launcher.c': b'launcher',
-            'host/romfs_image.h': b'validator', 'tools/romfs.py': b'reader',
+            'host/romfs_image.h': b'validator', 'tools/romfs.py': b'reader', 'tools/save_compat.py': b'identity',
+            'host/cloud_saves.m': b'engine', 'host/cloud_saves.h': b'cloud header', 'host/save_archive.c': b'archive', 'host/save_archive.h': b'archive header', 'ios/Sources/CloudSavePanel.swift': b'cloud UI',
             'source/Launcher.swift': b'window', 'ios/Sources/LauncherSettings.swift': b'model', 'ios/Sources/LauncherRow.swift': b'rows',
         }
         for n in pack_app.TABLES: files['profile/' + n] = n.encode()
@@ -255,13 +256,13 @@ class PackReuse(unittest.TestCase):
         self.assertIn('-c', c); self.assertIn('-parse-as-library', s)
         self.assertEqual(s[s.index('-o') + 1], str(Path(self.args.out).resolve().with_name('Game.app.partial') / 'Contents/MacOS/nxnative'))
         self.assertIn(c[c.index('-o') + 1], s)   # launcher.c's object, with its main
-        self.assertEqual([Path(x).name for x in s if x.endswith('.swift')], ['Launcher.swift', 'LauncherSettings.swift', 'LauncherRow.swift'])
+        self.assertEqual([Path(x).name for x in s if x.endswith('.swift')], ['Launcher.swift', 'LauncherSettings.swift', 'LauncherRow.swift', 'CloudSavePanel.swift'])
 
     def test_selected_file_modes_and_file_additions_and_removals_invalidate(self):
         self.pack()
         (self.tmp / 'dmhost').chmod(0o755); self.assert_repacked()
         for name in ('patched/new.patched.bin', 'patched/new.fixups.tsv', 'msl/new.metallib', 'font/new.ttf', 'pso/new.mtl4a'):
-            (self.tmp / name).write_text('new')
+            (self.tmp / name).write_text('# BUILD_ID\t' + 'b' * 32 + '\n' if name.endswith('.fixups.tsv') else 'new')
         self.assert_repacked()
         dm = Path(self.args.out) / 'Contents/Resources/dm'
         self.assertEqual((dm / 'new.patched.bin').read_text(), 'new')
@@ -368,7 +369,7 @@ class App(unittest.TestCase):
         (t / 'host.c').write_text(HOST_C)
         subprocess.run(['xcrun', 'clang', '-arch', 'arm64', '-o', t / 'dmhost', t / 'host.c'], check=True)
         for d in ('patched', 'romfs/region_common/audio', 'cache/b-0123456789ab', 'profile', 'font', 'aoc/1', 'bin', 'home'): (t / d).mkdir(parents=True)
-        for n, b in (('main.patched.bin', b'code'), ('main.fixups.tsv', b'f'), ('main.gates.tsv', b'g'), ('main.cuts.tsv', b'c'), ('main.obs.tsv', b'o'), ('main.changed.tsv', b'w'), ('main.sites.tsv', b's'), ('build_src.sha256', b'h')):
+        for n, b in (('main.patched.bin', b'code'), ('main.fixups.tsv', b'# BUILD_ID\t' + b'a' * 32 + b'\n'), ('main.gates.tsv', b'g'), ('main.cuts.tsv', b'c'), ('main.obs.tsv', b'o'), ('main.changed.tsv', b'w'), ('main.sites.tsv', b's'), ('build_src.sha256', b'h')):
             (t / 'patched' / n).write_bytes(b)
         (t / 'romfs/region_common/audio/edward.bfsar').write_bytes(b'snd')
         (t / 'cache/b-0123456789ab/k_b.metallib').write_bytes(b'lib'); (t / 'cache/b-0123456789ab/inputs.tsv').write_text('# stamp\n')
@@ -414,7 +415,7 @@ class App(unittest.TestCase):
         self.assertEqual(sorted(p.name for p in (c / 'MacOS').iterdir()), ['dmhost', 'nxnative'])
         self.assertEqual(sorted(p.name for p in (c / 'Resources/dm').iterdir()),
                          ['c1_full.tsv', 'env.txt', 'font', 'launcher.json', 'main.changed.tsv', 'main.cuts.tsv', 'main.fixups.tsv', 'main.gates.tsv', 'main.obs.tsv', 'main.patched.bin', 'pso_manifest.tsv', 'pso_pairs.tsv',
-                          'shader_map.tsv', 'shader_pairs.tsv'])   # the shader pairs: the pipeline prebuild's, without which hybrid draws have no stand-in
+                          'save-compat.json', 'shader_map.tsv', 'shader_pairs.tsv'])   # the shader pairs: the pipeline prebuild's, without which hybrid draws have no stand-in
         self.assertEqual([p.name for p in (c / 'Resources/msl').iterdir()], ['b-0123456789ab'])   # the libraries only, not the compile cache
         self.assertEqual(sorted(p.name for p in (c / 'Resources/msl/b-0123456789ab').iterdir()), ['inputs.tsv', 'k_b.json', 'k_b.metallib'])
         self.assertEqual((c / 'Resources/msl/b-0123456789ab/k_b.metallib').read_bytes(), b'lib')

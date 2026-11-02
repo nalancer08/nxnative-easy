@@ -29,6 +29,13 @@ class Cleanup(unittest.TestCase):
         self.assertEqual(cleanup.candidates(self.root),[])
         (self.cache/'link').unlink();(self.cache/'prod.keys').write_bytes(b'private')
         self.assertEqual(cleanup.candidates(self.root),[])
+    def test_cloud_history_is_never_disposable(self):
+        for name in ('revision.nxsave', 'save.nxe-cloud'):
+            p=self.cache/name
+            p.write_bytes(b'progress')
+            self.assertEqual(cleanup.candidates(self.root),[])
+            p.unlink()
+
     def test_active_build_blocks_deletion(self):
         preview=cleanup.candidates(self.root)
         with cleanup.build_lock(self.root),self.assertRaises(ValueError):cleanup.delete(self.root,preview)

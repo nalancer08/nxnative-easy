@@ -12,6 +12,7 @@ private func info(_ key: String) -> String? { Bundle.main.object(forInfoDictiona
 
 struct LauncherView: View {
     @ObservedObject var m: LauncherModel
+    @ObservedObject var cloud: CloudSaveModel
     let done: (Bool) -> Void
     let fit: (CGFloat) -> Void
     @AppStorage("window.show") private var show = true
@@ -29,6 +30,7 @@ struct LauncherView: View {
             }
             .padding([.horizontal, .top], 20)
             Form {
+                Section { CloudSavePanel(model: cloud) }
                 settingSections(basic: true)
                 Section {
                     DisclosureGroup("Advanced settings", isExpanded: $advanced) {}
@@ -53,7 +55,7 @@ struct LauncherView: View {
                 Toggle("Show this window at launch", isOn: $show).toggleStyle(.checkbox)
                 Spacer()
                 Button("Quit") { done(false) }
-                Button("Play") { done(true) }.keyboardShortcut(.defaultAction)
+                Button(cloud.status == "conflict" || cloud.status == "error" || cloud.status == "waiting" ? "Play local save" : "Play") { cloud.start { done(true) } }.keyboardShortcut(.defaultAction).disabled(!cloud.ready || cloud.busy || cloud.blocked)
             }
             .padding(20)
         }
@@ -92,7 +94,7 @@ private final class Launcher: NSObject, NSApplicationDelegate, NSWindowDelegate 
         if let screen = w.screen ?? NSScreen.main {
             w.setFrameTopLeftPoint(NSPoint(x: screen.visibleFrame.midX - w.frame.width / 2, y: screen.visibleFrame.maxY))
         }
-        let host = NSHostingView(rootView: LauncherView(m: model, done: { [weak self] in self?.finish($0) }, fit: { [weak self] in self?.fit($0) }))
+        let host = NSHostingView(rootView: LauncherView(m: model, cloud: .shared, done: { [weak self] in self?.finish($0) }, fit: { [weak self] in self?.fit($0) }))
         host.sizingOptions = []   // the Form's measured scroll content owns the height, including after collapse
         w.contentView = host
         host.layoutSubtreeIfNeeded()
@@ -134,12 +136,11 @@ enum LauncherWindowLayout {
 
 // 1: Play (the window's settings are in the environment), 0: the player quit, 2: no window (no launcher.json, or "Show this window at launch" off): launcher.c applies the saved choices
 @_cdecl("dm_mac_launcher")
-public func dmMacLauncher() -> Int32 {
-    guard let url = Bundle.main.resourceURL?.appendingPathComponent("dm/launcher.json"), let data = try? Data(contentsOf: url) else { return 2 }
-    guard let file = try? JSONDecoder().decode(SettingsFile.self, from: data), !file.settings.isEmpty else { fputs("[RED] launcher: dm/launcher.json cannot be read; starting the game\n", stderr); return 2 }
-    if (UserDefaults.standard.object(forKey: "window.show") as? Bool) == false && !NSEvent.modifierFlags.contains(.option) {
-        fputs("launcher: settings window off (hold Option at launch to show it)\n", stderr)
-        return 2
+@MainActor public func dmMacLauncher() -> Int32 {
+    let file = Bundle.main.resourceURL.map { $0.appendingPathComponent("dm/launcher.json") }.flatMap { try? Data(contentsOf: $0) }.flatMap { try? JSONDecoder().decode(SettingsFile.self, from: $0) } ?? SettingsFile(settings: [])
+    let hidden = ProcessInfo.processInfo.environment["DM_LAUNCHER"] == "0" || ((UserDefaults.standard.object(forKey: "window.show") as? Bool) == false && !NSEvent.modifierFlags.contains(.option))
+    if (hidden || file.settings.isEmpty) && !CloudSaveModel.hasFolder {
+        return CloudSaveModel.headlessPreflight() ? 2 : 0
     }
     let model = LauncherModel(file.settings)
     let app = NSApplication.shared, launcher = Launcher(model)
