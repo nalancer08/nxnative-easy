@@ -138,3 +138,22 @@ iPhone, continue on Mac, save and close, continue on iPhone. Then play both
 offline and verify both branches/explicit choice/history after reconnection.
 Also check iOS suspension, revoked folder access and reselection after re-signing.
 No agent test signs or installs on the owner's devices or opens real saves.
+
+## Native UI previews and local validation — 2026-11-02
+
+The conflict panel below renders the actual shared SwiftUI component with fake
+device names, dates and revisions. It does not access iCloud or the owner's saves.
+
+<img src="images/nxnative-icloud-conflict-en-v1.24.png" width="48%" alt="English save conflict panel with both device revisions retained"> <img src="images/nxnative-icloud-conflict-es-v1.24.png" width="48%" alt="Panel de conflicto con ambas partidas conservadas">
+
+Local validation: 19 native continuity/failure tests passed; 44 Mac packer and
+launcher tests passed; 18 save-cache, launcher-storage/layout and documentation
+checks passed; the full native host suite passed, including the two-root clone
+check that excludes uncommitted writes. The desktop app compiled and its bundle
+signature verified. Both production Mac and unsigned iOS targets link the strong
+commit/pair-clone hooks; the iOS app contains the exact generated compatibility
+manifest. New native files have zero LLVM 23.1.4 findings; Python lint has no new
+findings over the pinned baseline. Read-only regression discovery found no
+registered Mac gameplay build, so no real-game smoke run was claimed or forced.
+Actual iCloud propagation, background suspension and the owner's physical
+iPhone/Mac round trip remain to be checked with test saves.
