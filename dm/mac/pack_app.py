@@ -92,7 +92,7 @@ def build_launcher(out, minos, clang, swiftc, sdk):   # launcher.c's main, linke
         objects = [obj]
         for source in ('cloud_saves.m', 'save_archive.c'):
             object_file = Path(t) / (source + '.o')
-            run([clang, '-isysroot', sdk, '-arch', 'arm64', f'-mmacosx-version-min={minos}', '-O2', '-fobjc-arc', '-Wno-deprecated-declarations', '-I', HERE.parent / 'host', '-c', '-o', object_file, HERE.parent / 'host' / source])
+            run([clang, '-isysroot', sdk, '-arch', 'arm64', f'-mmacosx-version-min={minos}', '-O2', '-fobjc-arc', '-fobjc-arc-exceptions', '-Wno-deprecated-declarations', '-I', HERE.parent / 'host', '-c', '-o', object_file, HERE.parent / 'host' / source])
             objects.append(object_file)
         run([swiftc, '-sdk', sdk, '-target', f'arm64-apple-macos{minos}', '-O', '-swift-version', '5', '-parse-as-library', '-module-cache-path', Path(t) / 'module-cache',
              '-o', out, *swift_sources(), *objects, '-framework', 'CoreFoundation', '-framework', 'AppKit', '-framework', 'SwiftUI'])

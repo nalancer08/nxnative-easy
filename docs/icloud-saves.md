@@ -21,7 +21,9 @@ playable game or evidence of physical-device synchronization.
    the common folder, not an individual revision or the game-data folder.
 3. Save using the game's own save function. Save commits queue snapshots in the
    background. On Mac, the launcher also checks after the game exits; on iOS,
-   entering the background requests another snapshot. iOS may suspend/terminate
+   entering the background requests another snapshot and a finite background
+   execution lease, ended promptly when the coalesced workers finish or when
+   iOS expires it. iOS may suspend/terminate
    background work; locally queued snapshots are retried on the next launch.
 4. Close the game before switching devices. Open its launcher on the other
    device and let the save check finish before pressing **Play**. **Check now**
@@ -74,7 +76,7 @@ nxnative-saves-v1/<TITLE ID>/<SHA-256>.nxsave
 Every revision is one immutable file with bounded metadata and a checked archive
 containing both committed `save` and `save_device` trees, including guest-name
 extended attributes. It records title, single-player namespace, exact build/content
-identity, source device, informational date and parent revision IDs. No mutable
+identity, informational game-app version, source device, informational date and parent revision IDs. No mutable
 "latest save" exists for two devices to overwrite. File coordination is local
 provider cooperation, not a distributed lock or proof of cloud delivery.
 
@@ -112,7 +114,10 @@ The native engine is `dm/host/cloud_saves.m`. Archive primitives are adapted fro
 seedds/nxnative at `4a2a81a64f02` (MIT); upstream date-based arbitration and restore
 code are **not** enabled. `hle_fs.c` clones both committed trees while holding
 the filesystem's commit locks. Network/provider operations run on a separate
-queue. A running game never imports a remote save into its mounted work trees.
+queue. A running game never imports a remote save into its mounted work trees. Payload
+buffers are released per revision, with ARC exception cleanup enabled in both
+production builds so recoverable I/O failures do not retain large buffers. See
+[Clang’s ARC exception contract](https://clang.llvm.org/docs/AutomaticReferenceCounting.html#exceptions).
 The shared SwiftUI panel is `dm/ios/Sources/CloudSavePanel.swift`.
 
 Apple's [directory access documentation](https://developer.apple.com/documentation/uikit/providing-access-to-directories)
@@ -146,7 +151,7 @@ device names, dates and revisions. It does not access iCloud or the owner's save
 
 <img src="images/nxnative-icloud-conflict-en-v1.24.png" width="48%" alt="English save conflict panel with both device revisions retained"> <img src="images/nxnative-icloud-conflict-es-v1.24.png" width="48%" alt="Panel de conflicto con ambas partidas conservadas">
 
-Local validation: 19 native continuity/failure tests passed; 44 Mac packer and
+Local validation: 21 native continuity/failure tests passed; 44 Mac packer and
 launcher tests passed; 18 save-cache, launcher-storage/layout and documentation
 checks passed; the full native host suite passed, including the two-root clone
 check that excludes uncommitted writes. The desktop app compiled and its bundle

@@ -329,11 +329,39 @@ static void front_ios_audio_watch(void) {
 
 // Scene lifecycle (called by SceneDelegate in main.m): 0 resign active, 1 enter background, 2 return to foreground, 3 become active. On entering background, freeze the guest clock and suspend after in-flight GPU work completes (submitting GPU work in background gets the process killed).
 // The screen stays on while the game is active: only touches reset the idle timer, so with a controller (or during a cutscene) the screen dimmed and locked mid-game
+static UIBackgroundTaskIdentifier g_save_background; // UIKit's invalid ID is a runtime constant.
+static uintptr_t g_save_background_generation;
+static void save_background_complete(void *context) {
+    uintptr_t generation = (uintptr_t)context;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        if (g_save_background_generation == generation && g_save_background != UIBackgroundTaskInvalid) {
+            UIBackgroundTaskIdentifier token = g_save_background;
+            g_save_background = UIBackgroundTaskInvalid;
+            [UIApplication.sharedApplication endBackgroundTask:token];
+        }
+    });
+}
+static void save_background_checkpoint(void) {
+    static dispatch_once_t once;
+    dispatch_once(&once, ^{ g_save_background = UIBackgroundTaskInvalid; });
+    if (!getenv("NXE_CLOUD_FOLDER") || g_save_background != UIBackgroundTaskInvalid) return;
+    uintptr_t generation = ++g_save_background_generation;
+    __block UIBackgroundTaskIdentifier token = UIBackgroundTaskInvalid;
+    token = [UIApplication.sharedApplication beginBackgroundTaskWithName:@"Save continuity checkpoint" expirationHandler:^{
+        if (g_save_background_generation == generation && g_save_background == token && token != UIBackgroundTaskInvalid) {
+            g_save_background = UIBackgroundTaskInvalid;
+            [UIApplication.sharedApplication endBackgroundTask:token];
+        }
+    }];
+    g_save_background = token;
+    nxe_cloud_flush(save_background_complete, (void *)generation);
+}
+
 void front_ios_focus_event(int ev) {
     if (!g_layer) return;
     switch (ev) {
         case 0: dm_gamepad_reset(); dm_focus_set(2); break;
-        case 1: nxe_cloud_committed(); UIApplication.sharedApplication.idleTimerDisabled = NO; dm_focus_set(3); g_audio_bg = 1; front_ios_audio_apply(); guest_clock_freeze_for(1, 1); dm_gfx_suspend(1); break;
+        case 1: save_background_checkpoint(); UIApplication.sharedApplication.idleTimerDisabled = NO; dm_focus_set(3); g_audio_bg = 1; front_ios_audio_apply(); guest_clock_freeze_for(1, 1); dm_gfx_suspend(1); break;
         case 2: dm_gfx_suspend(0); guest_clock_freeze_for(1, 0); front_ios_audio_session(); g_audio_bg = 0; front_ios_audio_apply(); dm_focus_set(2); break;
         case 3:   // Becoming active again also ends an interruption whose "ended" never came (not every one sends it), and retries a session that would not activate on the way back
             UIApplication.sharedApplication.idleTimerDisabled = YES;

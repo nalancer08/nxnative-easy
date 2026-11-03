@@ -29,7 +29,7 @@ class LauncherStorageTests(unittest.TestCase):
             objects = []
             for source in ('cloud_saves.m', 'save_archive.c'):
                 obj = tmp / (source + '.o')
-                subprocess.run(['xcrun', 'clang', '-fobjc-arc', '-Wno-deprecated-declarations', '-I', str(REPO / 'dm/host'), '-c', str(REPO / 'dm/host' / source), '-o', str(obj)], check=True, capture_output=True)
+                subprocess.run(['xcrun', 'clang', '-fobjc-arc', '-fobjc-arc-exceptions', '-Wno-deprecated-declarations', '-I', str(REPO / 'dm/host'), '-c', str(REPO / 'dm/host' / source), '-o', str(obj)], check=True, capture_output=True)
                 objects.append(str(obj))
             compile_result = subprocess.run(['xcrun', '-sdk', 'macosx', 'swiftc', '-swift-version', '5', '-parse-as-library', '-module-cache-path', str(tmp / 'module-cache'),
                             '-o', str(exe), str(REPO / 'dm/ios/Sources/LauncherSettings.swift'), str(REPO / 'dm/ios/Sources/LauncherRow.swift'), str(REPO / 'dm/mac/Launcher.swift'), str(REPO / 'dm/ios/Sources/CloudSavePanel.swift'), *objects,

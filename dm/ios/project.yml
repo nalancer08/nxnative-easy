@@ -78,6 +78,7 @@ targets:
       GCC_C_LANGUAGE_STANDARD: gnu11
       OTHER_CFLAGS: $(inherited) -mcpu=apple-a18   # The host assembly contains LSE atomic instructions, which the default baseline does not accept
       CLANG_ENABLE_OBJC_ARC: YES
+      CLANG_ENABLE_OBJC_ARC_EXCEPTIONS: YES  # release buffers when recoverable save I/O throws
       SWIFT_VERSION: "5.0"                         # Launcher.swift (SwiftUI)
       DEBUG_INFORMATION_FORMAT: dwarf
       GCC_WARN_INHIBIT_ALL_WARNINGS: YES

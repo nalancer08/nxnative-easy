@@ -12,8 +12,9 @@
 #include "save_archive.h"
 
 static NSFileManager *fm;
-static NSString *save, *vault, *compat, *title, *device, *cloud;
+static NSString *save, *vault, *compat, *title, *device, *cloud, *gameVersion;
 static dispatch_queue_t queue;
+static dispatch_group_t workers;
 static BOOL playing, localSafe, initialized;
 static int lease = -1;
 static const unsigned long long MAX_REVISION = 270ULL << 20;
@@ -80,6 +81,7 @@ static NSDictionary *state(void) {
 static void base(NSString *ID, NSString *hash) { atomicData(json(@{@"base": ID, @"hash": hash, @"folder": cloud ?: @""}), at(vault, @"state.json")); }
 static NSString *scan(NSString *p) { ss_meta m; need(ss_scan(p.fileSystemRepresentation, &m) == 0, @"Cannot read the complete local save. Nothing was replaced."); return @(m.hash); }
 static NSDictionary *readRevision(NSString *path, NSString *ID, NSString *into) {
+    @autoreleasepool { // Release payload buffers per revision, not per whole history.
     plain(path, NO);
     NSDictionary *a = [fm attributesOfItemAtPath:path error:nil];
     need([a[NSFileSize] unsignedLongLongValue] <= MAX_REVISION, @"This save snapshot is too large.");
@@ -101,17 +103,20 @@ static NSDictionary *readRevision(NSString *path, NSString *ID, NSString *into) 
     need(result == 0 && [@(meta.title) isEqual:title] && [@(meta.hash) isEqual:m[@"hash"]], @"The complete save inventory did not verify. Nothing was restored.");
     need(meta.files > 0 || [path.stringByDeletingLastPathComponent isEqual:at(vault, @"backups")], @"An empty cloud snapshot cannot replace real progress.");
     return m;
+    }
 }
 static NSString *pack(NSString *source, NSArray *parents, BOOL backup) {
+    @autoreleasepool {
     NSString *tmp = at(vault, [NSUUID.UUID.UUIDString stringByAppendingString:@".archive"]);
     @try {
     ss_meta meta;
     need(ss_pack(source.fileSystemRepresentation, title.UTF8String, tmp.fileSystemRepresentation, &meta) == 0, @"Cannot create a complete save snapshot. Local progress was kept.");
-    NSDictionary *m = @{@"format":@1, @"title":title, @"player":@"default", @"compat":compat,
+    NSDictionary *m = @{@"format":@1, @"title":title, @"player":@"default", @"compat":compat, @"gameVersion":gameVersion,
         @"parents":parents, @"hash":@(meta.hash), @"device":device,
         @"date":@([NSDate.date timeIntervalSince1970]), @"nonce":NSUUID.UUID.UUIDString};
     NSData *header = json(m), *payload = [NSData dataWithContentsOfFile:tmp options:NSDataReadingMappedIfSafe error:nil];
     need(payload != nil && payload.length <= MAX_REVISION - header.length - 4, @"The save is too large or the disk is full. Local progress was kept.");
+    need(header.length <= 65536 && parents.count <= 1024, @"Too many conflict branches to combine at once. Every revision was kept.");
     uint32_t length = (uint32_t)header.length;
     NSMutableData *data = [NSMutableData dataWithBytes:&length length:4]; [data appendData:header]; [data appendData:payload];
     need(backup || meta.files > 0, @"Empty progress is never published over a real save.");
@@ -121,6 +126,7 @@ static NSString *pack(NSString *source, NSArray *parents, BOOL backup) {
     atomicData(data, destination); unlink(tmp.fileSystemRepresentation);
     readRevision(destination, ID, nil); return ID;
     } @finally { unlink(tmp.fileSystemRepresentation); }
+    }
 }
 static void fault(NSString *point) {
 #ifdef NXE_CLOUD_TESTING
@@ -188,6 +194,7 @@ static void initialize(void) {
     mkdirs(vault); mkdirs(at(vault, @"revisions"));
     NSDictionary *m = dictionary([NSData dataWithContentsOfFile:@(manifest)]);
     title = m[@"title"]; compat = m[@"identity"];
+    gameVersion = [m[@"version"] isKindOfClass:NSString.class] ? m[@"version"] : @"unknown";
     need([title isKindOfClass:NSString.class] && title.length == 16 && [title rangeOfCharacterFromSet:[[NSCharacterSet characterSetWithCharactersInString:@"0123456789ABCDEF"] invertedSet]].location == NSNotFound && hexID(compat), @"This game lacks a verified save compatibility identity. Rebuild it before enabling iCloud.");
     device = NSProcessInfo.processInfo.hostName ?: @"This device";
     const char *c = getenv("NXE_CLOUD_FOLDER"); cloud = c && *c ? @(c) : nil; initialized = YES;
@@ -203,7 +210,7 @@ static void coordinate(NSURL *url, BOOL writing, void (^accessor)(NSURL *)) {
     NSFileCoordinator *c = [[NSFileCoordinator alloc] initWithFilePresenter:nil];
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 8 * NSEC_PER_SEC), dispatch_get_global_queue(QOS_CLASS_UTILITY, 0), ^{ [c cancel]; });
     NSError *error = nil; __block NSException *failure = nil; __block BOOL accessed = NO;
-    void (^block)(NSURL *) = ^(NSURL *u) { @try { accessor(u); accessed = YES; } @catch (NSException *e) { failure = e; } };
+    void (^block)(NSURL *) = ^(NSURL *u) { @autoreleasepool { @try { accessor(u); accessed = YES; } @catch (NSException *e) { failure = e; } } };
     if (writing) [c coordinateWritingItemAtURL:url options:0 error:&error byAccessor:block];
     else [c coordinateReadingItemAtURL:url options:NSFileCoordinatorReadingWithoutChanges error:&error byAccessor:block];
     if (failure) @throw failure;
@@ -326,7 +333,7 @@ static NSDictionary *command(NSString *cmd, NSString *arg) {
     if ([cmd isEqual:@"play"] && ![@[@"conflict", @"waiting", @"error"] containsObject:result[@"status"]]) playing = YES;
     return result;
 }
-static void setupQueue(void) { static dispatch_once_t once; dispatch_once(&once, ^{ queue = dispatch_queue_create("org.nxnative.save-continuity", DISPATCH_QUEUE_SERIAL); }); }
+static void setupQueue(void) { static dispatch_once_t once; dispatch_once(&once, ^{ queue = dispatch_queue_create("org.nxnative.save-continuity", DISPATCH_QUEUE_SERIAL); workers = dispatch_group_create(); }); }
 char *nxe_cloud_command(const char *cmd, const char *arg) {
     setupQueue(); __block NSDictionary *result;
     dispatch_sync(queue, ^{ @autoreleasepool { @try { result = command(@(cmd), arg ? @(arg) : @""); }
@@ -342,6 +349,7 @@ void nxe_cloud_committed(void) {
     setupQueue(); static _Atomic int pending;
     __c11_atomic_fetch_add(&requested, 1, __ATOMIC_SEQ_CST);
     if (__c11_atomic_exchange(&pending, 1, __ATOMIC_SEQ_CST)) return;
+    dispatch_group_enter(workers);
     dispatch_async(queue, ^{ @autoreleasepool {
         unsigned long long captured = __c11_atomic_load(&requested, __ATOMIC_SEQ_CST);
         @try {
@@ -357,5 +365,11 @@ void nxe_cloud_committed(void) {
         } @catch (NSException *e) { fprintf(stderr, "[dm] save continuity: %s\n", e.reason.UTF8String); }
         __c11_atomic_store(&pending, 0, __ATOMIC_SEQ_CST);
         if (captured != __c11_atomic_load(&requested, __ATOMIC_SEQ_CST)) nxe_cloud_committed();
+        dispatch_group_leave(workers);
     } });
+}
+
+void nxe_cloud_flush(void (*done)(void *), void *context) {
+    setupQueue(); nxe_cloud_committed();
+    dispatch_group_notify(workers, dispatch_get_global_queue(QOS_CLASS_UTILITY, 0), ^{ if (done) done(context); });
 }

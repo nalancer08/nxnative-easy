@@ -26,7 +26,7 @@ class CloudSaves(unittest.TestCase):
     def setUpClass(cls):
         cls.build = tempfile.TemporaryDirectory(prefix='nxe-cloud-engine-')
         cls.driver = Path(cls.build.name) / 'driver'
-        subprocess.run(['clang', '-fobjc-arc', '-fblocks', '-DNXE_CLOUD_TESTING',
+        subprocess.run(['clang', '-fobjc-arc', '-fobjc-arc-exceptions', '-fblocks', '-DNXE_CLOUD_TESTING',
                         '-Wno-deprecated-declarations', '-I', str(HOST),
                         str(HOST / 'tests/cloud_driver.m'), str(HOST / 'cloud_saves.m'),
                         str(HOST / 'save_archive.c'), '-framework', 'Foundation',
@@ -46,7 +46,7 @@ class CloudSaves(unittest.TestCase):
             root = self.root / name
             root.mkdir()
             manifest = root / 'compat.json'
-            manifest.write_text(json.dumps({'title': '010015100B514000', 'identity': 'a' * 64}))
+            manifest.write_text(json.dumps({'title': '010015100B514000', 'identity': 'a' * 64, 'version': '1.0'}))
             self.devices[name] = dict(os.environ, DM_SAVE=str(root / 'save'),
                                      NXE_SAVE_COMPAT=str(manifest), NXE_CLOUD_FOLDER=str(self.cloud))
             self.devices[name].pop('NXE_TEST_CLOUD_CRASH', None)
@@ -83,6 +83,23 @@ class CloudSaves(unittest.TestCase):
 
     def revisions(self):
         return list(self.cloud.rglob('*.nxsave'))
+
+    def test_worker_flush_publishes_the_committed_pair_before_completion(self):
+        self.write('phone', 'checkpoint account', 'checkpoint device')
+        self.assertEqual(self.run_command('phone', 'flush')['status'], 'flushed')
+        self.assertEqual(len(self.revisions()), 1)
+        data = self.revisions()[0].read_bytes()
+        length = struct.unpack('<I', data[:4])[0]
+        self.assertEqual(json.loads(data[4:4 + length])['gameVersion'], '1.0')
+        self.run_command('mac')
+        self.assertEqual(self.contents('mac'), (b'checkpoint account', b'checkpoint device'))
+
+    def test_disabled_flush_does_not_access_saves_or_create_history(self):
+        self.devices['phone'].pop('NXE_CLOUD_FOLDER')
+        self.write('phone', 'local only')
+        self.assertEqual(self.run_command('phone', 'flush')['status'], 'flushed')
+        self.assertFalse((self.root / 'phone/save.nxe-cloud').exists())
+        self.assertEqual(self.revisions(), [])
 
     def test_bidirectional_continuity_with_both_folders(self):
         self.write('phone', 'phone one', 'console one')
