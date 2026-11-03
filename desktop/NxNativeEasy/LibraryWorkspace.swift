@@ -66,9 +66,9 @@ struct LibraryWorkspace:View {
         guard let folder=model.folder else {return}
         do {try library.add(folder)}catch{library.error="No pudimos añadir esa carpeta a la biblioteca. Tus archivos siguen intactos."}
     }
-    private func checkBuildAdvice(_ snapshot:[OwnedGameOutput]?=nil) {
+    private func checkBuildAdvice(_ snapshot:[OwnedGameOutput]?=nil,jobsSnapshot:[RefreshJob]?=nil) {
         let generation=UUID();adviceGeneration=generation
-        let games=snapshot ?? library.games,repo=model.repo,jobs=sideload.jobs
+        let games=snapshot ?? library.games,repo=model.repo,jobs=jobsSnapshot ?? sideload.jobs
         Task {
             let advice=await Task.detached(priority:.utility) { ()->[String:String] in
                 var result:[String:String]=[:]
@@ -217,7 +217,7 @@ struct LibraryWorkspace:View {
         .onReceive(NotificationCenter.default.publisher(for:Notification.Name("nxnative.showBuildActivity"))){_ in page = .prepare;model.installingInline=false;model.preparationStep=model.running || model.failed || model.output==nil ? 4 : 5;model.showDetails=true}
         .onChange(of:model.showCatalog){_,show in if show {page = .compatibility;model.showCatalog=false}}
         .onChange(of:model.showDeviceLibrary){_,show in if show {page = .library;selectedGameID=nil;advanced=false;model.showDeviceLibrary=false}}
-        .onReceive(sideload.$jobs){_ in checkBuildAdvice()}
+        .onReceive(sideload.$jobs){jobs in checkBuildAdvice(jobsSnapshot:jobs)}
         .onReceive(library.$games){games in checkBuildAdvice(games);sideload.preparedFolders=Dictionary(games.compactMap {game in game.titleID.map {($0,game.folder)}},uniquingKeysWith:{first,_ in first});sideload.preparedIdentifiers=games.compactMap {game in game.originalBundleID ?? game.titleID.map {"org.nxnative."+$0.lowercased()}}}
         .onChange(of:model.folder){_,_ in if model.folder != nil {remember()}}
         .onChange(of:model.running){old,new in
