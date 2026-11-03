@@ -210,6 +210,10 @@ import Foundation
         let backup=root.appendingPathComponent("progress.zip")
         model.exportSaves(selected,destination:backup,confirmedClosed:true);try await wait {!model.busy && model.exportedSaves != nil};assert(model.exportedSaves==backup)
         model.copyData(selected,confirmedClosed:true);try await wait {!model.busy};assert(model.fraction==1 && model.error==nil)
+        let copyReport=DeviceGameObservation(device:"SYNTHETIC-DEVICE",deviceName:"Test iPad",bundleID:selected.id,titleID:"010093801237C000",version:selected.version,checkedAt:Date())
+        model.copyGame(copyReport);try await wait {!model.busy}
+        let copyAudit=try String(contentsOf:root.appendingPathComponent("operations.log"),encoding:.utf8)
+        guard model.error==nil,copyAudit.split(separator:"\n").filter({$0=="copy_romfs"}).count==2 else {fputs("Per-game data copy must recheck the exact installed identity\n",stderr);exit(1)}
         model.copyData(InstalledGame(id:selected.id,name:selected.name,version:"9.0"),confirmedClosed:true);assert(!model.busy && model.error != nil)
         let unrelated=root.appendingPathComponent("unrelated.zip")
         model.exportSaves(InstalledGame(id:"com.unrelated.private",name:selected.name),destination:unrelated,confirmedClosed:true);assert(!FileManager.default.fileExists(atPath:unrelated.path))
@@ -220,7 +224,7 @@ import Foundation
         assert(quiet.busy && quiet.quietSessionRecovery && !quiet.blocksGameWork)
         try await wait {!quiet.busy};assert(quiet.hasRememberedSession && quiet.error==nil && !quiet.quietSessionRecovery)
         quiet.restoreSession();try await wait {quiet.recoveringSession}
-        assert(quiet.blocksGameWork && !quiet.quietSessionRecovery)
+        guard !quiet.blocksGameWork && !quiet.quietSessionRecovery else {fputs("Interactive authentication must not block library work\n",stderr);exit(1)}
         try await wait {!quiet.busy};assert(quiet.hasRememberedSession && quiet.error != nil);quiet.cancel()
         let autoState=root.appendingPathComponent("automatic/jobs.json")
         try FileManager.default.createDirectory(at:autoState.deletingLastPathComponent(),withIntermediateDirectories:true)

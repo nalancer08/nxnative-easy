@@ -35,7 +35,45 @@ enum AccountRegistrationPolicy {
         return devices.contains(where:{$0.id.caseInsensitiveCompare(device) == .orderedSame}) ? .registered : .new
     }
 }
-struct InstalledGame:Identifiable {let id:String;let name:String;var version:String=""}
+struct InstalledGame:Identifiable {let id:String;let name:String;var version:String="";var saveContinuity:Int?=nil}
+
+// A separate, bounded read-only helper never sends input into an Apple login or
+// an install in progress. Closing its stdin ends it after the single request.
+private final class DeviceReadProbe:@unchecked Sendable {
+    private let lock=NSLock()
+    private var process:Process?
+    private var cancelled=false
+    func cancel() {lock.lock();cancelled=true;let task=process;lock.unlock();if let task,task.isRunning {task.terminate()}}
+    func read(helper:URL,request:[String:Any])->Data {
+        let task=Process(),input=Pipe(),output=Pipe();task.executableURL=helper
+        task.standardInput=input;task.standardOutput=output;task.standardError=FileHandle.nullDevice
+        var env=ProcessInfo.processInfo.environment;env.removeValue(forKey:"RUST_LOG");env.removeValue(forKey:"RUST_BACKTRACE");task.environment=env
+        defer {lock.lock();process=nil;lock.unlock()}
+        lock.lock()
+        guard !cancelled else {lock.unlock();return Data()}
+        do {try task.run()}catch{lock.unlock();return Data()}
+        process=task;lock.unlock()
+        do {
+            let timeout=DispatchWorkItem {[weak self] in self?.cancel()}
+            DispatchQueue.global(qos:.utility).asyncAfter(deadline:.now()+15,execute:timeout)
+            defer {timeout.cancel()}
+            var result=Data()
+            if request["op"] as? String=="installed_apps" {
+                var hello=Data()
+                while !hello.contains(10),hello.count<=65536 {let part=output.fileHandleForReading.availableData;if part.isEmpty {break};hello.append(part)}
+                let ready=hello.split(separator:10).compactMap{(try? JSONSerialization.jsonObject(with:Data($0))) as? [String:Any]}.first{$0["event"] as? String=="hello"}
+                guard ready?["protocol"] as? Int==1,(ready?["capabilities"] as? [String] ?? []).contains("scoped-games-v1") else {cancel();return Data()}
+                result.append(hello)
+            }
+            var data=try JSONSerialization.data(withJSONObject:request);data.append(10)
+            try input.fileHandleForWriting.write(contentsOf:data);try input.fileHandleForWriting.close()
+            while let part=try output.fileHandleForReading.read(upToCount:65536),!part.isEmpty {
+                if result.count+part.count>1048576 {cancel();return Data()};result.append(part)
+            }
+            task.waitUntilExit();return task.terminationStatus==0 ? result : Data()
+        }catch {cancel();return Data()}
+    }
+}
 
 struct GameAppScope {
     var originals:Set<String>=[]
@@ -62,6 +100,7 @@ struct DeviceGameObservation:Codable,Identifiable {
     let titleID:String?
     let version:String
     let checkedAt:Date?
+    var saveContinuity:Int?=nil
 }
 
 struct RefreshJob:Codable,Identifiable {
@@ -95,6 +134,12 @@ enum RefreshPolicy {
 
 @MainActor final class SideloadModel:ObservableObject {
     @Published var devices:[SideloadDevice]=[]
+    @Published private(set) var checkingDevices=false
+    @Published private(set) var devicesCheckedAt:Date?
+    @Published private(set) var connectionIssue=false
+    @Published private(set) var justConnected:SideloadDevice?
+    private var gameQueryGeneration=UUID()
+    private var queriedDevices:[String:Date]=[:]
     @Published private(set) var deviceGames:[DeviceGameObservation]=[]
     private var presenceWritable=true
     private var verifiedDevices:Set<String>=[]
@@ -104,6 +149,7 @@ enum RefreshPolicy {
     var preparedFolders:[String:URL]=[:]
     @Published var exportedSaves:URL?
     private var helperCapabilities:Set<String>=[]
+    private var requestedCopy:DeviceGameObservation?
     private var requestedBackup:(DeviceGameObservation,(String)->String)?
     private var pendingExport:URL?
     private var pendingContentID:String?
@@ -134,7 +180,7 @@ enum RefreshPolicy {
     @Published private(set) var recoveringSession=false
     @Published private(set) var quietSessionRecovery=false
     var recoveringQuietlyAtStartup:Bool {recoveringSession && quietSessionRecovery && activeRefresh==nil}
-    var blocksGameWork:Bool {busy && !recoveringQuietlyAtStartup}
+    var blocksGameWork:Bool {busy && (installIntent != nil || activeRefresh != nil || pendingContentID != nil || pendingExport != nil || requestedBackup != nil || requestedCopy != nil)}
     private var recoveryRequested=false
     private var automaticRecoveryAttempted=false
     @Published var busy=false {
@@ -143,6 +189,8 @@ enum RefreshPolicy {
     @Published var codeRequired=false
     @Published var smsNumbers:[TrustedSMS]=[]
     @Published var error:String?
+    @Published private(set) var failureOperation=""
+    @Published private(set) var appleFailureCode:Int?
     @Published var phase="Conecta y desbloquea tu iPhone/iPad."
     @Published var connectionSummary=""
     @Published var fraction:Double?
@@ -256,6 +304,10 @@ enum RefreshPolicy {
         guard !busy,devices.contains(where:{$0.id==observation.device}) else {return}
         requestedBackup=(observation,text);connect();openDevice(observation.device)
     }
+    func copyGame(_ observation:DeviceGameObservation) {
+        guard !busy,devices.contains(where:{$0.id==observation.device && $0.ready}) else{return}
+        requestedCopy=observation;connect();openDevice(observation.device)
+    }
     func copyData(_ app:InstalledGame,confirmedClosed:Bool) {
         guard !busy,!device.isEmpty,appQueryScope.permits(app.id),let source=dataFolder(for:app),helperCapabilities.contains("romfs-copy-v1") else {return}
         guard let id=titleID(for:app),let folder=preparedFolders[id],let version=PreviousPreparation.load(folder:folder,target:"ios")?.version,version==app.version else {error="Actualiza primero la app con la misma versión que los datos preparados.";return}
@@ -321,7 +373,7 @@ enum RefreshPolicy {
             guard let self,self.process === finished else {return}
             let recovering=self.recoveringSession
             if self.installerLease>=0 {Darwin.close(self.installerLease);self.installerLease = -1}
-            self.process=nil;self.input=nil;self.scopedDiscovery=false;self.requestedBackup=nil;self.authenticated=false;self.codeRequired=false;self.recoveringSession=false;self.quietSessionRecovery=false;self.pendingRemember=nil
+            self.process=nil;self.input=nil;self.scopedDiscovery=false;self.requestedBackup=nil;self.requestedCopy=nil;self.authenticated=false;self.codeRequired=false;self.recoveringSession=false;self.quietSessionRecovery=false;self.pendingRemember=nil
             if self.busy {self.error=recovering ? "No pudimos recuperar la sesión guardada. Revisa Internet y el acceso al Llavero, o vuelve a iniciar sesión." : "Instalación detenida. Vuelve a intentar; las partidas no se tocaron."}
             self.busy=false;self.activeRefresh=nil;self.installIntent=nil;self.refreshAuthenticated=false
         }}
@@ -340,6 +392,53 @@ enum RefreshPolicy {
         send(["op":"connection_diagnostics","udid":device])
     }
     func listDevices() {guard !busy else {return};error=nil;busy=true;startedAt=Date();fraction=nil;phase="Buscando dispositivos conectados…";record(phase);send(["op":"devices"])}
+    private func readDeviceEvent(_ request:[String:Any],event:String) async -> [String:Any]? {
+        guard let root=Bundle.main.executableURL?.deletingLastPathComponent() else {return nil}
+        let helper=helperURL ?? root.appendingPathComponent("nxnative-sideload"),probe=DeviceReadProbe()
+        let data=await withTaskCancellationHandler(operation:{await Task.detached(priority:.utility){probe.read(helper:helper,request:request)}.value},onCancel:{probe.cancel()})
+        guard !Task.isCancelled else {return nil}
+        return data.split(separator:10).compactMap{(try? JSONSerialization.jsonObject(with:Data($0))) as? [String:Any]}.last(where:{$0["event"] as? String==event})
+    }
+    func watchConnections() async {
+        while !Task.isCancelled {
+            await refreshConnections()
+            do {try await Task.sleep(nanoseconds:3_000_000_000)}catch{return}
+        }
+    }
+    func refreshConnections() async {
+        guard !checkingDevices else {return};checkingDevices=true;defer {checkingDevices=false}
+        guard let result=await readDeviceEvent(["op":"devices"],event:"devices") else {if !Task.isCancelled {connectionIssue=true;verifiedDevices=[]};return}
+        let before=Set(devices.filter(\.ready).map(\.id))
+        devices=SideloadDevice.decode((result["items"] as? [[String:Any]]) ?? [])
+        devicesCheckedAt=Date();connectionIssue=false
+        verifiedDevices.formIntersection(Set(devices.filter(\.ready).map(\.id)))
+        if let added=devices.first(where:{$0.ready && !before.contains($0.id)}) {justConnected=added}
+        if !busy,renewalJob==nil {
+            if !devices.contains(where:{$0.id==device}) {device="";apps=[];existing=""}
+            if device.isEmpty,devices.filter(\.ready).count==1 {device=devices.first(where:{$0.ready})!.id}
+        }
+        for item in devices where item.ready && !Task.isCancelled {
+            guard installIntent==nil,activeRefresh==nil,pendingContentID==nil,pendingExport==nil,Date().timeIntervalSince(queriedDevices[item.id] ?? .distantPast)>25 else {continue}
+            let token=gameQueryGeneration
+            let scope=GameAppScope(originals:Set(preparedIdentifiers),known:Set(jobs.filter{$0.udid==item.id}.map(\.effectiveID)))
+            guard !scope.isEmpty else {continue}
+            verifiedDevices.remove(item.id)
+            guard let result=await readDeviceEvent(["op":"installed_apps","udid":item.id,"original_ids":scope.originals.sorted(),"known_ids":scope.known.sorted()],event:"installed_apps") else {continue}
+            let found=((result["items"] as? [[String:Any]]) ?? []).compactMap{value->InstalledGame? in
+                guard let id=value["id"] as? String,scope.permits(id),let name=value["name"] as? String else{return nil}
+                return InstalledGame(id:id,name:name,version:value["version"] as? String ?? "",saveContinuity:value["save_continuity"] as? Int)
+            }
+            guard gameQueryGeneration==token,devices.contains(where:{$0.id==item.id}),!Task.isCancelled else {continue}
+            deviceGames.removeAll{$0.device==item.id && scope.permits($0.bundleID)}
+            deviceGames += found.map{DeviceGameObservation(device:item.id,deviceName:item.name,bundleID:$0.id,titleID:titleID(for:$0),version:$0.version,checkedAt:Date(),saveContinuity:$0.saveContinuity)}
+            verifiedDevices.insert(item.id);queriedDevices[item.id]=Date();savePresence()
+            if device==item.id,!busy {apps=found}
+        }
+    }
+    func dismissConnectionNotice(){justConnected=nil}
+    func invalidateGameQueries(){gameQueryGeneration=UUID();queriedDevices=[:];verifiedDevices=[]}
+    func hasCheckedGames(_ id:String)->Bool {verifiedDevices.contains(id) && devices.contains{$0.id==id && $0.ready} && !connectionIssue}
+    func clearAccountIssue(){if ["login","restore","verify","send_to_devices","request_sms"].contains(failureOperation){error=nil;appleFailureCode=nil;failureOperation=""}}
     func inspectApps() {
         guard !busy,!device.isEmpty else {return}
         var originals=Set(preparedIdentifiers)
@@ -355,6 +454,7 @@ enum RefreshPolicy {
 
     func signIn(password:String,remember:Bool) {
         guard !busy,!email.isEmpty,!password.isEmpty else {return}
+        failureOperation="login";appleFailureCode=nil
         recoveryRequested=false;automaticRecoveryAttempted=true;recoveringSession=false;quietSessionRecovery=false
         email=email.trimmingCharacters(in:.whitespacesAndNewlines).lowercased()
         busy=true;error=nil;startedAt=Date();fraction=nil;phase="Iniciando sesión con Apple…"
@@ -367,7 +467,7 @@ enum RefreshPolicy {
     func sendSMS(_ number:Int) {phase="Solicitando un nuevo código…";codeRequired=false;send(["op":"sms","number":number])}
     func resend() {phase="Solicitando un nuevo código…";codeRequired=false;send(["op":"resend"])}
     func signOut() {guard !busy else {return};connect();guard process?.isRunning==true else{return};recoveryRequested=false;automaticRecoveryAttempted=true;defaults.removeObject(forKey:"sideloadTeam."+RefreshPolicy.account(email));send(["op":"logout","email":email]);defaults.removeObject(forKey:"sideloadEmail");for index in jobs.indices {jobs[index].enabled=false};saveJobs()}
-    func cancel() {requestedBackup=nil;recoveryRequested=false;automaticRecoveryAttempted=true;pendingRemember=nil;record("Operación cancelada; puedes volver a intentar.");if let refresh=activeRefresh,let index=jobs.firstIndex(where:{$0.id==refresh.id}) {jobs[index].retryAfter=Date().addingTimeInterval(6*3600);saveJobs()};if let process,process.isRunning {if kill(-process.processIdentifier,SIGTERM) != 0 {process.terminate()}}}
+    func cancel() {requestedBackup=nil;requestedCopy=nil;recoveryRequested=false;automaticRecoveryAttempted=true;pendingRemember=nil;record("Operación cancelada; puedes volver a intentar.");if let refresh=activeRefresh,let index=jobs.firstIndex(where:{$0.id==refresh.id}) {jobs[index].retryAfter=Date().addingTimeInterval(6*3600);saveJobs()};if let process,process.isRunning {if kill(-process.processIdentifier,SIGTERM) != 0 {process.terminate()}}}
     var canUpdateAppOnly:Bool {
         guard let folder=gameFolder,let version=PreviousPreparation.load(folder:folder,target:"ios")?.version,!version.isEmpty,
               let app=apps.first(where:{$0.id==existing}) else {return false}
@@ -422,14 +522,21 @@ enum RefreshPolicy {
                 if !device.isEmpty {inspectApps()}
             }
         case "installed_apps":
-            apps=((event["items"] as? [[String:Any]]) ?? []).compactMap {item in guard let id=item["id"] as? String,appQueryScope.permits(id),let name=item["name"] as? String else {return nil};return InstalledGame(id:id,name:name,version:item["version"] as? String ?? "")}.sorted {$0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending}
+            apps=((event["items"] as? [[String:Any]]) ?? []).compactMap {item in guard let id=item["id"] as? String,appQueryScope.permits(id),let name=item["name"] as? String else {return nil};return InstalledGame(id:id,name:name,version:item["version"] as? String ?? "",saveContinuity:item["save_continuity"] as? Int)}.sorted {$0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending}
             deviceGames.removeAll {$0.device==device && appQueryScope.permits($0.bundleID)}
             let checked=Date(),deviceName=devices.first(where:{$0.id==device})?.name ?? "iPhone / iPad"
-            deviceGames += apps.map {DeviceGameObservation(device:device,deviceName:deviceName,bundleID:$0.id,titleID:titleID(for:$0),version:$0.version,checkedAt:checked)}
+            deviceGames += apps.map {DeviceGameObservation(device:device,deviceName:deviceName,bundleID:$0.id,titleID:titleID(for:$0),version:$0.version,checkedAt:checked,saveContinuity:$0.saveContinuity)}
             verifiedDevices.insert(device);savePresence()
             record("Lista de tus juegos actualizada.")
             let matches=apps.filter {$0.id.hasPrefix(originalID)};if existing.isEmpty,matches.count==1 {existing=matches[0].id}
             busy=false
+            if let wanted=requestedCopy {
+                requestedCopy=nil
+                if wanted.device==device,let app=apps.first(where:{$0.id==wanted.bundleID}) {
+                    if supportsContentCopy {copyData(app,confirmedClosed:true)}else{error="Falta el instalador nativo. Actualiza nxnative Easy."}
+                }
+                else {error="No encontramos este juego en el dispositivo. No se copiaron datos."}
+            }
             if let (wanted,text)=requestedBackup {
                 requestedBackup=nil
                 if wanted.device==device,let app=apps.first(where:{$0.id==wanted.bundleID}) {
@@ -479,6 +586,7 @@ enum RefreshPolicy {
             let installedFolder=URL(fileURLWithPath:job.gameFolder)
             let installedVersion=job.gameVersion ?? ""
             let installedTitle=SaveLocations.titleID(folder:installedFolder)
+            queriedDevices.removeValue(forKey:job.udid)
             let installedName=devices.first(where:{$0.id==job.udid})?.name ?? "iPhone / iPad"
             deviceGames.removeAll {$0.device==job.udid && $0.bundleID==actual}
             deviceGames.append(DeviceGameObservation(device:job.udid,deviceName:installedName,bundleID:actual,titleID:installedTitle,version:installedVersion,checkedAt:Date()))
@@ -490,7 +598,7 @@ enum RefreshPolicy {
             let confirmsCurrentInstall=activeRefresh==nil && job.ipa==ipa?.path && job.gameFolder==gameFolder?.path && job.originalID==originalID && job.udid==device && job.team==team
             installIntent=nil;activeRefresh=nil;refreshAuthenticated=false;busy=false;fraction=1;completedInstallation=confirmsCurrentInstall;increasedMemoryLimit=event["increased_memory_limit"] as? Bool;phase="Instalado. Tus partidas se conservan en el dispositivo.";record(phase)
         case "error":
-            requestedBackup=nil
+            requestedBackup=nil;requestedCopy=nil
             if recoveringQuietlyAtStartup {
                 quietSessionRecovery=false;recoveringSession=false;recoveryRequested=false
                 authenticated=false;pendingRemember=nil;busy=false;error=nil
@@ -499,6 +607,7 @@ enum RefreshPolicy {
             }
             record("La operación se detuvo. Revisa el mensaje de error.")
             let op=event["operation"] as? String
+            failureOperation=op ?? "";appleFailureCode=event["apple_code"] as? Int
             let codes=["keychain_access":"Tu cuenta sigue guardada. Conecta el Llavero desde tu cuenta Apple para continuar.","registration_consent":"Este dispositivo necesita registro. Revisa el consumo de un cupo y confirma antes de instalar.","version_changed":"La versión del juego cambió o no está verificada. Instala la app con sus datos nuevos.","game_running":"El juego sigue abierto. La renovación espera para no interrumpir tu partida.","idle_unknown":"No pudimos comprobar si el juego está abierto. Guarda, ciérralo y renueva manualmente.","identity_mismatch":"Ese identificador no corresponde al equipo elegido. Detenido para conservar la app anterior.","not_installed":"No encontramos esa app instalada. Revisa el identificador antes de actualizar.","wrong_app":"La app elegida no corresponde a este juego. No se instaló encima.","storage":"No hay espacio suficiente para preparar los datos nuevos sin borrar los anteriores.","ipa_changed":"La IPA cambió. Prepara y aprueba la actualización antes de renovarla."]
             error=codes[event["code"] as? String ?? ""] ?? ((op=="login" || op=="restore") ? "No pudimos iniciar sesión o la sesión guardada caducó. Vuelve a iniciar sesión." : "No pudimos completar la instalación. Revisa el dispositivo, equipo y permisos. No se revocaron certificados automáticamente.")
             if op=="export_saves" || op=="copy_romfs" {
@@ -510,7 +619,7 @@ enum RefreshPolicy {
             if op=="devices" {error="No pudimos buscar dispositivos. Revisa la conexión y vuelve a intentar."}
             if op=="account_devices" {accountDevices=[];accountDeviceTeam="";error="Apple no devolvió los dispositivos de este equipo. Revisa tu sesión y vuelve a consultar."}
             if op=="restore" && event["code"] as? String != "keychain_access" {error="No pudimos recuperar la sesión guardada. Revisa Internet y el acceso al Llavero, o vuelve a iniciar sesión."}
-            if let code=event["apple_code"] as? Int {error=(error ?? "")+" · Apple: \(code)"}
+            if let code=appleFailureCode {record("Apple: \(code)")}
             if op=="login" || op=="restore" {authenticated=false;pendingRemember=nil;recoveringSession=false;quietSessionRecovery=false}
             if let refresh=activeRefresh,let index=jobs.firstIndex(where:{$0.id==refresh.id}) {jobs[index].retryAfter=Date().addingTimeInterval((event["code"] as? String)=="game_running" ? 600 : 6*3600);jobs[index].needsLogin=(op=="restore" || event["code"] as? String=="keychain_access");saveJobs()}
             if let error {record(error)}
@@ -539,6 +648,7 @@ enum RefreshPolicy {
     }
     func restoreSession(interactive:Bool=true) {
         guard !busy,!email.isEmpty,defaults.string(forKey:"sideloadEmail")==email else {return}
+        failureOperation="restore";appleFailureCode=nil
         recoveryRequested=false;automaticRecoveryAttempted=true;recoveringSession=true;quietSessionRecovery = !interactive;pendingRemember=nil
         busy=true;error=nil;startedAt=Date();fraction=nil;phase="Recuperando tu sesión del Llavero…";record(phase)
         send(["op":"restore","email":email,"anisette_url":anisette,"interactive":interactive])
@@ -649,14 +759,16 @@ struct SideloadView:View {
         guard let job=model.renewalJob else {return true}
         return job.account==RefreshPolicy.account(model.email) && job.team==model.team && job.udid==model.device && job.effectiveID==model.existing && model.registrationState == .registered
     }
-    private var canInstall:Bool {!model.busy && model.authenticated && !model.device.isEmpty && !model.team.isEmpty && !model.originalID.isEmpty && model.ipa != nil && model.registrationState != .unknown && (model.registrationState != .new || approveRegistration) && renewalIdentityMatches}
+    private var canInstall:Bool {!model.busy && model.authenticated && selectedDevice?.ready==true && !model.connectionIssue && !model.device.isEmpty && !model.team.isEmpty && !model.originalID.isEmpty && model.ipa != nil && model.registrationState != .unknown && (model.registrationState != .new || approveRegistration) && renewalIdentityMatches}
     var body:some View {
         ScrollView {
             if accountOnly && embedded {
-                HStack(alignment:.top,spacing:36) {
-                    AccountSceneIntro(authenticated:model.authenticated,text:text).frame(width:250)
-                    VStack(alignment:.leading,spacing:20) {accountContent;InstallActivityView(model:model,text:text)}.frame(maxWidth:570)
-                }.frame(maxWidth:1000,alignment:.leading).frame(maxWidth:.infinity).padding(30)
+                VStack(alignment:.leading,spacing:20) {
+                    Text(text("Cuenta de instalación")).font(.title2.bold())
+                    Text(text("Para instalar y renovar apps. iCloud funciona por separado.")).font(.callout).foregroundStyle(.secondary)
+                    accountContent
+                    InstallActivityView(model:model,text:text,showBusy:false,showError:false)
+                }.frame(maxWidth:570,alignment:.leading).frame(maxWidth:.infinity,alignment:.leading).padding(30)
             } else {
             VStack(alignment:.leading,spacing:EasyDesign.spacing) {
                 HStack(alignment:.center) {
@@ -672,7 +784,9 @@ struct SideloadView:View {
                     if guided {Label(text("Preparación completada · Ahora vamos a instalar"),systemImage:"checkmark.seal.fill").font(.caption.weight(.semibold)).foregroundStyle(EasyDesign.accent)}
                     EasyStepRail(titles:["Dispositivo","Cuenta Apple","Revisar","Instalar"].map(text),current:installStep)
                 }
-                EasyMilestone(kind:kind,title:text(title),subtitle:text(subtitle))
+                if accountOnly || installStep==1 {Text(text(model.codeRequired ? "Verifica tu cuenta" : "Cuenta de instalación")).font(.title2.bold())}
+                else {EasyMilestone(kind:kind,title:text(title),subtitle:text(subtitle))}
+                if !accountOnly {Label(text(model.devices.contains{$0.ready} ? "Dispositivo conectado" : "Conecta tu iPhone o iPad")+(selectedDevice.map{" · "+$0.name} ?? ""),systemImage:model.devices.contains{$0.ready} ? "checkmark.circle.fill" : "cable.connector").font(.callout).foregroundStyle(model.devices.contains{$0.ready} ? EasyDesign.accent : .secondary)}
                 if accountOnly || installStep==1 {accountContent}
                 else if installStep==0 {deviceContent}
                 else if installStep==2 {reviewContent}
@@ -680,7 +794,7 @@ struct SideloadView:View {
                 if !accountOnly && installStep>0 && installStep<3 {
                     Button {installStep-=1} label:{Label(text("Atrás"),systemImage:"arrow.left")}.buttonStyle(EasyLinkStyle()).disabled(model.busy)
                 }
-                InstallActivityView(model:model,text:text)
+                InstallActivityView(model:model,text:text,showBusy:!(accountOnly || installStep==1),showError:!(accountOnly || installStep==1))
             }.frame(maxWidth:860,alignment:.leading).frame(maxWidth:.infinity,alignment:.top).padding(EasyDesign.pagePadding)
             }
         }
@@ -718,37 +832,39 @@ struct SideloadView:View {
                     }
                 }
                 Text(text("Desbloquea el dispositivo, confía en este Mac y activa Modo de desarrollador si iOS lo pide.")).font(.caption).foregroundStyle(.secondary)
-                Button {installStep=1} label:{Label(text("Continuar con este dispositivo"),systemImage:"arrow.right")}.buttonStyle(EasyPrimaryStyle()).disabled(model.busy || model.device.isEmpty)
+                Button {installStep=model.authenticated && !model.team.isEmpty ? 2 : 1} label:{Label(text("Continuar con este dispositivo"),systemImage:"arrow.right")}.buttonStyle(EasyPrimaryStyle()).disabled(model.busy || model.device.isEmpty)
             }
         }
     }
     private var accountContent:some View {
-        VStack(alignment:.leading,spacing:20) {
+        VStack(alignment:.leading,spacing:16) {
             if model.codeRequired {AppleVerificationView(model:model,text:text)}
             else if model.authenticated {signedInContent}
             else if model.busy {
-                Label(model.email,systemImage:"person.crop.circle").font(.callout).foregroundStyle(.secondary)
+                HStack(spacing:14) {ProgressView().controlSize(.small);VStack(alignment:.leading,spacing:5) {Text(text("Conectando tu cuenta…")).font(.headline);Text(model.email).font(.callout).foregroundStyle(.secondary)};Spacer();Button(text("Cancelar")){model.cancel()}.buttonStyle(EasyLinkStyle())}.padding(20).background(EasyDesign.panel,in:RoundedRectangle(cornerRadius:16))
             } else if model.hasRememberedSession && !usePassword {
+                let failed=model.error != nil && ["restore","login"].contains(model.failureOperation)
                 EasyCard {
                     VStack(alignment:.leading,spacing:16) {
-                        Label(text("Tu cuenta está guardada en este Mac"),systemImage:"key.horizontal").font(.headline)
-                        Text(model.email).font(.callout).textSelection(.enabled)
-                        Text(text("Conecta tu cuenta cuando la necesites. La biblioteca y tus partidas no requieren acceso al Llavero.")).font(.callout).foregroundStyle(.secondary)
-                        Text(text("Si vienes de una versión anterior, la primera conexión puede pedir permisos para conservar tu cuenta.")).font(.caption).foregroundStyle(.secondary)
-                        Button(text("Conectar cuenta guardada")){model.restoreSession()}.buttonStyle(EasyPrimaryStyle())
-                        Button(text("Entrar con contraseña")){usePassword=true}.buttonStyle(EasyLinkStyle())
+                        HStack(spacing:12) {Image(systemName:"person.crop.circle").font(.system(size:32,weight:.light)).foregroundStyle(EasyDesign.accent);VStack(alignment:.leading,spacing:5) {Text(model.email).font(.headline).textSelection(.enabled);Text(text(failed ? "La cuenta necesita volver a conectarse" : "Cuenta guardada en este Mac")).font(.caption).foregroundStyle(.secondary)}}
+                        if failed {Text(text("No pudimos usar la sesión guardada. Entra con tu contraseña para continuar.")).font(.callout).foregroundStyle(.secondary)}
+                        Button(text(failed ? "Entrar con contraseña" : "Conectar cuenta")){if failed {model.clearAccountIssue();usePassword=true}else{model.restoreSession()}}.buttonStyle(EasyPrimaryStyle())
+                        Button(text(failed ? "Intentar de nuevo" : "Usar otra cuenta")){if failed {model.restoreSession()}else{model.clearAccountIssue();usePassword=true}}.buttonStyle(EasyLinkStyle())
                     }
                 }
             } else {loginContent}
+            if let error=model.error,["login","restore","verify"].contains(model.failureOperation),!model.busy {
+                DisclosureGroup(text("Detalles de conexión")) {Text(text(error)+(model.appleFailureCode.map{" · Apple: \($0)"} ?? "")).font(.caption).foregroundStyle(.secondary).textSelection(.enabled)}.font(.caption)
+            }
             if !accountOnly && model.authenticated && !model.codeRequired {
-                Button {installStep=2} label:{Label(text("Continuar a la revisión"),systemImage:"arrow.right")}.buttonStyle(EasyPrimaryStyle()).disabled(model.busy || model.team.isEmpty)
+                Button {installStep=2} label:{Label(text("Continuar"),systemImage:"arrow.right")}.buttonStyle(EasyPrimaryStyle()).disabled(model.busy || model.team.isEmpty)
             }
         }
     }
     private var loginContent:some View {
         EasyCard {
             VStack(alignment:.leading,spacing:20) {
-                VStack(alignment:.leading,spacing:6) {Text(text("Inicia sesión en Apple")).font(.title3.bold());Text(text("Sólo hace falta para firmar, instalar y renovar apps. Exportar partidas y copiar romfs no necesitan sesión.")).font(.callout).foregroundStyle(.secondary)}
+                VStack(alignment:.leading,spacing:6) {Text(text("Inicia sesión en Apple")).font(.title3.bold());Text(text("Para instalar en tu iPhone o iPad.")).font(.callout).foregroundStyle(.secondary)}
                 VStack(alignment:.leading,spacing:16) {
                     EasyField(text("Cuenta Apple personal")){TextField("name@example.com",text:$model.email).accessibilityLabel(text("Cuenta Apple personal"))}
                     EasyField(text("Contraseña de Apple")){SecureField(text("Contraseña de Apple"),text:$password).accessibilityLabel(text("Contraseña de Apple")).onSubmit {signIn()}}
@@ -1086,10 +1202,12 @@ struct SideloadLibraryView:View {
 struct InstallActivityView:View {
     @ObservedObject var model:SideloadModel
     let text:(String)->String
+    var showBusy=true
+    var showError=true
     @State private var expanded=false
     var body:some View {
         VStack(alignment:.leading,spacing:16) {
-            if model.busy && !model.codeRequired {
+            if showBusy && model.busy && !model.codeRequired {
                 EasyCard {
                     VStack(alignment:.leading,spacing:14) {
                         HStack {Label(text(model.phase),systemImage:"arrow.triangle.2.circlepath").font(.headline);Spacer();Button(text("Cancelar")){model.cancel()}.buttonStyle(EasyLinkStyle())}
@@ -1102,8 +1220,8 @@ struct InstallActivityView:View {
             if let memory=model.increasedMemoryLimit,model.completedInstallation {
                 Text(text(memory ? "Memoria ampliada: confirmada en la firma." : "La firma no incluye memoria ampliada. Algunos juegos grandes pueden cerrarse por falta de memoria.")).font(.caption).foregroundStyle(memory ? Color.secondary : Color.orange)
             }
-            if let error=model.error {
-                EasyCard {VStack(alignment:.leading,spacing:8) {Label(text("Necesitamos revisar algo"),systemImage:"exclamationmark.triangle").font(.headline).foregroundStyle(.orange);Text(text(error)).font(.callout).textSelection(.enabled)}}
+            if showError,let error=model.error {
+                VStack(alignment:.leading,spacing:10) {Label(text("No pudimos completar este paso"),systemImage:"exclamationmark.triangle").font(.callout.bold()).foregroundStyle(.orange);DisclosureGroup(text("Ver detalles")){Text(text(error)).font(.caption).textSelection(.enabled)}}.padding(18).background(EasyDesign.panel,in:RoundedRectangle(cornerRadius:14))
             }
             if let export=model.exportedSaves {Button(text("Mostrar ZIP de partidas")){NSWorkspace.shared.activateFileViewerSelecting([export])}}
             if !model.logs.isEmpty {

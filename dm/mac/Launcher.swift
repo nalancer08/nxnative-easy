@@ -17,6 +17,8 @@ struct LauncherView: View {
     let fit: (CGFloat) -> Void
     @AppStorage("window.show") private var show = true
     @AppStorage("window.advanced") private var advanced = false
+    private var quickPlay: Bool { ProcessInfo.processInfo.environment["NXE_QUICK_PLAY"] == "1" && !NSEvent.modifierFlags.contains(.option) }
+    private func continueAutomatically() { if quickPlay && cloud.canQuickPlay { cloud.start { done(true) } } }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -60,6 +62,8 @@ struct LauncherView: View {
             .padding(20)
         }
         .frame(minWidth: 520, idealWidth: 560)
+        .onChange(of: cloud.ready) { _, _ in continueAutomatically() }
+        .onChange(of: cloud.busy) { _, _ in continueAutomatically() }
     }
 
     @ViewBuilder private func settingSections(basic: Bool) -> some View {
@@ -139,7 +143,8 @@ enum LauncherWindowLayout {
 @MainActor public func dmMacLauncher() -> Int32 {
     let file = Bundle.main.resourceURL.map { $0.appendingPathComponent("dm/launcher.json") }.flatMap { try? Data(contentsOf: $0) }.flatMap { try? JSONDecoder().decode(SettingsFile.self, from: $0) } ?? SettingsFile(settings: [])
     let hidden = ProcessInfo.processInfo.environment["DM_LAUNCHER"] == "0" || ((UserDefaults.standard.object(forKey: "window.show") as? Bool) == false && !NSEvent.modifierFlags.contains(.option))
-    if (hidden || file.settings.isEmpty) && !CloudSaveModel.hasFolder {
+    let quickPlay = ProcessInfo.processInfo.environment["NXE_QUICK_PLAY"] == "1"
+    if (hidden || file.settings.isEmpty) && !CloudSaveModel.hasFolder && !quickPlay {
         return CloudSaveModel.headlessPreflight() ? 2 : 0
     }
     let model = LauncherModel(file.settings)

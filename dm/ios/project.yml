@@ -32,6 +32,7 @@ targets:
         CFBundleDisplayName: ${DM_DISPLAY_NAME}   # the game name in the base NSP (set by build_ipa.sh)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         CFBundleShortVersionString: $(MARKETING_VERSION)
+        DMEasySaveContinuity: 2
         UILaunchStoryboardName: ""
         UIFileSharingEnabled: true          # Documents (log.txt, saves) visible in the Files app
         LSSupportsOpeningDocumentsInPlace: true

@@ -28,6 +28,29 @@ private func json(_ status: String, blocked: Bool = false, source: String = "") 
 @main private struct Check {
     @MainActor static func main() async {
         do {
+            let suite="nxnative.quick-play.tests."+UUID().uuidString,defaults=UserDefaults(suiteName:suite)!
+            let root=FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString).resolvingSymlinksInPath()
+            let selected=root.appendingPathComponent("selected"),other=root.appendingPathComponent("other")
+            try FileManager.default.createDirectory(at:selected,withIntermediateDirectories:true)
+            try FileManager.default.createDirectory(at:other,withIntermediateDirectories:true)
+            let originalEnvironment=ProcessInfo.processInfo.environment["NXE_CLOUD_FOLDER"]
+            defer {
+                defaults.removePersistentDomain(forName:suite);try? FileManager.default.removeItem(at:root)
+                if let originalEnvironment {setenv("NXE_CLOUD_FOLDER",originalEnvironment,1)}else{unsetenv("NXE_CLOUD_FOLDER")}
+            }
+            setenv("NXE_CLOUD_FOLDER",selected.path,1);reset(json("available"))
+            let first=CloudSaveModel(defaults:defaults);await first.load()
+            try require(first.folder?.path==selected.path && first.canQuickPlay,"new Mac game must adopt the explicit Easy folder before quick play")
+            let originalBookmark=defaults.data(forKey:"saveContinuity.folder.v1")
+            try require(originalBookmark != nil,"remember the selected folder")
+            setenv("NXE_CLOUD_FOLDER",other.path,1);reset(json("local"))
+            let mismatch=CloudSaveModel(defaults:defaults);await mismatch.load()
+            try require(mismatch.permissionError != nil && !mismatch.canQuickPlay,"different pre-existing folder must stop quick play")
+            try require(defaults.data(forKey:"saveContinuity.folder.v1")==originalBookmark,"never replace a previous game's folder without choosing")
+            let gate=model();gate.status="conflict";try require(!gate.canQuickPlay,"conflict must keep the game on review")
+            gate.status="waiting";try require(!gate.canQuickPlay,"pending delivery must not start automatically")
+            gate.status="available";gate.blocked=true;try require(!gate.canQuickPlay,"blocked restore must stop automatic play")
+            unsetenv("NXE_CLOUD_FOLDER")
             for (status, delay) in [("waiting", UInt64(3_000_000_000)), ("error", UInt64(15_000_000_000))] {
                 reset(json(status)); let m = model(); var sleeps = 0
                 await m.followCloud { nanos in

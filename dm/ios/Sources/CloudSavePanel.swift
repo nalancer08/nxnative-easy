@@ -48,6 +48,9 @@ enum CloudRefreshPolicy {
     @Published private(set) var started = false
     @Published private(set) var restoredFrom: String?
     private var access: URL?
+    private let defaults: UserDefaults
+    init(defaults: UserDefaults = .standard) { self.defaults = defaults }
+    var canQuickPlay: Bool { ready && !busy && !blocked && permissionError == nil && ["available", "empty", "local"].contains(status) }
     static var hasFolder: Bool { UserDefaults.standard.data(forKey: "saveContinuity.folder.v1") != nil }
     static func headlessPreflight() -> Bool {
         let pointer = "local-play".withCString { cmd in "".withCString { cloudCommand(cmd, $0) } }
@@ -84,8 +87,16 @@ enum CloudRefreshPolicy {
 
     func load() async {
         guard !ready && !busy else { return }
+        #if os(macOS)
+        // Easy passes only a user-selected folder, never an Apple credential.
+        // A pre-existing per-game choice is not silently replaced.
+        if defaults.data(forKey: bookmarkKey) == nil,
+           let path = ProcessInfo.processInfo.environment["NXE_CLOUD_FOLDER"], path.hasPrefix("/"), !path.contains("\0") {
+            await choose(URL(fileURLWithPath: path)); return
+        }
+        #endif
         busy = true
-        if let data = UserDefaults.standard.data(forKey: bookmarkKey) {
+        if let data = defaults.data(forKey: bookmarkKey) {
             do {
                 var stale = false
                 #if os(macOS)
@@ -95,6 +106,13 @@ enum CloudRefreshPolicy {
                 #endif
                 let url = try URL(resolvingBookmarkData: data, options: options, relativeTo: nil, bookmarkDataIsStale: &stale)
                 guard !stale else { throw CocoaError(.fileReadNoPermission) }
+                #if os(macOS)
+                if let global = ProcessInfo.processInfo.environment["NXE_CLOUD_FOLDER"], URL(fileURLWithPath: global).standardizedFileURL != url.standardizedFileURL {
+                    folder = url
+                    permissionError = text("This game uses a different save folder. Choose the folder you want before playing.", "Este juego usa otra carpeta de partidas. Elige cuál quieres usar antes de jugar.")
+                    _ = await invoke("folder", ""); ready = true; busy = false; return
+                }
+                #endif
                 if url.startAccessingSecurityScopedResource() { access = url }
                 folder = url
                 _ = await invoke("folder", url.path)
@@ -119,7 +137,7 @@ enum CloudRefreshPolicy {
             let data = try url.bookmarkData(options: options, includingResourceValuesForKeys: nil, relativeTo: nil)
             access?.stopAccessingSecurityScopedResource()
             access = scoped ? url : nil; folder = url
-            UserDefaults.standard.set(data, forKey: bookmarkKey)
+            defaults.set(data, forKey: bookmarkKey)
             permissionError = nil; restoredFrom = nil
             _ = await invoke("folder", url.path)
         } catch {
@@ -133,7 +151,7 @@ enum CloudRefreshPolicy {
     func disable() async {
         guard !busy && !started else { return }; busy = true
         _ = await invoke("folder", "")
-        UserDefaults.standard.removeObject(forKey: bookmarkKey)
+        defaults.removeObject(forKey: bookmarkKey)
         access?.stopAccessingSecurityScopedResource(); access = nil; folder = nil; permissionError = nil; restoredFrom = nil
         busy = false
     }

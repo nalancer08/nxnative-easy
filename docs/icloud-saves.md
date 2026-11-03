@@ -1,10 +1,15 @@
 # Continue your game between iPhone, iPad and Mac
 
-The desktop **Saves** page now lists received iCloud revisions and prepares checked
-manual backup copies. See [the transfer guide](save-transfer.md) for importing a
-compatible console backup, preserving both roots and stock-console limitations.
-Signature renewal/rebuilding has its own [guided maintenance flow](game-maintenance.md).
+Open **Library → Connect iCloud** and choose a folder in iCloud Drive. Easy uses
+this Mac's system iCloud session; the account used to sign apps is independent.
+Received saves bring their titles into your library, even without local game
+files. Open a cover to see destinations, received revisions and manual backups.
+**Add to play** starts guided preparation for Mac or iPhone/iPad and checks that
+you select files for the same title. No game is downloaded from a save.
 
+[Manual transfers](save-transfer.md) and [game maintenance](game-maintenance.md)
+remain available inside the game's detail. There is no separate Saves or Devices
+workspace destination.
 Save continuity is optional. Each device keeps its own active local save; only
 checked snapshots go into a folder you choose in iCloud Drive. No game files,
 RomFS, touch-control profiles, signing credentials or keys are uploaded.
@@ -21,9 +26,12 @@ playable game or evidence of physical-device synchronization.
    the existing iOS app with the same signing account, team and app identity.
    **Do not uninstall your game.** Updating Easy alone cannot change an already
    installed game's runtime. Keep a manual export before the first trial.
-2. Create a folder such as **My game saves** in **iCloud Drive**. Open the game
-   on each device and choose this **same folder** in its save panel. You choose
-   the common folder, not an individual revision or the game-data folder.
+2. Choose a folder such as **My game saves** in **iCloud Drive** in Easy. New
+   Mac apps prepared with this release receive that selection when you click
+   **Play**. If a Mac game already chose another folder, it asks you to review
+   instead of silently replacing the choice. On iPhone/iPad, open each rebuilt
+   game and grant access to this **same folder** once in the system picker.
+   Folder permission belongs to each app; signing credentials cannot grant it.
 3. Save using the game's own save function. Save commits queue snapshots in the
    background. On Mac, the launcher also checks after the game exits; on iOS,
    entering the background requests another snapshot and a finite background
@@ -69,10 +77,9 @@ is not proof of global freshness. iCloud scheduling and iOS suspension can delay
 delivery. The OS grants only limited background execution, as described by
 [Apple's background execution guide](https://developer.apple.com/documentation/uikit/extending-your-app-s-background-execution-time).
 
-Easy's **Saves and backups** page explains this setup and can review/export
-copies. The actual automatic receive/restore belongs to each newly prepared
-game, not the Easy desktop process. Choose the common folder once in each game
-and device; enabling it in Easy does not alter old installed apps.
+The game detail in Easy explains this setup and can review/export copies. The actual automatic receive/restore belongs to each newly prepared
+game, not the Easy desktop process. Grant the common folder once in each iOS game/device; enabling it in Easy does
+not alter old installed apps. Rebuilt Mac apps can use the folder selected in Easy.
 
 The device's iCloud account supplies storage access. The Apple account used to
 sign an IPA in Easy is separate; no signing login or paid developer membership
@@ -233,3 +240,28 @@ The unsigned production iOS fixture and Mac launcher/storage fixture compile and
 link this same component. Six native panel renders cover received, waiting and
 conflict in English and Spanish. Physical iCloud delivery remains a separate
 check; no game app was compiled, signed or installed using the owner's files.
+
+## Library presence and automatic discovery
+
+Easy checks connected devices independently of signing/login. USB and Wi-Fi
+transports are deduplicated by device ID. Only known game identifiers from your
+local library, received save titles and recorded installations are requested;
+this is never an unfiltered installed-app inventory. A successful scoped query
+confirms presence or absence. Disconnecting preserves the last known installation
+as historical evidence, not a current verification. A save's source-device name
+alone never claims that the app remains installed there.
+
+The library watches the selected namespace while active, requests provider
+materialization for pending revisions, and retains bounded display metadata when
+offline. Folder changes invalidate in-flight listings and isolate the cached
+catalog by the exact permission bookmark. This cache is not an active save and
+cannot select a winner. A local folder is labelled local, not iCloud. Only the
+native game's checked lineage/recovery path applies progress before play.
+
+Rebuilt apps expose a continuity capability marker. Older/unknown mobile builds
+show **Enable iCloud** and follow the existing preparation/installation flow;
+keep the same signing identity and do not uninstall. This marker is a capability
+hint, not evidence that the user has granted a folder or that a cloud round trip
+has completed. Mac **Play** may bypass settings only after the native preflight
+is ready; a pending delivery, conflict, blocked restore or folder disagreement
+keeps the launcher visible. Hold Option to open the Mac settings normally.

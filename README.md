@@ -10,7 +10,7 @@ A game library that takes you from your own game files to a ready-to-play app, w
 
 Unzip → drag **nxnative Easy.app** to **Applications** → open it. **No Terminal or launcher compilation needed.** The app includes its supporting tools.
 
-![Your personal game library](docs/images/nxnative-library-en-v1.27.jpg)
+![Your personal game library](docs/images/nxnative-library-en-v1.29.jpg)
 
 ## Switch 2 on Mac
 
@@ -44,22 +44,32 @@ If macOS blocks the first opening, open **System Settings → Privacy & Security
 
 ## Everything in one place
 
-- **Your library:** a cover shelf, a full-width game view, platform filters, prepared versions and installations verified on your connected devices. Select a cover, then play, install or open its details.
+- **Your library:** one cover per game, including titles found in your iCloud saves. Open it to play on Mac, add missing files, or see current and last-known iPhone/iPad installations.
 - **Your controls:** Xbox, PS5 and PS4 controllers, plus an input tester in **Settings**. On iPhone/iPad, move and resize touch buttons and save **four named profiles** per game.
 - **Your settings:** per-game Mac launch options and cache cleanup with a preview of exactly what will be removed.
-- **Your saves:** open **Saves** to see received iCloud revisions by game, device, version and date. Bring a compatible backup into a new revision or prepare a new console backup without replacing existing progress. Enable [iCloud continuity](docs/icloud-saves.md) in matching rebuilt games; conflicts keep both versions. No signing-account login is needed. [Transfer guide and console requirements](docs/save-transfer.md).
+- **Your saves:** connect iCloud in the library, then open your game to see received revisions by device, version and date. Bring a compatible backup into a new revision or prepare a new console backup without replacing existing progress. Enable [iCloud continuity](docs/icloud-saves.md) in matching rebuilt games; conflicts keep both versions. No signing-account login is needed. [Transfer guide and console requirements](docs/save-transfer.md).
 - **Your Apple account:** shared across the app, with a remembered Keychain session, device review and optional background signature renewal. [Renewal requirements](docs/background-renewal.md).
 - **App updates:** click **Update now** when a release appears. The app downloads and checks the new package, keeps the previous app as a backup and leaves your games and saves in place. To use a new engine in an existing game, prepare that game again.
 
-<img src="docs/images/nxnative-details-en-v1.27.jpg" width="49%" alt="Game details and where to play"> <img src="docs/images/nxnative-account-en-v1.25.jpg" width="49%" alt="Your shared Apple account in Settings">
+<img src="docs/images/nxnative-details-en-v1.29.jpg" width="49%" alt="Game details and where to play"> <img src="docs/images/nxnative-account-en-v1.29.jpg" width="49%" alt="Your shared Apple account in Settings">
 
 <img src="docs/images/nxnative-saves-en-v1.26.jpg" width="49%" alt="Save revisions received in your selected iCloud folder; synthetic examples"> <img src="docs/images/nxnative-maintenance-en-v1.27.jpg" width="49%" alt="Choose signature renewal or a game update">
 
 **Switch backups:** an unmodified Switch 1 or 2 cannot import saves just by copying them to its SD card. Easy prepares checked files; restoring them requires a separately configured compatible console tool. It does not access Nintendo's cloud. [What is possible](docs/save-transfer.md).
 
-**Open your game to see what comes next.** Home shows where it is installed and whether its recorded signature is expiring. **My game** explains recommendations and compares the Easy release used for preparation/signing with the current release. Legacy installations without that history say **Not recorded**. **Saves and backups** lets you back up iPhone progress locally, copy this Mac’s committed saves or review received iCloud versions, without signing-account login.
+**Open your game to see what comes next.** Home shows where it is installed and whether its recorded signature is expiring. Its detail explains recommendations and compares the Easy release used for preparation/signing with the current release. Legacy installations without that history say **Not recorded**. The same page lets you back up iPhone progress locally, copy this Mac’s committed saves or review received iCloud versions, without signing-account login.
 
 The interface starts in **English**; switch to **Español** in **Settings → General**.
+
+**Continue on another screen:** connect the same iCloud Drive folder in Easy and in
+each rebuilt iPhone/iPad game once. New Mac builds receive Easy’s chosen folder
+when you click **Play**. Compatible continuations are received before playing;
+saving queues upload automatically. Conflicting branches are both kept and you
+choose which to continue. Old game apps need a safe update over the existing
+installation. The system iCloud account can differ from your signing account.
+[Setup and delivery limits](docs/icloud-saves.md).
+
+Native UI previews use synthetic devices and save metadata; they are not proof of iCloud delivery.
 
 ## Find your game
 

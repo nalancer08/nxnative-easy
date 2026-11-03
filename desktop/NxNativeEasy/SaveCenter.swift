@@ -2,7 +2,7 @@ import SwiftUI
 import AppKit
 import UniformTypeIdentifiers
 
-struct SaveRevision:Decodable,Identifiable {
+struct SaveRevision:Codable,Identifiable {
     let id,title,path,device,version:String
     let date:Double
 }
@@ -19,6 +19,10 @@ struct SavePreview:Decodable {
 // game runtime, with its existing conflict choice and durable recovery journal.
 @MainActor final class SaveCenterModel:ObservableObject {
     @Published var cloud:URL?
+    @Published private(set) var scanning=false
+    @Published private(set) var cloudCheckedAt:Date?
+    @Published private(set) var cloudIssue:String?
+    @Published private(set) var knownCloudTitles:[String]=[]
     @Published var revisions:[SaveRevision]=[]
     @Published var pending=0
     @Published var invalid=0
@@ -38,23 +42,52 @@ struct SavePreview:Decodable {
     private let defaults:UserDefaults
     private var access:URL?
     private var generation=UUID()
-    init(defaults:UserDefaults = .standard) {self.defaults=defaults}
+    private var listGeneration=UUID()
+    private var signature:String?
+    @Published private(set) var usesICloud=false
+    private let isCloudLocation:(URL)->Bool
+    nonisolated static func isICloudLocation(_ folder:URL)->Bool {
+        let root=FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Library/Mobile Documents/com~apple~CloudDocs").standardizedFileURL.path
+        let selected=folder.standardizedFileURL.path
+        if selected==root || selected.hasPrefix(root+"/") {return true}
+        return (try? folder.resourceValues(forKeys:[.isUbiquitousItemKey]).isUbiquitousItem)==true
+    }
+    private struct CloudCache:Codable {let bookmark:Data;let revisions:[SaveRevision];var titles:[String]?=nil}
+    init(defaults:UserDefaults = .standard,isCloudLocation:@escaping(URL)->Bool = SaveCenterModel.isICloudLocation) {self.defaults=defaults;self.isCloudLocation=isCloudLocation}
     func restoreFolder() {
         guard cloud==nil,let data=defaults.data(forKey:"saveCenter.folder.v1") else {return}
+        if let cached=defaults.data(forKey:"cloudLibrary.cache.v1"),cached.count<=1048576,let value=try? JSONDecoder().decode(CloudCache.self,from:cached),value.bookmark==data {knownCloudTitles=(value.titles ?? value.revisions.map(\.title)).filter{$0.range(of:"^[0-9A-F]{16}$",options:.regularExpression) != nil}}
         var stale=false
         if let url=try? URL(resolvingBookmarkData:data,options:[.withSecurityScope,.withoutUI],relativeTo:nil,bookmarkDataIsStale:&stale),!stale {
-            if url.startAccessingSecurityScopedResource() {access=url};cloud=url
+            if url.startAccessingSecurityScopedResource() {access=url};cloud=url;usesICloud=isCloudLocation(url)
+            if let cached=defaults.data(forKey:"cloudLibrary.cache.v1"),cached.count<=1048576,let value=try? JSONDecoder().decode(CloudCache.self,from:cached),value.bookmark==data {
+                revisions=value.revisions.compactMap{item in
+                    guard item.title.range(of:"^[0-9A-F]{16}$",options:.regularExpression) != nil,item.id.range(of:"^[0-9a-f]{64}$",options:.regularExpression) != nil,item.date.isFinite else{return nil}
+                    let expected=url.appendingPathComponent("nxnative-saves-v1/"+item.title+"/"+item.id+".nxsave")
+                    // Never trust a cached absolute path. Rebuild it from the
+                    // selected folder's bookmark and bounded title/hash IDs.
+                    return SaveRevision(id:item.id,title:item.title,path:expected.path,device:item.device,version:item.version,date:item.date)
+                }
+                knownCloudTitles=(value.titles ?? revisions.map(\.title)).filter{$0.range(of:"^[0-9A-F]{16}$",options:.regularExpression) != nil}
+            }
         }
     }
     func chooseCloud(repo:URL) {
         guard !busy else {return}
         let panel=NSOpenPanel();panel.canChooseDirectories=true;panel.canChooseFiles=false;panel.allowsMultipleSelection=false
+        panel.title="iCloud Drive";panel.canCreateDirectories=true
+        let drive=FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Library/Mobile Documents/com~apple~CloudDocs")
+        if FileManager.default.fileExists(atPath:drive.path) {panel.directoryURL=drive}
         guard panel.runModal() == .OK,let url=panel.url else {return}
+        connectCloud(folder:url,repo:repo)
+    }
+    func connectCloud(folder url:URL,repo:URL) {
+        guard !busy else{return}
         let scoped=url.startAccessingSecurityScopedResource()
         do {
             let data=try url.bookmarkData(options:.withSecurityScope,includingResourceValuesForKeys:nil,relativeTo:nil)
             access?.stopAccessingSecurityScopedResource();access=scoped ? url : nil
-            defaults.set(data,forKey:"saveCenter.folder.v1");cloud=url
+            listGeneration=UUID();scanning=false;defaults.set(data,forKey:"saveCenter.folder.v1");defaults.removeObject(forKey:"cloudLibrary.cache.v1");revisions=[];knownCloudTitles=[];cloud=url;usesICloud=isCloudLocation(url);signature=nil;cloudCheckedAt=nil;cloudIssue=nil
             refresh(repo:repo)
         } catch {if scoped {url.stopAccessingSecurityScopedResource()};self.error="folder_access"}
     }
@@ -86,12 +119,60 @@ struct SavePreview:Decodable {
             done(payload)
         }
     }
-    func refresh(repo:URL) {
-        guard let cloud else {return}
-        request(repo:repo,["op":"list","cloud":cloud.path]) {result in
-            let data=(try? JSONSerialization.data(withJSONObject:result["revisions"] ?? [])) ?? Data()
-            self.revisions=(try? JSONDecoder().decode([SaveRevision].self,from:data)) ?? []
-            self.pending=result["pending"] as? Int ?? 0;self.invalid=result["invalid"] as? Int ?? 0
+    func disconnectCloud() {
+        listGeneration=UUID();access?.stopAccessingSecurityScopedResource();access=nil;cloud=nil
+        revisions=[];knownCloudTitles=[];usesICloud=false;signature=nil;cloudCheckedAt=nil;cloudIssue=nil;scanning=false
+        defaults.removeObject(forKey:"saveCenter.folder.v1");defaults.removeObject(forKey:"cloudLibrary.cache.v1")
+    }
+    nonisolated private static func cloudSignature(_ folder:URL)->String? {
+        let root=folder.appendingPathComponent("nxnative-saves-v1"),fm=FileManager.default
+        guard fm.fileExists(atPath:folder.path) else {return nil}
+        guard fm.fileExists(atPath:root.path) else {return "empty"}
+        guard let walk=fm.enumerator(at:root,includingPropertiesForKeys:[.fileSizeKey,.contentModificationDateKey,.isUbiquitousItemKey,.ubiquitousItemDownloadingStatusKey],options:[.skipsPackageDescendants]) else {return nil}
+        var rows:[String]=[],visited=0
+        while let url=walk.nextObject() as? URL {
+            visited+=1;if visited>16384 {return nil}
+            guard url.pathExtension=="nxsave" || url.lastPathComponent.hasSuffix(".nxsave.icloud") else {continue}
+            guard let value=try? url.resourceValues(forKeys:[.fileSizeKey,.contentModificationDateKey,.isUbiquitousItemKey,.ubiquitousItemDownloadingStatusKey]) else{return nil}
+            if value.isUbiquitousItem==true,value.ubiquitousItemDownloadingStatus != .current {try? fm.startDownloadingUbiquitousItem(at:url)}
+            if url.lastPathComponent.hasPrefix("."),url.lastPathComponent.hasSuffix(".icloud") {let logical=String(url.lastPathComponent.dropFirst().dropLast(7));try? fm.startDownloadingUbiquitousItem(at:url.deletingLastPathComponent().appendingPathComponent(logical))}
+            rows.append(url.path+":"+String(value.fileSize ?? -1)+":"+String(value.contentModificationDate?.timeIntervalSince1970 ?? 0))
+        }
+        return rows.sorted().joined(separator:"\n")
+    }
+    func watchCloud(repo:URL) async {
+        restoreFolder()
+        while !Task.isCancelled {
+            refresh(repo:repo,force:false)
+            do {try await Task.sleep(nanoseconds:5_000_000_000)}catch{return}
+        }
+    }
+    func refresh(repo:URL,force:Bool=true) {
+        guard let folder=cloud,!scanning else {return};scanning=true
+        let token=UUID();listGeneration=token
+        Task {
+            let stamp=await Task.detached(priority:.utility){Self.cloudSignature(folder)}.value
+            guard listGeneration==token,cloud==folder else{return}
+            guard stamp != nil else {scanning=false;cloudIssue="folder_access";return}
+            if !force,stamp==signature,cloudCheckedAt != nil,cloudIssue==nil {scanning=false;return}
+            let data=await Task.detached(priority:.utility){Self.execute(repo:repo,request:["op":"list","cloud":folder.path])}.value
+            guard listGeneration==token,cloud==folder else{return};scanning=false
+            guard let result=(try? JSONSerialization.jsonObject(with:data)) as? [String:Any],result["ok"] as? Bool==true,let payload=result["result"] as? [String:Any],let encoded=try? JSONSerialization.data(withJSONObject:payload["revisions"] ?? []),let received=try? JSONDecoder().decode([SaveRevision].self,from:encoded) else {cloudIssue="folder_access";return}
+            revisions=received;pending=payload["pending"] as? Int ?? 0;invalid=payload["invalid"] as? Int ?? 0
+            knownCloudTitles=Array(Set(knownCloudTitles+received.map(\.title))).sorted()
+            signature=stamp;cloudCheckedAt=Date();cloudIssue=nil
+            if let bookmark=defaults.data(forKey:"saveCenter.folder.v1"),let cache=try? JSONEncoder().encode(CloudCache(bookmark:bookmark,revisions:received,titles:knownCloudTitles)),cache.count<=1048576 {defaults.set(cache,forKey:"cloudLibrary.cache.v1")}
+        }
+    }
+    func download(repo:URL,revision:SaveRevision) {
+        guard !busy,cloud != nil else{return}
+        let panel=NSSavePanel();panel.nameFieldStringValue="Save-"+revision.title+"-"+String(Int(revision.date))+".zip"
+        guard panel.runModal() == .OK,let destination=panel.url else{return}
+        request(repo:repo,["op":"inspect","source":revision.path,"kind":"account"]) {checked in
+            guard let fingerprint=checked["fingerprint"] as? String else {self.error="save_operation_failed";return}
+            self.request(repo:repo,["op":"backup_revision","source":revision.path,"fingerprint":fingerprint,"destination":destination.path]) {result in
+                if let path=result["path"] as? String {self.localBackup=URL(fileURLWithPath:path);self.localBackupTitle=revision.title}
+            }
         }
     }
     func inspect(repo:URL,url:URL,revision:SaveRevision?=nil) {
@@ -156,7 +237,7 @@ struct SaveCenterView:View {
     var body:some View {
         ScrollView {
             VStack(alignment:.leading,spacing:24) {
-                HStack(alignment:.center,spacing:28) {
+                if focusTitle==nil || model.source==nil {HStack(alignment:.center,spacing:28) {
                     VStack(alignment:.leading,spacing:15) {
                         EasyEyebrow(title:text("TUS PARTIDAS"))
                         Text(text(model.source==nil ? "Tu aventura continúa." : "Prepara el siguiente capítulo.")).font(.system(size:model.source==nil ? 38 : 28,weight:.bold)).tracking(-1.1)
@@ -170,7 +251,7 @@ struct SaveCenterView:View {
                         if let cloud=model.cloud {Label(cloud.lastPathComponent,systemImage:"icloud").font(.caption).foregroundStyle(.secondary)}
                     }.frame(maxWidth:.infinity,alignment:.leading)
                     if let image=Bundle.main.url(forResource:"save-vault",withExtension:"png",subdirectory:"Library").flatMap({NSImage(contentsOf:$0)}) {Image(nsImage:image).resizable().scaledToFit().frame(width:model.source==nil ? 300 : 180,height:model.source==nil ? 220 : 120).accessibilityHidden(true)}
-                }
+                }}
                 if model.source==nil {
                     VStack(alignment:.leading,spacing:10) {
                         Label(text("Guarda y continúa. Automáticamente."),systemImage:"arrow.triangle.2.circlepath.icloud").font(.headline).foregroundStyle(EasyDesign.accent)
@@ -263,8 +344,9 @@ struct SaveCenterView:View {
                 if importing {
                     EasyCard {
                         VStack(alignment:.leading,spacing:16) {
-                            Text(text("¿A qué juego pertenece?")).font(.headline)
-                            Picker(text("Tu juego"),selection:$model.gameID) {Text(text("Elige de tu biblioteca")).tag("");ForEach(games.filter{$0.titleID != nil}) {game in Text(title(game.titleID!)+" · "+(game.version ?? "—")).tag(game.id)}}
+                            if let focusTitle {Label(title(focusTitle),systemImage:"gamecontroller").font(.headline)}
+                            else {Text(text("¿A qué juego pertenece?")).font(.headline)
+                            Picker(text("Tu juego"),selection:$model.gameID) {Text(text("Elige de tu biblioteca")).tag("");ForEach(games.filter{$0.titleID != nil}) {game in Text(title(game.titleID!)+" · "+(game.version ?? "—")).tag(game.id)}}}
                             Text(text("Los respaldos de consola no siempre indican versión o DLC. Comprueba que sean los mismos que preparaste; no convertimos partidas entre juegos ni ediciones.")).font(.callout).foregroundStyle(.secondary)
                             Toggle(text("Confirmo que es el mismo juego, versión y contenido."),isOn:$agreed)
                             if model.cloud==nil {Button(text("Elegir carpeta de iCloud")){model.chooseCloud(repo:repo)}.buttonStyle(EasySecondaryStyle())}

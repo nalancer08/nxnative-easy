@@ -1,6 +1,6 @@
 # Your saves, between devices
 
-Open **Saves** in nxnative Easy on Mac. Choose the same iCloud Drive folder used
+Open **Library → your game** in nxnative Easy on Mac. Choose the same iCloud Drive folder used
 inside your rebuilt games. This grants folder access; it does not use the Apple
 account that signs your apps. The desktop lists all received revisions by game,
 source device, version and date. Select one to check its complete archive before
@@ -13,8 +13,8 @@ preparing a copy. Dates identify revisions; they never decide a winner.
    files, ROMs or keys are needed or accepted.
 2. Prepare your game with save continuity, choose your iCloud folder inside it,
    and save once. A checked first snapshot identifies the game's save layout.
-3. In Easy, choose **Saves → Bring a backup**, then the folder or ZIP. Select the
-   game from your own library and confirm the same version, update and DLC. Raw
+3. In the game detail, choose **Upload a backup**, then the folder or ZIP. The
+   destination game stays selected; confirm the same version, update and DLC. Raw
    console files do not universally identify their title, user or version; Easy
    does not infer these from a folder's name.
 4. Choose **Add to iCloud**. Easy verifies the selected
@@ -37,7 +37,7 @@ interchange, not conversion between different games, editions or save schemas.
 
 ## Take an iCloud revision to Switch
 
-1. Select the game/revision in **Saves** and let verification finish.
+1. Open your game in **Library**, then a revision’s **More options → Prepare for Switch** and let verification finish.
 2. In **Prepare for Switch**, acknowledge that a console restore tool is
    required, then click **Prepare backup** and choose your SD card or an ordinary destination folder.
 3. Easy makes a new `Easy-<title ID>-<date>-<unique suffix>` folder. It contains
@@ -91,11 +91,10 @@ are separate from these tests.
 
 ## Backups directly from your game detail
 
-Open **Library → your game → Saves and backups**. To copy from iPhone, first save
+Open **Library → your game → Your save**. To copy from iPhone, first save
 and close the game. Easy makes a fresh scoped query for that exact device and app
 identifier before offering a new local ZIP destination. It does not sign, log in,
-copy RomFS or restore device progress. After a successful copy, choose **Add this
-backup to iCloud** to enter the existing content/layout review; this never skips
+copy RomFS or restore device progress. After a successful copy, use **Upload a backup** in that game to enter the existing content/layout review; this never skips
 compatibility checks or chooses a conflicting version automatically.
 
 **Back up this Mac's save** reads only committed `save` and `save_device` roots

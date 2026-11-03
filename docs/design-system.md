@@ -170,3 +170,33 @@ disclosure. Keep both initial intent choices visible at minimum height. Recorded
 expiry may preselect renewal, but must never start it. The pinned review action
 remains visible even while history is expanded. Validate these views with an
 actual care context; a context-free preview misses the extra content.
+
+## Current library contract (1.29; supersedes older navigation sections)
+
+`CloudLibraryHome`, `LibraryEntry`, `WorkspaceConnectionBar` and
+`GameContinuityDetail` implement the current collection. One cover grid leads to
+one game page: destinations, received saves, manual backup actions and collapsed
+version/history details. No per-game tabs, global Saves page, device-management
+page, second sidebar or repeated primary Add action. Compatibility is separate.
+Settings contains the signing account and controller tester. Keep preparation
+mounted to preserve running work, and retain the existing inline/later-modal
+installer contract and its final confirmation.
+
+A cloud-only title is a library record, not an invented game folder or installed
+app. Add to play retains the expected title through the destination/files flow.
+The runtime, not the library, chooses a compatible continuation. Source-device
+metadata never proves installed presence, a timestamp never proves more progress,
+and available local provider data never proves global cloud freshness.
+
+The persistent connection strip uses independently queried device readiness and
+cloud-provider availability. First verified arrival triggers the local
+`device-connected` Lottie once; it cannot trigger signing, copying or installation.
+It ends after 2 seconds, its notice is dismissible and auto-hides after 5 seconds.
+Reduced motion shows a native checkmark. Background/invisible animation pauses.
+
+Account recovery is one compact card with the remembered address, one actionable
+recovery explanation and a primary password/retry path. Technical Apple errors
+stay behind Details; they do not appear in the library or imply iCloud failed.
+Browsing and read-only device discovery remain usable during authentication.
+
+See [research, original assets and verification](design/library-continuity-2026-11.md).

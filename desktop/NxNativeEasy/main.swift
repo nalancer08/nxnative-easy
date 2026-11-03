@@ -234,6 +234,7 @@ struct PackageIdentityView:View {
     @Published var folder: URL? {didSet {inspectFiles()}}
     @Published var keysFolder: URL? {didSet {identifyGame()}}
     @Published var inspecting=false
+    @Published var expectedLibraryTitleID:String?
     @Published var inspection:PackageInspection?
     private var inspectionData:Data?
     private var inspectionManifest:URL?
@@ -399,8 +400,9 @@ struct PackageIdentityView:View {
         output=prepared.ipa;assets=prepared.romfs
     }
 
+    var matchesExpectedGame:Bool {expectedLibraryTitleID==nil || inspection?.title_id?.uppercased()==expectedLibraryTitleID?.uppercased()}
     func build() {
-        guard let folder, !running, !inspecting,inspection?.ready==true,!target.isEmpty else {return}
+        guard matchesExpectedGame,let folder, !running, !inspecting,inspection?.ready==true,!target.isEmpty else {return}
         let script=repo.appendingPathComponent("scripts/prepare_ios.sh")
         guard FileManager.default.fileExists(atPath:script.path) else {
             phase="No encontramos el código de nxnative.";detail="Vuelve a crear la app desde el repositorio con Abrir-interfaz.command.";failed=true;return
@@ -708,10 +710,11 @@ struct ContentView: View {
                             Text(model.text("Las carpetas extraídas de Switch 2 se preparan para Mac. iPhone/iPad aún no están probados.")).foregroundStyle(.orange)
                             Button(model.text("Preparar en Mac")){model.target="mac"}
                         }
+                        if !model.matchesExpectedGame,model.inspection?.ready==true {Label(model.text("Elegiste otro juego. Selecciona los archivos del juego de tu biblioteca."),systemImage:"exclamationmark.triangle").font(.callout).foregroundStyle(.orange)}
                         if model.inspection?.ready==true {
                             DisclosureGroup(model.text("Ver archivos detectados")) {PreparationInventory(files:model.detectedFiles,text:model.text)}.font(.callout).foregroundStyle(.secondary)
                         } else {PreparationInventory(files:model.detectedFiles,text:model.text)}
-                        Button(model.text("Continuar")){model.preparationStep=(model.readableKeys || model.isDumpFolder) ? 3 : 2}.buttonStyle(LibraryPrimaryButtonStyle()).disabled(model.inspecting || model.inspection?.ready != true || (model.isDumpFolder && model.target != "mac") || model.failed || model.folder==nil || (model.detectedFiles.isEmpty || model.detectedFiles.contains(where:{!$0.readable})) || model.running || sideload.blocksGameWork || updater.busy)
+                        Button(model.text("Continuar")){model.preparationStep=(model.readableKeys || model.isDumpFolder) ? 3 : 2}.buttonStyle(LibraryPrimaryButtonStyle()).disabled(model.inspecting || !model.matchesExpectedGame || model.inspection?.ready != true || (model.isDumpFolder && model.target != "mac") || model.failed || model.folder==nil || (model.detectedFiles.isEmpty || model.detectedFiles.contains(where:{!$0.readable})) || model.running || sideload.blocksGameWork || updater.busy)
                         }
                         if model.preparationStep==2 {
                         HStack(spacing:12) {
@@ -726,7 +729,7 @@ struct ContentView: View {
                         }
                         Label(model.text(model.readableKeys ? "Recordamos su ubicación. La compatibilidad de las llaves se comprueba al preparar." : "Elige prod.keys o arrástralo aquí. No necesitas seleccionar una carpeta."),systemImage:model.readableKeys ? "checkmark.shield" : "hand.draw").font(.callout).foregroundStyle(.secondary)
                         if model.folder != nil {PackageIdentityView(inspection:model.inspection,inspecting:model.inspecting,hasKeys:model.readableKeys || model.isDumpFolder,catalog:model.catalog,text:model.text,chooseKeys:{model.chooseKeysFolder()},retry:{model.identifyGame()},setup:{model.identifyGame(setupTools:true)},cancel:{model.cancelInspection()},proposal:PendingGameProposal.find(repo:model.repo,title:model.inspection?.title_id))}
-                        Button(model.text("Continuar")){model.preparationStep=3}.buttonStyle(LibraryPrimaryButtonStyle()).disabled(model.inspecting || model.inspection?.ready != true || model.failed || !model.readableKeys || model.running || sideload.blocksGameWork || updater.busy)
+                        Button(model.text("Continuar")){model.preparationStep=3}.buttonStyle(LibraryPrimaryButtonStyle()).disabled(model.inspecting || !model.matchesExpectedGame || model.inspection?.ready != true || model.failed || !model.readableKeys || model.running || sideload.blocksGameWork || updater.busy)
                         }
                         if model.preparationStep==3 {
                             Label(model.isMac ? "Mac" : "iPhone / iPad",systemImage:model.isMac ? "desktopcomputer" : "ipad.and.iphone").font(.title2.bold())

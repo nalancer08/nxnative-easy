@@ -10,7 +10,7 @@ Una biblioteca que te lleva de tus propios archivos a una app lista para jugar, 
 
 Descomprime → arrastra **nxnative Easy.app** a **Aplicaciones** → ábrela. **Sin Terminal ni compilar la interfaz.** La app incluye sus herramientas.
 
-![Tu biblioteca de juegos](docs/images/nxnative-library-es-v1.27.jpg)
+![Tu biblioteca de juegos](docs/images/nxnative-library-es-v1.29.jpg)
 
 ## Switch 2 en Mac
 
@@ -44,22 +44,32 @@ Si macOS bloquea la primera apertura, entra a **Configuración del Sistema → P
 
 ## Todo en un lugar
 
-- **Tu biblioteca:** una colección de portadas, vista amplia del juego, filtros por plataforma, versiones preparadas e instalaciones verificadas en tus dispositivos. Elige una portada para jugar, instalar o consultar el detalle.
+- **Tu biblioteca:** una portada por juego, también los que aparecen por tus partidas de iCloud. Ábrela para jugar en Mac, añadir archivos o ver las instalaciones actuales y conocidas de tu iPhone/iPad.
 - **Tus controles:** Xbox, PS5 y PS4, con una prueba de botones y sticks en **Configuración**. En iPhone/iPad puedes mover y cambiar el tamaño de los botones táctiles y guardar **cuatro perfiles con nombre** por juego.
 - **Tus ajustes:** opciones de inicio por juego en Mac y limpieza de cachés con una vista previa de lo que se borrará.
-- **Tus partidas:** abre **Partidas** para ver las versiones recibidas en iCloud por juego, dispositivo, versión y fecha. Añade un respaldo compatible como una versión nueva o prepara una copia para consola sin reemplazar el progreso anterior. Activa la [continuidad con iCloud](docs/icloud-saves.md) al preparar juegos con el mismo contenido; los conflictos conservan ambas partidas. No necesitas la cuenta de firma. [Transferencias y requisitos de consola](docs/save-transfer.md).
+- **Tus partidas:** conecta iCloud en la biblioteca y abre tu juego para ver las versiones recibidas por dispositivo, versión y fecha. Añade un respaldo compatible como una versión nueva o prepara una copia para consola sin reemplazar el progreso anterior. Activa la [continuidad con iCloud](docs/icloud-saves.md) al preparar juegos con el mismo contenido; los conflictos conservan ambas partidas. No necesitas la cuenta de firma. [Transferencias y requisitos de consola](docs/save-transfer.md).
 - **Tu cuenta Apple:** una para toda la app, con sesión recordada en el Llavero, revisión de dispositivos y renovación opcional de firmas en segundo plano. [Requisitos de renovación](docs/background-renewal.md).
 - **Actualizaciones de la app:** pulsa **Actualizar ahora** cuando aparezca una versión. La app descarga y verifica el paquete, conserva la app anterior como respaldo y mantiene tus juegos y partidas. Para aplicar un motor nuevo a un juego existente, vuelve a prepararlo.
 
-<img src="docs/images/nxnative-details-es-v1.27.jpg" width="49%" alt="Detalle del juego y dónde jugar"> <img src="docs/images/nxnative-account-es-v1.25.jpg" width="49%" alt="Tu cuenta Apple global en Configuración">
+<img src="docs/images/nxnative-details-es-v1.29.jpg" width="49%" alt="Detalle del juego y dónde jugar"> <img src="docs/images/nxnative-account-es-v1.29.jpg" width="49%" alt="Tu cuenta Apple global en Configuración">
 
 <img src="docs/images/nxnative-saves-es-v1.26.jpg" width="49%" alt="Versiones de partidas recibidas en la carpeta de iCloud; ejemplos ficticios"> <img src="docs/images/nxnative-maintenance-es-v1.27.jpg" width="49%" alt="Elegir entre renovar la firma y actualizar el juego">
 
 **Respaldos de Switch:** una Switch 1 o 2 sin modificar no importa partidas sólo por copiarlas a la SD. Easy prepara archivos comprobados; restaurarlos requiere una herramienta compatible configurada por separado en la consola. No conecta con la nube de Nintendo. [Qué se puede hacer](docs/save-transfer.md).
 
-**Abre tu juego para entender qué sigue.** El inicio muestra dónde está instalado y si su firma registrada va a caducar. En **Mi juego** ves el motivo de una recomendación, la versión de Easy usada para preparar/firmar y la actual. Las instalaciones antiguas sin esos datos dicen **Sin registro**. En **Partidas y copias** puedes traer un respaldo del iPhone, respaldar el progreso de este Mac o revisar las versiones recibidas en iCloud; no necesitas la cuenta de firma para copiar partidas.
+**Abre tu juego para entender qué sigue.** El inicio muestra dónde está instalado y si su firma registrada va a caducar. En su detalle ves el motivo de una recomendación, la versión de Easy usada para preparar/firmar y la actual. Las instalaciones antiguas sin esos datos dicen **Sin registro**. En esa misma pantalla puedes traer un respaldo del iPhone, respaldar el progreso de este Mac o revisar las versiones recibidas en iCloud; no necesitas la cuenta de firma para copiar partidas.
 
 La interfaz empieza en **inglés**; cámbiala a **Español** en **Settings → General**.
+
+**Sigue en otra pantalla:** conecta la misma carpeta de iCloud Drive en Easy y una
+vez dentro de cada juego reconstruido de iPhone/iPad. Las nuevas apps de Mac
+reciben la carpeta elegida al pulsar **Jugar**. Una continuación compatible se
+recibe antes de jugar; guardar en el juego prepara la subida automáticamente.
+Si hay conflicto, se conservan ambas partidas y eliges. Las apps antiguas necesitan
+actualizarse sobre su instalación existente. La cuenta de iCloud del sistema puede
+ser distinta de la cuenta de firma. [Configuración y límites](docs/icloud-saves.md).
+
+Estas vistas de la interfaz usan dispositivos y partidas ficticias; no prueban la entrega real de iCloud.
 
 ## Encuentra tu juego
 
