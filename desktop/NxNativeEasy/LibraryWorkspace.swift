@@ -159,7 +159,7 @@ struct LibraryWorkspace:View {
     }
     private var observingShell:some View {
         shell
-        .task {library.refresh();refreshScope();sideload.canRefresh={model.defaults.bool(forKey:"autoRefreshApps") && !model.running && !updater.busy};checkBuildAdvice();saves.restoreFolder()}
+        .task {library.refresh();refreshScope();sideload.canRefresh={!model.running && !updater.busy};checkBuildAdvice();saves.restoreFolder()}
         .task(id:scenePhase){if scenePhase == .active {await sideload.watchConnections()}}
         .task(id:String(scenePhase == .active)+":"+(saves.cloud?.path ?? "")){if scenePhase == .active {await saves.watchCloud(repo:model.repo)}}
         .task(id:sideload.justConnected?.id){if sideload.justConnected != nil {do {try await Task.sleep(nanoseconds:5_000_000_000)}catch{return};sideload.dismissConnectionNotice()}}
