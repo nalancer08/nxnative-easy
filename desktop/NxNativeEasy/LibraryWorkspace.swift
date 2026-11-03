@@ -8,6 +8,7 @@ struct LibraryWorkspace:View {
     @ObservedObject var sideload:SideloadModel
     private enum Page {case library,prepare,settings,compatibility}
     @StateObject private var saves=SaveCenterModel()
+    @StateObject private var localSaves=LocalSaveMonitor()
     @State private var page=Page.library
     @State private var query=""
     @State private var selectedEntryID:String?
@@ -21,9 +22,9 @@ struct LibraryWorkspace:View {
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     private var occupied:Bool {model.running || updater.busy || sideload.blocksGameWork}
-    init(model:BuildModel,library:GameLibrary,updater:AppUpdater,sideload:SideloadModel,saves:SaveCenterModel?=nil,initialEntryID:String?=nil) {
+    init(model:BuildModel,library:GameLibrary,updater:AppUpdater,sideload:SideloadModel,saves:SaveCenterModel?=nil,localSaves:LocalSaveMonitor?=nil,initialEntryID:String?=nil) {
         self.model=model;self.library=library;self.updater=updater;self.sideload=sideload
-        _saves=StateObject(wrappedValue:saves ?? SaveCenterModel());_selectedEntryID=State(initialValue:initialEntryID)
+        _saves=StateObject(wrappedValue:saves ?? SaveCenterModel());_localSaves=StateObject(wrappedValue:localSaves ?? LocalSaveMonitor());_selectedEntryID=State(initialValue:initialEntryID)
     }
     private var entries:[LibraryEntry] {LibraryEntry.merge(local:library.games,revisions:saves.revisions,known:saves.knownCloudTitles,installed:sideload.deviceGames)}
     private var selected:LibraryEntry? {entries.first{$0.id==selectedEntryID}}
@@ -131,7 +132,7 @@ struct LibraryWorkspace:View {
                     if let entry=selected {
                         VStack(spacing:0) {
                             HStack {Button {selectedEntryID=nil}label:{Label(model.text("Biblioteca"),systemImage:"arrow.left")}.buttonStyle(EasyLinkStyle());Spacer()}.padding(.horizontal,30).padding(.top,18)
-                            ScrollView {GameContinuityDetail(entry:entry,title:entryTitle(entry),catalog:model.catalog.first{$0.id==entry.titleID},context:entry.ios.map{care($0)} ?? entry.local.map{care($0)},saves:saves,sideload:sideload,repo:model.repo,text:model.text,disabled:occupied,prepare:{prepare(entry,target:$0)},chooseDestination:{addEntry(entry)},maintain:{if let game=entry.ios ?? entry.local {maintain(game)}else{addEntry(entry)}},maintainDevice:{report in if let game=entry.ios ?? entry.local {maintain(game,device:report.device)}else{addEntry(entry)}},install:{if let game=entry.ios {install(game)}else{prepare(entry,target:"ios")}},files:{optionsGame=entry.local},upload:{guard let game=entry.ios ?? entry.mac else{return};saves.gameID=game.id;saves.source=nil;saves.selectedRevision=nil;saves.completed=nil;saves.chooseSource(repo:model.repo);if saves.source != nil {importingSave=true}},reviewRevision:{revision in saves.inspect(repo:model.repo,url:URL(fileURLWithPath:revision.path),revision:revision);importingSave=true})}
+                            ScrollView {GameContinuityDetail(entry:entry,title:entryTitle(entry),catalog:model.catalog.first{$0.id==entry.titleID},context:entry.ios.map{care($0)} ?? entry.local.map{care($0)},saves:saves,localSaves:localSaves,sideload:sideload,repo:model.repo,text:model.text,disabled:occupied,prepare:{prepare(entry,target:$0)},chooseDestination:{addEntry(entry)},maintain:{if let game=entry.ios ?? entry.local {maintain(game)}else{addEntry(entry)}},maintainDevice:{report in if let game=entry.ios ?? entry.local {maintain(game,device:report.device)}else{addEntry(entry)}},install:{if let game=entry.ios {install(game)}else{prepare(entry,target:"ios")}},files:{optionsGame=entry.local},upload:{guard let game=entry.ios ?? entry.mac else{return};saves.gameID=game.id;saves.source=nil;saves.selectedRevision=nil;saves.completed=nil;saves.chooseSource(repo:model.repo);if saves.source != nil {importingSave=true}},reviewRevision:{revision in saves.inspect(repo:model.repo,url:URL(fileURLWithPath:revision.path),revision:revision);importingSave=true})}
                         }
                     } else {CloudLibraryHome(entries:entries,catalog:model.catalog,saves:saves,sideload:sideload,text:model.text,query:$query,disabled:occupied,connect:{saves.chooseCloud(repo:model.repo)},add:add,open:{selectedEntryID=$0.id})}
                 }
@@ -162,6 +163,7 @@ struct LibraryWorkspace:View {
         .task {library.refresh();refreshScope();sideload.canRefresh={!model.running && !updater.busy};checkBuildAdvice();saves.restoreFolder()}
         .task(id:scenePhase){if scenePhase == .active {await sideload.watchConnections()}}
         .task(id:String(scenePhase == .active)+":"+(saves.cloud?.path ?? "")){if scenePhase == .active {await saves.watchCloud(repo:model.repo)}}
+        .task(id:String(scenePhase == .active)+":"+entries.compactMap(\.titleID).sorted().joined(separator:",")){if scenePhase == .active {await localSaves.watch(titles:entries.compactMap(\.titleID))}}
         .task(id:sideload.justConnected?.id){if sideload.justConnected != nil {do {try await Task.sleep(nanoseconds:5_000_000_000)}catch{return};sideload.dismissConnectionNotice()}}
         .onReceive(library.$games){games in checkBuildAdvice(games);refreshScope(local:games)}
         .onReceive(saves.$revisions){refreshScope(remote:$0)}

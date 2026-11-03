@@ -12,6 +12,13 @@ enum EasyLanguage: String, CaseIterable {
 
 struct EasyStrings {
     static let english: [String:String] = [
+        "Las partidas de iPhone y iPad aparecen cuando iCloud las entrega.":"iPhone and iPad saves appear when iCloud delivers them.",
+        "Tu partida aparecerá aquí cuando guardes dentro del juego.":"Your save will appear here when you save in the game.",
+        "Aún no recibimos una copia de iCloud.":"No iCloud copy received yet.",
+        "No pudimos comprobar la partida de este Mac.":"Could not check the save on this Mac.",
+        "Guardada en el dispositivo. Las copias recibidas de iCloud aparecen debajo.":"Saved on the device. Received iCloud copies appear below.",
+        "Última modificación":"Last modified",
+        "Partida en este Mac":"Save on this Mac",
         "Añade tus archivos para preparar este juego.":"Add your files to prepare this game.",
         "Sólo se quita el registro. Tus archivos y partidas se conservan.":"Only the library record is removed. Your files and saves are kept.",
         "No encontramos este juego en el dispositivo. No se copiaron datos.":"This game was not found on the device. No data was copied.",

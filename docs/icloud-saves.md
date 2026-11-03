@@ -241,6 +241,26 @@ link this same component. Six native panel renders cover received, waiting and
 conflict in English and Spanish. Physical iCloud delivery remains a separate
 check; no game app was compiled, signed or installed using the owner's files.
 
+## Games before their first save
+
+Adding a game puts it in the library immediately, even with no save. Inside its
+detail, **Your save** stays empty until the game actually commits progress;
+launching alone is not a universal save event. Easy never creates a dummy save.
+
+While the desktop is active, a read-only monitor checks the known library titles'
+committed Mac `save/` and `save_device/` roots every three seconds. The first real
+file and later modification dates appear in the same game detail, even without
+iCloud connected. Empty folders and working transactions are not progress.
+Symlinks, unreadable roots and scans beyond the entry limit remain unverified.
+This is presence metadata, not a content check, backup or proof of cloud upload.
+
+Received iCloud revisions remain separate and keep their source device/date.
+iPhone/iPad progress appears on Mac after its configured game publishes a
+snapshot and iCloud delivers it. A connected device or installed game alone is
+not evidence that a save exists. Local and cloud copies never decide a conflict
+from filesystem dates. Manual backup still uses the existing committed-save
+verification and a new destination after the user saves and closes the game.
+
 ## Library presence and automatic discovery
 
 Easy checks connected devices independently of signing/login. USB and Wi-Fi

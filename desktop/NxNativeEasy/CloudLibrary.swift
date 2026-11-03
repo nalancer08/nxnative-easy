@@ -162,6 +162,7 @@ struct GameContinuityDetail:View {
     let catalog:CatalogGame?
     let context:GameCareContext?
     @ObservedObject var saves:SaveCenterModel
+    @ObservedObject var localSaves:LocalSaveMonitor
     @ObservedObject var sideload:SideloadModel
     let repo:URL
     let text:(String)->String
@@ -178,6 +179,7 @@ struct GameContinuityDetail:View {
     @State private var backupMac=false
     @State private var copying:DeviceGameObservation?
     private var reports:[DeviceGameObservation] {sideload.observations(titleID:entry.titleID,originalID:entry.ios?.originalBundleID)}
+    private var localPresence:LocalSavePresence? {entry.titleID.flatMap{localSaves.games[$0]}}
     private var hasFiles:Bool {entry.sources.contains{!$0.missing}}
     private var primaryTitle:String {
         if entry.mac != nil {return "Jugar"}
@@ -255,8 +257,22 @@ struct GameContinuityDetail:View {
                 if (entry.mac?.macApp).flatMap({Bundle(url:$0)?.object(forInfoDictionaryKey:"DMEasySaveContinuity") as? Int}) == nil && entry.mac != nil {
                     HStack {Text(text("Actualiza la app de Mac para recibir las partidas automáticamente.")).font(.caption).foregroundStyle(.secondary);Spacer();Button(text("Activar iCloud en Mac")){prepare("mac")}.buttonStyle(EasyLinkStyle()).disabled(disabled)}
                 }
+                if let presence=localPresence,presence.state == .present {
+                    HStack(spacing:14) {
+                        Image(systemName:"desktopcomputer").foregroundStyle(EasyDesign.accent)
+                        VStack(alignment:.leading,spacing:5) {
+                            Text(text("Partida en este Mac")).font(.callout.bold())
+                            if let date=presence.modified {Text(text("Última modificación")+" · "+date.formatted(date:.abbreviated,time:.shortened)).font(.caption).foregroundStyle(.secondary)}
+                            Text(text("Guardada en el dispositivo. Las copias recibidas de iCloud aparecen debajo.")).font(.caption).foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                    }.padding(14).background(EasyDesign.surface,in:RoundedRectangle(cornerRadius:12))
+                } else if localPresence?.state == .unavailable {
+                    Text(text("No pudimos comprobar la partida de este Mac.")).font(.caption).foregroundStyle(.orange)
+                }
                 if entry.revisions.isEmpty {
-                    Text(text(saves.cloud==nil ? "Conecta iCloud para traer tus partidas." : "Aún no recibimos una copia. Activa iCloud al abrir el juego.")).font(.callout).foregroundStyle(.secondary)
+                    Text(text(localPresence?.state == .present ? "Aún no recibimos una copia de iCloud." : "Tu partida aparecerá aquí cuando guardes dentro del juego.")).font(.callout).foregroundStyle(.secondary)
+                    if !reports.isEmpty {Text(text("Las partidas de iPhone y iPad aparecen cuando iCloud las entrega.")).font(.caption).foregroundStyle(.secondary)}
                 } else {
                     Text(text("Se reciben automáticamente. El juego aplica tu continuación al abrirlo.")).font(.callout).foregroundStyle(.secondary)
                     ForEach(Array(entry.revisions.prefix(2))) {revision in revisionRow(revision)}
@@ -264,7 +280,7 @@ struct GameContinuityDetail:View {
                 }
                 HStack(spacing:18) {
                     Button(text("Subir un respaldo"),action:upload).buttonStyle(EasyLinkStyle()).disabled(disabled || saves.busy || !hasFiles || saves.cloud==nil)
-                    if let local=entry.mac,let id=entry.titleID,FileManager.default.fileExists(atPath:SaveLocations.macRoot(titleID:id).appendingPathComponent("save").path) {Button(text("Guardar partida de este Mac")){backupMac=true}.buttonStyle(EasyLinkStyle()).disabled(saves.busy || local.missing)}
+                    if let local=entry.local,localPresence?.state == .present {Button(text("Guardar partida de este Mac")){backupMac=true}.buttonStyle(EasyLinkStyle()).disabled(saves.busy || local.missing)}
                     ForEach(reports.filter{sideload.isVerified($0)}) {report in Button(text("Sacar copia del iPhone")){backup=report}.buttonStyle(EasyLinkStyle()).disabled(sideload.busy)}
                 }
                 if let url=saves.localBackup,saves.localBackupTitle==entry.titleID {Button{textShow(url)}label:{Label(text("Mostrar copia guardada"),systemImage:"checkmark.shield")}.buttonStyle(EasyLinkStyle())}
@@ -278,7 +294,7 @@ struct GameContinuityDetail:View {
         }.padding(30).frame(maxWidth:1120).frame(maxWidth:.infinity,alignment:.top).background(EasyDesign.background)
         .alert(text("Guardar una copia"),isPresented:Binding(get:{backup != nil || backupMac},set:{if !$0 {backup=nil;backupMac=false}})) {
             Button(text("Cancelar"),role:.cancel){backup=nil;backupMac=false}
-            Button(text("Ya guardé y cerré el juego")){if let backup {sideload.backupGame(backup,text:text)}else if let game=entry.mac {saves.backupMac(repo:repo,game:game)};backup=nil;backupMac=false}
+            Button(text("Ya guardé y cerré el juego")){if let backup {sideload.backupGame(backup,text:text)}else if let game=entry.local {saves.backupMac(repo:repo,game:game)};backup=nil;backupMac=false}
         }message:{Text(text("Se crea un respaldo nuevo. La partida original se conserva."))}
         .alert(text("Copiar datos del juego"),isPresented:Binding(get:{copying != nil},set:{if !$0 {copying=nil}})) {
             Button(text("Cancelar"),role:.cancel){copying=nil}

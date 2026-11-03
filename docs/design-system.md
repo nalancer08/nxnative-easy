@@ -200,3 +200,13 @@ stay behind Details; they do not appear in the library or imply iCloud failed.
 Browsing and read-only device discovery remain usable during authentication.
 
 See [research, original assets and verification](design/library-continuity-2026-11.md).
+
+## First save presence (1.29.1)
+
+A library game exists independently of its saves. `LocalSaveMonitor` reads only
+committed local metadata for known titles while active. The game's **Your save**
+section distinguishes a local Mac save from received iCloud copies. Show the
+observed modification date as **Last modified**, never progress percentage,
+cloud receipt or a branch winner. Empty-state copy waits for a real in-game save;
+opening the app alone is insufficient. Do not create placeholder save files or
+inspect unrelated device apps to fill an empty state.
