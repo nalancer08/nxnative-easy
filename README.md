@@ -53,7 +53,7 @@ If macOS blocks the first opening, open **System Settings → Privacy & Security
 
 <img src="docs/images/nxnative-details-en-v1.27.jpg" width="49%" alt="Game details and where to play"> <img src="docs/images/nxnative-account-en-v1.25.jpg" width="49%" alt="Your shared Apple account in Settings">
 
-<img src="docs/images/nxnative-saves-en-v1.26.jpg" width="49%" alt="Save revisions received in your selected iCloud folder; synthetic examples"> <img src="docs/images/nxnative-maintenance-en-v1.26.jpg" width="49%" alt="Choose signature renewal or a game update">
+<img src="docs/images/nxnative-saves-en-v1.26.jpg" width="49%" alt="Save revisions received in your selected iCloud folder; synthetic examples"> <img src="docs/images/nxnative-maintenance-en-v1.27.jpg" width="49%" alt="Choose signature renewal or a game update">
 
 **Switch backups:** an unmodified Switch 1 or 2 cannot import saves just by copying them to its SD card. Easy prepares checked files; restoring them requires a separately configured compatible console tool. It does not access Nintendo's cloud. [What is possible](docs/save-transfer.md).
 

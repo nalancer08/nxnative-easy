@@ -25,11 +25,12 @@ struct GameMaintenanceView:View {
             VStack(alignment:.leading,spacing:24) {
                 HStack {EasyEyebrow(title:text("MEJORA TU JUEGO"));Spacer();Button(text("Cerrar"),action:close).buttonStyle(EasyLinkStyle())}
                 EasyStepRail(titles:["Qué necesitas","Revisar","Continuar"].map(text),current:reason.isEmpty ? 0 : 1)
-                EasyMilestone(kind:reason=="renew" ? .account : .review,title:text(reason=="renew" ? "Vuelve a jugar. Tu progreso sigue." : "Tu juego, mejor que antes."),subtitle:title)
+                if context==nil {
+                    EasyMilestone(kind:reason=="renew" ? .account : .review,title:text(reason=="renew" ? "Vuelve a jugar. Tu progreso sigue." : "Tu juego, mejor que antes."),subtitle:title)
+                } else {Text(title).font(.system(size:26,weight:.bold)).lineLimit(2)}
                 Text(text("Actualizar conserva las partidas cuando mantienes la misma app e identidad. El instalador comprueba esto antes de continuar. Guarda y cierra el juego; no lo desinstales.")).font(.callout).foregroundStyle(.secondary)
                 if let context {
                     EasyCard {VStack(alignment:.leading,spacing:12) {Text(text(context.title)).font(.headline);Text(text(context.reason)).font(.callout).foregroundStyle(.secondary);ForEach(context.changes,id:\.self){Label(text($0),systemImage:"sparkles").font(.caption)}}}
-                    EasyCard {GameVersionComparison(context:context,text:text)}
                 }
                 if reason.isEmpty {
                 choice("renew",title:"Caducó o está por caducar",body:"Renueva la firma de iPhone o iPad. Reutiliza la IPA; no recompila ni copia otra vez los datos del juego.",icon:"arrow.clockwise.circle")
@@ -61,6 +62,7 @@ struct GameMaintenanceView:View {
                         }
                     }
                 }
+                if let context {DisclosureGroup(text("Historial de preparación")) {GameVersionComparison(context:context,text:text).padding(.top,12)}.font(.caption)}
             }.padding(30).frame(maxWidth:820,alignment:.leading).frame(maxWidth:.infinity)
         }.safeAreaInset(edge:.bottom,spacing:0) {
             if !reason.isEmpty {
@@ -72,7 +74,7 @@ struct GameMaintenanceView:View {
                 }.padding(20).background(EasyDesign.background).overlay(alignment:.top){Divider()}
             }
         }.frame(minWidth:720,idealWidth:820,maxWidth:820,minHeight:520,idealHeight:700,maxHeight:760).background(EasyDesign.background).preferredColorScheme(.dark)
-        .task {platform=game.macApp != nil ? "mac" : "ios";selectedJob=matchingJobs.first?.id ?? ""}
+        .task {platform=game.macApp != nil ? "mac" : "ios";selectedJob=context?.attention?.job?.id ?? matchingJobs.first?.id ?? "";if reason.isEmpty,let state=context?.state,state == .expired || state == .expiring {reason="renew"}}
     }
     private func choice(_ value:String,title:String,body:String,icon:String)->some View {
         Button {reason=value} label:{HStack(alignment:.top,spacing:16) {Image(systemName:icon).font(.system(size:28,weight:.light)).foregroundStyle(EasyDesign.accent);VStack(alignment:.leading,spacing:8) {Text(text(title)).font(.headline);Text(text(body)).font(.callout).foregroundStyle(.secondary).multilineTextAlignment(.leading)};Spacer();Image(systemName:reason==value ? "checkmark.circle.fill" : "circle").foregroundStyle(reason==value ? EasyDesign.accent : .secondary)}.padding(20).background(EasyDesign.panel,in:RoundedRectangle(cornerRadius:14)).overlay(RoundedRectangle(cornerRadius:14).strokeBorder(reason==value ? EasyDesign.accent.opacity(0.7) : .white.opacity(0.08))).foregroundStyle(EasyDesign.ink)}.buttonStyle(.plain)

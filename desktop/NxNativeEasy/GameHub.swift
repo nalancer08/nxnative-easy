@@ -15,8 +15,9 @@ struct GameCareContext {
     var current:EasyBuildStamp?
     var localReady=false
     var localRebuild:Bool?
+    var attention:GameDeviceReport? {reports.min(by:{priority($0.state)<priority($1.state)})}
     var state:GameCareState {
-        let remote=reports.min(by:{priority($0.state)<priority($1.state)})?.state
+        let remote=attention?.state
         if localReady,localRebuild==true,priority(remote ?? .notInstalled)>priority(.rebuild) {return .rebuild}
         return remote ?? (localReady ? (localRebuild==false ? .current : .unknown) : .notInstalled)
     }

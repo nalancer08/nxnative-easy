@@ -142,7 +142,7 @@ struct LibrarySpotlight:View {
                         EasyEyebrow(title:text("EN TUS PANTALLAS"))
                         Label(text(care.title),systemImage:care.state == .expired || care.state == .expiring ? "clock.badge.exclamationmark" : "iphone").font(.headline).foregroundStyle(care.state == .expired || care.state == .expiring ? .orange : EasyDesign.accent)
                         Text(text(care.reason)).font(.callout).foregroundStyle(.secondary).fixedSize(horizontal:false,vertical:true)
-                        if let report=care.reports.first {
+                        if let report=care.attention {
                             Text(report.observation.deviceName).font(.caption.weight(.semibold)).lineLimit(1)
                             Text(text("Juego")+" · "+(report.observation.version.isEmpty ? text("Sin registro") : report.observation.version)).font(.caption).foregroundStyle(.secondary)
                         }

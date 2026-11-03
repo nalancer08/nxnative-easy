@@ -53,7 +53,7 @@ Si macOS bloquea la primera apertura, entra a **Configuración del Sistema → P
 
 <img src="docs/images/nxnative-details-es-v1.27.jpg" width="49%" alt="Detalle del juego y dónde jugar"> <img src="docs/images/nxnative-account-es-v1.25.jpg" width="49%" alt="Tu cuenta Apple global en Configuración">
 
-<img src="docs/images/nxnative-saves-es-v1.26.jpg" width="49%" alt="Versiones de partidas recibidas en la carpeta de iCloud; ejemplos ficticios"> <img src="docs/images/nxnative-maintenance-es-v1.26.jpg" width="49%" alt="Elegir entre renovar la firma y actualizar el juego">
+<img src="docs/images/nxnative-saves-es-v1.26.jpg" width="49%" alt="Versiones de partidas recibidas en la carpeta de iCloud; ejemplos ficticios"> <img src="docs/images/nxnative-maintenance-es-v1.27.jpg" width="49%" alt="Elegir entre renovar la firma y actualizar el juego">
 
 **Respaldos de Switch:** una Switch 1 o 2 sin modificar no importa partidas sólo por copiarlas a la SD. Easy prepara archivos comprobados; restaurarlos requiere una herramienta compatible configurada por separado en la consola. No conecta con la nube de Nintendo. [Qué se puede hacer](docs/save-transfer.md).
 

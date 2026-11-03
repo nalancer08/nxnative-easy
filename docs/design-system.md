@@ -163,3 +163,10 @@ just the launcher UI. Separate game-content versions from Easy versions. Record
 preparation provenance at build time and signing provenance on validated receipts;
 renewal retains the original preparation stamp. Show expiry as recorded evidence,
 not a fresh examination of an external install's provisioning profile.
+
+
+Contextual maintenance uses a compact game heading and a collapsed build-history
+disclosure. Keep both initial intent choices visible at minimum height. Recorded
+expiry may preselect renewal, but must never start it. The pinned review action
+remains visible even while history is expanded. Validate these views with an
+actual care context; a context-free preview misses the extra content.
