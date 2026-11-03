@@ -57,7 +57,7 @@ A success illustration appears only after a **validated `installed` event matchi
 
 ## Verification before shipping
 
-Compile the whole desktop target and run the synthetic client/workflow fixtures. Render at least: empty and selected device; password form in English and Spanish; saved-session recovery; 2FA; authenticated team/slots; new-device review; progress; verified success and failure. Check the minimum desktop content width (760 points), long names, scrolling, focus, one primary action and collapsed log history. Keep decorative artwork static so reduced-motion settings need no exception.
+Compile the whole desktop target and run the synthetic client/workflow fixtures. Render at least: empty and selected device; password form in English and Spanish; saved-session recovery; 2FA; authenticated team/slots; new-device review; progress; verified success and failure. Check the minimum desktop content width (760 points), long names, scrolling, focus, one primary action and collapsed log history. Check the static reduced-motion alternative for any decorative animation.
 
 Use fake accounts, helper messages and devices for screenshots/tests. Do not initiate real account login, registration, signing or installation during agent validation. Real-device testing remains a separate user action.
 
@@ -68,21 +68,41 @@ A local IPA is **ready to install**, not proof of device installation. A local M
 Completed preparation notices have a labelled dismiss action that hides only the notice. Retain logs, timeline, source files and outputs. Do not allow dismissal to obscure a running build; the next actual build resets the dismissal. Viewing completed activity must not label the job as still building.
 
 
-## Collection welcome (1.23)
+## Personal library and navigation (1.24)
 
-`LibraryWelcomeHeader`, `EasyCollectionArtwork` and `EasyLibraryMetric` reuse the
-existing tokens. The cover fan draws only the player's added game artwork;
-empty libraries use original native device/controller geometry. Decoration is
-static, hidden from accessibility, and never introduces an animation requirement.
+The workspace has one horizontal navigation bar: Library, Prepare, Devices,
+Compatibility and Settings. Do not add a global sidebar or an adjacent game list.
+The library is a responsive cover grid; a cover opens a full-width game page.
+Back to Library (also Command-[) retains the search. Library navigation returns
+to the grid. Preparation stays mounted so browsing never resets a running job,
+its logs, cancellation or sheets. The activity dock remains independent.
 
-Show collection count, discoverable Mac apps and discoverable IPAs separately.
-An IPA count is not an installation count. Per-device proof remains in the game
-detail. The empty state hides search/counters and has one primary Add game action.
-At 1000 × 640 the shorter detail artwork keeps the main action visible; further
-detail still scrolls. Keep keyboard/selection semantics and translated labels.
-Quiet startup account recovery must not block browsing or preparing games, nor display
-an intrusive global account spinner. Actual installer operations keep their guards.
+`LibraryCoverCard` shows owned-game artwork, the game name, real output availability
+(Mac app / IPA) and the strongest actual device observation. A ready IPA is not an
+installed game. The card action only opens details; it never starts installation
+or compilation. There are no invented play times, achievements, remote-play
+buttons, purchased games or storefront promotions.
 
+Use 28-point page padding, 18-point cover corners, 20-point grid gutters and the
+shared accent. At 1000 × 640, navigation and primary actions must fit. One or two
+games use one or two generous columns; larger collections use an adaptive grid.
+Long names get two lines. Remove oversized metric panels that compete with covers.
+The detail uses a wide 250-point hero; retain per-device proof, version, rebuild
+advice, save guidance and explicit installation review.
+
+`LibraryEmptyCollection` uses the original generated archive illustration and one
+Add game action. `LibraryDropOverlay` appears only while an actual file drag targets
+the workspace; its original 2.8-second Lottie shows cards entering an archive.
+The bundled, pinned MIT lottie-web light 5.13.0 runtime runs in a single temporary
+local WKWebView with a nonpersistent store, no script bridge, no remote connections
+and no navigation outside its asset directory. No account, filenames or saves
+enter this view. Hide/dismantle it on drag exit; pause in background. Reduced motion
+holds meaningful frame 60. Native hover/navigation use 0.16–0.18-second transitions
+and respect reduced motion. Never use decorative animation as progress or success.
+
+Research, asset provenance and review limits: [library redesign](design/library-2026-11.md).
+Quiet startup account recovery must not block browsing or preparing games, nor
+show an intrusive global account spinner. Actual installer guards stay unchanged.
 
 ## Save continuity in rebuilt games (1.24)
 

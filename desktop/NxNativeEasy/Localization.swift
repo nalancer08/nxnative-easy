@@ -12,6 +12,10 @@ enum EasyLanguage: String, CaseIterable {
 
 struct EasyStrings {
     static let english: [String:String] = [
+        "IPA lista":"IPA ready",
+        "Ver detalles del juego":"View game details",
+        "Suelta tu juego aquí":"Drop your game here",
+        "Una carpeta o sus archivos NSP, XCI, NSZ o XCZ. Los originales se quedan en su lugar.":"A folder or its NSP, XCI, NSZ or XCZ files. Originals stay in place.",
         "En tu colección":"In your collection",
         "Apps listas en Mac":"Mac apps ready",
         "IPA listas para instalar":"IPAs ready to install",

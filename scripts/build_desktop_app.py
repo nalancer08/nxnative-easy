@@ -51,7 +51,7 @@ def build_bundle(output,portable=False):
     contents=output/'Contents';macos=contents/'MacOS';macos.mkdir(parents=True,exist_ok=True)
     subprocess.run(['xcrun','swiftc','-parse-as-library','-swift-version','5','-target','arm64-apple-macosx26.0',
         *(str(p) for p in sorted((REPO/'desktop/NxNativeEasy').glob('*.swift'))),'-o',str(macos/'NxNativeEasy'),
-        '-framework','SwiftUI','-framework','AppKit','-framework','GameController'],check=True)
+        '-framework','SwiftUI','-framework','AppKit','-framework','GameController','-framework','WebKit'],check=True)
     # The optional worker shares all identity/policy code, but has no UI entry point.
     with tempfile.TemporaryDirectory(prefix='nxnative-worker-') as temporary:
         model=Path(temporary)/'MainModel.swift'
@@ -59,7 +59,7 @@ def build_bundle(output,portable=False):
         entry=Path(temporary)/'RefreshMain.swift'
         entry.write_text('import AppKit\n@main struct RefreshMain { @MainActor static func main() { NSApplication.shared.setActivationPolicy(.prohibited); BackgroundRenewal.run() } }\n')
         sources=[str(p) for p in sorted((REPO/'desktop/NxNativeEasy').glob('*.swift')) if p.name!='main.swift']
-        subprocess.run(['xcrun','swiftc','-parse-as-library','-swift-version','5','-target','arm64-apple-macosx26.0',str(model),*sources,str(entry),'-o',str(macos/'nxnative-refresh'),'-framework','SwiftUI','-framework','AppKit','-framework','GameController'],check=True)
+        subprocess.run(['xcrun','swiftc','-parse-as-library','-swift-version','5','-target','arm64-apple-macosx26.0',str(model),*sources,str(entry),'-o',str(macos/'nxnative-refresh'),'-framework','SwiftUI','-framework','AppKit','-framework','GameController','-framework','WebKit'],check=True)
     agents=contents/'Library/LaunchAgents';agents.mkdir(parents=True)
     (agents/'com.nalancer08.nxnative.refresh.plist').write_bytes(plistlib.dumps(dict(Label='com.nalancer08.nxnative.refresh',BundleProgram='Contents/MacOS/nxnative-refresh',StartInterval=1800,RunAtLoad=True,ProcessType='Background')))
     resources=contents/'Resources';resources.mkdir(exist_ok=True)
@@ -68,6 +68,9 @@ def build_bundle(output,portable=False):
     build_helper(macos/'nxnative-sideload',helper_cache)
     shutil.move(str(macos/'sideload-licenses'),str(resources/'SideloadLicenses'))
     shutil.copy2(REPO/'desktop/NxNativeEasy/Assets/AppIcon.png',resources/'BrandIcon.png')
+    shutil.copytree(REPO/'desktop/NxNativeEasy/Assets/Library',resources/'Library')
+    motion_page=resources/'Library/drop-game.html'
+    motion_page.write_text(motion_page.read_text().replace('__NXE_ANIMATION_DATA__',(resources/'Library/drop-game.json').read_text()))
     with tempfile.TemporaryDirectory(prefix='nxnative-icon-') as temporary:
         iconset=Path(temporary)/'AppIcon.iconset';iconset.mkdir()
         subprocess.run(['xcrun','swift',str(REPO/'desktop/NxNativeEasy/Assets/draw_icon.swift'),str(iconset)],check=True)

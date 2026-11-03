@@ -11,6 +11,8 @@ struct LibraryWorkspace:View {
     private var preparing:Bool {page == .prepare}
     @State private var query=""
     @State private var selectedGameID:String?
+    @State private var dropTargeted=false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var rebuildAdvice:[String:String]=[:]
     @State private var adviceGeneration=UUID()
     @State private var removing:OwnedGameOutput?
@@ -19,7 +21,7 @@ struct LibraryWorkspace:View {
     private var occupied:Bool {model.running || updater.busy || sideload.blocksGameWork}
     private func name(_ game:OwnedGameOutput)->String {model.catalog.first(where:{$0.id==game.titleID})?.name ?? game.folder.lastPathComponent}
     private var results:[OwnedGameOutput] {library.games.filter {query.isEmpty || (name($0)+" "+($0.titleID ?? "")+" "+$0.item.folder).localizedCaseInsensitiveContains(query)}}
-    private var selectedResult:OwnedGameOutput? {results.first(where:{$0.id==selectedGameID}) ?? results.first}
+    private var selectedResult:OwnedGameOutput? {library.games.first(where:{$0.id==selectedGameID})}
     private func needsRebuild(_ game:OwnedGameOutput)->Bool {["Mac","iPhone / iPad"].contains {rebuildAdvice[game.id+$0]=="rebuild"}}
     private func libraryStatus(_ game:OwnedGameOutput)->String {
         let observations=sideload.observations(titleID:game.titleID,originalID:game.originalBundleID)
@@ -69,19 +71,22 @@ struct LibraryWorkspace:View {
     }
     var body:some View {
         VStack(spacing:0) {
-            HStack(spacing:0) {
-                VStack(alignment:.leading,spacing:22) {
-                    HStack(spacing:8) {Image(nsImage:AppArtwork.icon).resizable().frame(width:30,height:30);Text("nxnative\neasy").font(.headline).lineSpacing(-2)}.foregroundStyle(accent).padding(.bottom,12)
-                    nav("Mi biblioteca",icon:"square.grid.2x2",selected:page == .library){page = .library}
-                    nav("Preparar juego",icon:"hammer",selected:preparing){page = .prepare}
-                    Divider()
-                    nav("Dispositivos",icon:"ipad.and.iphone",selected:page == .devices){page = .devices}
-                    nav("Compatibilidad",icon:"checklist",selected:page == .compatibility){model.openCatalog()}
-                    Spacer()
-                    Divider()
-                    nav("Configuración",icon:"gearshape",selected:page == .settings){page = .settings}
-                }.padding(20).frame(width:190).frame(maxHeight:.infinity).background(.white.opacity(0.025))
-                Divider()
+            HStack(spacing:22) {
+                HStack(spacing:9) {
+                    Image(nsImage:AppArtwork.icon).resizable().frame(width:30,height:30)
+                    Text("nxnative Easy").font(.system(size:15,weight:.bold,design:.rounded))
+                }.foregroundStyle(EasyDesign.ink).padding(.trailing,10)
+                nav("Mi biblioteca",icon:"square.grid.2x2",selected:page == .library){selectedGameID=nil;page = .library}
+                nav("Preparar juego",icon:"hammer",selected:preparing){page = .prepare}
+                nav("Dispositivos",icon:"ipad.and.iphone",selected:page == .devices){page = .devices}
+                nav("Compatibilidad",icon:"checklist",selected:page == .compatibility){model.openCatalog()}
+                Spacer(minLength:0)
+                Button {page = .settings} label:{Image(systemName:"gearshape").font(.system(size:17)).frame(width:40,height:40)}
+                    .buttonStyle(.plain).foregroundStyle(page == .settings ? accent : .secondary)
+                    .background(page == .settings ? accent.opacity(0.1) : .clear,in:RoundedRectangle(cornerRadius:10))
+                    .help(model.text("Configuración")).accessibilityLabel(model.text("Configuración"))
+            }.padding(.horizontal,28).padding(.vertical,12).background(.white.opacity(0.025))
+            Divider()
                 ZStack {
                     // Keep one preparation model/view alive: its task, logs, cancellation,
                     // update checks and sheets continue when browsing the library.
@@ -98,64 +103,67 @@ struct LibraryWorkspace:View {
                         })
                     }
                     if page == .library {
-                        VStack(alignment:.leading,spacing:20) {
-                            LibraryWelcomeHeader(text:model.text,images:library.games.prefix(3).compactMap {game in GameArtworkCache.image(model.catalog.first(where:{$0.id==game.titleID})?.artworkURL)},disabled:occupied,showAction:!library.games.isEmpty,add:add)
-                            if !library.games.isEmpty {
-                                HStack(spacing:12) {
-                                    EasyLibraryMetric(value:library.games.count,title:model.text("En tu colección"),symbol:"square.stack.3d.up")
-                                    EasyLibraryMetric(value:library.games.filter{$0.macApp != nil}.count,title:model.text("Apps listas en Mac"),symbol:"desktopcomputer")
-                                    EasyLibraryMetric(value:library.games.filter{$0.iosIPA != nil}.count,title:model.text("IPA listas para instalar"),symbol:"iphone")
+                        VStack(alignment:.leading,spacing:18) {
+                            if let game=selectedResult {
+                                HStack {
+                                    Button {withAnimation(reduceMotion ? nil : .easeInOut(duration:0.18)){selectedGameID=nil}} label:{Label(model.text("Mi biblioteca"),systemImage:"arrow.left")}
+                                        .buttonStyle(EasyLinkStyle()).keyboardShortcut("[",modifiers:.command)
+                                    Text("/").foregroundStyle(.tertiary)
+                                    Text(name(game)).font(.callout).lineLimit(1).foregroundStyle(.secondary)
+                                    Spacer()
                                 }
-                            }
-                            if !library.games.isEmpty {HStack {
-                                TextField(model.text("Buscar en mis juegos"),text:$query).textFieldStyle(.roundedBorder)
-                                Text(String(library.games.count)+" "+model.text(library.games.count==1 ? "juego" : "juegos")).font(.caption).foregroundStyle(.secondary)
-                                Button {library.refresh()} label:{Image(systemName:"arrow.clockwise")}.help(model.text("Actualizar biblioteca")).accessibilityLabel(model.text("Actualizar biblioteca"))
-                            }}
-                            if updater.visible {
-                                Button {page = .prepare} label:{Label(model.text(updater.busy ? updater.phaseText : "Hay una nueva versión"),systemImage:"arrow.down.circle")}.buttonStyle(.link)
-                            }
-                            if let error=library.error {Text(model.text(error)).font(.callout).foregroundStyle(.orange).textSelection(.enabled)}
-                            if sideload.showsRefreshNotice {Button(model.text("Revisar renovación")){page = .devices}.disabled(sideload.busy)}
-                            if library.games.isEmpty {
-                                VStack(spacing:16) {
-                                    EasyCollectionArtwork(images:[]).frame(width:220,height:140).accessibilityHidden(true)
-                                    Text(model.text("Tu colección empieza con tu primer juego")).font(.title2.bold())
-                                    Text(model.text("Añade su carpeta. Conservamos los archivos donde están y recordamos tus versiones para Mac, iPhone y iPad.")).foregroundStyle(.secondary).multilineTextAlignment(.center).frame(maxWidth:440)
-                                    Button(model.text("Añadir juego")){add()}.buttonStyle(LibraryPrimaryButtonStyle()).disabled(occupied)
-                                    Button(model.text("Ver juegos compatibles")){model.openCatalog()}.buttonStyle(.link)
-                                }.frame(maxWidth:.infinity,maxHeight:.infinity)
-                            } else if results.isEmpty {Text(model.text("No hay juegos que coincidan con tu búsqueda.")).foregroundStyle(.secondary).frame(maxWidth:.infinity,maxHeight:.infinity)}
-                            else {
-                                HStack(alignment:.top,spacing:0) {
-                                    ScrollView {
-                                        LazyVStack(spacing:5) {
-                                            ForEach(results) {game in
-                                                Button {selectedGameID=game.id} label:{
-                                                    HStack(spacing:9) {
-                                                        if let image=GameArtworkCache.image(model.catalog.first(where:{$0.id==game.titleID})?.artworkURL) {Image(nsImage:image).resizable().scaledToFill().frame(width:42,height:42).clipped().clipShape(RoundedRectangle(cornerRadius:6))}
-                                                        else {Image(systemName:"gamecontroller").frame(width:42,height:42)}
-                                                        VStack(alignment:.leading,spacing:3) {Text(name(game)).font(.system(size:12,weight:.semibold)).lineLimit(2);Text(libraryStatus(game)).font(.caption2).foregroundStyle(.secondary).lineLimit(2);if needsRebuild(game) {Text(model.text("Conviene recompilar")).font(.caption2).foregroundStyle(.orange)}}
-                                                        Spacer(minLength:0)
-                                                    }.padding(8).background(selectedResult?.id==game.id ? accent.opacity(0.12) : .clear,in:RoundedRectangle(cornerRadius:8))
-                                                }.buttonStyle(.plain).accessibilityAddTraits(selectedResult?.id==game.id ? .isSelected : [])
-                                            }
-                                        }.padding(.trailing,12)
-                                    }.frame(width:210)
-                                    Divider()
-                                    if let game=selectedResult {
-                                        ScrollView {
-                                            GameLibraryDetail(game:game,title:name(game),catalog:model.catalog.first(where:{$0.id==game.titleID}),text:model.text,building:model.running && model.folder?.resolvingSymlinksInPath().path==game.folder.resolvingSymlinksInPath().path,disabled:occupied,installBusy:sideload.busy,observations:sideload.observations(titleID:game.titleID,originalID:game.originalBundleID),isVerified:sideload.isVerified,needsRebuild:needsRebuild(game),advice:["Mac","iPhone / iPad"].compactMap {platform in rebuildAdvice[game.id+platform].map {value in platform+": "+model.text(value=="rebuild" ? "Conviene recompilar: cambiaron herramientas o el perfil de este juego." : "No hay historial suficiente para comparar esta preparación.") }},sourceRepo:model.repo,checkDevices:{if sideload.devices.count>1 && sideload.device.isEmpty {page = .devices}else{sideload.listDevices()}},open:{if let mac=game.macApp {NSWorkspace.shared.open(mac)}},prepare:{configure(game)},install:{install(game)},remove:{removing=game})
-                                        }.padding(.leading,20)
+                                ScrollView {
+                                    GameLibraryDetail(game:game,title:name(game),catalog:model.catalog.first(where:{$0.id==game.titleID}),text:model.text,building:model.running && model.folder?.resolvingSymlinksInPath().path==game.folder.resolvingSymlinksInPath().path,disabled:occupied,installBusy:sideload.busy,observations:sideload.observations(titleID:game.titleID,originalID:game.originalBundleID),isVerified:sideload.isVerified,needsRebuild:needsRebuild(game),advice:["Mac","iPhone / iPad"].compactMap {platform in rebuildAdvice[game.id+platform].map {value in platform+": "+model.text(value=="rebuild" ? "Conviene recompilar: cambiaron herramientas o el perfil de este juego." : "No hay historial suficiente para comparar esta preparación.") }},sourceRepo:model.repo,checkDevices:{if sideload.devices.count>1 && sideload.device.isEmpty {page = .devices}else{sideload.listDevices()}},open:{if let mac=game.macApp {NSWorkspace.shared.open(mac)}},prepare:{configure(game)},install:{install(game)},remove:{removing=game})
+                                        .frame(maxWidth:1160).frame(maxWidth:.infinity)
+                                }.id(game.id)
+                            } else {
+                                HStack(alignment:.center) {
+                                    VStack(alignment:.leading,spacing:6) {
+                                        Text(model.text("Mi biblioteca")).font(.system(size:30,weight:.bold,design:.rounded)).foregroundStyle(EasyDesign.ink)
+                                        Text(model.text("Tus juegos. Tus archivos. Todo en un lugar.")).font(.callout).foregroundStyle(.secondary)
+                                    }
+                                    Spacer()
+                                    if !library.games.isEmpty {Button(action:add){Label(model.text("Añadir juego"),systemImage:"plus")}.buttonStyle(EasyPrimaryStyle()).disabled(occupied)}
+                                }
+                                if !library.games.isEmpty {
+                                    HStack(spacing:16) {
+                                        HStack(spacing:8) {
+                                            Image(systemName:"magnifyingglass").foregroundStyle(.secondary)
+                                            TextField(model.text("Buscar en mis juegos"),text:$query).textFieldStyle(.plain)
+                                        }.padding(11).background(EasyDesign.surface,in:RoundedRectangle(cornerRadius:10)).overlay(RoundedRectangle(cornerRadius:10).strokeBorder(EasyDesign.border)).frame(maxWidth:360)
+                                        Text(String(library.games.count)+" "+model.text(library.games.count==1 ? "juego" : "juegos")).font(.callout).foregroundStyle(.secondary)
+                                        Spacer()
+                                        Button {library.refresh()} label:{Image(systemName:"arrow.clockwise").frame(width:32,height:32)}.buttonStyle(EasySecondaryStyle()).help(model.text("Actualizar biblioteca")).accessibilityLabel(model.text("Actualizar biblioteca"))
                                     }
                                 }
-
+                                if updater.visible {Button {page = .prepare} label:{Label(model.text(updater.busy ? updater.phaseText : "Hay una nueva versión"),systemImage:"arrow.down.circle")}.buttonStyle(.link)}
+                                if let error=library.error {Text(model.text(error)).font(.callout).foregroundStyle(.orange).textSelection(.enabled)}
+                                if sideload.showsRefreshNotice {Button(model.text("Revisar renovación")){page = .devices}.disabled(sideload.busy)}
+                                if library.games.isEmpty {
+                                    LibraryEmptyCollection(text:model.text,disabled:occupied,add:add,compatibility:{model.openCatalog()}).frame(maxWidth:.infinity,maxHeight:.infinity)
+                                } else if results.isEmpty {
+                                    ContentUnavailableView(model.text("No hay juegos que coincidan con tu búsqueda."),systemImage:"magnifyingglass").frame(maxWidth:.infinity,maxHeight:.infinity)
+                                } else {
+                                    ScrollView {
+                                        LazyVGrid(columns:results.count<=2 ? Array(repeating:GridItem(.flexible(minimum:250,maximum:560),spacing:20,alignment:.top),count:max(1,results.count)) : [GridItem(.adaptive(minimum:270,maximum:440),spacing:20,alignment:.top)],alignment:.leading,spacing:24) {
+                                            ForEach(results) {game in
+                                                LibraryCoverCard(title:name(game),catalog:model.catalog.first(where:{$0.id==game.titleID}),status:libraryStatus(game),verified:sideload.observations(titleID:game.titleID,originalID:game.originalBundleID).contains(where:sideload.isVerified),macReady:game.macApp != nil,ipaReady:game.iosIPA != nil,rebuild:needsRebuild(game),text:model.text) {
+                                                    withAnimation(reduceMotion ? nil : .easeInOut(duration:0.18)){selectedGameID=game.id}
+                                                }
+                                            }
+                                        }.padding(.bottom,8)
+                                    }
+                                }
+                                Text(model.text("Esta biblioteca sólo contiene las carpetas que tú añades. No incluye ni descarga juegos.")).font(.caption).foregroundStyle(.secondary)
                             }
-                            Text(model.text("Esta biblioteca sólo contiene las carpetas que tú añades. No incluye ni descarga juegos.")).font(.caption).foregroundStyle(.secondary)
                         }.padding(28).frame(maxWidth:.infinity,maxHeight:.infinity,alignment:.topLeading)
+                            .transition(.opacity)
+                    }
+                }.overlay {
+                    if dropTargeted && !occupied {
+                        LibraryDropOverlay(text:model.text).frame(maxWidth:.infinity,maxHeight:.infinity).background(EasyDesign.background.opacity(0.97)).allowsHitTesting(false)
                     }
                 }
-            }
             if sideload.recoveringSession && !sideload.recoveringQuietlyAtStartup && page != .settings && !model.showSideload && !model.installingInline {
                 Divider()
                 HStack(spacing:12) {
@@ -180,11 +188,11 @@ struct LibraryWorkspace:View {
             guard !occupied else {return false}
             if page != .prepare {model.target="";model.folder=nil;model.preparationStep=0}
             model.acceptDrop(items);if !model.failed {remember()};page = .prepare;return true
-        }
+        } isTargeted:{dropTargeted=$0}
         .onReceive(NotificationCenter.default.publisher(for:Notification.Name("nxnative.showDevices"))){_ in page = .devices}
         .onReceive(NotificationCenter.default.publisher(for:Notification.Name("nxnative.openSettings"))){_ in page = .settings}
         .onChange(of:model.installingInline){_,inline in if inline {page = .prepare}}
-        .onReceive(NotificationCenter.default.publisher(for:Notification.Name("nxnative.showLibrary"))){_ in page = .library;if !sideload.busy {model.showSideload=false};library.refresh()}
+        .onReceive(NotificationCenter.default.publisher(for:Notification.Name("nxnative.showLibrary"))){_ in page = .library;selectedGameID=nil;if !sideload.busy {model.showSideload=false};library.refresh()}
         .onReceive(NotificationCenter.default.publisher(for:Notification.Name("nxnative.showBuildActivity"))){_ in page = .prepare;model.installingInline=false;model.preparationStep=model.running || model.failed || model.output==nil ? 4 : 5;model.showDetails=true}
         .onChange(of:model.showCatalog){_,show in if show {page = .compatibility;model.showCatalog=false}}
         .onChange(of:model.showDeviceLibrary){_,show in if show {page = .devices;model.showDeviceLibrary=false}}
@@ -199,11 +207,11 @@ struct LibraryWorkspace:View {
         .onChange(of:scenePhase){_,phase in if phase == .active {library.refresh()}}
         .alert(model.text("¿Quitar de la biblioteca?"),isPresented:Binding(get:{removing != nil},set:{if !$0 {removing=nil}})) {
             Button(model.text("Cancelar"),role:.cancel){removing=nil}
-            Button(model.text("Quitar de esta lista"),role:.destructive){if let removing {library.remove(removing.id)};removing=nil}
+            Button(model.text("Quitar de esta lista"),role:.destructive){if let removing {library.remove(removing.id);selectedGameID=nil};removing=nil}
         } message:{Text(model.text("Sólo quitamos el acceso de la biblioteca. No borramos juegos, cachés, llaves ni partidas."))}
     }
     private func nav(_ title:String,icon:String,selected:Bool,action:@escaping()->Void)->some View {
-        Button(action:action){Label(model.text(title),systemImage:icon).font(.system(size:12,weight:selected ? .semibold : .regular)).frame(maxWidth:.infinity,alignment:.leading).padding(.vertical,10).padding(.horizontal,9).background(selected ? accent.opacity(0.1) : .clear,in:RoundedRectangle(cornerRadius:9)).foregroundStyle(selected ? accent : Color.primary)}.buttonStyle(.plain)
+        Button(action:action){Label(model.text(title),systemImage:icon).font(.system(size:12,weight:selected ? .semibold : .regular)).fixedSize().padding(.vertical,10).padding(.horizontal,11).background(selected ? accent.opacity(0.1) : .clear,in:RoundedRectangle(cornerRadius:9)).foregroundStyle(selected ? accent : Color.primary)}.buttonStyle(.plain)
     }
 }
 
@@ -295,7 +303,7 @@ struct GameLibraryDetail:View {
                     if building {Label(text("Compilando"),systemImage:"hammer.fill").font(.caption.bold())}
                     Text(title).font(.system(size:28,weight:.bold,design:.rounded)).lineLimit(2)
                 }.padding(20).foregroundStyle(.white)
-            }.frame(height:210).clipped().clipShape(RoundedRectangle(cornerRadius:14))
+            }.frame(height:250).clipped().clipShape(RoundedRectangle(cornerRadius:18))
             if let device=observations.first(where:isVerified) ?? observations.first {
                 Label(text(isVerified(device) ? "Instalación verificada" : device.checkedAt==nil ? "Instalación registrada" : "Última instalación observada")+" · "+device.deviceName,systemImage:isVerified(device) ? "checkmark.circle.fill" : "clock").font(.callout.weight(.semibold)).foregroundStyle(isVerified(device) ? Color.green : .secondary)
             }

@@ -961,6 +961,11 @@ struct GameCatalogView: View {
         }
             .defaultSize(width:1060,height:700)
             .commands {
+                CommandGroup(after:.sidebar) {
+                    Button(EasyStrings.text("Mi biblioteca",language:EasyLanguage(rawValue:appLanguage) ?? .english)) {
+                        NotificationCenter.default.post(name:Notification.Name("nxnative.showLibrary"),object:nil)
+                    }.keyboardShortcut("[",modifiers:.command)
+                }
                 CommandGroup(replacing:.appSettings) {
                     Button(EasyStrings.text("Configuración",language:EasyLanguage(rawValue:appLanguage) ?? .english)) {
                         NotificationCenter.default.post(name:Notification.Name("nxnative.openSettings"),object:nil)

@@ -10,7 +10,7 @@ A game library that takes you from your own game files to a ready-to-play app, w
 
 Unzip → drag **nxnative Easy.app** to **Applications** → open it. **No Terminal or launcher compilation needed.** The app includes its supporting tools.
 
-![Your personal game library](docs/images/nxnative-library-en-v1.23.png)
+![Your personal game library](docs/images/nxnative-library-en-v1.24.png)
 
 ## Switch 2 on Mac
 
