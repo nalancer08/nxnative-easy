@@ -341,6 +341,9 @@ char *nxe_cloud_command(const char *cmd, const char *arg) {
     return strdup([[NSString alloc] initWithData:json(result) encoding:NSUTF8StringEncoding].UTF8String);
 }
 __attribute__((weak)) int dm_fs_clone_save_pair(const char *source, const char *into) { (void)source; (void)into; return -1; }
+#ifdef NXE_CLOUD_TESTING
+__attribute__((weak)) void nxe_cloud_test_claimed(void) {}
+#endif
 static _Atomic unsigned long long requested;
 void nxe_cloud_committed(void) {
     // Off means no queue, snapshots or provider I/O on game commits.
@@ -348,8 +351,13 @@ void nxe_cloud_committed(void) {
     // A bounded/coalesced worker; no network I/O under game filesystem locks.
     setupQueue(); static _Atomic int pending;
     __c11_atomic_fetch_add(&requested, 1, __ATOMIC_SEQ_CST);
-    if (__c11_atomic_exchange(&pending, 1, __ATOMIC_SEQ_CST)) return;
+    // Enter before claiming pending: a concurrent flush must observe the claim
+    // even if this thread is preempted before it can schedule the worker.
     dispatch_group_enter(workers);
+    if (__c11_atomic_exchange(&pending, 1, __ATOMIC_SEQ_CST)) { dispatch_group_leave(workers); return; }
+    #ifdef NXE_CLOUD_TESTING
+    nxe_cloud_test_claimed();
+    #endif
     dispatch_async(queue, ^{ @autoreleasepool {
         unsigned long long captured = __c11_atomic_load(&requested, __ATOMIC_SEQ_CST);
         @try {

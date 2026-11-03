@@ -8,6 +8,7 @@
 #include <sys/clonefile.h>
 #include <sys/stat.h>
 #include <limits.h>
+#include <pthread.h>
 int dm_fs_clone_save_pair(const char *source, const char *into) {
     for (int i = 0; i < 2; i++) {
         char from[PATH_MAX], to[PATH_MAX]; struct stat st;
@@ -18,9 +19,25 @@ int dm_fs_clone_save_pair(const char *source, const char *into) {
     }
     return 0;
 }
+static dispatch_semaphore_t claimed, resume_claim;
+void nxe_cloud_test_claimed(void) {
+    if (claimed) { dispatch_semaphore_signal(claimed); dispatch_semaphore_wait(resume_claim, DISPATCH_TIME_FOREVER); }
+}
+static void *request_checkpoint(void *ignored) { (void)ignored; nxe_cloud_committed(); return NULL; }
 static void flushed(void *context) { dispatch_semaphore_signal((__bridge dispatch_semaphore_t)context); }
 int main(int argc, char **argv) { @autoreleasepool {
     if (argc < 2) return 2;
+    if (!strcmp(argv[1], "flush-race")) {
+        claimed = dispatch_semaphore_create(0); resume_claim = dispatch_semaphore_create(0);
+        dispatch_semaphore_t completed = dispatch_semaphore_create(0);
+        pthread_t requester; pthread_create(&requester, NULL, request_checkpoint, NULL);
+        if (dispatch_semaphore_wait(claimed, dispatch_time(DISPATCH_TIME_NOW, 5 * NSEC_PER_SEC))) return 5;
+        nxe_cloud_flush(flushed, (__bridge void *)completed);
+        if (!dispatch_semaphore_wait(completed, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC))) return 4;
+        dispatch_semaphore_signal(resume_claim); pthread_join(requester, NULL);
+        if (dispatch_semaphore_wait(completed, dispatch_time(DISPATCH_TIME_NOW, 20 * NSEC_PER_SEC))) return 3;
+        puts("{\"status\":\"flushed\"}"); return 0;
+    }
     if (!strcmp(argv[1], "flush")) {
         dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
         nxe_cloud_flush(flushed, (__bridge void *)semaphore);

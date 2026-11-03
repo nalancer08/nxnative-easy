@@ -84,6 +84,12 @@ class CloudSaves(unittest.TestCase):
     def revisions(self):
         return list(self.cloud.rglob('*.nxsave'))
 
+    def test_flush_waits_for_a_claimed_but_not_yet_scheduled_worker(self):
+        self.write('phone', 'account checkpoint', 'device checkpoint')
+        self.assertEqual(self.run_command('phone', 'flush-race')['status'], 'flushed')
+        self.run_command('mac')
+        self.assertEqual(self.contents('mac'), (b'account checkpoint', b'device checkpoint'))
+
     def test_worker_flush_publishes_the_committed_pair_before_completion(self):
         self.write('phone', 'checkpoint account', 'checkpoint device')
         self.assertEqual(self.run_command('phone', 'flush')['status'], 'flushed')

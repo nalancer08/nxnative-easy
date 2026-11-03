@@ -151,7 +151,7 @@ device names, dates and revisions. It does not access iCloud or the owner's save
 
 <img src="images/nxnative-icloud-conflict-en-v1.24.png" width="48%" alt="English save conflict panel with both device revisions retained"> <img src="images/nxnative-icloud-conflict-es-v1.24.png" width="48%" alt="Panel de conflicto con ambas partidas conservadas">
 
-Local validation: 21 native continuity/failure tests passed; 44 Mac packer and
+Local validation: 22 native continuity/failure tests passed; 44 Mac packer and
 launcher tests passed; 18 save-cache, launcher-storage/layout and documentation
 checks passed; the full native host suite passed, including the two-root clone
 check that excludes uncommitted writes. The desktop app compiled and its bundle
@@ -162,3 +162,9 @@ findings over the pinned baseline. Read-only regression discovery found no
 registered Mac gameplay build, so no real-game smoke run was claimed or forced.
 Actual iCloud propagation, background suspension and the owner's physical
 iPhone/Mac round trip remain to be checked with test saves.
+
+The checkpoint regression also pauses a commit after it claims a worker but
+before scheduling it. The old ordering signalled flush completion too early;
+entering the dispatch group before publishing that claim keeps the background
+lease until the actual snapshot finishes. The failing ordering was reproduced
+with synthetic data before the fix, and the regression now passes.
