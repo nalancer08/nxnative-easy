@@ -57,13 +57,13 @@ struct ControllerTestView: View {
     var embedded=false
     @Environment(\.dismiss) private var dismiss
     @StateObject private var tester=ControllerTester()
-    private let lime=Color(red:0.79,green:0.95,blue:0.37)
+    private let lime=EasyDesign.accent
     private let tick=Timer.publish(every:1.0/60.0,on:.main,in:.common).autoconnect()
     private var state: ControllerInputState {tester.state}
 
     private func button(_ key:String,_ label:String,_ size:CGFloat=36) -> some View {
         let pressed=state.buttons.contains(key)
-        return Text(label).font(.system(size:13,weight:.bold,design:.rounded)).lineLimit(1).minimumScaleFactor(0.7)
+        return Text(label).font(.system(size:13,weight:.bold,design:.default)).lineLimit(1).minimumScaleFactor(0.7)
             .frame(width:size,height:size).foregroundStyle(pressed ? Color.black : Color.white.opacity(0.75))
             .background(pressed ? lime : Color.white.opacity(0.08),in:RoundedRectangle(cornerRadius:size/3))
             .overlay(RoundedRectangle(cornerRadius:size/3).stroke(pressed ? lime : Color.white.opacity(0.12)))
@@ -93,7 +93,7 @@ struct ControllerTestView: View {
         VStack(alignment:.leading,spacing:20) {
             HStack {
                 VStack(alignment:.leading,spacing:5) {
-                    Text(text("Prueba tu control")).font(.system(size:25,weight:.bold,design:.rounded))
+                    Text(text("Prueba tu control")).font(.system(size:25,weight:.bold,design:.default))
                     Text(text("Pulsa botones y mueve los sticks. Verás cada movimiento aquí."))
                         .font(.system(size:13)).foregroundStyle(.secondary)
                 }

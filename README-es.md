@@ -10,7 +10,7 @@ Una biblioteca que te lleva de tus propios archivos a una app lista para jugar, 
 
 Descomprime → arrastra **nxnative Easy.app** a **Aplicaciones** → ábrela. **Sin Terminal ni compilar la interfaz.** La app incluye sus herramientas.
 
-![Tu biblioteca de juegos](docs/images/nxnative-library-es-v1.24.png)
+![Tu biblioteca de juegos](docs/images/nxnative-library-es-v1.25.jpg)
 
 ## Switch 2 en Mac
 
@@ -33,7 +33,7 @@ Si macOS bloquea la primera apertura, entra a **Configuración del Sistema → P
 3. Revisa y pulsa **Preparar juego**. Durante el proceso verás etapas, contadores y el registro en vivo.
 4. **Mac:** pulsa **Jugar en Mac**. **iPhone / iPad:** continúa con **dispositivo → cuenta Apple → revisar → instalar**. La app te guía con la firma, instalación y transferencia de los datos del juego.
 
-<img src="docs/images/nxnative-prepare-es-v1.13.png" width="49%" alt="Preparación guiada del juego"> <img src="docs/images/nxnative-progress-es-v1.13.png" width="49%" alt="Etapas y progreso de compilación">
+<img src="docs/images/nxnative-prepare-es-v1.25.jpg" width="49%" alt="Preparación guiada del juego"> <img src="docs/images/nxnative-progress-es-v1.25.jpg" width="49%" alt="Etapas y progreso de compilación">
 
 | Juega en… | Qué obtienes |
 |---|---|
@@ -44,14 +44,14 @@ Si macOS bloquea la primera apertura, entra a **Configuración del Sistema → P
 
 ## Todo en un lugar
 
-- **Tu biblioteca:** imágenes, buscador, versiones preparadas e instalaciones verificadas en tus dispositivos conectados.
+- **Tu biblioteca:** una colección de portadas, vista amplia del juego, filtros por plataforma, versiones preparadas e instalaciones verificadas en tus dispositivos. Elige una portada para jugar, instalar o consultar el detalle.
 - **Tus controles:** Xbox, PS5 y PS4, con una prueba de botones y sticks en **Configuración**. En iPhone/iPad puedes mover y cambiar el tamaño de los botones táctiles y guardar **cuatro perfiles con nombre** por juego.
 - **Tus ajustes:** opciones de inicio por juego en Mac y limpieza de cachés con una vista previa de lo que se borrará.
 - **Tus partidas:** guárdalas localmente, exporta un respaldo o activa la [continuidad con iCloud](docs/icloud-saves.md) al preparar de nuevo tus juegos para Mac, iPhone y iPad. Si hay conflicto, se conservan ambas versiones para que elijas con cuál seguir. No necesitas iniciar sesión con tu cuenta de firma.
 - **Tu cuenta Apple:** una para toda la app, con sesión recordada en el Llavero, revisión de dispositivos y renovación opcional de firmas en segundo plano. [Requisitos de renovación](docs/background-renewal.md).
 - **Actualizaciones de la app:** pulsa **Actualizar ahora** cuando aparezca una versión. La app descarga y verifica el paquete, conserva la app anterior como respaldo y mantiene tus juegos y partidas. Para aplicar un motor nuevo a un juego existente, vuelve a prepararlo.
 
-<img src="docs/images/nxnative-options-es-v1.19.png" width="49%" alt="Opciones de inicio por juego"> <img src="docs/images/nxnative-settings-es-v1.19.png" width="49%" alt="Configuración y renovación opcional en segundo plano">
+<img src="docs/images/nxnative-details-es-v1.25.jpg" width="49%" alt="Detalle del juego y dónde jugar"> <img src="docs/images/nxnative-account-es-v1.25.jpg" width="49%" alt="Tu cuenta Apple global en Configuración">
 
 La interfaz empieza en **inglés**; cámbiala a **Español** en **Settings → General**.
 
@@ -61,7 +61,7 @@ Consulta **Compatibilidad** en la app o abre una ficha de abajo para ver version
 
 Las imágenes de abajo muestran perfiles de juegos con soporte. **Tú debes aportar los archivos del juego.**
 
-![Consulta los perfiles de juegos actuales](docs/images/nxnative-compatibility-es-v1.22.png)
+![Consulta los perfiles de juegos actuales](docs/images/nxnative-compatibility-es-v1.25.jpg)
 
 <!-- BEGIN GENERATED GAME GALLERY -->
 130 perfiles. Consulta la ficha de cada juego para ver versiones y dispositivos probados.

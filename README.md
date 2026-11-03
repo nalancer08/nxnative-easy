@@ -10,7 +10,7 @@ A game library that takes you from your own game files to a ready-to-play app, w
 
 Unzip → drag **nxnative Easy.app** to **Applications** → open it. **No Terminal or launcher compilation needed.** The app includes its supporting tools.
 
-![Your personal game library](docs/images/nxnative-library-en-v1.24.png)
+![Your personal game library](docs/images/nxnative-library-en-v1.25.jpg)
 
 ## Switch 2 on Mac
 
@@ -33,7 +33,7 @@ If macOS blocks the first opening, open **System Settings → Privacy & Security
 3. Review and click **Prepare game**. Follow the build stages, counters and live log while it works.
 4. **Mac:** click **Play on Mac**. **iPhone / iPad:** continue through **device → Apple account → review → install**. The app guides signing, installation and game-data transfer.
 
-<img src="docs/images/nxnative-prepare-en-v1.13.png" width="49%" alt="Guided game preparation"> <img src="docs/images/nxnative-progress-en-v1.13.png" width="49%" alt="Build stages and live progress">
+<img src="docs/images/nxnative-prepare-en-v1.25.jpg" width="49%" alt="Guided game preparation"> <img src="docs/images/nxnative-progress-en-v1.25.jpg" width="49%" alt="Build stages and live progress">
 
 | Play on… | What you get |
 |---|---|
@@ -44,14 +44,14 @@ If macOS blocks the first opening, open **System Settings → Privacy & Security
 
 ## Everything in one place
 
-- **Your library:** artwork, search, prepared versions and installations verified on your connected devices.
+- **Your library:** a cover shelf, a full-width game view, platform filters, prepared versions and installations verified on your connected devices. Select a cover, then play, install or open its details.
 - **Your controls:** Xbox, PS5 and PS4 controllers, plus an input tester in **Settings**. On iPhone/iPad, move and resize touch buttons and save **four named profiles** per game.
 - **Your settings:** per-game Mac launch options and cache cleanup with a preview of exactly what will be removed.
 - **Your saves:** keep them locally, export a backup, or enable [iCloud continuity](docs/icloud-saves.md) in rebuilt Mac/iPhone/iPad games. Conflicting versions are kept so you can choose which to continue. Exporting saves and copying game data do **not** require Apple sign-in. [Save guide](docs/saves.md).
 - **Your Apple account:** shared across the app, with a remembered Keychain session, device review and optional background signature renewal. [Renewal requirements](docs/background-renewal.md).
 - **App updates:** click **Update now** when a release appears. The app downloads and checks the new package, keeps the previous app as a backup and leaves your games and saves in place. To use a new engine in an existing game, prepare that game again.
 
-<img src="docs/images/nxnative-options-en-v1.19.png" width="49%" alt="Per-game launch options"> <img src="docs/images/nxnative-settings-en-v1.19.png" width="49%" alt="Settings and optional background renewal">
+<img src="docs/images/nxnative-details-en-v1.25.jpg" width="49%" alt="Game details and where to play"> <img src="docs/images/nxnative-account-en-v1.25.jpg" width="49%" alt="Your shared Apple account in Settings">
 
 The interface starts in **English**; switch to **Español** in **Settings → General**.
 
@@ -61,7 +61,7 @@ Browse **Compatibility** in the app, or open a game below for supported versions
 
 The images below show supported game profiles. **Bring your own game files.**
 
-![Browse the current game profiles](docs/images/nxnative-compatibility-en-v1.22.png)
+![Browse the current game profiles](docs/images/nxnative-compatibility-en-v1.25.jpg)
 
 <!-- BEGIN GENERATED GAME GALLERY -->
 130 profiles. See each game's notes for tested versions and devices.

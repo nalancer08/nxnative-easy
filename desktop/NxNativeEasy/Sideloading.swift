@@ -623,10 +623,16 @@ struct SideloadView:View {
     private var canInstall:Bool {!model.busy && model.authenticated && !model.device.isEmpty && !model.team.isEmpty && !model.originalID.isEmpty && model.ipa != nil && model.registrationState != .unknown && (model.registrationState != .new || approveRegistration)}
     var body:some View {
         ScrollView {
+            if accountOnly && embedded {
+                HStack(alignment:.top,spacing:36) {
+                    AccountSceneIntro(authenticated:model.authenticated,text:text).frame(width:250)
+                    VStack(alignment:.leading,spacing:20) {accountContent;InstallActivityView(model:model,text:text)}.frame(maxWidth:570)
+                }.frame(maxWidth:1000,alignment:.leading).frame(maxWidth:.infinity).padding(30)
+            } else {
             VStack(alignment:.leading,spacing:EasyDesign.spacing) {
                 HStack(alignment:.center) {
                     VStack(alignment:.leading,spacing:5) {
-                        Text(text(accountOnly ? "Tu cuenta Apple" : guided ? "Del juego a tu dispositivo" : "Instalar en iPhone / iPad")).font(.system(size:30,weight:.bold,design:.rounded))
+                        Text(text(accountOnly ? "Tu cuenta Apple" : guided ? "Del juego a tu dispositivo" : "Instalar en iPhone / iPad")).font(.system(size:30,weight:.bold,design:.default))
                         if !accountOnly {Label(displayedGame,systemImage:"checkmark.circle.fill").font(.callout).foregroundStyle(.secondary)}
                     }
                     Spacer()
@@ -647,6 +653,7 @@ struct SideloadView:View {
                 }
                 InstallActivityView(model:model,text:text)
             }.frame(maxWidth:860,alignment:.leading).frame(maxWidth:.infinity,alignment:.top).padding(EasyDesign.pagePadding)
+            }
         }
         .safeAreaInset(edge:.bottom,spacing:0) {if !accountOnly && installStep==2 {installFooter}}
         .background(EasyDesign.background)
@@ -747,8 +754,8 @@ struct SideloadView:View {
                 }
                 if model.accountDeviceTeam==model.team && !model.team.isEmpty {
                     HStack(spacing:20) {
-                        VStack(alignment:.leading,spacing:4) {Text(String(model.accountDevices.count)).font(.system(size:28,weight:.bold,design:.rounded));Text(text("Dispositivos registrados")).font(.caption).foregroundStyle(.secondary)}
-                        if let remaining=model.estimatedDeviceSlots {Divider().frame(height:44);VStack(alignment:.leading,spacing:4) {Text("\(remaining) / 3").font(.system(size:28,weight:.bold,design:.rounded)).foregroundStyle(EasyDesign.accent);Text(text("Cupos disponibles estimados")).font(.caption).foregroundStyle(.secondary)}}
+                        VStack(alignment:.leading,spacing:4) {Text(String(model.accountDevices.count)).font(.system(size:28,weight:.bold,design:.default));Text(text("Dispositivos registrados")).font(.caption).foregroundStyle(.secondary)}
+                        if let remaining=model.estimatedDeviceSlots {Divider().frame(height:44);VStack(alignment:.leading,spacing:4) {Text("\(remaining) / 3").font(.system(size:28,weight:.bold,design:.default)).foregroundStyle(EasyDesign.accent);Text(text("Cupos disponibles estimados")).font(.caption).foregroundStyle(.secondary)}}
                     }
                     if model.estimatedDeviceSlots==nil {Text(text("Apple aún no confirmó cuántos dispositivos puedes registrar.")).font(.caption).foregroundStyle(.secondary)}
                     else {Text(text("Estimación según los registros devueltos. Apple confirma el cupo al registrar un dispositivo nuevo.")).font(.caption).foregroundStyle(.secondary)}
@@ -940,17 +947,21 @@ struct SideloadLibraryView:View {
     private func prepare() {prepareGame();if !embedded {dismiss()}}
     var body:some View {
         VStack(spacing:0) {
-            HStack(alignment:.top) {
-                VStack(alignment:.leading,spacing:6) {
-                    Label(text("Mis iPhones y iPads"),systemImage:"ipad.and.iphone").font(.title2.bold())
-                    Text(text("Conecta. Elige tu juego. Instala o actualiza.")).foregroundStyle(.secondary)
-                }
-                Spacer();if !embedded {Button(text("Cerrar")){dismiss()}.disabled(model.busy)}
-            }.padding(24)
-            Divider()
+            HStack(spacing:28) {
+                VStack(alignment:.leading,spacing:14) {
+                    EasyEyebrow(title:text("TUS DISPOSITIVOS"))
+                    Text(text("Mis iPhones y iPads")).font(.system(size:34,weight:.bold)).tracking(-1)
+                    Text(text("Conecta. Elige tu juego. Instala o actualiza.")).font(.callout).foregroundStyle(.secondary)
+                    HStack(spacing:10) {
+                        Label(text(model.devices.isEmpty ? "Sin dispositivos conectados" : "Dispositivos conectados")+(model.devices.isEmpty ? "" : " · "+String(model.devices.count)),systemImage:model.devices.isEmpty ? "cable.connector" : "checkmark.circle.fill").font(.caption).foregroundStyle(model.devices.isEmpty ? .secondary : EasyDesign.accent)
+                        if !embedded {Button(text("Cerrar")){dismiss()}.buttonStyle(EasyLinkStyle()).disabled(model.busy)}
+                    }
+                }.frame(maxWidth:.infinity,alignment:.leading)
+                DeviceHubArtwork(devices:model.devices).frame(width:250,height:150).accessibilityHidden(true)
+            }.padding(.horizontal,36).padding(.vertical,24).background(RadialGradient(colors:[EasyDesign.violet.opacity(0.14),.clear],center:.trailing,startRadius:0,endRadius:560))
             ScrollView {
                 VStack(alignment:.leading,spacing:20) {
-                    Text(text("Exportar partidas y copiar romfs no requieren iniciar sesión con Apple. Sólo conecta y autoriza tu dispositivo.")).font(.callout).foregroundStyle(.secondary)
+                    Text(text("Exportar partidas y copiar romfs no requieren iniciar sesión con Apple. Sólo conecta y autoriza tu dispositivo.")).font(.caption).foregroundStyle(.secondary)
                     HStack {
                         Label(text("Dispositivos conectados"),systemImage:"cable.connector").font(.headline)
                         Spacer();Button(text("Buscar dispositivos")){model.listDevices()}.disabled(model.busy || !canInstall)
@@ -975,19 +986,19 @@ struct SideloadLibraryView:View {
                             }.padding(16).background(model.device==device.id ? accent.opacity(0.08) : .white.opacity(0.035),in:RoundedRectangle(cornerRadius:14))
                         }.buttonStyle(.plain).disabled(model.busy || !canInstall)
                     }
-                        VStack(alignment:.leading,spacing:10) {
-                            Label(text("Instalar otro juego"),systemImage:"plus.app").font(.headline)
-                            Text(text("Elige tus archivos; prepararemos el juego y abriremos el instalador al terminar.")).foregroundStyle(.secondary)
-                            Button(text("Elegir carpeta de juego")){model.cancelPendingUpdate();prepare()}.disabled(model.busy || !canInstall)
-                        }.padding(18).frame(maxWidth:.infinity,minHeight:136,alignment:.topLeading).background(.white.opacity(0.04),in:RoundedRectangle(cornerRadius:14))
+                    HStack {
+                        Label(text("Instalar otro juego"),systemImage:"plus.app").font(.callout.weight(.medium))
+                        Spacer()
+                        Button(text("Elegir carpeta de juego")){model.cancelPendingUpdate();prepare()}.buttonStyle(EasySecondaryStyle()).disabled(model.busy || !canInstall)
+                    }
                     if !model.device.isEmpty {
                         HStack {Label(text("Tus juegos instalados"),systemImage:"square.grid.2x2").font(.headline);Spacer();Text(String(model.apps.count)).foregroundStyle(.secondary)}
                         TextField(text("Buscar por nombre o identificador"),text:$search).textFieldStyle(.roundedBorder)
                         if model.apps.isEmpty && !model.busy {Text(text("No encontramos juegos vinculados. Añade su carpeta preparada a la biblioteca y vuelve a buscar.")).foregroundStyle(.secondary)}
                         ForEach(Array(matchingApps.prefix(appLimit))) {app in
                             HStack(spacing:12) {
-                                if let image=artwork(app) {Image(nsImage:image).resizable().scaledToFill().frame(width:76,height:50).clipped().clipShape(RoundedRectangle(cornerRadius:8))}
-                                else {Image(systemName:"gamecontroller").font(.title2).frame(width:76,height:50).background(.white.opacity(0.04),in:RoundedRectangle(cornerRadius:8))}
+                                if let image=artwork(app) {Image(nsImage:image).resizable().scaledToFill().frame(width:120,height:72).clipped().clipShape(RoundedRectangle(cornerRadius:8))}
+                                else {Image(systemName:"gamecontroller").font(.title2).frame(width:120,height:72).background(.white.opacity(0.04),in:RoundedRectangle(cornerRadius:8))}
                                 VStack(alignment:.leading,spacing:4) {Text(app.name).font(.headline);Text(app.id+(app.version.isEmpty ? "" : " · "+app.version)).font(.caption).foregroundStyle(.secondary).textSelection(.enabled)}
                                 Spacer()
                                 VStack(alignment:.trailing,spacing:7) {
@@ -997,8 +1008,7 @@ struct SideloadLibraryView:View {
                                         if model.dataFolder(for:app) != nil {Button(text("Copiar datos del juego")){confirmation = .copy(app)}.disabled(!model.supportsContentCopy)}
                                     }.font(.caption)
                                 }.disabled(model.busy || !canInstall)
-                            }.padding(.vertical,6)
-                            Divider()
+                            }.padding(18).background(EasyDesign.panel,in:RoundedRectangle(cornerRadius:14))
                         }
                         if matchingApps.count>appLimit {Button(text("Mostrar más juegos")+" · "+String(min(appLimit,matchingApps.count))+" / "+String(matchingApps.count)){appLimit+=8}}
                         Text(text("Actualizar requiere tus archivos del mismo juego y la cuenta/equipo originales. No desinstalamos la app existente.")).font(.caption).foregroundStyle(.secondary)
@@ -1017,9 +1027,9 @@ struct SideloadLibraryView:View {
                         }
                     }
                     InstallActivityView(model:model,text:text)
-                }.padding(24)
+                }.padding(36)
             }
-        }.frame(width:embedded ? nil : 850,height:embedded ? nil : 730).frame(maxWidth:.infinity,maxHeight:.infinity).background(Color(red:0.065,green:0.075,blue:0.07)).preferredColorScheme(.dark).interactiveDismissDisabled(model.busy)
+        }.frame(width:embedded ? nil : 850,height:embedded ? nil : 730).frame(maxWidth:.infinity,maxHeight:.infinity).background(EasyDesign.background).preferredColorScheme(.dark).interactiveDismissDisabled(model.busy)
         .onChange(of:search){_,_ in appLimit=8}
         .onChange(of:model.device){_,_ in appLimit=8}
         .task {if canInstall && !model.busy {model.listDevices()}}

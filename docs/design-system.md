@@ -6,16 +6,16 @@ The canonical implementation is [`DesignSystem.swift`](../desktop/NxNativeEasy/D
 
 | Token | Value / intent |
 |---|---|
-| Background | `EasyDesign.background`, RGB 0.065 / 0.075 / 0.07 |
-| Primary text | `EasyDesign.ink`, RGB 0.93 / 0.94 / 0.90 |
-| Accent | `EasyDesign.accent`, RGB 0.79 / 0.95 / 0.37; main action and confirmed milestones |
-| Surface | White at 4.5% over the dark background |
+| Background | `EasyDesign.background`, RGB 0.035 / 0.043 / 0.068 |
+| Primary text | `EasyDesign.ink`, RGB 0.94 / 0.95 / 0.98 |
+| Accent | `EasyDesign.accent`, RGB 0.46 / 0.92 / 0.96; main action and selected navigation |
+| Surface | `EasyDesign.panel` navy or white at 4% over the background |
 | Border | White at 7.5%, 1 point |
-| Page padding | 28 points |
+| Page padding | 36 points for workspace pages; 28 for forms |
 | Content spacing | 20 points; internal groups use 8 / 12 / 16 / 20 / 24 |
-| Card radius | 18 points; milestone radius 20; field and action radius 10 |
-| Page heading | System rounded, 30 points, bold |
-| Milestone heading | System rounded, 24 points, bold |
+| Card radius | 14 points; action radius 9; unboxed game stage |
+| Page heading | Default SF Pro, 34–38 points, bold; selected game 44–54 |
+| Milestone heading | Default SF Pro, 32 points, bold |
 | Section title / body | Native headline / callout; no custom font download |
 | Supporting text | Native caption, secondary; keep essential instructions in callout |
 | Technical output | Monospaced 11 points, selectable, bounded scroll area |
@@ -68,41 +68,43 @@ A local IPA is **ready to install**, not proof of device installation. A local M
 Completed preparation notices have a labelled dismiss action that hides only the notice. Retain logs, timeline, source files and outputs. Do not allow dismissal to obscure a running build; the next actual build resets the dismissal. Viewing completed activity must not label the job as still building.
 
 
-## Personal library and navigation (1.24)
+## Desktop workspace (1.25)
 
-The workspace has one horizontal navigation bar: Library, Prepare, Devices,
-Compatibility and Settings. Do not add a global sidebar or an adjacent game list.
-The library is a responsive cover grid; a cover opens a full-width game page.
-Back to Library (also Command-[) retains the search. Library navigation returns
-to the grid. Preparation stays mounted so browsing never resets a running job,
-its logs, cancellation or sheets. The activity dock remains independent.
+Use `CinematicLibrary`, `LibrarySpotlight`, `LibraryShelfCover` and
+`LibrarySpotlightItem` for the owned collection. A cover selects the full-width
+stage; it does not launch or open installation. The stage provides an explicit
+Mac Play, iOS review or Prepare action based on real outputs. Details uses
+Where to play, Files & options, and Saves tabs. Keep prepared version labelled
+separately from installed versions and observations; historical evidence stays
+historical. Mobile filtering includes linked observed installations even when a
+local IPA is unavailable. Adding a game clears stale collection filters.
 
-`LibraryCoverCard` shows owned-game artwork, the game name, real output availability
-(Mac app / IPA) and the strongest actual device observation. A ready IPA is not an
-installed game. The card action only opens details; it never starts installation
-or compilation. There are no invented play times, achievements, remote-play
-buttons, purchased games or storefront promotions.
+Top navigation uses underlined destinations and a quiet Add action. The hidden
+native title bar reserves 82 leading points for the Mac window controls. No
+adjacent game sidebar or oversized dashboard metrics. Preparation stays mounted
+when browsing. Its step rail, destination cards and phase artwork use the shared
+system. `EasyBuildMeter` displays only the current stage's real fraction; unknown
+progress remains unknown. Never label that fraction overall completion.
 
-Use 28-point page padding, 18-point cover corners, 20-point grid gutters and the
-shared accent. At 1000 × 640, navigation and primary actions must fit. One or two
-games use one or two generous columns; larger collections use an adaptive grid.
-Long names get two lines. Remove oversized metric panels that compete with covers.
-The detail uses a wide 250-point hero; retain per-device proof, version, rebuild
-advice, save guidance and explicit installation review.
+Use the shared `EasyPrimaryStyle` and `EasySecondaryStyle`: their child views
+read `isEnabled`, so disabled forms remain visually distinct. Keep native focus,
+keyboard and accessibility semantics. Settings uses workspace tabs. Embedded
+Apple Account lays the introduction beside the existing form; the installer
+retains its guarded sequential steps and explicit final confirmation. Devices
+uses actual discovery state and prioritizes the scoped installed games list.
+Compatibility is a profile gallery, not the personal library or a source of games.
 
-`LibraryEmptyCollection` uses the original generated archive illustration and one
-Add game action. `LibraryDropOverlay` appears only while an actual file drag targets
-the workspace; its original 2.8-second Lottie shows cards entering an archive.
-The bundled, pinned MIT lottie-web light 5.13.0 runtime runs in a single temporary
-local WKWebView with a nonpersistent store, no script bridge, no remote connections
-and no navigation outside its asset directory. No account, filenames or saves
-enter this view. Hide/dismantle it on drag exit; pause in background. Reduced motion
-holds meaningful frame 60. Native hover/navigation use 0.16–0.18-second transitions
-and respect reduced motion. Never use decorative animation as progress or success.
+The original generated archive and new `play-destinations.png` are bundled
+illustrations; text, choices, statuses and actions remain native. The real local
+Lottie still appears only during an actual file drag, pauses in background and
+uses frame 60 for reduced motion. Native stage/shelf animations also respect
+reduced motion. Keep one temporary player, no remote content and no account,
+filename or save data in its web view. Retain pinned runtime/license and teardown.
 
-Research, asset provenance and review limits: [library redesign](design/library-2026-11.md).
-Quiet startup account recovery must not block browsing or preparing games, nor
-show an intrusive global account spinner. Actual installer guards stay unchanged.
+Research, resource prompts and verification scope:
+[cinematic frontend](design/cinematic-frontend-2026-11.md).
+Quiet account recovery must not block browsing or introduce startup Keychain
+prompts. Keep the business guards and source/save identities unchanged.
 
 ## Save continuity in rebuilt games (1.24)
 

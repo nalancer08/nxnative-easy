@@ -23,6 +23,7 @@ class DesktopController(unittest.TestCase):
             subprocess.run(['xcrun','swiftc','-parse-as-library','-swift-version','5',
                 str(ROOT/'desktop/NxNativeEasy/ControllerMonitor.swift'),
                 str(ROOT/'desktop/NxNativeEasy/ControllerTest.swift'),
+                str(ROOT/'desktop/NxNativeEasy/DesignSystem.swift'),
                 str(ROOT/'desktop/NxNativeEasy/tests/controller_input_check.swift'),
                 '-framework','SwiftUI','-framework','AppKit','-framework','GameController','-o',str(executable)],check=True)
             subprocess.run([str(executable)],check=True)

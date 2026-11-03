@@ -60,18 +60,21 @@ struct PreparationIllustration:View {
     let text:(String)->String
     private let accent=EasyDesign.accent
     private var symbol:String {["gamecontroller","tray.and.arrow.down","key.horizontal","point.topleft.down.to.point.bottomright.curvepath","cpu","checkmark.seal"][min(5,max(0,step))]}
-    private var title:String {["Tu juego, en tu pantalla","Ve lo que vas a preparar","La llave la eliges tú","Un plan antes de empezar","Del archivo a tu app","El siguiente paso: jugar"][min(5,max(0,step))]}
-    private var subtitle:String {["Elige tu destino. El resto se adapta a ti.","Tus archivos aparecen aquí antes de compilar.","Un archivo local. Sin subirlo ni copiarlo.","Destino, archivos y datos: todo a la vista.","Cada etapa muestra lo que está ocurriendo.","Tu preparación está lista para el destino elegido."][min(5,max(0,step))]}
+    var fraction:Double?=nil
+    private var title:String {["¿Dónde quieres jugar?","Añade tu juego","Tus llaves, en tu Mac","Todo listo para preparar","Creando tu juego","Tu juego está preparado"][min(5,max(0,step))]}
+    private var subtitle:String {["Elige el dispositivo. Te guiamos con el resto.","Elige su carpeta o arrastra tus archivos aquí. No los moveremos.","Selecciona tu prod.keys. Sólo recordamos su ubicación.","Revisa el destino antes de empezar. Conservamos tus originales y partidas.","Sigue cada etapa y abre el registro en vivo cuando quieras.","La preparación terminó. El siguiente paso depende de tu dispositivo."][min(5,max(0,step))]}
     var body:some View {
-        HStack(spacing:28) {
-            artwork.frame(width:210,height:146).accessibilityHidden(true)
-            VStack(alignment:.leading,spacing:10) {
-                Text(text(title)).font(.system(size:23,weight:.bold,design:.rounded))
-                Text(text(subtitle)).font(.callout).foregroundStyle(.secondary).fixedSize(horizontal:false,vertical:true)
+        HStack(spacing:32) {
+            VStack(alignment:.leading,spacing:14) {
+                Text(text(title)).font(.system(size:34,weight:.bold)).tracking(-1).foregroundStyle(EasyDesign.ink)
+                Text(text(subtitle)).font(.system(size:14)).lineSpacing(3).foregroundStyle(.secondary).fixedSize(horizontal:false,vertical:true)
             }.frame(maxWidth:.infinity,alignment:.leading)
-        }.padding(20).frame(maxWidth:.infinity,alignment:.leading)
-            .background(LinearGradient(colors:[accent.opacity(0.10),.white.opacity(0.025)],startPoint:.leading,endPoint:.trailing),in:RoundedRectangle(cornerRadius:20))
-            .overlay(RoundedRectangle(cornerRadius:20).strokeBorder(accent.opacity(0.12)))
+            Group {
+                if step==0,let image=Bundle.main.url(forResource:"play-destinations",withExtension:"png",subdirectory:"Library").flatMap({NSImage(contentsOf:$0)}) {Image(nsImage:image).resizable().scaledToFit()}
+                else if step==4 {EasyBuildMeter(fraction:fraction,text:text)}
+                else {artwork.scaleEffect(1.12)}
+            }.frame(width:280,height:170).accessibilityHidden(true)
+        }.padding(.vertical,10).padding(.horizontal,8).frame(maxWidth:.infinity,alignment:.leading)
     }
     @ViewBuilder private var artwork:some View {
         ZStack {
@@ -203,7 +206,7 @@ struct PackageIdentityView:View {
                     else {Button(text("Volver a comprobar"),action:retry);if inspection?.input_kind != "dump" {Button(text("Cambiar prod.keys"),action:chooseKeys)}}
                 }
             }
-        }.padding(18).frame(maxWidth:.infinity,alignment:.leading).background(Color(red:0.79,green:0.95,blue:0.37).opacity(0.065),in:RoundedRectangle(cornerRadius:14))
+        }.padding(18).frame(maxWidth:.infinity,alignment:.leading).background(EasyDesign.accent.opacity(0.065),in:RoundedRectangle(cornerRadius:14))
             .onChange(of:inspecting) {_,active in if active {started=Date()}}
     }
 }
@@ -617,7 +620,7 @@ struct ContentView: View {
     private let lime=EasyDesign.accent
     var body: some View {
         ZStack {
-            Color(red:0.065,green:0.075,blue:0.07).ignoresSafeArea()
+            EasyDesign.background.ignoresSafeArea()
             if model.installingInline {
                 SideloadView(model:sideload,text:model.text,embedded:true,guided:true,gameName:model.inspection?.name,onReturn:{model.installingInline=false})
             } else {
@@ -658,27 +661,23 @@ struct ContentView: View {
                             if !sideload.busy {Button(model.text("Revisar renovación")){model.showDeviceLibrary=true}}
                         }.padding(14).background(Color.orange.opacity(0.08),in:RoundedRectangle(cornerRadius:12))
                     }
-                    VStack(alignment:.leading,spacing:12) {
+                    VStack(alignment:.leading,spacing:18) {
                         HStack {
-                            Text(model.text(["¿Dónde quieres jugar?","Añade tu juego","Tus llaves, en tu Mac","Todo listo para preparar","Creando tu juego","Tu juego está preparado"][min(5,model.preparationStep)])).font(.system(size:32,weight:.bold,design:.rounded)).foregroundStyle(ink)
+                            EasyEyebrow(title:model.text("PREPARACIÓN")+"  /  "+String(format:"%02d",min(6,model.preparationStep+1)))
                             Spacer()
-                            if model.preparationStep>0 && model.preparationStep<4 {Button(model.text("Atrás")){model.preparationStep-=1}.disabled(model.running || sideload.blocksGameWork || updater.busy)}
+                            if model.preparationStep>0 && model.preparationStep<4 {Button {model.preparationStep-=1} label:{Label(model.text("Atrás"),systemImage:"arrow.left")}.buttonStyle(EasyLinkStyle()).disabled(model.running || sideload.blocksGameWork || updater.busy)}
                         }
-                        HStack(spacing:6) {
-                            ForEach(0..<5) {step in Capsule().fill(step<=model.preparationStep ? lime : .white.opacity(0.08)).frame(height:4)}
-                        }
-                        Text(model.text(["Elige el dispositivo. Te guiamos con el resto.","Elige su carpeta o arrastra tus archivos aquí. No los moveremos.","Selecciona tu prod.keys. Sólo recordamos su ubicación.","Revisa el destino antes de empezar. Conservamos tus originales y partidas.","Sigue cada etapa y abre el registro en vivo cuando quieras.","La preparación terminó. El siguiente paso depende de tu dispositivo."][min(5,model.preparationStep)])).foregroundStyle(.secondary)
+                        EasyStepRail(titles:["Destino","Archivos","Llaves","Revisar","Crear"].map(model.text),current:model.preparationStep)
                     }
-                    PreparationIllustration(step:model.preparationStep,isMac:model.isMac,text:model.text)
+                    PreparationIllustration(step:model.preparationStep,isMac:model.isMac,text:model.text,fraction:model.activity.fraction)
                     VStack(alignment:.leading,spacing:18) {
                         if model.preparationStep==0 {
                         HStack(spacing:16) {
                             ForEach(["ios","mac"],id:\.self) { target in
                                 Button {model.target=target} label: {
-                                    VStack(spacing:16) {Image(systemName:target=="ios" ? "ipad.and.iphone" : "desktopcomputer").font(.system(size:46,weight:.light));Text(target == "ios" ? "iPhone / iPad" : "Mac").font(.title2.bold());Text(model.text(target=="ios" ? "Prepara la IPA y te guiamos para instalarla." : "Una app completa. Preparar y jugar en este Mac.")).font(.callout).multilineTextAlignment(.center)}.frame(maxWidth:.infinity,minHeight:200).padding(20)
-                                        .foregroundStyle(model.target == target ? Color.black : ink)
-                                        .background(model.target == target ? lime : Color.white.opacity(0.06),in:RoundedRectangle(cornerRadius:9))
+                                    EasyDestinationCard(target:target,selected:model.target==target,text:model.text)
                                 }.buttonStyle(.plain).disabled(model.running || updater.busy || sideload.blocksGameWork).accessibilityIdentifier("target-"+target)
+
                             }
                         }
                         Button(model.text("Continuar")){model.preparationStep=1}.buttonStyle(LibraryPrimaryButtonStyle()).disabled(model.target.isEmpty || model.running || sideload.blocksGameWork || updater.busy)
@@ -774,15 +773,14 @@ struct ContentView: View {
                                     Text(model.text(model.failed ? "Intentar de nuevo" : (model.previous == nil ? "Preparar juego" : "Preparar actualización")))
                                     Spacer()
                                     Image(systemName:"arrow.right")
-                                }.font(.system(size:15,weight:.bold)).padding(15).foregroundStyle(Color.black)
-                                    .background(model.folder == nil || model.target.isEmpty ? Color.gray : lime,in:RoundedRectangle(cornerRadius:10))
-                            }.buttonStyle(.plain).disabled(model.folder == nil || model.target.isEmpty || updater.busy || sideload.blocksGameWork)
+                                }.frame(maxWidth:.infinity)
+                            }.buttonStyle(EasyPrimaryStyle()).disabled(model.folder == nil || model.target.isEmpty || updater.busy || sideload.blocksGameWork)
                         }
                         if model.output != nil && model.preparationStep==3 {Button(model.text("Usar la preparación existente")){model.preparationStep=5}.disabled(sideload.blocksGameWork || updater.busy)}
                         if model.failed && model.preparationStep==4 {Button(model.text("Revisar e intentar de nuevo")){model.preparationStep=3}.disabled(model.running)}
                         if model.preparationStep==4 && model.activity.eta==nil {Text(model.text("Esta etapa todavía no informa cuánto falta. Mostramos el avance real y el tiempo transcurrido.")).font(.caption).foregroundStyle(.secondary)}
                         if let eta=model.activity.eta,model.running {Text(model.text("Tiempo restante de esta etapa")+": ~"+String(Int(eta))+" s").font(.callout).monospacedDigit()}
-                    }.padding(22).background(Color.white.opacity(0.045),in:RoundedRectangle(cornerRadius:16))
+                    }.padding(22).background(model.preparationStep==0 ? .clear : EasyDesign.panel,in:RoundedRectangle(cornerRadius:14))
                     if model.output != nil && !model.running && !model.failed && model.preparationStep==5 {
                         VStack(alignment:.leading,spacing:16) {
                             if model.isMac {
@@ -859,63 +857,43 @@ struct ContentView: View {
     }
 }
 
-struct GameCatalogView: View {
-    @ObservedObject var model: BuildModel
+struct GameCatalogView:View {
+    @ObservedObject var model:BuildModel
     @State private var query=""
-    @FocusState private var searchFocused: Bool
-    private let lime=EasyDesign.accent
-    private var results: [CatalogGame] {GameCatalog.search(model.catalog,query:query)}
-    var body: some View {
-        VStack(alignment:.leading,spacing:18) {
-            HStack {
-                VStack(alignment:.leading,spacing:5) {
-                    Text(model.text("Todos los juegos")).font(.system(size:26,weight:.bold,design:.rounded))
-                    HStack(spacing:5) {
-                        Text("\(results.count) / \(model.catalog.count)").monospacedDigit()
-                        Text(model.text("juegos en la lista"))
-                    }.font(.system(size:12)).foregroundStyle(.secondary)
+    @FocusState private var searchFocused:Bool
+    private var results:[CatalogGame] {GameCatalog.search(model.catalog,query:query)}
+    var body:some View {
+        VStack(alignment:.leading,spacing:22) {
+            HStack(alignment:.bottom) {
+                VStack(alignment:.leading,spacing:12) {
+                    EasyEyebrow(title:model.text("DESCUBRE EL SOPORTE"))
+                    Text(model.text("Compatibilidad")).font(.system(size:38,weight:.bold)).tracking(-1.2)
+                    Text(model.text("Juegos del repositorio. Consulta cada ficha para ver dispositivos probados y versiones.")).font(.callout).foregroundStyle(.secondary)
                 }
                 Spacer()
+                Text(String(results.count)+" / "+String(model.catalog.count)).font(.system(size:12,design:.monospaced)).foregroundStyle(.secondary)
             }
-            Text(model.text("Juegos del repositorio. Consulta cada ficha para ver dispositivos probados y versiones."))
-                .font(.system(size:12)).foregroundStyle(.secondary).fixedSize(horizontal:false,vertical:true)
-            HStack {
-                Image(systemName:"magnifyingglass").foregroundStyle(lime)
-                TextField(model.text("Buscar un juego"),text:$query)
-                    .textFieldStyle(.plain).focused($searchFocused).accessibilityIdentifier("game-search")
-                if !query.isEmpty {Button {query=""} label: {Image(systemName:"xmark.circle.fill")}.buttonStyle(.plain).accessibilityLabel(model.text("Limpiar búsqueda"))}
-            }.padding(12).background(Color.white.opacity(0.06),in:RoundedRectangle(cornerRadius:10))
-            if model.catalogFailed {
-                Text(model.text("No pudimos leer los perfiles. Comprueba que el repositorio siga en su ubicación original."))
-                    .foregroundStyle(.orange).frame(maxWidth:.infinity,maxHeight:.infinity)
-            } else if results.isEmpty {
-                VStack(spacing:8) {
-                    Image(systemName:"magnifyingglass").font(.system(size:32)).foregroundStyle(.secondary)
-                    Text(model.text("No encontramos juegos con esa búsqueda."))
-                }.frame(maxWidth:.infinity,maxHeight:.infinity)
-            } else {
+            HStack(spacing:12) {Image(systemName:"magnifyingglass").foregroundStyle(EasyDesign.accent);TextField(model.text("Buscar un juego"),text:$query).textFieldStyle(.plain).focused($searchFocused).accessibilityIdentifier("game-search");if !query.isEmpty {Button {query=""} label:{Image(systemName:"xmark.circle.fill")}.buttonStyle(.plain).accessibilityLabel(model.text("Limpiar búsqueda"))}}.padding(14).background(EasyDesign.panel,in:RoundedRectangle(cornerRadius:10))
+            if model.catalogFailed {Text(model.text("No pudimos leer los perfiles. Comprueba que el repositorio siga en su ubicación original.")).foregroundStyle(.orange).frame(maxWidth:.infinity,maxHeight:.infinity)}
+            else if results.isEmpty {ContentUnavailableView(model.text("No encontramos juegos con esa búsqueda."),systemImage:"magnifyingglass").frame(maxWidth:.infinity,maxHeight:.infinity)}
+            else {
                 ScrollView {
-                    LazyVStack(spacing:8) {
+                    LazyVGrid(columns:[GridItem(.adaptive(minimum:240,maximum:380),spacing:18)],spacing:22) {
                         ForEach(results) {game in
-                            HStack(spacing:12) {
-                                GameArtworkView(game:game).frame(width:80,height:45).clipShape(RoundedRectangle(cornerRadius:7))
-                                VStack(alignment:.leading,spacing:5) {
-                                    Text(game.name).font(.system(size:14,weight:.semibold)).fixedSize(horizontal:false,vertical:true)
+                            Link(destination:game.notesURL) {
+                                VStack(alignment:.leading,spacing:12) {
+                                    ZStack(alignment:.bottomTrailing) {GameArtworkView(game:game);Image(systemName:"arrow.up.right").font(.system(size:12,weight:.semibold)).padding(8).background(.black.opacity(0.65),in:Circle()).padding(10)}.frame(height:144).clipped().clipShape(RoundedRectangle(cornerRadius:10))
+                                    Text(game.name).font(.system(size:14,weight:.semibold)).foregroundStyle(EasyDesign.ink).lineLimit(2).frame(height:36,alignment:.topLeading)
                                     if game.isSwitch2 {Label(model.text("Switch 2 · Sólo Mac · Carpeta extraída"),systemImage:"desktopcomputer").font(.caption).foregroundStyle(.secondary)}
-                                    if !game.versions.isEmpty {
-                                        Text(model.text("Versiones")+": "+game.versions.joined(separator:", "))
-                                            .font(.system(size:11)).foregroundStyle(.secondary)
-                                    }
-                                }
-                                Spacer()
-                                Link(model.text("Ficha del juego"),destination:game.notesURL).font(.system(size:12))
-                            }.padding(14).background(Color.white.opacity(0.04),in:RoundedRectangle(cornerRadius:12))
+                                    else {Text(model.text("Versiones")+": "+game.versions.joined(separator:", ")).font(.caption).foregroundStyle(.secondary).lineLimit(1)}
+                                }.padding(.bottom,6).frame(maxWidth:.infinity,alignment:.leading)
+                            }.buttonStyle(.plain)
                         }
                     }
                 }
             }
-        }.padding(28).frame(maxWidth:.infinity,maxHeight:.infinity,alignment:.topLeading).preferredColorScheme(.dark)
-        .onAppear {searchFocused=true}
+            Text(model.text("Esta lista muestra perfiles de compatibilidad. Debes aportar tus propios archivos del juego.")).font(.caption).foregroundStyle(.tertiary)
+        }.padding(36).frame(maxWidth:.infinity,maxHeight:.infinity,alignment:.topLeading).background(EasyDesign.background).preferredColorScheme(.dark).onAppear {searchFocused=true}
     }
 }
 
@@ -959,7 +937,8 @@ struct GameCatalogView: View {
                 if Bundle.main.bundleIdentifier != nil {UNUserNotificationCenter.current().delegate=BuildCompletionNotice.shared}
             }
         }
-            .defaultSize(width:1060,height:700)
+            .windowStyle(.hiddenTitleBar)
+            .defaultSize(width:1120,height:760)
             .commands {
                 CommandGroup(after:.sidebar) {
                     Button(EasyStrings.text("Mi biblioteca",language:EasyLanguage(rawValue:appLanguage) ?? .english)) {
