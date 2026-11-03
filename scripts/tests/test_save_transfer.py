@@ -121,11 +121,17 @@ class SaveTransfer(unittest.TestCase):
 
     def test_local_cloud_copy_is_checked_and_never_replaces_a_backup(self):
         revision = self.revision()
-        destination = self.root / 'Local.nxsave'
+        destination = self.root / 'Local.zip'
         request = dict(op='backup_revision', source=str(revision), destination=str(destination),
                        fingerprint=transfer.inspect(revision)['fingerprint'])
         transfer.local_backup(request)
-        self.assertEqual(destination.read_bytes(), revision.read_bytes())
+        with zipfile.ZipFile(destination) as archive:
+            self.assertEqual(archive.read(revision.name), revision.read_bytes())
+        metadata, entries = transfer.source(destination)
+        self.assertEqual(metadata['title'], TITLE)
+        self.assertTrue(entries)
+        imported = transfer.import_cloud(self.request(source=str(destination), fingerprint=transfer.inspect(destination)['fingerprint']))
+        self.assertNotEqual(imported['path'], str(revision))
         with self.assertRaisesRegex(transfer.TransferError, 'destination_exists'):
             transfer.local_backup(request)
         self.assertTrue(revision.exists())

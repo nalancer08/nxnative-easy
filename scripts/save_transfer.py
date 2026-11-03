@@ -187,10 +187,9 @@ def decode_inner(data):
     return title, entries, digest.hexdigest()[:32]
 
 
-def read_revision(path, verify=True):
-    path = Path(path)
+def parse_revision(data, filename, verify=True):
+    path = Path(filename)
     require(path.suffix == '.nxsave' and HEX_ID.fullmatch(path.stem), 'invalid_revision_name')
-    data = read_file(path)
     require(len(data) > 8, 'invalid_revision')
     length = struct.unpack('<I', data[:4])[0]
     require(0 < length <= MAX_HEADER and len(data) > length + 4, 'invalid_revision')
@@ -211,6 +210,10 @@ def read_revision(path, verify=True):
         title, entries, digest = decode_inner(data[4 + length:])
         require(title == metadata['title'] and digest == metadata.get('hash'), 'checksum_mismatch')
     return metadata, entries
+
+
+def read_revision(path, verify=True):
+    return parse_revision(read_file(path), Path(path).name, verify)
 
 
 def read_directory(path, kind):
@@ -298,7 +301,16 @@ def source(path, kind='account'):
         entries, metadata = read_directory(path, kind), {}
     else:
         require(path.suffix.lower() == '.zip', 'unsupported_save')
-        entries, metadata = read_zip(path, kind), {}
+        with zipfile.ZipFile(io.BytesIO(read_file(path))) as archive:
+            infos = archive.infolist()
+            native = len(infos) == 1 and re.fullmatch(r'[0-9a-f]{64}\.nxsave', infos[0].filename)
+            if native:
+                item = infos[0]
+                require(not item.flag_bits & 1 and not stat.S_ISLNK(item.external_attr >> 16)
+                        and item.file_size <= MAX_BYTES + MAX_HEADER + 160, 'invalid_zip_entry')
+                metadata, entries = parse_revision(archive.read(item), item.filename)
+            else:
+                entries, metadata = read_zip(path, kind), {}
     return metadata, entries
 
 
@@ -529,7 +541,7 @@ def export_switch(request):
 
 def local_backup(request):
     destination = Path(request['destination'])
-    require(destination.suffix == ('.nxsave' if request.get('op') == 'backup_revision' else '.zip'), 'invalid_destination')
+    require(destination.suffix == '.zip', 'invalid_destination')
     writable_destination(destination.parent)
     require(not destination.exists(), 'destination_exists')
     if request.get('op') == 'backup_revision':
@@ -537,6 +549,10 @@ def local_backup(request):
         require(preview['fingerprint'] == request.get('fingerprint'), 'source_changed')
         data = read_file(request['source'])
         require(hashlib.sha256(data).hexdigest() == Path(request['source']).stem, 'source_changed')
+        archive = io.BytesIO()
+        with zipfile.ZipFile(archive, 'w', compression=zipfile.ZIP_DEFLATED) as output:
+            output.writestr(Path(request['source']).name, data)
+        data = archive.getvalue()
     else:
         require(request.get('confirmed_closed') is True, 'close_game_first')
         title = request.get('title')

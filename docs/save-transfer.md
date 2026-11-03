@@ -105,5 +105,7 @@ source files before publication. Working roots are excluded. Filename-alias
 metadata that a ZIP cannot retain is refused. The destination must be new.
 
 A checked cloud revision also offers **Save a local copy**, retaining its complete
-`.nxsave` file. This is a backup, not an active local restore. No destructive
+`.nxsave` file inside a shareable ZIP. The canonical checksum filename is retained
+inside; Easy can inspect/import that ZIP again without weakening integrity checks.
+This is a backup, not an active local restore. No destructive
 replace or console restore is added.

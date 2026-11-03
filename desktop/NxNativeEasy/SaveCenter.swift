@@ -130,7 +130,7 @@ struct SavePreview:Decodable {
     }
     func backupRevision(repo:URL) {
         guard !busy,let source,let preview else {return}
-        let panel=NSSavePanel();panel.nameFieldStringValue="Partida-"+(preview.title ?? "Easy")+"-"+String(Int(Date().timeIntervalSince1970))+".nxsave"
+        let panel=NSSavePanel();panel.nameFieldStringValue="Partida-"+(preview.title ?? "Easy")+"-"+String(Int(Date().timeIntervalSince1970))+".zip"
         guard panel.runModal() == .OK,let url=panel.url else {return}
         request(repo:repo,["op":"backup_revision","source":source.path,"fingerprint":preview.fingerprint,"destination":url.path]) {result in if let path=result["path"] as? String {self.localBackup=URL(fileURLWithPath:path);self.localBackupTitle=preview.title}}
     }
