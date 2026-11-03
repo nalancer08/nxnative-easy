@@ -98,3 +98,9 @@ sideload client and launch-options checks passed. The portable app must still
 pass release identity, source hashes, signature and updater compatibility gates
 before publication. No user game, save, key, installation or Apple login was
 modified during these checks.
+
+The catalog gate verified all 130 profiles and both galleries, the documentation
+suite passed 11 checks, and Astro built and checked both public-language routes.
+This frontend release does not change the host or save format. Its portable
+package must contain `play-destinations.png`, the local Lottie runtime and embedded
+animation data; publishing a preview executable is not a substitute.
