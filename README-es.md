@@ -40,18 +40,22 @@ Si macOS bloquea la primera apertura, entra a **Configuración del Sistema → P
 | **Mac** | Una `.app` completa con los datos del juego incluidos. Ábrela desde tu biblioteca. |
 | **iPhone / iPad** | Una IPA para instalar en tu dispositivo. Elige una versión ligera con los datos por separado o inclúyelos dentro de la IPA. También puedes usar Sideloadly como alternativa. |
 
-**¿Ya lo tienes instalado?** Usa **Preparar o actualizar** para recompilar con un update del juego o un motor nuevo. En iOS, instala encima de la app existente con la misma cuenta/equipo Apple e identidad de la app para conservar sus datos. No desinstales primero el juego. [Detalles de actualización e instalación](docs/personal-ios.md).
+**¿Ya lo tienes instalado?** Abre **Actualizar o renovar**. Si caducó la firma de iPhone/iPad, reutiliza la IPA registrada; si quieres mejoras o un update, revisa tus archivos y prepara de nuevo. Conserva la app instalada: el instalador comprueba su cuenta, equipo e identidad. [Guía paso a paso](docs/game-maintenance.md).
 
 ## Todo en un lugar
 
 - **Tu biblioteca:** una colección de portadas, vista amplia del juego, filtros por plataforma, versiones preparadas e instalaciones verificadas en tus dispositivos. Elige una portada para jugar, instalar o consultar el detalle.
 - **Tus controles:** Xbox, PS5 y PS4, con una prueba de botones y sticks en **Configuración**. En iPhone/iPad puedes mover y cambiar el tamaño de los botones táctiles y guardar **cuatro perfiles con nombre** por juego.
 - **Tus ajustes:** opciones de inicio por juego en Mac y limpieza de cachés con una vista previa de lo que se borrará.
-- **Tus partidas:** guárdalas localmente, exporta un respaldo o activa la [continuidad con iCloud](docs/icloud-saves.md) al preparar de nuevo tus juegos para Mac, iPhone y iPad. Si hay conflicto, se conservan ambas versiones para que elijas con cuál seguir. No necesitas iniciar sesión con tu cuenta de firma.
+- **Tus partidas:** abre **Partidas** para ver las versiones recibidas en iCloud por juego, dispositivo, versión y fecha. Añade un respaldo compatible como una versión nueva o prepara una copia para consola sin reemplazar el progreso anterior. Activa la [continuidad con iCloud](docs/icloud-saves.md) al preparar juegos con el mismo contenido; los conflictos conservan ambas partidas. No necesitas la cuenta de firma. [Transferencias y requisitos de consola](docs/save-transfer.md).
 - **Tu cuenta Apple:** una para toda la app, con sesión recordada en el Llavero, revisión de dispositivos y renovación opcional de firmas en segundo plano. [Requisitos de renovación](docs/background-renewal.md).
 - **Actualizaciones de la app:** pulsa **Actualizar ahora** cuando aparezca una versión. La app descarga y verifica el paquete, conserva la app anterior como respaldo y mantiene tus juegos y partidas. Para aplicar un motor nuevo a un juego existente, vuelve a prepararlo.
 
 <img src="docs/images/nxnative-details-es-v1.25.jpg" width="49%" alt="Detalle del juego y dónde jugar"> <img src="docs/images/nxnative-account-es-v1.25.jpg" width="49%" alt="Tu cuenta Apple global en Configuración">
+
+<img src="docs/images/nxnative-saves-es-v1.26.jpg" width="49%" alt="Versiones de partidas recibidas en la carpeta de iCloud; ejemplos ficticios"> <img src="docs/images/nxnative-maintenance-es-v1.26.jpg" width="49%" alt="Elegir entre renovar la firma y actualizar el juego">
+
+**Respaldos de Switch:** una Switch 1 o 2 sin modificar no importa partidas sólo por copiarlas a la SD. Easy prepara archivos comprobados; restaurarlos requiere una herramienta compatible configurada por separado en la consola. No conecta con la nube de Nintendo. [Qué se puede hacer](docs/save-transfer.md).
 
 La interfaz empieza en **inglés**; cámbiala a **Español** en **Settings → General**.
 

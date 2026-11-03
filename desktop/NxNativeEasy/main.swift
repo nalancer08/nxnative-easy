@@ -151,6 +151,7 @@ struct PackageIdentityView:View {
     let retry:()->Void
     let setup:()->Void
     let cancel:()->Void
+    var proposal:PendingGameProposal?=nil
     private var message:String {
         switch inspection?.status {
         case "dump_invalid":return "La carpeta extraída está incompleta o mezcla archivos incompatibles. Revisa base/exefs, base/romfs y sus updates; no necesita llaves."
@@ -199,6 +200,13 @@ struct PackageIdentityView:View {
                 if let id=result.title_id,!catalog.contains(where:{$0.id.uppercased()==id}) {Text(text("Este juego no tiene un perfil probado en el catálogo. Prepararlo no garantiza que funcione.")).font(.caption).foregroundStyle(.orange)}
                 Button(text("Volver a comprobar"),action:retry).font(.caption)
             } else {
+                if inspection?.status=="profile_missing",let proposal {
+                    Label(proposal.name,systemImage:"flag.checkered").font(.title2.bold())
+                    Text(text("El motor tiene una propuesta revisada. Aún no forma parte del soporte de esta app.")).font(.callout).foregroundStyle(.secondary)
+                    Text(text("Pruebas reportadas por su autor en Mac")+" · "+proposal.reportedVersion).font(.caption)
+                    if inspection?.version==0 {Text(text("Tus archivos son la versión base. No equivalen al update probado en esa propuesta.")).font(.callout).foregroundStyle(.orange)}
+                    Link(text("Ver avance del motor"),destination:URL(string:proposal.url)!)
+                }
                 Label(text(message),systemImage:"exclamationmark.triangle").foregroundStyle(.orange)
                 if let id=inspection?.title_id {Text(id).font(.caption.monospaced()).foregroundStyle(.secondary)}
                 HStack {
@@ -695,7 +703,7 @@ struct ContentView: View {
                             Spacer()
                             Button(model.folder == nil ? model.text("Elegir") : model.text("Cambiar")) {model.chooseFolder()}.disabled(model.running || updater.busy || sideload.blocksGameWork).accessibilityLabel(model.text("Carpeta de tu juego"))
                         }
-                        PackageIdentityView(inspection:model.inspection,inspecting:model.inspecting,hasKeys:model.readableKeys || model.isDumpFolder,catalog:model.catalog,text:model.text,chooseKeys:{model.chooseKeysFolder()},retry:{model.identifyGame()},setup:{model.identifyGame(setupTools:true)},cancel:{model.cancelInspection()})
+                        PackageIdentityView(inspection:model.inspection,inspecting:model.inspecting,hasKeys:model.readableKeys || model.isDumpFolder,catalog:model.catalog,text:model.text,chooseKeys:{model.chooseKeysFolder()},retry:{model.identifyGame()},setup:{model.identifyGame(setupTools:true)},cancel:{model.cancelInspection()},proposal:PendingGameProposal.find(repo:model.repo,title:model.inspection?.title_id))
                         if model.isDumpFolder && model.target != "mac" {
                             Text(model.text("Las carpetas extraídas de Switch 2 se preparan para Mac. iPhone/iPad aún no están probados.")).foregroundStyle(.orange)
                             Button(model.text("Preparar en Mac")){model.target="mac"}
@@ -717,7 +725,7 @@ struct ContentView: View {
                             Button(model.keysFolder == nil ? model.text("Elegir") : model.text("Cambiar")) {model.chooseKeysFolder()}.disabled(model.running || updater.busy || sideload.blocksGameWork).accessibilityLabel(model.text("Seleccionar prod.keys"))
                         }
                         Label(model.text(model.readableKeys ? "Recordamos su ubicación. La compatibilidad de las llaves se comprueba al preparar." : "Elige prod.keys o arrástralo aquí. No necesitas seleccionar una carpeta."),systemImage:model.readableKeys ? "checkmark.shield" : "hand.draw").font(.callout).foregroundStyle(.secondary)
-                        if model.folder != nil {PackageIdentityView(inspection:model.inspection,inspecting:model.inspecting,hasKeys:model.readableKeys || model.isDumpFolder,catalog:model.catalog,text:model.text,chooseKeys:{model.chooseKeysFolder()},retry:{model.identifyGame()},setup:{model.identifyGame(setupTools:true)},cancel:{model.cancelInspection()})}
+                        if model.folder != nil {PackageIdentityView(inspection:model.inspection,inspecting:model.inspecting,hasKeys:model.readableKeys || model.isDumpFolder,catalog:model.catalog,text:model.text,chooseKeys:{model.chooseKeysFolder()},retry:{model.identifyGame()},setup:{model.identifyGame(setupTools:true)},cancel:{model.cancelInspection()},proposal:PendingGameProposal.find(repo:model.repo,title:model.inspection?.title_id))}
                         Button(model.text("Continuar")){model.preparationStep=3}.buttonStyle(LibraryPrimaryButtonStyle()).disabled(model.inspecting || model.inspection?.ready != true || model.failed || !model.readableKeys || model.running || sideload.blocksGameWork || updater.busy)
                         }
                         if model.preparationStep==3 {

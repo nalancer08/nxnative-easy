@@ -761,5 +761,12 @@
         "status": "unavailable_404"
       }
     ]
+  },
+  "latest_topic_review": {
+    "date": "2026-11-03",
+    "topic": "Mario Kart World",
+    "inspected_main": "bd688163afea8a7cf6d5e5f889e177ad1d589711",
+    "integrated": false,
+    "review": "docs/upstream-reviews/2026-11-03-mario-kart-world.md"
   }
 }

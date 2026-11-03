@@ -69,11 +69,12 @@ def build_bundle(output,portable=False):
     shutil.move(str(macos/'sideload-licenses'),str(resources/'SideloadLicenses'))
     shutil.copy2(REPO/'desktop/NxNativeEasy/Assets/AppIcon.png',resources/'BrandIcon.png')
     shutil.copytree(REPO/'desktop/NxNativeEasy/Assets/Library',resources/'Library')
-    motion_page=resources/'Library/drop-game.html'
-    motion_template=motion_page.read_text()
-    if motion_template.count('__NXE_ANIMATION_DATA__')!=1:
-        raise ValueError('The local drop-animation template must contain exactly one data placeholder.')
-    motion_page.write_text(motion_template.replace('__NXE_ANIMATION_DATA__',(resources/'Library/drop-game.json').read_text()))
+    for name in ('drop-game','save-transfer'):
+        motion_page=resources/('Library/'+name+'.html')
+        motion_template=motion_page.read_text()
+        if motion_template.count('__NXE_ANIMATION_DATA__')!=1:
+            raise ValueError('The local animation template must contain exactly one data placeholder.')
+        motion_page.write_text(motion_template.replace('__NXE_ANIMATION_DATA__',(resources/('Library/'+name+'.json')).read_text()))
     with tempfile.TemporaryDirectory(prefix='nxnative-icon-') as temporary:
         iconset=Path(temporary)/'AppIcon.iconset';iconset.mkdir()
         subprocess.run(['xcrun','swift',str(REPO/'desktop/NxNativeEasy/Assets/draw_icon.swift'),str(iconset)],check=True)

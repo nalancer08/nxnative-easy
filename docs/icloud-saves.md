@@ -1,5 +1,10 @@
 # Continue your game between iPhone, iPad and Mac
 
+The desktop **Saves** page now lists received iCloud revisions and prepares checked
+manual backup copies. See [the transfer guide](save-transfer.md) for importing a
+compatible console backup, preserving both roots and stock-console limitations.
+Signature renewal/rebuilding has its own [guided maintenance flow](game-maintenance.md).
+
 Save continuity is optional. Each device keeps its own active local save; only
 checked snapshots go into a folder you choose in iCloud Drive. No game files,
 RomFS, touch-control profiles, signing credentials or keys are uploaded.

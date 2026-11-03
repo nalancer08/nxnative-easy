@@ -40,18 +40,22 @@ If macOS blocks the first opening, open **System Settings → Privacy & Security
 | **Mac** | A complete game `.app`, including its game data. Open it from your library. |
 | **iPhone / iPad** | An IPA to install on your device. Choose a lightweight build with separate game data, or include the data in the IPA. Sideloadly is also available as an alternative. |
 
-**Already installed?** Use **Prepare or update** to rebuild with a game update or newer engine. For iOS, install over the existing app with the same Apple account/team and app identity to retain its data. Do not uninstall the game first. [Updates and installation details](docs/personal-ios.md).
+**Already installed?** Open **Update or renew**. Choose an expired iPhone/iPad signature to reuse the registered IPA, or improvements/a game update to review your files and prepare again. The installer retains the existing account/team and app identity; keep the game installed to preserve its data. [Step-by-step maintenance](docs/game-maintenance.md).
 
 ## Everything in one place
 
 - **Your library:** a cover shelf, a full-width game view, platform filters, prepared versions and installations verified on your connected devices. Select a cover, then play, install or open its details.
 - **Your controls:** Xbox, PS5 and PS4 controllers, plus an input tester in **Settings**. On iPhone/iPad, move and resize touch buttons and save **four named profiles** per game.
 - **Your settings:** per-game Mac launch options and cache cleanup with a preview of exactly what will be removed.
-- **Your saves:** keep them locally, export a backup, or enable [iCloud continuity](docs/icloud-saves.md) in rebuilt Mac/iPhone/iPad games. Conflicting versions are kept so you can choose which to continue. Exporting saves and copying game data do **not** require Apple sign-in. [Save guide](docs/saves.md).
+- **Your saves:** open **Saves** to see received iCloud revisions by game, device, version and date. Bring a compatible backup into a new revision or prepare a new console backup without replacing existing progress. Enable [iCloud continuity](docs/icloud-saves.md) in matching rebuilt games; conflicts keep both versions. No signing-account login is needed. [Transfer guide and console requirements](docs/save-transfer.md).
 - **Your Apple account:** shared across the app, with a remembered Keychain session, device review and optional background signature renewal. [Renewal requirements](docs/background-renewal.md).
 - **App updates:** click **Update now** when a release appears. The app downloads and checks the new package, keeps the previous app as a backup and leaves your games and saves in place. To use a new engine in an existing game, prepare that game again.
 
 <img src="docs/images/nxnative-details-en-v1.25.jpg" width="49%" alt="Game details and where to play"> <img src="docs/images/nxnative-account-en-v1.25.jpg" width="49%" alt="Your shared Apple account in Settings">
+
+<img src="docs/images/nxnative-saves-en-v1.26.jpg" width="49%" alt="Save revisions received in your selected iCloud folder; synthetic examples"> <img src="docs/images/nxnative-maintenance-en-v1.26.jpg" width="49%" alt="Choose signature renewal or a game update">
+
+**Switch backups:** an unmodified Switch 1 or 2 cannot import saves just by copying them to its SD card. Easy prepares checked files; restoring them requires a separately configured compatible console tool. It does not access Nintendo's cloud. [What is possible](docs/save-transfer.md).
 
 The interface starts in **English**; switch to **Español** in **Settings → General**.
 

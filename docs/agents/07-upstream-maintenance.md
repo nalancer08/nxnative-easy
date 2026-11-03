@@ -197,3 +197,10 @@ an older app cache may lack a newly required codec. Keep source setup and CI
 aligned. Ship the exact corresponding source and notice for the pinned ZBIC
 wheel, verify its source-archive digest, and test the bundled codec with synthetic
 bytes without writing into the sealed application.
+
+Save interchange publishes independent checked revisions; preserve the first-save
+layout check and refusal of incomplete account/device pairs. Desktop transfers
+never write active save folders or claim a stock Switch accepts an SD backup.
+Retain console-access prerequisites, new-backup-only export, guest-name collision
+refusal and explicit raw-save game/version confirmation. Pending game proposals
+remain outside supported catalogs and never bypass the inspection/build gate.

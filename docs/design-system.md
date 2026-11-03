@@ -119,3 +119,25 @@ new conflict stays on this screen. Running games never import remote progress.
 The desktop library offers a collapsed bilingual setup guide. Folder permission
 is distinct from Apple signing-account login. Synthetic preview images are not
 evidence of iCloud/device synchronization.
+
+## Save transfers and game maintenance (1.26)
+
+Saves is a workspace destination, not a modal catalog. Its overview uses the
+original archive illustration and received revisions grouped by title. Selecting
+a revision performs a full check before an action becomes available. The review
+uses a compact header and a pinned bottom action, so the copy action never falls
+below long instructions. Original and historical saves remain distinct from an
+active restore. Unknown console/title/version capabilities are explicit.
+
+Update or renew separates signature expiry from recompilation. Selecting an
+intent advances the scene; a pinned action opens the existing guarded installer
+or preparation flow. Keep the original installation identity and source IPA for
+renewal. Never hide the final confirmation in scrollable content or change an
+automatic-renewal preference during manual review.
+
+The save-transfer Lottie exists only during an actual helper operation, pauses in
+the background and uses frame 60 for reduced motion. It depicts two retained
+saves, not business completion. Use elapsed time for unknown progress; verified
+helper output alone may show a copy as prepared. A console export is always
+labelled prepared, never restored. Native dialogs remain appropriate for choosing
+files/folders. The macOS signing account is unrelated to iCloud folder access.

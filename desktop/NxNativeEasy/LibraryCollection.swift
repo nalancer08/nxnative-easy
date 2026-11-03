@@ -16,17 +16,18 @@ struct LibraryDropOverlay:View {
     }
 }
 
-// One local-only Lottie player exists while an actual file drag targets the workspace.
+// A local-only Lottie player decorates file drags or a running save-copy operation.
 // It receives no filenames, account data or application state, and cannot navigate or fetch.
 struct LibraryDropMotion:NSViewRepresentable {
     let playing:Bool
+    var resource="drop-game"
     func makeCoordinator()->Coordinator {Coordinator()}
     func makeNSView(context:Context)->WKWebView {
         let config=WKWebViewConfiguration();config.websiteDataStore = .nonPersistent()
         let view=WKWebView(frame:.zero,configuration:config)
         view.navigationDelegate=context.coordinator;view.underPageBackgroundColor=NSColor(EasyDesign.background)
         context.coordinator.playing=playing
-        if let url=Bundle.main.url(forResource:"drop-game",withExtension:"html",subdirectory:"Library") {
+        if let url=Bundle.main.url(forResource:resource,withExtension:"html",subdirectory:"Library") {
             context.coordinator.directory=url.deletingLastPathComponent()
             view.loadFileURL(url,allowingReadAccessTo:url.deletingLastPathComponent())
         }

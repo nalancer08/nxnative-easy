@@ -175,7 +175,9 @@ enum RefreshPolicy {
         terminationObserver=NotificationCenter.default.addObserver(forName:NSApplication.willTerminateNotification,object:nil,queue:.main) { [weak self] _ in MainActor.assumeIsolated {self?.cancel()} }
         timer=Timer.publish(every:1800,on:.main,in:.common).autoconnect().sink { [weak self] _ in Task {@MainActor in self?.checkRefresh()}}
     }
+    @Published var renewalJob:RefreshJob?
     func configure(ipa:URL,folder:URL,romfs:URL?) {
+        renewalJob=nil
         completedInstallation=false;increasedMemoryLimit=nil
         self.ipa=ipa;gameFolder=folder;self.romfs=romfs
         originalID=PreviousPreparation.load(folder:folder,target:"ios")?.bundleID ?? ""
@@ -525,9 +527,14 @@ enum RefreshPolicy {
     }
     // This is an opt-in marker, not proof that Keychain or Apple will accept the saved session.
     var hasRememberedSession:Bool {defaults.string(forKey:"sideloadEmail")==email && !email.isEmpty}
+    func reviewRenewal(_ job:RefreshJob) {
+        guard !busy else {return}
+        select(job);renewalJob=job;connect();listDevices()
+    }
     func select(_ job:RefreshJob) {
         completedInstallation=false
         guard !busy else {return}
+        renewalJob=nil
         ipa=URL(fileURLWithPath:job.ipa);gameFolder=URL(fileURLWithPath:job.gameFolder);romfs=nil
         originalID=job.originalID;device=job.udid;team=job.team;existing=job.effectiveID
     }
@@ -620,7 +627,11 @@ struct SideloadView:View {
         return ["Tu juego ya está preparado. Ahora elige tu iPhone o iPad.","Inicia sesión para firmar tu app. Tus partidas y archivos siguen en su lugar.","Revisa el destino y confirma. La instalación empieza sólo cuando tú lo indiques.",model.completedInstallation ? "Abre el juego en tu iPhone o iPad. Tus partidas se conservan." : model.busy ? "Sigue la firma, la instalación y la copia de datos desde aquí." : "La instalación no terminó. Revisa lo ocurrido antes de volver a intentarlo."][min(3,installStep)]
     }
     private var kind:EasyMilestoneKind {accountOnly || installStep==1 ? .account : installStep==0 ? .device : installStep==2 ? .review : model.completedInstallation ? .complete : model.busy ? .transfer : .review}
-    private var canInstall:Bool {!model.busy && model.authenticated && !model.device.isEmpty && !model.team.isEmpty && !model.originalID.isEmpty && model.ipa != nil && model.registrationState != .unknown && (model.registrationState != .new || approveRegistration)}
+    private var renewalIdentityMatches:Bool {
+        guard let job=model.renewalJob else {return true}
+        return job.account==RefreshPolicy.account(model.email) && job.team==model.team && job.udid==model.device && job.effectiveID==model.existing && model.registrationState == .registered
+    }
+    private var canInstall:Bool {!model.busy && model.authenticated && !model.device.isEmpty && !model.team.isEmpty && !model.originalID.isEmpty && model.ipa != nil && model.registrationState != .unknown && (model.registrationState != .new || approveRegistration) && renewalIdentityMatches}
     var body:some View {
         ScrollView {
             if accountOnly && embedded {
@@ -632,7 +643,7 @@ struct SideloadView:View {
             VStack(alignment:.leading,spacing:EasyDesign.spacing) {
                 HStack(alignment:.center) {
                     VStack(alignment:.leading,spacing:5) {
-                        Text(text(accountOnly ? "Tu cuenta Apple" : guided ? "Del juego a tu dispositivo" : "Instalar en iPhone / iPad")).font(.system(size:30,weight:.bold,design:.default))
+                        Text(text(accountOnly ? "Tu cuenta Apple" : model.renewalJob != nil ? "Renovar para seguir jugando" : guided ? "Del juego a tu dispositivo" : "Instalar en iPhone / iPad")).font(.system(size:30,weight:.bold,design:.default))
                         if !accountOnly {Label(displayedGame,systemImage:"checkmark.circle.fill").font(.callout).foregroundStyle(.secondary)}
                     }
                     Spacer()
@@ -685,7 +696,7 @@ struct SideloadView:View {
                                 VStack(alignment:.leading,spacing:6) {Text(device.name).font(.headline);if !device.detail.isEmpty {Text(device.detail).font(.caption).foregroundStyle(.secondary)}}
                                 Spacer();Image(systemName:model.device==device.id ? "checkmark.circle.fill" : "circle").foregroundStyle(model.device==device.id ? EasyDesign.accent : .secondary)
                             }.padding(16).background(model.device==device.id ? EasyDesign.accent.opacity(0.08) : .white.opacity(0.025),in:RoundedRectangle(cornerRadius:12))
-                        }.buttonStyle(.plain).disabled(model.busy).accessibilityLabel(device.name).accessibilityAddTraits(model.device==device.id ? .isSelected : [])
+                        }.buttonStyle(.plain).disabled(model.busy || (model.renewalJob != nil && model.renewalJob?.udid != device.id)).accessibilityLabel(device.name).accessibilityAddTraits(model.device==device.id ? .isSelected : [])
                     }
                 }
                 Text(text("Desbloquea el dispositivo, confía en este Mac y activa Modo de desarrollador si iOS lo pide.")).font(.caption).foregroundStyle(.secondary)
@@ -773,15 +784,16 @@ struct SideloadView:View {
                     Text(displayedGame).font(.title3.bold())
                     Label(selectedDevice?.name ?? "iPhone / iPad",systemImage:"iphone").font(.headline)
                     Label(model.email,systemImage:"person.crop.circle").font(.callout).foregroundStyle(.secondary)
-                    Label(text(model.romfs == nil ? "IPA completa: el juego va dentro de la app." : "IPA ligera: instalaremos la app y copiaremos romfs por separado."),systemImage:"shippingbox").font(.callout).foregroundStyle(.secondary)
+                    Label(text(model.renewalJob != nil ? "Sólo renovaremos la firma. No recompilamos ni copiamos romfs o partidas." : model.romfs == nil ? "IPA completa: el juego va dentro de la app." : "IPA ligera: instalaremos la app y copiaremos romfs por separado."),systemImage:"shippingbox").font(.callout).foregroundStyle(.secondary)
                     VStack(alignment:.leading,spacing:8) {
                         Text(text("App existente que actualizarás")).font(.callout.bold())
-                        Picker(text("App existente que actualizarás"),selection:$model.existing) {Text(text("Primera instalación")).tag("");ForEach(model.apps){Text($0.name+" · "+$0.id).tag($0.id)}}.labelsHidden().frame(maxWidth:.infinity).disabled(model.busy)
+                        Picker(text("App existente que actualizarás"),selection:$model.existing) {Text(text("Primera instalación")).tag("");ForEach(model.apps){Text($0.name+" · "+$0.id).tag($0.id)}}.labelsHidden().frame(maxWidth:.infinity).disabled(model.busy || model.renewalJob != nil)
                     }
                     Text(text("Se conserva el identificador efectivo. Si no corresponde al juego y equipo, la instalación se detiene; no se desinstala la app anterior.")).font(.caption).foregroundStyle(.secondary)
                 }
             }
             RegistrationReviewView(model:model,text:text,approved:$approveRegistration)
+            if model.renewalJob == nil {
             EasyCard {
                 VStack(alignment:.leading,spacing:16) {
                     Toggle(text("Renovar automáticamente antes de que caduque"),isOn:$autoRefresh).disabled(model.busy || !model.hasRememberedSession)
@@ -790,7 +802,7 @@ struct SideloadView:View {
                     DisclosureGroup(text("Más opciones")) {
                         VStack(alignment:.leading,spacing:14) {
                             Toggle(text("Renovar aunque la ventana esté cerrada"),isOn:$loginItem).onChange(of:loginItem){_,value in model.setLoginItem(value)}
-                            if model.canUpdateAppOnly {Toggle(text("Copiar también los datos del juego"),isOn:$includeGameData);Text(text("Para cambios de controles o de la app con la misma versión del juego. Si cambió el juego o DLC, usa la instalación con datos nuevos.")).font(.caption).foregroundStyle(.secondary)}
+                            if model.renewalJob == nil && model.canUpdateAppOnly {Toggle(text("Copiar también los datos del juego"),isOn:$includeGameData);Text(text("Para cambios de controles o de la app con la misma versión del juego. Si cambió el juego o DLC, usa la instalación con datos nuevos.")).font(.caption).foregroundStyle(.secondary)}
                         }.padding(.top,12)
                     }.font(.callout)
                     Label(text("Guarda y cierra el juego antes de instalar. No desinstales la app anterior."),systemImage:"info.circle").font(.callout)
@@ -798,10 +810,14 @@ struct SideloadView:View {
                     if model.originalID.isEmpty || model.ipa==nil {Text(text("Falta una IPA preparada con su identidad. Vuelve a preparar el juego antes de instalar.")).font(.caption).foregroundStyle(.orange)}
                 }
             }.disabled(model.busy)
+            } else {
+                Label(text("Se reutiliza la IPA registrada. Tus partidas y datos del juego no se vuelven a copiar."),systemImage:"checkmark.shield").font(.callout).foregroundStyle(.secondary)
+            }
         }
     }
     private var readinessMessage:String {
         if model.busy {return "Esperando la operación actual…"}
+        if !renewalIdentityMatches {return "Para renovar, conserva la cuenta, el equipo y el dispositivo de la instalación original."}
         if !model.authenticated {return "Vuelve a iniciar sesión para continuar."}
         if model.device.isEmpty {return "Elige un dispositivo conectado."}
         if model.team.isEmpty {return "Selecciona tu equipo Apple."}
@@ -816,7 +832,7 @@ struct SideloadView:View {
                 Text(text(canInstall ? "Listo para instalar" : "Antes de instalar")).font(.headline)
                 Text(text(readinessMessage)).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal:false,vertical:true)
             }.frame(maxWidth:.infinity,alignment:.leading)
-            Button {installStep=3;model.install(autoRefresh:autoRefresh,includeContent:includeGameData,approveRegistration:approveRegistration)} label:{Label(text(model.existing.isEmpty ? "Firmar e instalar" : "Firmar y actualizar"),systemImage:"arrow.down.app")}.buttonStyle(EasyPrimaryStyle()).disabled(!canInstall)
+            Button {installStep=3;if let job=model.renewalJob {model.renew(job)}else {model.install(autoRefresh:autoRefresh,includeContent:includeGameData,approveRegistration:approveRegistration)}} label:{Label(text(model.renewalJob != nil ? "Renovar y conservar mi progreso" : model.existing.isEmpty ? "Firmar e instalar" : "Firmar y actualizar"),systemImage:"arrow.down.app")}.buttonStyle(EasyPrimaryStyle()).disabled(!canInstall)
         }.padding(20).frame(maxWidth:860).frame(maxWidth:.infinity).background(EasyDesign.background).overlay(alignment:.top){Divider()}
     }
     private var installationContent:some View {

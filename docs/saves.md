@@ -1,5 +1,10 @@
 # Where your game progress lives
 
+The desktop **Saves** page now lists received iCloud revisions and prepares checked
+manual backup copies. See [the transfer guide](save-transfer.md) for importing a
+compatible console backup, preserving both roots and stock-console limitations.
+Signature renewal/rebuilding has its own [guided maintenance flow](game-maintenance.md).
+
 Game progress is local to the device on which you played. nxnative Easy on the
 Mac prepares the game; it does not receive the iPhone's progress automatically.
 Rebuilt game apps now include optional [iCloud continuity](icloud-saves.md).
