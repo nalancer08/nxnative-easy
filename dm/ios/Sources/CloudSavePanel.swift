@@ -173,7 +173,10 @@ struct CloudSavePanel: View {
     // Both launchers embed this view in AppKit/UIKit, without a SwiftUI Scene.
     // Observe the application lifecycle directly so foreground retries work there.
     @State private var active = true
-    private var refreshKey: String { "\(active):\(model.folder?.path ?? ""):\(model.started)" }
+    private var refreshKey: String {
+        let retry = CloudRefreshPolicy.delay(status: model.status, blocked: model.blocked, permissionError: model.permissionError != nil, started: model.started) != nil
+        return "\(active):\(model.folder?.path ?? ""):\(model.started):\(retry)"
+    }
     private var activeNotification: Notification.Name {
         #if os(macOS)
         NSApplication.didBecomeActiveNotification

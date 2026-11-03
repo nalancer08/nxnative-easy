@@ -13,6 +13,12 @@ TESTS = Path(__file__).resolve().parent
 @unittest.skipUnless(sys.platform == 'darwin' and shutil.which('xcrun'), 'needs macOS Swift')
 class AutomaticContinuityTests(unittest.TestCase):
     def test_delivery_conflict_lifecycle_and_play(self):
+        self.run_fixture('cloud_automatic_check.swift', 'play guards passed')
+
+    def test_panel_restarts_after_late_delivery_and_foreground(self):
+        self.run_fixture('cloud_panel_check.swift', 'embedded AppKit foreground passed')
+
+    def run_fixture(self, source, message):
         with tempfile.TemporaryDirectory(prefix='nxe-auto-cloud-') as folder:
             root = Path(folder)
             obj, exe = root / 'backend.o', root / 'check'
@@ -21,12 +27,12 @@ class AutomaticContinuityTests(unittest.TestCase):
             built = subprocess.run(['xcrun', '-sdk', 'macosx', 'swiftc', '-swift-version', '5',
                                     '-parse-as-library', '-module-cache-path', str(root / 'modules'),
                                     str(REPO / 'dm/ios/Sources/CloudSavePanel.swift'),
-                                    str(TESTS / 'cloud_automatic_check.swift'), str(obj), '-o', str(exe)],
+                                    str(TESTS / source), str(obj), '-o', str(exe)],
                                    capture_output=True, text=True, timeout=180)
             self.assertEqual(built.returncode, 0, built.stdout + built.stderr)
             ran = subprocess.run([str(exe)], capture_output=True, text=True, timeout=20)
             self.assertEqual(ran.returncode, 0, ran.stdout + ran.stderr)
-            self.assertIn('play guards passed', ran.stdout)
+            self.assertIn(message, ran.stdout)
 
 
 if __name__ == '__main__':

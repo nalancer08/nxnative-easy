@@ -58,6 +58,8 @@ cancels the loop; returning checks again. Healthy results stop polling; pressing
 in the waiting state until that parent arrives. Revoked folder access needs
 reselection; blocked recovery and conflicts do not trigger automatic choices.
 Once play starts, no retry may import into the running game's save trees.
+If a manual check or the final Play check discovers pending delivery after an
+earlier healthy result, the panel starts its automatic retry loop again.
 
 Two independent branches are the exception: dates cannot tell which adventure
 is further ahead, so the game asks which one to continue and retains both.
@@ -222,6 +224,10 @@ delivery/provider retry, stopping after a healthy result, conflict/permission
 guards, cancellation on inactivity, late conflict at Play and no checks/restores
 once play starts. Both embedded launchers observe their AppKit/UIKit application
 lifecycle directly; they do not require a SwiftUI Scene.
+An actual embedded AppKit panel fixture also reproduces a late waiting state
+after a healthy check and verifies that automatic checking restarts. The old
+task key omitted this transition; the fixture failed before adding retry state
+to that key, then passed. Foreground return and stopping after health are covered.
 
 The unsigned production iOS fixture and Mac launcher/storage fixture compile and
 link this same component. Six native panel renders cover received, waiting and
