@@ -223,12 +223,20 @@ class CloudSaves(unittest.TestCase):
         self.write('phone', 'first')
         self.run_command('phone')
         first = self.revisions()[0]
+        earlier = first.read_bytes()
         self.write('phone', 'second')
         self.run_command('phone')
         first.unlink()  # Simulates descendant delivery before its parent.
         reply = self.run_command('mac')
-        self.assertEqual(reply['status'], 'error')
+        self.assertEqual(reply['status'], 'waiting')
         self.assertEqual(self.contents('mac'), (None, None))
+        self.assertNotIn('restoredFrom', reply)
+        first.write_bytes(earlier)
+        reply = self.run_command('mac')
+        self.assertEqual(reply['status'], 'available')
+        self.assertTrue(reply['restoredFrom'])
+        self.assertEqual(self.contents('mac'), (b'second', None))
+        self.assertEqual(self.run_command('mac')['restoredFrom'], '')
 
     def test_offline_and_sync_off_preserve_local_progress(self):
         self.write('phone', 'offline', 'device offline')

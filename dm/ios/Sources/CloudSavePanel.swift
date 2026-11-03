@@ -1,6 +1,11 @@
 // Shared native game-launcher UI. The Apple signing account is never involved.
 import SwiftUI
 import UniformTypeIdentifiers
+#if os(macOS)
+import AppKit
+#else
+import UIKit
+#endif
 
 @_silgen_name("nxe_cloud_command")
 private func cloudCommand(_ command: UnsafePointer<CChar>, _ argument: UnsafePointer<CChar>) -> UnsafeMutablePointer<CChar>
@@ -15,6 +20,18 @@ private struct CloudSaveReply: Decodable {
     let choices: [CloudSaveChoice]
     let history: [CloudSaveChoice]?
     let blocksPlay: Bool?
+    let restoredFrom: String?
+}
+
+enum CloudRefreshPolicy {
+    static func delay(status: String, blocked: Bool, permissionError: Bool, started: Bool) -> UInt64? {
+        guard !blocked && !permissionError && !started else { return nil }
+        switch status {
+        case "waiting": return 3_000_000_000
+        case "error": return 15_000_000_000
+        default: return nil
+        }
+    }
 }
 
 @MainActor final class CloudSaveModel: ObservableObject {
@@ -28,6 +45,8 @@ private struct CloudSaveReply: Decodable {
     @Published var choices: [CloudSaveChoice] = []
     @Published var history: [CloudSaveChoice] = []
     @Published var permissionError: String?
+    @Published private(set) var started = false
+    @Published private(set) var restoredFrom: String?
     private var access: URL?
     static var hasFolder: Bool { UserDefaults.standard.data(forKey: "saveContinuity.folder.v1") != nil }
     static func headlessPreflight() -> Bool {
@@ -58,6 +77,8 @@ private struct CloudSaveReply: Decodable {
         status = reply.status; message = reply.message
         choices = reply.choices; history = reply.history ?? []
         blocked = reply.blocksPlay ?? false
+        if reply.status != "available" { restoredFrom = nil }
+        else if let source = reply.restoredFrom, !source.isEmpty { restoredFrom = source }
         return reply.status != "error"
     }
 
@@ -86,7 +107,7 @@ private struct CloudSaveReply: Decodable {
     }
 
     func choose(_ url: URL) async {
-        guard !busy else { return }
+        guard !busy && !started else { return }
         busy = true
         let scoped = url.startAccessingSecurityScopedResource()
         do {
@@ -99,7 +120,7 @@ private struct CloudSaveReply: Decodable {
             access?.stopAccessingSecurityScopedResource()
             access = scoped ? url : nil; folder = url
             UserDefaults.standard.set(data, forKey: bookmarkKey)
-            permissionError = nil
+            permissionError = nil; restoredFrom = nil
             _ = await invoke("folder", url.path)
         } catch {
             if scoped { url.stopAccessingSecurityScopedResource() }
@@ -108,24 +129,39 @@ private struct CloudSaveReply: Decodable {
         ready = true; busy = false
     }
 
-    func check() async { guard !busy else { return }; busy = true; _ = await invoke("check"); busy = false }
+    func check() async { guard !busy && !started else { return }; busy = true; _ = await invoke("check"); busy = false }
     func disable() async {
-        guard !busy else { return }; busy = true
+        guard !busy && !started else { return }; busy = true
         _ = await invoke("folder", "")
         UserDefaults.standard.removeObject(forKey: bookmarkKey)
-        access?.stopAccessingSecurityScopedResource(); access = nil; folder = nil; permissionError = nil
+        access?.stopAccessingSecurityScopedResource(); access = nil; folder = nil; permissionError = nil; restoredFrom = nil
         busy = false
     }
-    func resolve(_ ID: String) async { guard !busy else { return }; busy = true; _ = await invoke("resolve", ID); busy = false }
+    func resolve(_ ID: String) async { guard !busy && !started else { return }; busy = true; _ = await invoke("resolve", ID); busy = false }
+    // Runs only while the pre-game panel is active. Play always performs one
+    // final native check; no periodic work is needed after a healthy result.
+    func followCloud(sleep: @escaping (UInt64) async throws -> Void = { try await Task.sleep(nanoseconds: $0) }) async {
+        while busy && !Task.isCancelled && !started {
+            do { try await sleep(100_000_000) } catch { return }
+        }
+        guard !Task.isCancelled && !started else { return }
+        if !ready { await load() } else if folder != nil { await check() }
+        while !Task.isCancelled && folder != nil {
+            guard let delay = CloudRefreshPolicy.delay(status: status, blocked: blocked, permissionError: permissionError != nil, started: started) else { return }
+            do { try await sleep(delay) } catch { return }
+            guard !Task.isCancelled && !started else { return }
+            if !busy { await check() }
+        }
+    }
     func start(_ done: @escaping () -> Void) {
-        guard ready && !busy && !blocked else { return }
+        guard ready && !busy && !blocked && !started else { return }
         busy = true
         let explicitlyLocal = ["conflict", "waiting", "error"].contains(status)
         Task {
             let ok = await invoke(explicitlyLocal ? "local-play" : "play")
             busy = false
             // A newly discovered conflict stays on this screen for a real choice.
-            if ok && (explicitlyLocal || !["conflict", "waiting", "error"].contains(status)) { done() }
+            if ok && (explicitlyLocal || !["conflict", "waiting", "error"].contains(status)) { started = true; done() }
         }
     }
 }
@@ -134,13 +170,31 @@ struct CloudSavePanel: View {
     @ObservedObject var model: CloudSaveModel
     @State private var picking = false
     @State private var selected: CloudSaveChoice?
+    // Both launchers embed this view in AppKit/UIKit, without a SwiftUI Scene.
+    // Observe the application lifecycle directly so foreground retries work there.
+    @State private var active = true
+    private var refreshKey: String { "\(active):\(model.folder?.path ?? ""):\(model.started)" }
+    private var activeNotification: Notification.Name {
+        #if os(macOS)
+        NSApplication.didBecomeActiveNotification
+        #else
+        UIApplication.didBecomeActiveNotification
+        #endif
+    }
+    private var inactiveNotification: Notification.Name {
+        #if os(macOS)
+        NSApplication.didResignActiveNotification
+        #else
+        UIApplication.willResignActiveNotification
+        #endif
+    }
     private var accent: Color { Color(red: 0.79, green: 0.95, blue: 0.37) }
     private var heading: String {
         switch model.status {
         case "conflict": return model.text("Two adventures. Both kept.", "Dos aventuras. Ambas a salvo.")
-        case "waiting": return model.text("Saved here. Waiting for iCloud.", "Guardada aquí. Esperando a iCloud.")
+        case "waiting": return model.text("Waiting for iCloud", "Esperando a iCloud")
         case "empty": return model.text("Ready for your first save", "Lista para tu primera partida")
-        case "available": return model.text("Continue on your other device", "Continúa en tu otro dispositivo")
+        case "available": return model.text("Ready to continue here", "Lista para continuar aquí")
         case "error": return model.text("Your save needs attention", "Revisemos tu partida")
         default: return model.text("Your adventure, on every device", "Tu aventura, en todos tus dispositivos")
         }
@@ -161,6 +215,9 @@ struct CloudSavePanel: View {
             Text(model.text("Choose the same iCloud Drive folder on both devices. Save and close the game before switching devices. Your active save stays local.", "Elige la misma carpeta de iCloud Drive en ambos dispositivos. Guarda y cierra el juego antes de cambiar de dispositivo. Tu partida activa sigue siendo local."))
                 .font(.callout).foregroundStyle(.secondary)
             if let folder = model.folder {
+                Label(model.text("Automatic save continuity", "Continuidad automática"), systemImage: "arrow.triangle.2.circlepath.icloud").font(.callout.weight(.semibold)).foregroundStyle(accent)
+                Text(model.text("Save in the game; changes are copied automatically. Before playing here, we check for progress from your other device.", "Guarda dentro del juego; los cambios se copian automáticamente. Antes de jugar aquí, comprobamos la partida del otro dispositivo.")).font(.callout).foregroundStyle(.secondary)
+                if let source = model.restoredFrom { Label(model.text("Save received from \(source). Ready to continue.", "Partida recibida de \(source). Lista para continuar."), systemImage: "checkmark.icloud").font(.callout).foregroundStyle(accent) }
                 Label(folder.lastPathComponent, systemImage: "folder").font(.callout.weight(.medium))
                 Text(statusText).font(.callout).fixedSize(horizontal: false, vertical: true)
             }
@@ -188,7 +245,9 @@ struct CloudSavePanel: View {
         .background(.white.opacity(0.045), in: RoundedRectangle(cornerRadius: 18))
         .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(.white.opacity(0.075)))
         .disabled(model.busy)
-        .task { await model.load() }
+        .task(id: refreshKey) { if active { await model.followCloud() } }
+        .onReceive(NotificationCenter.default.publisher(for: activeNotification)) { _ in active = true }
+        .onReceive(NotificationCenter.default.publisher(for: inactiveNotification)) { _ in active = false }
         .fileImporter(isPresented: $picking, allowedContentTypes: [.folder]) { result in
             if case .success(let url) = result { Task { await model.choose(url) } }
         }
@@ -211,8 +270,8 @@ struct CloudSavePanel: View {
     private var statusText: String {
         switch model.status {
         case "empty": return model.text("No save yet. Play and save in the game; a snapshot will be queued automatically.", "Aún no hay partida. Juega y guarda dentro del juego; se preparará una copia automáticamente.")
-        case "available": return model.text("Snapshot available in this folder. iCloud may still be uploading; check on the other device before playing.", "La partida está disponible en esta carpeta. iCloud puede seguir subiéndola; comprueba el otro dispositivo antes de jugar.")
-        case "waiting": return model.text("Your local progress is safe. Some revisions are still downloading; check again before switching devices.", "Tu progreso local está a salvo. Hay versiones descargándose; comprueba de nuevo antes de cambiar de dispositivo.")
+        case "available": return model.text("This device’s snapshot is ready. Your other device checks automatically before play. iCloud delivery may take a moment.", "La copia de este dispositivo está lista. El otro comprueba automáticamente antes de jugar. iCloud puede tardar un momento en entregarla.")
+        case "waiting": return model.text("Your local progress is safe. Some revisions are still downloading. We keep checking automatically before play.", "Tu progreso local está a salvo. Hay versiones descargándose. Seguimos comprobando automáticamente antes de jugar.")
         case "conflict": return model.text("Progress differs between devices. Choose which one to continue, or play this device’s local save. Both are kept.", "El progreso es distinto en tus dispositivos. Elige con cuál seguir o juega tu partida local. Se conservan ambas.")
         case "error": return model.blocked ? model.text("Recovery must finish before play. Free space or restore folder access and check again.", "La recuperación debe terminar antes de jugar. Libera espacio o recupera el acceso y comprueba de nuevo.") : model.text("iCloud could not finish. You can play locally; snapshots remain queued for the next check.", "iCloud no pudo terminar. Puedes jugar localmente; las copias quedan pendientes para la próxima comprobación.")
         default: return model.text("Saved on this device.", "Guardada en este dispositivo.")

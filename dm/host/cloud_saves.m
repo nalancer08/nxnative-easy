@@ -294,10 +294,16 @@ static NSDictionary *check(BOOL mayRestore) {
     recover(); localSafe = YES;
     if (!cloud) return @{@"status":@"local", @"message":@"Saved on this device. Choose the same iCloud Drive folder on both devices to continue elsewhere.", @"choices":@[]};
     NSString *local = captureLocal();
-    BOOL complete = exchange(); NSDictionary *all = graph(); NSArray *h = heads(all);
+    BOOL complete = exchange(); NSDictionary *all = graph();
+    // Delivery can bring a child before its parents. Keep this a retryable wait,
+    // never an invitation to arbitrate by date or restore an incomplete graph.
+    for (NSDictionary *m in all.allValues) for (NSString *parent in m[@"parents"]) {
+        if (!all[parent]) return @{@"status":@"waiting", @"message":@"Waiting for an earlier iCloud revision to download. Local progress was kept.", @"choices":@[]};
+    }
+    NSArray *h = heads(all); NSString *restoredFrom = nil;
     if (complete && mayRestore && h.count == 1 && (![local length] || descendant(h[0], local, all))) {
         NSDictionary *m = all[h[0]];
-        if (![local isEqual:h[0]]) { restore(h[0]); local = h[0]; }
+        if (![local isEqual:h[0]]) { restore(h[0]); local = h[0]; restoredFrom = m[@"device"]; }
         need([m[@"compat"] isEqual:compat], @"Use the same game version and content on both devices. Both saves were kept.");
     }
     NSMutableArray *choices = [NSMutableArray array];
@@ -311,7 +317,7 @@ static NSDictionary *check(BOOL mayRestore) {
     BOOL conflict = h.count > 1;
     NSString *status = conflict ? @"conflict" : !complete ? @"waiting" : !h.count ? @"empty" : @"available";
     NSString *message = !h.count ? @"No save yet. Save in the game to queue your first snapshot." : conflict ? @"Different progress was found. Both versions are kept. Choose which one to continue; the other remains in history." : !complete ? @"Saved locally. Waiting for iCloud to download every revision. You can keep playing locally." : @"Snapshot available in the selected folder. Wait for iCloud to deliver it before playing on the other device.";
-    return @{@"status":status, @"message":message, @"choices":choices, @"history":history};
+    return @{@"status":status, @"message":message, @"choices":choices, @"history":history, @"restoredFrom":restoredFrom ?: @""};
 }
 static NSDictionary *command(NSString *cmd, NSString *arg) {
     initialize();

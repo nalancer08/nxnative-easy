@@ -31,14 +31,46 @@ playable game or evidence of physical-device synchronization.
    iOS expires it. iOS may suspend/terminate
    background work; locally queued snapshots are retried on the next launch.
 4. Close the game before switching devices. Open its launcher on the other
-   device and let the save check finish before pressing **Play**. **Check now**
-   retries iCloud. A snapshot being present in the chosen folder is not proof
+   device and let the save check finish before pressing **Play**. The active
+   pre-game panel retries pending downloads automatically and checks again when
+   you return to it. **Play** always checks once more. **Check now** is optional.
+   A snapshot being present in the chosen folder is not proof
    that iCloud has already delivered it to another device.
 
 En español: prepara ambas versiones una vez, conserva la identidad de tu app,
 elige la misma carpeta de **iCloud Drive** dentro de cada juego y guarda/cierra
 antes de cambiar de dispositivo. Espera la comprobación de partidas antes de
 jugar en el otro. Si hay conflicto, elige con cuál seguir: se conservan las dos.
+
+## Automatic, with one deliberate exception
+
+There is no upload or download button in the normal playing flow. A successful
+in-game save commit queues a content-checked snapshot; an unchanged committed
+save does not create another revision. Before starting on another device, a
+single compatible continuation is restored automatically and the panel confirms
+**Save received from [device]. Ready to continue.** It only shows that notice
+after the native restore succeeds, never from a timestamp or a file listing.
+
+While the pre-game panel is active, incomplete iCloud delivery is checked every
+3 seconds and recoverable provider failures every 15 seconds. Leaving the app
+cancels the loop; returning checks again. Healthy results stop polling; pressing
+**Play** still performs a fresh check. A child delivered before its parent stays
+in the waiting state until that parent arrives. Revoked folder access needs
+reselection; blocked recovery and conflicts do not trigger automatic choices.
+Once play starts, no retry may import into the running game's save trees.
+
+Two independent branches are the exception: dates cannot tell which adventure
+is further ahead, so the game asks which one to continue and retains both.
+Offline play remains available where local recovery permits it. We cannot know
+whether an offline device has unpublished progress; a currently healthy folder
+is not proof of global freshness. iCloud scheduling and iOS suspension can delay
+delivery. The OS grants only limited background execution, as described by
+[Apple's background execution guide](https://developer.apple.com/documentation/uikit/extending-your-app-s-background-execution-time).
+
+Easy's **Saves and backups** page explains this setup and can review/export
+copies. The actual automatic receive/restore belongs to each newly prepared
+game, not the Easy desktop process. Choose the common folder once in each game
+and device; enabling it in Easy does not alter old installed apps.
 
 The device's iCloud account supplies storage access. The Apple account used to
 sign an IPA in Easy is separate; no signing login or paid developer membership
@@ -134,6 +166,7 @@ Native tests use fake saves and an ordinary temporary shared folder, not iCloud:
 
 ```sh
 python3 -m unittest discover -s dm/host/tests -p test_cloud_saves.py -v
+python3 -m unittest dm.ios.tests.test_cloud_automatic -v
 ```
 
 They exercise bidirectional continuity, initial different saves, divergent offline
@@ -173,3 +206,24 @@ before scheduling it. The old ordering signalled flush completion too early;
 entering the dispatch group before publishing that claim keeps the background
 lease until the actual snapshot finishes. The failing ordering was reproduced
 with synthetic data before the fix, and the regression now passes.
+
+## Automatic continuation validation — 2026-11-03
+
+The current shared game panel confirms an actual native restore, rather than
+claiming progress is newer from its date. These renders use a fake backend and
+synthetic device names, not the owner's iCloud or saves.
+
+<img src="images/nxnative-icloud-received-en-v1.28.png" width="48%" alt="Automatic continuity after receiving a save from a test iPhone"> <img src="images/nxnative-icloud-received-es-v1.28.png" width="48%" alt="Continuidad automática con la partida recibida de un iPhone de prueba">
+
+All 22 native continuity tests pass, including child-before-parent waiting,
+restore after delayed delivery and a receipt emitted only for an actual restore.
+The real Swift model also passes a fake-backend fixture for automatic pending
+delivery/provider retry, stopping after a healthy result, conflict/permission
+guards, cancellation on inactivity, late conflict at Play and no checks/restores
+once play starts. Both embedded launchers observe their AppKit/UIKit application
+lifecycle directly; they do not require a SwiftUI Scene.
+
+The unsigned production iOS fixture and Mac launcher/storage fixture compile and
+link this same component. Six native panel renders cover received, waiting and
+conflict in English and Spanish. Physical iCloud delivery remains a separate
+check; no game app was compiled, signed or installed using the owner's files.

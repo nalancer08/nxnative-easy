@@ -171,6 +171,14 @@ struct SaveCenterView:View {
                     }.frame(maxWidth:.infinity,alignment:.leading)
                     if let image=Bundle.main.url(forResource:"save-vault",withExtension:"png",subdirectory:"Library").flatMap({NSImage(contentsOf:$0)}) {Image(nsImage:image).resizable().scaledToFit().frame(width:model.source==nil ? 300 : 180,height:model.source==nil ? 220 : 120).accessibilityHidden(true)}
                 }
+                if model.source==nil {
+                    VStack(alignment:.leading,spacing:10) {
+                        Label(text("Guarda y continúa. Automáticamente."),systemImage:"arrow.triangle.2.circlepath.icloud").font(.headline).foregroundStyle(EasyDesign.accent)
+                        Text(text("Una sola vez: prepara las versiones de Mac y iPhone con Easy actualizado y elige la misma carpeta de iCloud dentro de cada juego.")).font(.callout)
+                        Text(text("Después, guarda y cierra el juego. Al abrirlo en el otro dispositivo, busca y recibe tu continuación antes de jugar. Si jugaste en ambos, te pide elegir y conserva las dos partidas.")).font(.callout).foregroundStyle(.secondary)
+                        Text(text("Esta pantalla permite revisar copias y guardarlas a mano. No activa la sincronización dentro de una app antigua. iCloud puede tardar; no confirma entregas que aún no ha recibido.")).font(.caption).foregroundStyle(.secondary)
+                    }.frame(maxWidth:.infinity,alignment:.leading).padding(20).background(EasyDesign.panel,in:RoundedRectangle(cornerRadius:16))
+                }
                 if model.busy {
                     HStack(spacing:18) {
                         LibraryDropMotion(playing:scenePhase == .active && !reduceMotion,resource:"save-transfer").frame(width:110,height:82).accessibilityHidden(true)
