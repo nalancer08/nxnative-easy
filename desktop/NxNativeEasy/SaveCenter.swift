@@ -30,6 +30,8 @@ struct SavePreview:Decodable {
     @Published var selectedRevision:SaveRevision?
     @Published var completed:URL?
     @Published var published=false
+    @Published var localBackup:URL?
+    @Published var localBackupTitle:String?
     @Published var kind="account"
     @Published var gameID=""
     @Published var filter=""
@@ -119,7 +121,20 @@ struct SavePreview:Decodable {
             if let path=result["path"] as? String {self.completed=URL(fileURLWithPath:path);self.published=false}
         }
     }
-    func clearSelection() {guard !busy else {return};source=nil;preview=nil;selectedRevision=nil;completed=nil;error=nil}
+    func backupMac(repo:URL,game:OwnedGameOutput) {
+        guard !busy,let title=game.titleID else {return}
+        if let app=game.macApp,let bundle=Bundle(url:app)?.bundleIdentifier,NSRunningApplication.runningApplications(withBundleIdentifier:bundle).contains(where:{!$0.isTerminated}) {error="close_game_first";return}
+        let panel=NSSavePanel();panel.nameFieldStringValue="Mac-"+title+"-"+String(Int(Date().timeIntervalSince1970))+".zip"
+        guard panel.runModal() == .OK,let url=panel.url else {return}
+        request(repo:repo,["op":"backup_mac","title":title,"destination":url.path,"confirmed_closed":true]) {result in if let path=result["path"] as? String {self.localBackup=URL(fileURLWithPath:path);self.localBackupTitle=title}}
+    }
+    func backupRevision(repo:URL) {
+        guard !busy,let source,let preview else {return}
+        let panel=NSSavePanel();panel.nameFieldStringValue="Partida-"+(preview.title ?? "Easy")+"-"+String(Int(Date().timeIntervalSince1970))+".nxsave"
+        guard panel.runModal() == .OK,let url=panel.url else {return}
+        request(repo:repo,["op":"backup_revision","source":source.path,"fingerprint":preview.fingerprint,"destination":url.path]) {result in if let path=result["path"] as? String {self.localBackup=URL(fileURLWithPath:path);self.localBackupTitle=preview.title}}
+    }
+    func clearSelection() {guard !busy else {return};source=nil;preview=nil;selectedRevision=nil;completed=nil;error=nil;localBackup=nil;localBackupTitle=nil}
 }
 
 struct SaveCenterView:View {
@@ -166,6 +181,7 @@ struct SaveCenterView:View {
                     }.padding(18).background(EasyDesign.panel,in:RoundedRectangle(cornerRadius:14))
                 }
                 if let error=model.error {Label(message(error),systemImage:"exclamationmark.triangle").font(.callout).foregroundStyle(.orange).textSelection(.enabled)}
+                if let local=model.localBackup {HStack {Label(text("Tu respaldo local está listo"),systemImage:"checkmark.shield");Button(text("Mostrar respaldo")){NSWorkspace.shared.activateFileViewerSelecting([local])}.buttonStyle(EasyLinkStyle())}.font(.callout)}
                 if let completed=model.completed {completion(completed)}
                 else if model.source != nil {review}
                 else {overview}
@@ -190,7 +206,7 @@ struct SaveCenterView:View {
         VStack(alignment:.leading,spacing:22) {
             HStack(alignment:.top,spacing:18) {
                 action("Traer un respaldo","De Switch o de otro dispositivo. El original se conserva.",icon:"tray.and.arrow.down") {importing=true;agreed=false;consoleReady=false;model.chooseSource(repo:repo)}
-                action("Sacar partidas del iPhone","Conecta tu dispositivo y exporta sus partidas desde Dispositivos. No necesitas iniciar sesión.",icon:"iphone.and.arrow.forward") {devices()}
+                action("Sacar partidas del iPhone","Abre tu juego en Biblioteca y elige Partidas y copias. Conecta el iPhone para guardar un respaldo local, sin iniciar sesión.",icon:"iphone.and.arrow.forward") {devices()}
             }.disabled(model.busy)
             HStack {
                 Text(text("En tu carpeta de iCloud")).font(.system(size:22,weight:.bold))
@@ -226,6 +242,7 @@ struct SaveCenterView:View {
             }
             if importing {Button(text("Elegir otro respaldo")){model.chooseSource(repo:repo)}.buttonStyle(EasyLinkStyle()).disabled(model.busy)}
             if let preview=model.preview {
+                if !importing {Button(text("Guardar copia local")){model.backupRevision(repo:repo)}.buttonStyle(EasySecondaryStyle()).disabled(model.busy)}
                 EasyCard {
                     VStack(alignment:.leading,spacing:14) {
                         Label(preview.title.map(title) ?? model.source?.lastPathComponent ?? text("Respaldo"),systemImage:"checkmark.shield").font(.title3.bold())

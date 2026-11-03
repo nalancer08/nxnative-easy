@@ -76,6 +76,10 @@ struct RefreshJob:Codable,Identifiable {
     var sha256:String
     var expires:Date
     var enabled:Bool
+    var preparedWith:EasyBuildStamp?
+    var signedWith:EasyBuildStamp?
+    var signedAt:Date?
+    var gameVersion:String?
     var retryAfter:Date?
     var needsLogin:Bool=false
 }
@@ -100,6 +104,7 @@ enum RefreshPolicy {
     var preparedFolders:[String:URL]=[:]
     @Published var exportedSaves:URL?
     private var helperCapabilities:Set<String>=[]
+    private var requestedBackup:(DeviceGameObservation,(String)->String)?
     private var pendingExport:URL?
     private var pendingContentID:String?
     private var appQueryScope=GameAppScope()
@@ -247,6 +252,10 @@ enum RefreshPolicy {
         guard panel.runModal() == .OK,let url=panel.url else {return}
         exportSaves(app,destination:url,confirmedClosed:true)
     }
+    func backupGame(_ observation:DeviceGameObservation,text:@escaping(String)->String) {
+        guard !busy,devices.contains(where:{$0.id==observation.device}) else {return}
+        requestedBackup=(observation,text);connect();openDevice(observation.device)
+    }
     func copyData(_ app:InstalledGame,confirmedClosed:Bool) {
         guard !busy,!device.isEmpty,appQueryScope.permits(app.id),let source=dataFolder(for:app),helperCapabilities.contains("romfs-copy-v1") else {return}
         guard let id=titleID(for:app),let folder=preparedFolders[id],let version=PreviousPreparation.load(folder:folder,target:"ios")?.version,version==app.version else {error="Actualiza primero la app con la misma versión que los datos preparados.";return}
@@ -312,7 +321,7 @@ enum RefreshPolicy {
             guard let self,self.process === finished else {return}
             let recovering=self.recoveringSession
             if self.installerLease>=0 {Darwin.close(self.installerLease);self.installerLease = -1}
-            self.process=nil;self.input=nil;self.scopedDiscovery=false;self.authenticated=false;self.codeRequired=false;self.recoveringSession=false;self.quietSessionRecovery=false;self.pendingRemember=nil
+            self.process=nil;self.input=nil;self.scopedDiscovery=false;self.requestedBackup=nil;self.authenticated=false;self.codeRequired=false;self.recoveringSession=false;self.quietSessionRecovery=false;self.pendingRemember=nil
             if self.busy {self.error=recovering ? "No pudimos recuperar la sesión guardada. Revisa Internet y el acceso al Llavero, o vuelve a iniciar sesión." : "Instalación detenida. Vuelve a intentar; las partidas no se tocaron."}
             self.busy=false;self.activeRefresh=nil;self.installIntent=nil;self.refreshAuthenticated=false
         }}
@@ -358,7 +367,7 @@ enum RefreshPolicy {
     func sendSMS(_ number:Int) {phase="Solicitando un nuevo código…";codeRequired=false;send(["op":"sms","number":number])}
     func resend() {phase="Solicitando un nuevo código…";codeRequired=false;send(["op":"resend"])}
     func signOut() {guard !busy else {return};connect();guard process?.isRunning==true else{return};recoveryRequested=false;automaticRecoveryAttempted=true;defaults.removeObject(forKey:"sideloadTeam."+RefreshPolicy.account(email));send(["op":"logout","email":email]);defaults.removeObject(forKey:"sideloadEmail");for index in jobs.indices {jobs[index].enabled=false};saveJobs()}
-    func cancel() {recoveryRequested=false;automaticRecoveryAttempted=true;pendingRemember=nil;record("Operación cancelada; puedes volver a intentar.");if let refresh=activeRefresh,let index=jobs.firstIndex(where:{$0.id==refresh.id}) {jobs[index].retryAfter=Date().addingTimeInterval(6*3600);saveJobs()};if let process,process.isRunning {if kill(-process.processIdentifier,SIGTERM) != 0 {process.terminate()}}}
+    func cancel() {requestedBackup=nil;recoveryRequested=false;automaticRecoveryAttempted=true;pendingRemember=nil;record("Operación cancelada; puedes volver a intentar.");if let refresh=activeRefresh,let index=jobs.firstIndex(where:{$0.id==refresh.id}) {jobs[index].retryAfter=Date().addingTimeInterval(6*3600);saveJobs()};if let process,process.isRunning {if kill(-process.processIdentifier,SIGTERM) != 0 {process.terminate()}}}
     var canUpdateAppOnly:Bool {
         guard let folder=gameFolder,let version=PreviousPreparation.load(folder:folder,target:"ios")?.version,!version.isEmpty,
               let app=apps.first(where:{$0.id==existing}) else {return false}
@@ -369,7 +378,9 @@ enum RefreshPolicy {
         if !includeContent && !canUpdateAppOnly {error="La versión del juego cambió o no está verificada. Instala la app con sus datos nuevos.";return}
         if autoRefresh && defaults.string(forKey:"sideloadEmail") != email {error="Para renovar al reiniciar, inicia sesión recordándola en el Llavero, o desactiva la renovación.";return}
         guard let effective=RefreshPolicy.identity(original:originalID,team:team,existing:existing) else {error="Ese identificador no corresponde al equipo elegido. Detenido para conservar la app anterior.";return}
-        let job=RefreshJob(id:device+":"+effective,ipa:ipa.path,gameFolder:gameFolder.path,originalID:originalID,effectiveID:effective,team:team,udid:device,account:RefreshPolicy.account(email),sha256:"",expires:Date(),enabled:autoRefresh)
+        var job=RefreshJob(id:device+":"+effective,ipa:ipa.path,gameFolder:gameFolder.path,originalID:originalID,effectiveID:effective,team:team,udid:device,account:RefreshPolicy.account(email),sha256:"",expires:Date(),enabled:autoRefresh)
+        job.preparedWith=EasyBuildStamp.prepared(folder:gameFolder,target:"ios",ipa:ipa)
+        job.gameVersion=PreviousPreparation.load(folder:gameFolder,target:"ios")?.version
         startInstall(job,updating:!existing.isEmpty,content:includeContent ? romfs : nil,appOnly:!includeContent,approveRegistration:approveRegistration)
     }
     private func startInstall(_ job:RefreshJob,updating:Bool,content:URL?,appOnly:Bool=false,approveRegistration:Bool=false) {
@@ -419,6 +430,12 @@ enum RefreshPolicy {
             record("Lista de tus juegos actualizada.")
             let matches=apps.filter {$0.id.hasPrefix(originalID)};if existing.isEmpty,matches.count==1 {existing=matches[0].id}
             busy=false
+            if let (wanted,text)=requestedBackup {
+                requestedBackup=nil
+                if wanted.device==device,let app=apps.first(where:{$0.id==wanted.bundleID}) {
+                    if supportsSaveExport {chooseSaveDestination(app,text:text)}else{error="Falta el instalador nativo. Actualiza nxnative Easy."}
+                } else {error="No encontramos este juego en el dispositivo. No se copió ninguna partida."}
+            }
         case "device_registered":
             guard event["team"] as? String==team,event["udid"] as? String==device else {return}
             if accountDeviceTeam==team,!accountDevices.contains(where:{$0.id.caseInsensitiveCompare(device) == .orderedSame}) {
@@ -457,10 +474,10 @@ enum RefreshPolicy {
             guard var job=installIntent,let actual=event["effective_id"] as? String,actual==job.effectiveID,let expiry=event["expires"] as? Double,expiry>Date().timeIntervalSince1970,let hash=event["sha256"] as? String,hash.count==64 else {
                 error="No pudimos verificar el resultado de la instalación. Revisa el dispositivo antes de continuar.";busy=false;activeRefresh=nil;installIntent=nil;return
             }
-            job.expires=Date(timeIntervalSince1970:expiry);job.sha256=hash;job.retryAfter=nil;job.needsLogin=false;jobs.removeAll {$0.id==job.id};jobs.append(job);error=nil;saveJobs();existing=actual
+            job.expires=Date(timeIntervalSince1970:expiry);job.sha256=hash;job.retryAfter=nil;job.needsLogin=false;job.signedWith=EasyBuildStamp.current;job.signedAt=Date();jobs.removeAll {$0.id==job.id};jobs.append(job);error=nil;saveJobs();existing=actual
             // A validated install receipt is presence evidence immediately, before any later refresh.
             let installedFolder=URL(fileURLWithPath:job.gameFolder)
-            let installedVersion=PreviousPreparation.load(folder:installedFolder,target:"ios")?.version ?? ""
+            let installedVersion=job.gameVersion ?? ""
             let installedTitle=SaveLocations.titleID(folder:installedFolder)
             let installedName=devices.first(where:{$0.id==job.udid})?.name ?? "iPhone / iPad"
             deviceGames.removeAll {$0.device==job.udid && $0.bundleID==actual}
@@ -473,6 +490,7 @@ enum RefreshPolicy {
             let confirmsCurrentInstall=activeRefresh==nil && job.ipa==ipa?.path && job.gameFolder==gameFolder?.path && job.originalID==originalID && job.udid==device && job.team==team
             installIntent=nil;activeRefresh=nil;refreshAuthenticated=false;busy=false;fraction=1;completedInstallation=confirmsCurrentInstall;increasedMemoryLimit=event["increased_memory_limit"] as? Bool;phase="Instalado. Tus partidas se conservan en el dispositivo.";record(phase)
         case "error":
+            requestedBackup=nil
             if recoveringQuietlyAtStartup {
                 quietSessionRecovery=false;recoveringSession=false;recoveryRequested=false
                 authenticated=false;pendingRemember=nil;busy=false;error=nil

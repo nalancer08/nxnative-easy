@@ -7,6 +7,7 @@ struct GameMaintenanceView:View {
     let title:String
     let jobs:[RefreshJob]
     let needsRebuild:Bool
+    var context:GameCareContext?=nil
     let text:(String)->String
     let choose:(GameMaintenanceAction)->Void
     let close:()->Void
@@ -26,6 +27,10 @@ struct GameMaintenanceView:View {
                 EasyStepRail(titles:["Qué necesitas","Revisar","Continuar"].map(text),current:reason.isEmpty ? 0 : 1)
                 EasyMilestone(kind:reason=="renew" ? .account : .review,title:text(reason=="renew" ? "Vuelve a jugar. Tu progreso sigue." : "Tu juego, mejor que antes."),subtitle:title)
                 Text(text("Actualizar conserva las partidas cuando mantienes la misma app e identidad. El instalador comprueba esto antes de continuar. Guarda y cierra el juego; no lo desinstales.")).font(.callout).foregroundStyle(.secondary)
+                if let context {
+                    EasyCard {VStack(alignment:.leading,spacing:12) {Text(text(context.title)).font(.headline);Text(text(context.reason)).font(.callout).foregroundStyle(.secondary);ForEach(context.changes,id:\.self){Label(text($0),systemImage:"sparkles").font(.caption)}}}
+                    EasyCard {GameVersionComparison(context:context,text:text)}
+                }
                 if reason.isEmpty {
                 choice("renew",title:"Caducó o está por caducar",body:"Renueva la firma de iPhone o iPad. Reutiliza la IPA; no recompila ni copia otra vez los datos del juego.",icon:"arrow.clockwise.circle")
                 choice("update",title:"Quiero las mejoras o un update",body:"Prepara la versión nueva para Mac o iPhone. Revisas tus archivos antes de compilar y después instalas encima de la app existente.",icon:"sparkles")

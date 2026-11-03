@@ -10,7 +10,7 @@ A game library that takes you from your own game files to a ready-to-play app, w
 
 Unzip → drag **nxnative Easy.app** to **Applications** → open it. **No Terminal or launcher compilation needed.** The app includes its supporting tools.
 
-![Your personal game library](docs/images/nxnative-library-en-v1.25.jpg)
+![Your personal game library](docs/images/nxnative-library-en-v1.27.jpg)
 
 ## Switch 2 on Mac
 
@@ -51,11 +51,13 @@ If macOS blocks the first opening, open **System Settings → Privacy & Security
 - **Your Apple account:** shared across the app, with a remembered Keychain session, device review and optional background signature renewal. [Renewal requirements](docs/background-renewal.md).
 - **App updates:** click **Update now** when a release appears. The app downloads and checks the new package, keeps the previous app as a backup and leaves your games and saves in place. To use a new engine in an existing game, prepare that game again.
 
-<img src="docs/images/nxnative-details-en-v1.25.jpg" width="49%" alt="Game details and where to play"> <img src="docs/images/nxnative-account-en-v1.25.jpg" width="49%" alt="Your shared Apple account in Settings">
+<img src="docs/images/nxnative-details-en-v1.27.jpg" width="49%" alt="Game details and where to play"> <img src="docs/images/nxnative-account-en-v1.25.jpg" width="49%" alt="Your shared Apple account in Settings">
 
 <img src="docs/images/nxnative-saves-en-v1.26.jpg" width="49%" alt="Save revisions received in your selected iCloud folder; synthetic examples"> <img src="docs/images/nxnative-maintenance-en-v1.26.jpg" width="49%" alt="Choose signature renewal or a game update">
 
 **Switch backups:** an unmodified Switch 1 or 2 cannot import saves just by copying them to its SD card. Easy prepares checked files; restoring them requires a separately configured compatible console tool. It does not access Nintendo's cloud. [What is possible](docs/save-transfer.md).
+
+**Open your game to see what comes next.** Home shows where it is installed and whether its recorded signature is expiring. **My game** explains recommendations and compares the Easy release used for preparation/signing with the current release. Legacy installations without that history say **Not recorded**. **Saves and backups** lets you back up iPhone progress locally, copy this Mac’s committed saves or review received iCloud versions, without signing-account login.
 
 The interface starts in **English**; switch to **Español** in **Settings → General**.
 

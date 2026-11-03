@@ -162,6 +162,29 @@ enum BuildProvenance {
         guard sourceIndex(repo) != nil,let value=try? String(contentsOf:repo.appendingPathComponent("SOURCE_REVISION"),encoding:.utf8).trimmingCharacters(in:.whitespacesAndNewlines),value.range(of:"^[0-9a-f]{40}$",options:.regularExpression) != nil else{return nil}
         return value
     }
+    static func reasons(repo:URL,revision:String?,titleID:String)->[String]? {
+        guard let revision,revision.range(of:"^[0-9a-fA-F]{40}$",options:.regularExpression) != nil else {return nil}
+        var changed:[String]
+        if let paths=git(repo,["diff","--name-only","--no-renames",revision,"--"]) {changed=paths.split(separator:"\n").map(String.init)}
+        else {
+            guard let now=sourceIndex(repo),let before=sourceIndex(repo.deletingLastPathComponent().appendingPathComponent(revision)) else {return head(repo)==revision ? [] : nil}
+            changed=Set(now.keys).union(before.keys).filter {path in
+                guard affects(path,titleID:titleID) else {return false}
+                guard let expected=before[path],now[path] != nil,let data=try? Data(contentsOf:repo.appendingPathComponent(path)) else {return true}
+                return SHA256.hash(data:data).map{String(format:"%02x",$0)}.joined() != expected
+            }
+        }
+        var result=Set<String>()
+        for path in changed where affects(path,titleID:titleID) {
+            if path.hasPrefix("dm/games/") {result.insert("Perfil de compatibilidad de este juego")}
+            else if path.hasPrefix("dm/gfx/") {result.insert("Gráficos y shaders")}
+            else if path.lowercased().contains("save") {result.insert("Partidas y continuidad")}
+            else if path.hasPrefix("dm/ios/") || path.hasPrefix("dm/mac/") {result.insert("Controles e interfaz dentro del juego")}
+            else if path.hasPrefix("scripts/") {result.insert("Preparación y empaquetado")}
+            else {result.insert("Motor y servicios del juego")}
+        }
+        return result.sorted()
+    }
     static func recommendation(repo:URL,revision:String?,titleID:String)->Bool? {
         guard let revision,revision.range(of:"^[0-9a-fA-F]{40}$",options:.regularExpression) != nil else{return nil}
         if let paths=git(repo,["diff","--name-only","--no-renames",revision,"--"]) {return paths.split(separator:"\n").contains {affects(String($0),titleID:titleID)}}

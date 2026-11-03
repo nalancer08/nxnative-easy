@@ -141,3 +141,25 @@ saves, not business completion. Use elapsed time for unknown progress; verified
 helper output alone may show a copy as prepared. A console export is always
 labelled prepared, never restored. Native dialogs remain appropriate for choosing
 files/folders. The macOS signing account is unrelated to iCloud folder access.
+
+## Game-centred library (1.27)
+
+Devices are context in the library, not a separate administrative destination.
+The connection strip exposes actual discovered devices. The selected-game stage
+shows one evidence-based recommendation beside its artwork; each cover carries
+its own attention label. Installed never implies outdated. An installed iOS
+primary action opens **View my game**, rather than an unexplained Update button.
+
+`GameHub` has **My game** and **Saves and backups** tabs. The former presents
+platform presence, recorded expiry, preparation/signing Easy versions, the current
+launcher version and concrete affected components. The latter offers per-game
+read-only iPhone export, committed Mac backup, received iCloud versions and a
+review path for importing a copied backup. Never claim one-click live save restore
+or infer conflicts/winners from timestamps. The runtime applies cloud saves.
+
+A missing legacy receipt/version is **Not recorded**, not a guessed release. A
+source change matters only when it affects the engine/profile/build inputs, not
+just the launcher UI. Separate game-content versions from Easy versions. Record
+preparation provenance at build time and signing provenance on validated receipts;
+renewal retains the original preparation stamp. Show expiry as recorded evidence,
+not a fresh examination of an external install's provisioning profile.

@@ -119,6 +119,32 @@ class SaveTransfer(unittest.TestCase):
         with self.assertRaisesRegex(transfer.TransferError, 'missing_guest_metadata'):
             transfer.inspect(archive)
 
+    def test_local_cloud_copy_is_checked_and_never_replaces_a_backup(self):
+        revision = self.revision()
+        destination = self.root / 'Local.nxsave'
+        request = dict(op='backup_revision', source=str(revision), destination=str(destination),
+                       fingerprint=transfer.inspect(revision)['fingerprint'])
+        transfer.local_backup(request)
+        self.assertEqual(destination.read_bytes(), revision.read_bytes())
+        with self.assertRaisesRegex(transfer.TransferError, 'destination_exists'):
+            transfer.local_backup(request)
+        self.assertTrue(revision.exists())
+
+    def test_mac_backup_reads_only_committed_roots_and_keeps_both(self):
+        from unittest.mock import patch
+        root = self.root / 'Library/Application Support/nxnative' / TITLE
+        for name in ['save', 'save_device', 'save.work']:
+            (root / name).mkdir(parents=True)
+            (root / name / 'progress').write_bytes(name.encode())
+        destination = self.root / 'Mac.zip'
+        with patch.object(transfer.Path, 'home', return_value=self.root):
+            transfer.local_backup(dict(op='backup_mac', title=TITLE, destination=str(destination), confirmed_closed=True))
+        with zipfile.ZipFile(destination) as archive:
+            self.assertEqual(archive.read('save/progress'), b'save')
+            self.assertEqual(archive.read('save_device/progress'), b'save_device')
+            self.assertFalse(any('save.work' in name for name in archive.namelist()))
+        self.assertEqual((root/'save.work/progress').read_bytes(), b'save.work')
+
     def test_modified_source_refuses_before_publishing(self):
         request = self.request()
         (self.backup / 'progress.bin').write_bytes(b'changed')

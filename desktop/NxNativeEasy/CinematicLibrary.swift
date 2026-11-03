@@ -9,6 +9,7 @@ struct LibrarySpotlightItem:Identifiable {
     let verified:Bool
     let installed:Bool
     let rebuild:Bool
+    var care:GameCareContext?=nil
     var id:String {game.id}
 }
 
@@ -38,7 +39,7 @@ struct CinematicLibrary:View {
                     } else {
                         if let item=featured {
                             LibrarySpotlight(item:item,text:text,disabled:disabled || (item.game.macApp==nil && installBusy),details:{details(item.game)},primary:{primary(item.game)})
-                                .frame(height:min(470,max(285,geometry.size.height-254)))
+                                .frame(height:340)
                         }
                         VStack(alignment:.leading,spacing:16) {
                             HStack(spacing:14) {
@@ -64,7 +65,7 @@ struct CinematicLibrary:View {
                                 ScrollView(.horizontal) {
                                     LazyHStack(alignment:.top,spacing:16) {
                                         ForEach(items) {item in
-                                            LibraryShelfCover(item:item,selected:featured?.id==item.id) {
+                                            LibraryShelfCover(item:item,text:text,selected:featured?.id==item.id) {
                                                 withAnimation(reduceMotion ? nil : .easeInOut(duration:0.22)){spotlight=item.id}
                                             }
                                         }
@@ -108,7 +109,7 @@ struct LibrarySpotlight:View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     private var primaryTitle:String {
         if item.game.macApp != nil {return "Jugar en Mac"}
-        if item.game.iosIPA != nil {return item.installed ? "Actualizar en iPhone / iPad" : "Instalar en iPhone / iPad"}
+        if item.game.iosIPA != nil {return item.installed ? "Ver mi juego" : "Instalar en iPhone / iPad"}
         return "Preparar juego"
     }
     var body:some View {
@@ -120,10 +121,11 @@ struct LibrarySpotlight:View {
                 }.id(item.id).transition(.opacity).animation(reduceMotion ? nil : .easeInOut(duration:0.28),value:item.id)
                 LinearGradient(stops:[.init(color:EasyDesign.background.opacity(0.96),location:0),.init(color:EasyDesign.background.opacity(0.74),location:0.38),.init(color:EasyDesign.background.opacity(0.08),location:0.78)],startPoint:.leading,endPoint:.trailing)
                 LinearGradient(stops:[.init(color:.clear,location:0.35),.init(color:EasyDesign.background.opacity(0.6),location:0.78),.init(color:EasyDesign.background,location:1)],startPoint:.top,endPoint:.bottom)
+                HStack(alignment:.center,spacing:28) {
                 VStack(alignment:.leading,spacing:15) {
                     EasyEyebrow(title:text("MI BIBLIOTECA")+(item.game.version.map {"  /  "+text("Versión preparada")+" "+$0} ?? ""))
                     Spacer(minLength:0)
-                    Text(item.title).font(.system(size:geometry.size.width>1100 ? 54 : 44,weight:.bold)).tracking(-1.8).lineLimit(2).minimumScaleFactor(0.72).foregroundStyle(.white).frame(maxWidth:570,alignment:.leading)
+                    Text(item.title).font(.system(size:geometry.size.width>1100 ? 46 : 36,weight:.bold)).tracking(-1.8).lineLimit(2).minimumScaleFactor(0.72).foregroundStyle(.white).frame(maxWidth:570,alignment:.leading)
                     Label(item.status,systemImage:item.verified ? "checkmark.circle.fill" : item.installed ? "clock" : "square.stack").font(.system(size:12,weight:.medium)).foregroundStyle(item.verified ? Color.green : EasyDesign.ink.opacity(0.8)).lineLimit(2)
                     HStack(spacing:12) {
                         Button(action:primary){Label(text(primaryTitle),systemImage:item.game.macApp != nil ? "play.fill" : item.game.iosIPA != nil ? "iphone" : "hammer.fill")}.buttonStyle(EasyPrimaryStyle()).disabled(disabled || item.game.missing)
@@ -134,6 +136,19 @@ struct LibrarySpotlight:View {
                         Label(text(item.game.iosIPA != nil ? "IPA lista" : "IPA sin preparar"),systemImage:"iphone")
                         if item.rebuild {Label(text("Conviene recompilar"),systemImage:"arrow.triangle.2.circlepath").foregroundStyle(.orange)}
                     }.font(.system(size:10,weight:.medium)).foregroundStyle(.secondary)
+                }.frame(maxWidth:.infinity,alignment:.leading)
+                if let care=item.care {
+                    VStack(alignment:.leading,spacing:14) {
+                        EasyEyebrow(title:text("EN TUS PANTALLAS"))
+                        Label(text(care.title),systemImage:care.state == .expired || care.state == .expiring ? "clock.badge.exclamationmark" : "iphone").font(.headline).foregroundStyle(care.state == .expired || care.state == .expiring ? .orange : EasyDesign.accent)
+                        Text(text(care.reason)).font(.callout).foregroundStyle(.secondary).fixedSize(horizontal:false,vertical:true)
+                        if let report=care.reports.first {
+                            Text(report.observation.deviceName).font(.caption.weight(.semibold)).lineLimit(1)
+                            Text(text("Juego")+" · "+(report.observation.version.isEmpty ? text("Sin registro") : report.observation.version)).font(.caption).foregroundStyle(.secondary)
+                        }
+                        Button(text(care.action),action:details).buttonStyle(EasyLinkStyle())
+                    }.padding(20).frame(width:270,alignment:.leading).background(EasyDesign.background.opacity(0.9),in:RoundedRectangle(cornerRadius:16)).overlay(RoundedRectangle(cornerRadius:16).strokeBorder(.white.opacity(0.09)))
+                }
                 }.padding(.horizontal,36).padding(.top,22).padding(.bottom,28).frame(maxWidth:.infinity,alignment:.leading)
             }.clipped()
         }
@@ -142,7 +157,9 @@ struct LibrarySpotlight:View {
 
 struct LibraryShelfCover:View {
     let item:LibrarySpotlightItem
+    var text:(String)->String={$0}
     let selected:Bool
+    private func textForState(_ care:GameCareContext)->String {text(care.title)}
     let choose:()->Void
     @State private var hovered=false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -154,6 +171,7 @@ struct LibraryShelfCover:View {
                     if selected {Image(systemName:"checkmark").font(.system(size:10,weight:.bold)).foregroundStyle(.black).padding(6).background(EasyDesign.accent,in:Circle()).padding(8)}
                 }.frame(width:192,height:108).clipped().clipShape(RoundedRectangle(cornerRadius:9)).overlay(RoundedRectangle(cornerRadius:9).strokeBorder(selected ? EasyDesign.accent : .white.opacity(hovered ? 0.35 : 0.1),lineWidth:selected ? 2 : 1))
                 Text(item.title).font(.system(size:12,weight:.semibold)).lineLimit(2).frame(width:192,height:30,alignment:.topLeading).foregroundStyle(selected ? .white : EasyDesign.ink.opacity(0.65))
+                if let care=item.care {Text(textForState(care)).font(.system(size:10,weight:.medium)).foregroundStyle(care.state == .expired || care.state == .expiring ? .orange : .secondary).lineLimit(1).frame(width:192,alignment:.leading)}
             }.offset(y:hovered && !reduceMotion ? -2 : 0).animation(reduceMotion ? nil : .easeOut(duration:0.16),value:hovered)
         }.buttonStyle(.plain).onHover{hovered=$0}.accessibilityLabel(item.title).accessibilityAddTraits(selected ? .isSelected : [])
     }

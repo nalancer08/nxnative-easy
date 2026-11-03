@@ -527,8 +527,47 @@ def export_switch(request):
         raise
 
 
+def local_backup(request):
+    destination = Path(request['destination'])
+    require(destination.suffix == ('.nxsave' if request.get('op') == 'backup_revision' else '.zip'), 'invalid_destination')
+    writable_destination(destination.parent)
+    require(not destination.exists(), 'destination_exists')
+    if request.get('op') == 'backup_revision':
+        preview = inspect(request['source'])
+        require(preview['fingerprint'] == request.get('fingerprint'), 'source_changed')
+        data = read_file(request['source'])
+        require(hashlib.sha256(data).hexdigest() == Path(request['source']).stem, 'source_changed')
+    else:
+        require(request.get('confirmed_closed') is True, 'close_game_first')
+        title = request.get('title')
+        require(TITLE.fullmatch(str(title)), 'choose_game')
+        root = Path.home() / 'Library/Application Support/nxnative' / title
+        require(not root.is_symlink(), 'symlink_refused')
+        def committed():
+            result = []
+            for name, kind in [('save', 'account'), ('save_device', 'device')]:
+                if (root / name).exists():
+                    result += read_directory(root / name, kind)
+            check_entries(result)
+            require(not any(item.guest for item in result), 'missing_guest_metadata')
+            return result
+        entries = committed()
+        archive = io.BytesIO()
+        with zipfile.ZipFile(archive, 'w', compression=zipfile.ZIP_DEFLATED) as output:
+            for entry in entries:
+                output.writestr(entry.path + ('/' if entry.data is None else ''), entry.data or b'')
+            output.writestr('nxnative-save-export.json', json.dumps(dict(format=1, title=title, origin='Mac committed backup')))
+        require(inner_archive(entries, title)[0][144:] == inner_archive(committed(), title)[0][144:], 'source_changed')
+        data = archive.getvalue()
+    publish_new(destination, data)
+    require(hashlib.sha256(read_file(destination)).digest() == hashlib.sha256(data).digest(), 'copy_failed')
+    return dict(path=str(destination), status='local_backup_ready')
+
+
 def dispatch(request):
     op = request.get('op')
+    if op in ('backup_revision', 'backup_mac'):
+        return local_backup(request)
     if op == 'list':
         return cloud_list(request['cloud'])
     if op == 'inspect':

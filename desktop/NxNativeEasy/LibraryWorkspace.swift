@@ -6,7 +6,7 @@ struct LibraryWorkspace:View {
     @ObservedObject var library:GameLibrary
     @ObservedObject var updater:AppUpdater
     @ObservedObject var sideload:SideloadModel
-    private enum Page {case library,prepare,devices,settings,compatibility,saves}
+    private enum Page {case library,prepare,settings,compatibility,saves}
     @StateObject private var saves=SaveCenterModel()
     @State private var saveFocus:String?
     @State private var maintaining:OwnedGameOutput?
@@ -18,6 +18,8 @@ struct LibraryWorkspace:View {
     @State private var platform="all"
     @State private var spotlightGameID:String?
     @State private var selectedGameID:String?
+    @State private var advanced=false
+    @State private var changeReasons:[String:[String]]=[:]
     @State private var dropTargeted=false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var rebuildAdvice:[String:String]=[:]
@@ -66,7 +68,7 @@ struct LibraryWorkspace:View {
     }
     private func checkBuildAdvice(_ snapshot:[OwnedGameOutput]?=nil) {
         let generation=UUID();adviceGeneration=generation
-        let games=snapshot ?? library.games,repo=model.repo
+        let games=snapshot ?? library.games,repo=model.repo,jobs=sideload.jobs
         Task {
             let advice=await Task.detached(priority:.utility) { ()->[String:String] in
                 var result:[String:String]=[:]
@@ -75,13 +77,45 @@ struct LibraryWorkspace:View {
                     for (platform,revision,ready) in [("Mac",game.macRevision,game.macApp != nil),("iPhone / iPad",game.iosRevision,game.iosIPA != nil)] where ready {
                         let value=BuildProvenance.recommendation(repo:repo,revision:revision,titleID:id)
                         if value==true {result[game.id+platform]="rebuild"}
-                        else if value==nil {result[game.id+platform]="unknown"}
+                        else if value==nil {result[game.id+platform]="unknown"}else{result[game.id+platform]="current"}
                     }
+                }
+                for job in jobs {
+                    if let id=SaveLocations.titleID(folder:URL(fileURLWithPath:job.gameFolder)),let reasons=BuildProvenance.reasons(repo:repo,revision:job.preparedWith?.revision,titleID:id) {result["receipt:"+job.id]=reasons.isEmpty ? "current" : "rebuild"}
                 }
                 return result
             }.value
-            if adviceGeneration==generation {rebuildAdvice=advice}
+            var reasons:[String:[String]]=[:]
+            let groups=await Task.detached(priority:.utility) { ()->[String:[String]] in
+                var values:[String:[String]]=[:]
+                for game in games {if let id=game.titleID {values[game.id]=BuildProvenance.reasons(repo:repo,revision:game.iosRevision ?? game.macRevision,titleID:id)}}
+                for job in jobs {if let id=SaveLocations.titleID(folder:URL(fileURLWithPath:job.gameFolder)) {values["receipt:"+job.id]=BuildProvenance.reasons(repo:repo,revision:job.preparedWith?.revision,titleID:id)}}
+                return values
+            }.value
+            reasons=groups
+            if adviceGeneration==generation {rebuildAdvice=advice;changeReasons=reasons}
         }
+    }
+    private func care(_ game:OwnedGameOutput)->GameCareContext {
+        let observations=sideload.observations(titleID:game.titleID,originalID:game.originalBundleID)
+        let reports=observations.map {item -> GameDeviceReport in
+            let job=sideload.jobs.first(where:{$0.udid==item.device && $0.effectiveID==item.bundleID})
+            let advice=job.flatMap{rebuildAdvice["receipt:"+$0.id]}
+            let evidence=GameCareEvidence(installed:true,installedVersion:item.version,preparedVersion:game.iosIPA == nil ? nil : PreviousPreparation.load(folder:game.folder,target:"ios")?.version,expires:job?.expires,rebuild:advice.map{$0=="rebuild"},preparedRevision:game.iosRevision,installedRevision:job?.preparedWith?.revision)
+            return GameDeviceReport(observation:item,job:job,state:evidence.state(),verified:sideload.isVerified(item))
+        }
+        let changes=Set((changeReasons[game.id] ?? [])+reports.flatMap{report in report.job.flatMap{changeReasons["receipt:"+$0.id]} ?? []}).sorted()
+        return GameCareContext(reports:reports,changes:changes,prepared:EasyBuildStamp.prepared(folder:game.folder,target:game.iosIPA != nil ? "ios" : "mac"),current:EasyBuildStamp.current,localReady:game.macApp != nil,localRebuild:rebuildAdvice[game.id+"Mac"].flatMap{$0=="unknown" ? nil : $0=="rebuild"})
+    }
+    private var deviceStrip:some View {
+        HStack(spacing:16) {
+            Label(model.text("Este Mac"),systemImage:"desktopcomputer").foregroundStyle(.secondary)
+            ForEach(sideload.devices) {device in Button {sideload.openDevice(device.id)} label:{Label(device.name,systemImage:device.kind=="iPad" ? "ipad" : "iphone").lineLimit(1)}.buttonStyle(EasyLinkStyle()).disabled(sideload.busy)}
+            if sideload.devices.isEmpty {Text(model.text("Conecta tu iPhone para comprobar tus juegos")).foregroundStyle(.secondary)}
+            Spacer(minLength:4)
+            Text("Easy "+(EasyBuildStamp.current?.version ?? "—")).foregroundStyle(.secondary)
+            Button {sideload.listDevices()} label:{Image(systemName:"arrow.clockwise")}.buttonStyle(EasyLinkStyle()).accessibilityLabel(model.text("Comprobar dispositivos")).disabled(sideload.busy)
+        }.font(.caption).padding(.horizontal,36).padding(.vertical,12).background(.white.opacity(0.025))
     }
     var body:some View {
         VStack(spacing:0) {
@@ -92,7 +126,6 @@ struct LibraryWorkspace:View {
                 }.foregroundStyle(EasyDesign.ink).padding(.trailing,10)
                 nav("Biblioteca",icon:"square.grid.2x2",selected:page == .library){selectedGameID=nil;page = .library}
                 nav("Preparar",icon:"hammer",selected:preparing){page = .prepare}
-                nav("Dispositivos",icon:"ipad.and.iphone",selected:page == .devices){page = .devices}
                 nav("Partidas",icon:"icloud",selected:page == .saves){saveFocus=nil;saves.filter="";page = .saves}
                 nav("Compatibilidad",icon:"checklist",selected:page == .compatibility){model.openCatalog()}
                 Spacer(minLength:0)
@@ -111,17 +144,11 @@ struct LibraryWorkspace:View {
                     if page == .settings {WorkspaceSettingsView(model:model,sideload:sideload)}
                     if page == .compatibility {GameCatalogView(model:model)}
                     if page == .saves {
-                            SaveCenterView(model:saves,repo:model.repo,games:library.games,catalog:model.catalog,text:model.text,focusTitle:saveFocus,devices:{page = .devices}).id(saveFocus ?? "all")
-                        } else if page == .devices {
-                        SideloadLibraryView(model:sideload,text:model.text,canInstall:!model.running && !updater.busy,prepareGame:{
-                            page = .prepare;model.folder=sideload.hasPendingUpdate ? sideload.gameFolder : nil;model.failed=false;model.preparationStep=0;model.target="ios"
-                        },embedded:true,artwork:{app in
-                            guard let id=sideload.titleID(for:app) else {return nil}
-                            return GameArtworkCache.image(model.catalog.first(where:{$0.id==id})?.artworkURL)
-                        })
+                        SaveCenterView(model:saves,repo:model.repo,games:library.games,catalog:model.catalog,text:model.text,focusTitle:saveFocus,devices:{page = .library;selectedGameID=library.games.first(where:{$0.titleID==saveFocus})?.id;advanced=false}).id(saveFocus ?? "all")
                     }
                     if page == .library {
-                        VStack(alignment:.leading,spacing:18) {
+                        VStack(alignment:.leading,spacing:0) {
+                            deviceStrip
                             if let game=selectedResult {
                                 HStack {
                                     Button {withAnimation(reduceMotion ? nil : .easeInOut(duration:0.18)){selectedGameID=nil}} label:{Label(model.text("Mi biblioteca"),systemImage:"arrow.left")}
@@ -131,20 +158,24 @@ struct LibraryWorkspace:View {
                                     Spacer()
                                 }.padding(.horizontal,36).padding(.top,16)
                                 ScrollView {
-                                    GameLibraryDetail(game:game,title:name(game),catalog:model.catalog.first(where:{$0.id==game.titleID}),text:model.text,building:model.running && model.folder?.resolvingSymlinksInPath().path==game.folder.resolvingSymlinksInPath().path,disabled:occupied,installBusy:sideload.busy,observations:sideload.observations(titleID:game.titleID,originalID:game.originalBundleID),isVerified:sideload.isVerified,needsRebuild:needsRebuild(game),advice:["Mac","iPhone / iPad"].compactMap {platform in rebuildAdvice[game.id+platform].map {value in platform+": "+model.text(value=="rebuild" ? "Conviene recompilar: cambiaron herramientas o el perfil de este juego." : "No hay historial suficiente para comparar esta preparación.") }},sourceRepo:model.repo,checkDevices:{if sideload.devices.count>1 && sideload.device.isEmpty {page = .devices}else{sideload.listDevices()}},open:{if let mac=game.macApp {NSWorkspace.shared.open(mac)}},prepare:{configure(game)},install:{install(game)},remove:{removing=game},prepareMac:{guard !occupied else {return};configure(game);model.target="mac"},prepareIOS:{guard !occupied else {return};configure(game);model.target="ios";model.splitIOS=game.romfs != nil},manageDevices:{page = .devices},manageSaves:{saveFocus=game.titleID;page = .saves},maintain:{maintaining=game})
+                                    if !advanced {
+                                        GameHub(game:game,catalog:model.catalog.first(where:{$0.id==game.titleID}),title:name(game),context:care(game),sideload:sideload,saves:saves,repo:model.repo,text:model.text,disabled:occupied,maintain:{maintaining=game},openSaves:{saveFocus=game.titleID;page = .saves},importBackup:{url in saves.gameID=game.id;saves.inspect(repo:model.repo,url:url);saveFocus=game.titleID;page = .saves},prepareMac:{configure(game);model.target="mac"},install:{install(game)},files:{advanced=true})
+                                    } else {
+                                    GameLibraryDetail(game:game,title:name(game),catalog:model.catalog.first(where:{$0.id==game.titleID}),text:model.text,building:model.running && model.folder?.resolvingSymlinksInPath().path==game.folder.resolvingSymlinksInPath().path,disabled:occupied,installBusy:sideload.busy,observations:sideload.observations(titleID:game.titleID,originalID:game.originalBundleID),isVerified:sideload.isVerified,needsRebuild:needsRebuild(game),advice:["Mac","iPhone / iPad"].compactMap {platform in rebuildAdvice[game.id+platform].map {value in platform+": "+model.text(value=="rebuild" ? "Conviene recompilar: cambiaron herramientas o el perfil de este juego." : "No hay historial suficiente para comparar esta preparación.") }},sourceRepo:model.repo,checkDevices:{sideload.listDevices()},open:{if let mac=game.macApp {NSWorkspace.shared.open(mac)}},prepare:{configure(game)},install:{install(game)},remove:{removing=game},prepareMac:{guard !occupied else {return};configure(game);model.target="mac"},prepareIOS:{guard !occupied else {return};configure(game);model.target="ios";model.splitIOS=game.romfs != nil},manageDevices:{advanced=false},manageSaves:{saveFocus=game.titleID;page = .saves},maintain:{maintaining=game},section:"options")
                                         .frame(maxWidth:.infinity)
+                                    }
                                 }.id(game.id)
                             } else {
                                 CinematicLibrary(items:results.map {game in
                                     let observations=sideload.observations(titleID:game.titleID,originalID:game.originalBundleID)
-                                    return LibrarySpotlightItem(game:game,catalog:model.catalog.first(where:{$0.id==game.titleID}),title:name(game),status:libraryStatus(game),verified:observations.contains(where:sideload.isVerified),installed:!observations.isEmpty,rebuild:needsRebuild(game))
-                                },total:library.games.count,text:model.text,query:$query,platform:$platform,spotlight:$spotlightGameID,disabled:occupied,installBusy:sideload.busy,add:add,refresh:{library.refresh()},compatibility:{model.openCatalog()},details:{game in selectedGameID=game.id},primary:{game in
+                                    return LibrarySpotlightItem(game:game,catalog:model.catalog.first(where:{$0.id==game.titleID}),title:name(game),status:libraryStatus(game),verified:observations.contains(where:sideload.isVerified),installed:!observations.isEmpty,rebuild:needsRebuild(game),care:care(game))
+                                },total:library.games.count,text:model.text,query:$query,platform:$platform,spotlight:$spotlightGameID,disabled:occupied,installBusy:sideload.busy,add:add,refresh:{library.refresh()},compatibility:{model.openCatalog()},details:{game in selectedGameID=game.id;advanced=false},primary:{game in
                                     guard !occupied,!game.missing else {return}
-                                    if let mac=game.macApp {NSWorkspace.shared.open(mac)}else if game.iosIPA != nil {if sideload.observations(titleID:game.titleID,originalID:game.originalBundleID).isEmpty {install(game)}else {maintaining=game}}else {configure(game)}
+                                    if let mac=game.macApp {NSWorkspace.shared.open(mac)}else if game.iosIPA != nil {if sideload.observations(titleID:game.titleID,originalID:game.originalBundleID).isEmpty {install(game)}else {selectedGameID=game.id;advanced=false}}else {configure(game)}
                                 })
                                 if updater.visible {Button {page = .prepare} label:{Label(model.text(updater.busy ? updater.phaseText : "Hay una nueva versión"),systemImage:"arrow.down.circle")}.buttonStyle(.link).padding(.horizontal,36)}
                                 if let error=library.error {Text(model.text(error)).font(.callout).foregroundStyle(.orange).textSelection(.enabled).padding(.horizontal,36)}
-                                if sideload.showsRefreshNotice {Button(model.text("Revisar renovación")){page = .devices}.disabled(sideload.busy).padding(.horizontal,36)}
+                                if sideload.showsRefreshNotice {Button(model.text("Revisar renovación")){if let game=library.games.first(where:{value in sideload.jobs.contains(where:{$0.gameFolder==value.folder.path})}) {maintaining=game}}.disabled(sideload.busy).padding(.horizontal,36)}
                             }
                         }.padding(0).frame(maxWidth:.infinity,maxHeight:.infinity,alignment:.topLeading)
                             .transition(.opacity)
@@ -179,13 +210,14 @@ struct LibraryWorkspace:View {
             if page != .prepare {model.target="";model.folder=nil;model.preparationStep=0}
             model.acceptDrop(items);if !model.failed {remember()};page = .prepare;return true
         } isTargeted:{dropTargeted=$0}
-        .onReceive(NotificationCenter.default.publisher(for:Notification.Name("nxnative.showDevices"))){_ in page = .devices}
+        .onReceive(NotificationCenter.default.publisher(for:Notification.Name("nxnative.showDevices"))){_ in page = .library;selectedGameID=nil;advanced=false}
         .onReceive(NotificationCenter.default.publisher(for:Notification.Name("nxnative.openSettings"))){_ in page = .settings}
         .onChange(of:model.installingInline){_,inline in if inline {page = .prepare}}
         .onReceive(NotificationCenter.default.publisher(for:Notification.Name("nxnative.showLibrary"))){_ in page = .library;selectedGameID=nil;if !sideload.busy {model.showSideload=false};library.refresh()}
         .onReceive(NotificationCenter.default.publisher(for:Notification.Name("nxnative.showBuildActivity"))){_ in page = .prepare;model.installingInline=false;model.preparationStep=model.running || model.failed || model.output==nil ? 4 : 5;model.showDetails=true}
         .onChange(of:model.showCatalog){_,show in if show {page = .compatibility;model.showCatalog=false}}
-        .onChange(of:model.showDeviceLibrary){_,show in if show {page = .devices;model.showDeviceLibrary=false}}
+        .onChange(of:model.showDeviceLibrary){_,show in if show {page = .library;selectedGameID=nil;advanced=false;model.showDeviceLibrary=false}}
+        .onReceive(sideload.$jobs){_ in checkBuildAdvice()}
         .onReceive(library.$games){games in checkBuildAdvice(games);sideload.preparedFolders=Dictionary(games.compactMap {game in game.titleID.map {($0,game.folder)}},uniquingKeysWith:{first,_ in first});sideload.preparedIdentifiers=games.compactMap {game in game.originalBundleID ?? game.titleID.map {"org.nxnative."+$0.lowercased()}}}
         .onChange(of:model.folder){_,_ in if model.folder != nil {remember()}}
         .onChange(of:model.running){old,new in
@@ -204,7 +236,7 @@ struct LibraryWorkspace:View {
             case .rebuild(let target):configure(game);model.target=target
             }
         }) {game in
-            GameMaintenanceView(game:game,title:name(game),jobs:sideload.jobs,needsRebuild:needsRebuild(game),text:model.text,choose:{action in maintenanceAction=action;maintenanceGame=game;maintaining=nil},close:{maintaining=nil})
+            GameMaintenanceView(game:game,title:name(game),jobs:sideload.jobs,needsRebuild:needsRebuild(game),context:care(game),text:model.text,choose:{action in maintenanceAction=action;maintenanceGame=game;maintaining=nil},close:{maintaining=nil})
         }
         .alert(model.text("¿Quitar de la biblioteca?"),isPresented:Binding(get:{removing != nil},set:{if !$0 {removing=nil}})) {
             Button(model.text("Cancelar"),role:.cancel){removing=nil}
@@ -304,7 +336,7 @@ struct GameLibraryDetail:View {
     var manageDevices:()->Void={}
     var manageSaves:()->Void={}
     var maintain:()->Void={}
-    @State private var section="status"
+    @State var section="status"
     private var status:String {
         if building {return text("Compilando")}
         if let device=observations.first(where:isVerified) ?? observations.first {return text(isVerified(device) ? "Instalado en" : device.checkedAt==nil ? "Instalación registrada en" : "Última vez en")+" "+device.deviceName}

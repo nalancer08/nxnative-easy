@@ -87,3 +87,23 @@ the native engine imports a prepared revision, native snapshots export back to
 identical console files, divergent progress remains a conflict, and a missing
 second save root is refused. Actual iCloud delivery and physical console restore
 are separate from these tests.
+
+
+## Backups directly from your game detail
+
+Open **Library → your game → Saves and backups**. To copy from iPhone, first save
+and close the game. Easy makes a fresh scoped query for that exact device and app
+identifier before offering a new local ZIP destination. It does not sign, log in,
+copy RomFS or restore device progress. After a successful copy, choose **Add this
+backup to iCloud** to enter the existing content/layout review; this never skips
+compatibility checks or chooses a conflicting version automatically.
+
+**Back up this Mac's save** reads only committed `save` and `save_device` roots
+under the game's standard Application Support directory. A known running game
+blocks the action; the user confirms it is closed. A second read detects changed
+source files before publication. Working roots are excluded. Filename-alias
+metadata that a ZIP cannot retain is refused. The destination must be new.
+
+A checked cloud revision also offers **Save a local copy**, retaining its complete
+`.nxsave` file. This is a backup, not an active local restore. No destructive
+replace or console restore is added.

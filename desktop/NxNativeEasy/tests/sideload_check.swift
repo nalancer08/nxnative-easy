@@ -178,7 +178,7 @@ import Foundation
         assert(IOSPackageOutput.load(record:packaging,split:true)?.romfs==lightweight.appendingPathComponent("romfs"))
         assert(IOSPackageOutput.load(record:["full_ipa":ipa.path],split:false)==nil)
         try FileManager.default.createDirectory(at:lightweight.appendingPathComponent("romfs"),withIntermediateDirectories:true)
-        try JSONSerialization.data(withJSONObject:["schema":1,"bundle_id":"org.game","version":"2.1.0","light_dir":lightweight.path]).write(to:folder.appendingPathComponent("nxnative-ios.json"))
+        try JSONSerialization.data(withJSONObject:["schema":1,"bundle_id":"org.game","version":"2.1.0","light_dir":lightweight.path,"easy_version":"1.24.0","easy_build":37,"light_ipa":ipa.path,"source_revision":String(repeating:"a",count:40)]).write(to:folder.appendingPathComponent("nxnative-ios.json"))
         let selected=InstalledGame(id:"org.game.custom",name:"Test game",version:"2.1.0")
         model.prepareUpdate(selected);model.configure(ipa:ipa,folder:folder,romfs:nil)
         try await wait {!model.busy && model.apps.count==1}
@@ -194,6 +194,8 @@ import Foundation
         model.inspectAccountDevices();try await wait {!model.busy};assert(model.estimatedDeviceSlots==2)
         model.install(autoRefresh:false,includeContent:false,approveRegistration:true);try await wait {!model.busy};assert(model.error==nil && model.completedInstallation)
         assert(model.estimatedDeviceSlots==1 && model.registrationState == .registered)
+        assert(model.jobs.first(where:{$0.effectiveID==selected.id})?.preparedWith?.version=="1.24.0")
+        assert(model.jobs.first(where:{$0.effectiveID==selected.id})?.gameVersion=="2.1.0")
         let installed=model.observations(titleID:"010093801237C000",originalID:"org.game")
         assert(installed.count==1 && installed[0].bundleID=="org.game.custom" && installed[0].version=="2.1.0" && model.isVerified(installed[0]))
         model.device="another-device";assert(!model.completedInstallation);model.device="SYNTHETIC-DEVICE"

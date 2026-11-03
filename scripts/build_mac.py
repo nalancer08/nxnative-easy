@@ -8,7 +8,7 @@ import plistlib
 from pathlib import Path
 import platform
 import sys
-from build_ios import REPO, build_lock, load_builder, select_keys
+from build_ios import REPO, build_lock, load_builder, select_keys, preparation_stamp
 from inspect_dump import inspect_dump, validate_dump
 
 
@@ -69,7 +69,8 @@ def main(argv=None):
         if old_id and info.get('CFBundleIdentifier')!=old_id:raise ValueError('Mac bundle identity changed; previous app record was preserved.')
         if old_title and info.get('DMTitleID')!=old_title:raise ValueError('Mac Title ID changed; use a separate folder for another game.')
         record={'schema':1,'app_path':str(output),'bundle_id':info.get('CFBundleIdentifier'),
-                'title_id':info.get('DMTitleID'),'version':info.get('CFBundleShortVersionString')}
+                'title_id':info.get('DMTitleID'),'version':info.get('CFBundleShortVersionString'),
+                **preparation_stamp()}
         temporary=state.with_suffix('.json.tmp')
         temporary.write_text(json.dumps(record,indent=2)+'\n')
         temporary.replace(state)

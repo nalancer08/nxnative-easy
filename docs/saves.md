@@ -139,7 +139,7 @@ receive any saves automatically.
 
 ## Export from a trusted iPhone/iPad (1.11)
 
-In **Devices**, choose **Export saves** for a recognized game, save and close it
+In **Library → your game → Saves and backups**, choose the iPhone backup action, save and close it
 from the app switcher, confirm and select a new ZIP. Apple-account login is not
 required for this read on an already paired/trusted device. **Show save ZIP**
 reveals the result for manual sharing.

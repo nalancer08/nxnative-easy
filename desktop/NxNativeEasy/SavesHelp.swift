@@ -23,7 +23,7 @@ struct SavesHelpView:View {
     var body:some View {
         VStack(alignment:.leading,spacing:16) {
             HStack {Text(text("Tus partidas")).font(.title2.bold());Spacer();Button(text("Cerrar")){dismiss()}}
-            Text(text("Se guardan en el dispositivo donde juegas. Todavía no hay sincronización en la nube."))
+            Text(text("Se guardan en el dispositivo donde juegas. Activa la continuidad con iCloud en juegos preparados con el mismo contenido para continuar entre dispositivos."))
             if isMac {
                 Text(text("En Mac: fuera de la app, en Application Support, por Title ID.")).font(.headline)
                 if let id=SaveLocations.titleID(folder:folder) {

@@ -14,10 +14,12 @@ import CryptoKit
         try git(["init","-b","main"]);try file("dm/host/example.c","one");try git(["add","."]);try git(["-c","user.name=Synthetic Test","-c","user.email=test@example.invalid","commit","-m","fixture"])
         let sha=BuildProvenance.head(root)!,title="010093801237C000"
         assert(BuildProvenance.recommendation(repo:root,revision:sha,titleID:title)==false)
+        assert(BuildProvenance.reasons(repo:root,revision:sha,titleID:title)==[])
         try file("docs/readme.md","notes");try file("dm/games/OTHER/game.tsv","other");try git(["add","."])
         assert(BuildProvenance.recommendation(repo:root,revision:sha,titleID:title)==false)
         try file("dm/games/"+title+"/game.tsv","updated profile");try git(["add","."])
         assert(BuildProvenance.recommendation(repo:root,revision:sha,titleID:title)==true)
+        assert(BuildProvenance.reasons(repo:root,revision:sha,titleID:title)==["Perfil de compatibilidad de este juego"])
         assert(BuildProvenance.recommendation(repo:root,revision:nil,titleID:title)==nil)
         assert(BuildProvenance.recommendation(repo:root,revision:String(repeating:"0",count:40),titleID:title)==nil)
         assert(!BuildProvenance.affects("desktop/NxNativeEasy/main.swift",titleID:title))

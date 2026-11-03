@@ -28,3 +28,19 @@ installer's existing-app review instead of inventing an expiry date.
 Source/profile rebuild advice remains separate from signing expiry. An Easy
 interface-only update does not require rebuilding a game. Engine or game-content
 changes may require preparation; a renewed signature alone does not apply them.
+
+
+## Why a recommendation appears
+
+The Library now shows a reason next to the selected game and on each cover. Open
+**View my game** for its installations and build history. Recorded signature
+expiry, a different prepared/observed content version, and relevant source
+changes are separate reasons. Rebuild changes are grouped by game profile,
+graphics, saves, in-game controls/interface, engine services or packaging. Missing
+history is unknown; a newer Easy interface alone is not a required game update.
+
+**Prepared with** identifies the build-tool release. **Last signed with** records
+the Easy release/build that received the successful install/renew receipt. The
+current Easy release is displayed beside them. Existing installations lacking
+those fields say **Not recorded**. No timestamp-based migration invents them.
+Renewing an IPA updates signing provenance while retaining preparation provenance.

@@ -20,6 +20,17 @@ import zipfile
 REPO = Path(__file__).resolve().parents[1]
 
 
+def preparation_stamp():
+    release = json.loads((REPO / 'desktop/release.json').read_text())
+    revision = subprocess.run(['git', '-C', str(REPO), 'rev-parse', 'HEAD'],
+                              capture_output=True, text=True).stdout.strip()
+    if not revision:
+        source = REPO / 'SOURCE_REVISION'
+        revision = source.read_text().strip() if source.is_file() else None
+    return dict(easy_version=release['version'], easy_build=release['build'],
+                source_revision=revision)
+
+
 @contextmanager
 def build_lock(game=None):
     # Coordinate generated checkout files and a game's caches across app versions.
@@ -179,7 +190,7 @@ def main(argv=None):
         if settings[key]: command += ['--'+key.replace('_','-'), settings[key]]
     command += ['--show-fps' if settings['show_fps'] else '--no-show-fps']
     if args.package: command += ['--package',args.package]
-    revision = subprocess.run(['git','-C',str(REPO),'rev-parse','HEAD'],capture_output=True,text=True).stdout.strip() or 'downloaded-source'
+    revision = preparation_stamp()['source_revision'] or 'downloaded-source'
     print('Source checkout:',REPO,flush=True)
     print('Source revision:',revision,flush=True)
     print('Output:',output,flush=True)
@@ -223,7 +234,7 @@ def main(argv=None):
             print(json.dumps({'ev':'stage','name':'Export lightweight IPA','step':'Separating game data','k':0,'n':0}),flush=True)
         light_dir = None if args.full_only else split_ipa(output)
         record = dict(schema=1, **settings, version=info.get('CFBundleShortVersionString'),
-                      source_revision=revision, packaging="full" if args.full_only else "split", full_ipa=str(output), light_dir=str(light_dir) if light_dir else None)
+                      **preparation_stamp(), light_ipa=str(next(light_dir.glob("*.ipa"))) if light_dir else None, packaging="full" if args.full_only else "split", full_ipa=str(output), light_dir=str(light_dir) if light_dir else None)
         temp = state_path.with_suffix('.json.tmp')
         temp.write_text(json.dumps(record,indent=2)+'\n'); temp.replace(state_path)
         print('Build complete. Install over the existing app using the same personal account and effective bundle ID.')

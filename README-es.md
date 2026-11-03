@@ -10,7 +10,7 @@ Una biblioteca que te lleva de tus propios archivos a una app lista para jugar, 
 
 Descomprime → arrastra **nxnative Easy.app** a **Aplicaciones** → ábrela. **Sin Terminal ni compilar la interfaz.** La app incluye sus herramientas.
 
-![Tu biblioteca de juegos](docs/images/nxnative-library-es-v1.25.jpg)
+![Tu biblioteca de juegos](docs/images/nxnative-library-es-v1.27.jpg)
 
 ## Switch 2 en Mac
 
@@ -51,11 +51,13 @@ Si macOS bloquea la primera apertura, entra a **Configuración del Sistema → P
 - **Tu cuenta Apple:** una para toda la app, con sesión recordada en el Llavero, revisión de dispositivos y renovación opcional de firmas en segundo plano. [Requisitos de renovación](docs/background-renewal.md).
 - **Actualizaciones de la app:** pulsa **Actualizar ahora** cuando aparezca una versión. La app descarga y verifica el paquete, conserva la app anterior como respaldo y mantiene tus juegos y partidas. Para aplicar un motor nuevo a un juego existente, vuelve a prepararlo.
 
-<img src="docs/images/nxnative-details-es-v1.25.jpg" width="49%" alt="Detalle del juego y dónde jugar"> <img src="docs/images/nxnative-account-es-v1.25.jpg" width="49%" alt="Tu cuenta Apple global en Configuración">
+<img src="docs/images/nxnative-details-es-v1.27.jpg" width="49%" alt="Detalle del juego y dónde jugar"> <img src="docs/images/nxnative-account-es-v1.25.jpg" width="49%" alt="Tu cuenta Apple global en Configuración">
 
 <img src="docs/images/nxnative-saves-es-v1.26.jpg" width="49%" alt="Versiones de partidas recibidas en la carpeta de iCloud; ejemplos ficticios"> <img src="docs/images/nxnative-maintenance-es-v1.26.jpg" width="49%" alt="Elegir entre renovar la firma y actualizar el juego">
 
 **Respaldos de Switch:** una Switch 1 o 2 sin modificar no importa partidas sólo por copiarlas a la SD. Easy prepara archivos comprobados; restaurarlos requiere una herramienta compatible configurada por separado en la consola. No conecta con la nube de Nintendo. [Qué se puede hacer](docs/save-transfer.md).
+
+**Abre tu juego para entender qué sigue.** El inicio muestra dónde está instalado y si su firma registrada va a caducar. En **Mi juego** ves el motivo de una recomendación, la versión de Easy usada para preparar/firmar y la actual. Las instalaciones antiguas sin esos datos dicen **Sin registro**. En **Partidas y copias** puedes traer un respaldo del iPhone, respaldar el progreso de este Mac o revisar las versiones recibidas en iCloud; no necesitas la cuenta de firma para copiar partidas.
 
 La interfaz empieza en **inglés**; cámbiala a **Español** en **Settings → General**.
 
