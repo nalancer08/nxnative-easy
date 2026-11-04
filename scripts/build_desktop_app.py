@@ -67,7 +67,6 @@ def build_bundle(output,portable=False):
     helper_cache=Path(os.environ.get('NXE_SIDELOAD_BUILD_CACHE',str(REPO.parent/'nxnative-sideload-tools')))
     build_helper(macos/'nxnative-sideload',helper_cache)
     shutil.move(str(macos/'sideload-licenses'),str(resources/'SideloadLicenses'))
-    shutil.copy2(REPO/'desktop/NxNativeEasy/Assets/Launcher/app-icon-3d.png',resources/'BrandIcon.png')
     shutil.copytree(REPO/'desktop/NxNativeEasy/Assets/Library',resources/'Library')
     for name in ('drop-game','save-transfer','device-connected','launcher-open','ecosystem-sync'):
         motion_page=resources/('Library/'+name+'.html')
@@ -78,6 +77,7 @@ def build_bundle(output,portable=False):
     with tempfile.TemporaryDirectory(prefix='nxnative-icon-') as temporary:
         iconset=Path(temporary)/'AppIcon.iconset';iconset.mkdir()
         subprocess.run(['xcrun','swift',str(REPO/'desktop/NxNativeEasy/Assets/draw_icon.swift'),str(iconset)],check=True)
+        shutil.copy2(iconset/'BrandMark.png',resources/'BrandIcon.png')
         subprocess.run(['iconutil','-c','icns',str(iconset),'-o',str(resources/'AppIcon.icns')],check=True)
     shutil.copy2(REPO/'desktop/NxNativeEasy/update_app.py',resources/'update_app.py')
     if portable:

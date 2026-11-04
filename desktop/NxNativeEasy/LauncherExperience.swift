@@ -17,17 +17,15 @@ struct EngineHistory:Decodable {
 struct LauncherBrand:View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var phase
-    @State private var hover=false
     @State private var appeared=false
     var body:some View {
-        HStack(spacing:9) {
-            Image(nsImage:AppArtwork.icon).resizable().frame(width:32,height:32).clipShape(RoundedRectangle(cornerRadius:8))
-                .rotation3DEffect(.degrees(hover && !reduceMotion ? -14 : 0),axis:(x:0,y:1,z:0))
-                .scaleEffect(appeared ? 1 : 0.8)
-            VStack(alignment:.leading,spacing:0) {Text("nxnative").font(.system(size:14,weight:.bold)).tracking(-0.3);Text("EASY").font(.system(size:8,weight:.bold)).tracking(3).foregroundStyle(EasyDesign.accent)}
-        }.frame(width:132,alignment:.leading).contentShape(Rectangle()).onHover{hover=$0}
-        .onAppear{withAnimation(reduceMotion ? nil : .spring(response:0.45,dampingFraction:0.7)){appeared=true}}
-        .animation(reduceMotion || phase != .active ? nil : .spring(response:0.35),value:hover)
+        HStack(spacing:8) {
+            Image(nsImage:AppArtwork.icon).resizable().frame(width:24,height:24)
+                .offset(x:appeared ? 0 : -5).opacity(appeared ? 1 : 0)
+            Text("nxnative").font(.system(size:14,weight:.semibold)).tracking(-0.4)
+            Text("easy").font(.system(size:10,weight:.medium)).foregroundStyle(.secondary)
+        }.frame(width:132,alignment:.leading)
+        .onAppear{withAnimation(reduceMotion || phase != .active ? nil : .easeOut(duration:0.45)){appeared=true}}
         .accessibilityElement(children:.ignore).accessibilityLabel("nxnative Easy")
     }
 }
@@ -44,25 +42,43 @@ struct CloudWelcomeView:View {
     var body:some View {
         GeometryReader {geometry in
             ScrollView {
-                VStack(alignment:.leading,spacing:22) {
-                    LauncherBrand().padding(.top,8)
-                    LibraryDropMotion(playing:phase == .active && !reduceMotion,resource:"ecosystem-sync").frame(maxWidth:.infinity).frame(height:geometry.size.height<700 ? 160 : 220).allowsHitTesting(false).accessibilityHidden(true)
-                    Text(text("Tu partida. Todas tus pantallas.")).font(.system(size:36,weight:.bold)).tracking(-1).fixedSize(horizontal:false,vertical:true)
-                    Text(text("Conecta iCloud para recibir tus partidas y continuar en Mac, iPhone o iPad.")).font(.system(size:15)).foregroundStyle(.secondary).fixedSize(horizontal:false,vertical:true)
-                    HStack(spacing:12) {Image(systemName:saves.usesICloud ? "checkmark.icloud.fill" : "person.icloud").font(.title2).foregroundStyle(EasyDesign.accent);VStack(alignment:.leading,spacing:5) {Text(text(saves.usesICloud ? "iCloud de este Mac disponible" : "Usa tu cuenta de iCloud de macOS")).font(.headline);Text(text("La cuenta para firmar apps es independiente.")).font(.caption).foregroundStyle(.secondary)}}.padding(18).frame(maxWidth:.infinity,alignment:.leading).background(EasyDesign.panel,in:RoundedRectangle(cornerRadius:12))
-                    if attempted && saves.cloud==nil {Text(text("Activa iCloud Drive en Ajustes del Sistema y vuelve aquí. Tus partidas locales se conservan.")).font(.callout).foregroundStyle(.orange)}
-                    HStack(spacing:12) {
-                        Button {attempted=true;saves.enableManagedCloud(repo:repo);if saves.usesICloud {finish()}else{NSWorkspace.shared.open(URL(fileURLWithPath:"/System/Applications/System Settings.app"))}}label:{Label(text(saves.usesICloud ? "Continuar con iCloud" : "Conectar iCloud"),systemImage:"icloud")}.buttonStyle(EasyPrimaryStyle()).disabled(saves.busy)
-                        Button(text("Continuar sin iCloud")){skipping=true}.buttonStyle(EasySecondaryStyle())
+                VStack(alignment:.leading,spacing:38) {
+                    LauncherBrand()
+                    ViewThatFits(in:.horizontal) {
+                        HStack(spacing:38) {
+                            message.frame(width:370)
+                            artwork.frame(width:470,height:340)
+                        }
+                        VStack(alignment:.leading,spacing:20) {
+                            artwork.frame(maxWidth:.infinity).frame(height:250)
+                            message
+                        }.frame(maxWidth:560)
                     }
-                    Text(text("Tus juegos y tus partidas locales siguen siendo tuyos. Los juegos antiguos necesitan actualizarse para sincronizar.")).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal:false,vertical:true)
-                }.frame(maxWidth:590,alignment:.leading).padding(32).frame(maxWidth:.infinity)
+                }.frame(maxWidth:920,alignment:.leading).padding(36)
+                    .frame(maxWidth:.infinity,minHeight:geometry.size.height,alignment:.center)
             }.background(EasyDesign.background)
         }
         .alert(text("Continuar con partidas locales"),isPresented:$skipping) {
             Button(text("Conectar iCloud"),role:.cancel){}
             Button(text("Continuar sin sincronizar")){saves.disconnectCloud();finish()}
         }message:{Text(text("Podrás jugar y guardar en este dispositivo. Easy no recibirá ni sincronizará copias en iCloud hasta que lo conectes. Los juegos que ya configuraste conservan sus ajustes."))}
+    }
+    private var artwork:some View {
+        LibraryDropMotion(playing:phase == .active && !reduceMotion,resource:"ecosystem-sync")
+            .allowsHitTesting(false).accessibilityHidden(true)
+    }
+    private var message:some View {
+                VStack(alignment:.leading,spacing:22) {
+                    Text(text("Tu partida. Todas tus pantallas.")).font(.system(size:36,weight:.bold)).tracking(-1).fixedSize(horizontal:false,vertical:true)
+                    Text(text("Conecta iCloud para recibir tus partidas y continuar en Mac, iPhone o iPad.")).font(.system(size:15)).foregroundStyle(.secondary).fixedSize(horizontal:false,vertical:true)
+                    HStack(spacing:12) {Image(systemName:saves.usesICloud ? "checkmark.icloud.fill" : "person.icloud").font(.title2).foregroundStyle(EasyDesign.accent);VStack(alignment:.leading,spacing:5) {Text(text(saves.usesICloud ? "iCloud de este Mac disponible" : "Usa tu cuenta de iCloud de macOS")).font(.headline);Text(text("La cuenta para firmar apps es independiente.")).font(.caption).foregroundStyle(.secondary)}}.padding(18).frame(maxWidth:.infinity,alignment:.leading).background(EasyDesign.panel,in:RoundedRectangle(cornerRadius:12))
+                    if attempted && saves.cloud==nil {Text(text("Activa iCloud Drive en Ajustes del Sistema y vuelve aquí. Tus partidas locales se conservan.")).font(.callout).foregroundStyle(.orange)}
+                    VStack(alignment:.leading,spacing:12) {
+                        Button {attempted=true;saves.enableManagedCloud(repo:repo);if saves.usesICloud {finish()}else{NSWorkspace.shared.open(URL(fileURLWithPath:"/System/Applications/System Settings.app"))}}label:{Label(text(saves.usesICloud ? "Continuar con iCloud" : "Conectar iCloud"),systemImage:"icloud")}.buttonStyle(EasyPrimaryStyle()).disabled(saves.busy)
+                        Button(text("Continuar sin iCloud")){skipping=true}.buttonStyle(EasySecondaryStyle())
+                    }
+                    Text(text("Tus juegos y tus partidas locales siguen siendo tuyos. Los juegos antiguos necesitan actualizarse para sincronizar.")).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal:false,vertical:true)
+                }
     }
 }
 

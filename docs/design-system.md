@@ -104,14 +104,17 @@ names while keeping detailed tool names and linker symbols in the logs.
 
 ## Art and motion
 
-The original 3D cartridge replaces the abstract portal. The cartridge connects
-the logo to game files and a personal library; never use console-controller
-branding as the app identity.
-`Assets/Launcher/app-icon-3d.png` is the source for both Dock and in-app branding.
-`ecosystem-sync.json` carries the generated cartridge between a Mac, iPad and
-iPhone through a cloud checkpoint. It decorates cloud onboarding, the first-game
-welcome and destination step; it never
-advances build/install state. Native opacity transitions accompany selection.
+The header uses a 24-point flat N monogram with a single-baseline wordmark.
+`Assets/Launcher/brand-mark.svg` is the editable source of truth;
+`Assets/draw_icon.swift` exports both the transparent header mark and Dock sizes.
+No miniature physical details, bevels or layered textures belong in the mark.
+Rich imagery belongs to the game or the separate welcome illustration.
+
+The iCloud welcome uses a two-column composition on wide windows and a vertical
+layout at narrower sizes. `ecosystem-sync.json` introduces original adventure art,
+then rests. It has no device diagram, giant cloud or perpetual decorative loop.
+It decorates onboarding, the empty library and destination selection and never
+advances build/install state. Native opacity transitions accompany game selection.
 
 The first launch presents an optional iCloud welcome. Use the system account,
 not an embedded Apple password form. Continuing without iCloud explicitly states
@@ -121,8 +124,8 @@ Settings can reopen this welcome. On iOS the per-game folder grant remains neces
 Use the pinned, local Lottie runtime. `LauncherPortal.visible` removes the web
 player when the always-mounted preparation flow is hidden. Pause when inactive, remove players off
 screen and show the meaningful resting frame 60 for reduced motion. Never create
-a player for every game row. Reference provenance, prompts, access limits and
-verification notes are in [launcher-art-direction.md](launcher-art-direction.md).
+a player for every game row. Current reference provenance, prompts and access limits are in
+[brand-motion-2026-11.md](brand-motion-2026-11.md).
 
 ## Verification
 
