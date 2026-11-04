@@ -8,7 +8,7 @@ struct LauncherPortal:View {
     @Environment(\.scenePhase) private var phase
     var body:some View {
         Group {
-            if visible {LibraryDropMotion(playing:phase == .active && !reduceMotion,resource:"launcher-open")}
+            if visible {LibraryDropMotion(playing:phase == .active && !reduceMotion,resource:"ecosystem-sync")}
             else {Color.clear}
         }.allowsHitTesting(false).accessibilityHidden(true)
     }

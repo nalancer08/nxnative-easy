@@ -7,9 +7,15 @@ grid-first workspace and global cloud/device connection strip.
 
 ## Structure and hierarchy
 
-- A fixed 64-point header contains back, Library, Compatibility and Add game.
-  Reserve 82 leading points for macOS window controls. Back restores the prior
-  route. Re-selecting the current route does not push another history entry.
+- A 60-point header starts at a 16-point inset: the system already reserves its
+  titlebar controls. Do not add a second traffic-light gutter. Back exists only
+  when navigation history is non-empty. Keep Library, Compatibility and Add game
+  labels readable at the 760-point minimum; use the entire visible button bounds.
+- The header's engine chip opens a full history screen. Its revision is the latest
+  integrated runtime commit, independent of cosmetic Easy releases. Regenerate
+  `desktop/engine-history.json` with `scripts/sync_engine_history.py` after engine
+  integration; retain upstream identity and exact dates/titles. Show prepared
+  per-platform revisions and preparation timestamps in each game detail.
 - Library has a 228-point game list with real artwork, search and selection.
   Settings sits at the bottom. There is no second global navigation sidebar.
 - Keep the selected game when returning from another page and remember it across
@@ -17,8 +23,8 @@ grid-first workspace and global cloud/device connection strip.
 - The selected game uses a 300-point gameplay image, a clear title, one primary
   play/install/maintenance action and a destination menu. Show installation
   evidence, cloud revisions and screenshots within that game.
-- Show only repository-provided screenshots; one image is a one-image gallery.
-  Opening the image uses a dismissible viewer, not an invented screenshot set.
+- Show only repository-provided screenshots. When there is only one, use it as
+  the hero and omit a redundant one-image gallery. Never invent more screenshots.
 - Keep the preparation view mounted while browsing, so a build is not reset.
   Clip its drawing and hit testing to its content region. Header navigation must
   remain interactive when another screen is mounted underneath it.
@@ -98,11 +104,19 @@ names while keeping detailed tool names and linker symbols in the logs.
 
 ## Art and motion
 
-The new original orange 3D portal replaces the handset/controller branding.
+The original 3D cartridge replaces the abstract portal. The cartridge connects
+the logo to game files and a personal library; never use console-controller
+branding as the app identity.
 `Assets/Launcher/app-icon-3d.png` is the source for both Dock and in-app branding.
-`launcher-open.json` combines the generated 3D portal with original keyed vector
-orbit lights. It decorates the first-game welcome and destination step; it never
+`ecosystem-sync.json` carries the generated cartridge between a Mac, iPad and
+iPhone through a cloud checkpoint. It decorates cloud onboarding, the first-game
+welcome and destination step; it never
 advances build/install state. Native opacity transitions accompany selection.
+
+The first launch presents an optional iCloud welcome. Use the system account,
+not an embedded Apple password form. Continuing without iCloud explicitly states
+that progress stays local and will not sync. Keep existing cloud history intact;
+Settings can reopen this welcome. On iOS the per-game folder grant remains necessary.
 
 Use the pinned, local Lottie runtime. `LauncherPortal.visible` removes the web
 player when the always-mounted preparation flow is hidden. Pause when inactive, remove players off
@@ -120,3 +134,15 @@ animation in a visible native window and its reduced-motion frame.
 
 Use synthetic accounts, devices and saves for tests. Agent checks never sign,
 install, launch a real game or change the owner's active progress.
+
+## Storage and updates
+
+Storage offers only fingerprinted regenerable caches, including Xcode
+intermediates. Compiled products, originals, keys, romfs and saves are protected.
+Never automatically delete NSPs or substitute archives for originals. Show the
+space reclaimed and that a later preparation may need to regenerate caches.
+
+Update discovery runs from the visible workspace and on foreground, throttled
+for automatic checks. Follow the latest published release and verify its tag
+and metadata rather than treating unreleased main as a distributable version.
+Manual checks show their result and time in the engine screen.

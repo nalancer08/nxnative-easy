@@ -176,7 +176,6 @@ struct GameContinuityDetail:View {
     let files:()->Void
     let upload:()->Void
     let reviewRevision:(SaveRevision)->Void
-    @State private var showScreenshot=false
     @State private var backup:DeviceGameObservation?
     @State private var backupMac=false
     @State private var copying:DeviceGameObservation?
@@ -236,20 +235,23 @@ struct GameContinuityDetail:View {
                 if !hasFiles {Text(text(entry.knownInCloud ? "Tu partida está aquí. Añade tus archivos para jugar." : "Añade tus archivos para preparar este juego.")).font(.callout).foregroundStyle(.secondary)}
             if sideload.blocksGameWork {InstallActivityView(model:sideload,text:text)}
                 ViewThatFits(in:.horizontal) {
-                    HStack(alignment:.top,spacing:24) {savedProgress.frame(minWidth:330,maxWidth:.infinity);destinations.frame(width:270)}
+                    HStack(alignment:.top,spacing:24) {savedProgress.frame(minWidth:330,maxWidth:.infinity);destinations.frame(width:300)}
                     VStack(alignment:.leading,spacing:24) {savedProgress;destinations}
                 }
-            if let context {DisclosureGroup(text("Versión y mejoras")) {VStack(alignment:.leading,spacing:14) {GameVersionComparison(context:context,text:text);Button(text("Actualizar o renovar"),action:maintain).buttonStyle(EasyLinkStyle())}.padding(.top,12)}.font(.callout)}
-            if let catalog {
-                VStack(alignment:.leading,spacing:12) {
-                    Text(text("CAPTURAS")).font(.system(size:10,weight:.semibold)).tracking(1.8).foregroundStyle(.secondary)
-                    Button {showScreenshot=true}label:{GameArtworkView(game:catalog).frame(width:220,height:124).clipped().clipShape(RoundedRectangle(cornerRadius:8)).overlay(alignment:.bottomTrailing){Image(systemName:"arrow.up.left.and.arrow.down.right").font(.caption).padding(9).background(.black.opacity(0.5),in:RoundedRectangle(cornerRadius:6)).padding(7)}}.buttonStyle(.plain).accessibilityLabel(text("Ver captura"))
+            VStack(alignment:.leading,spacing:10) {
+                ForEach(entry.sources.flatMap(\.preparations)) {build in
+                    VStack(alignment:.leading,spacing:5) {
+                        HStack(spacing:8) {Image(systemName:"hammer").foregroundStyle(EasyDesign.accent);Text(build.platform).fontWeight(.semibold);Spacer();Text(text("Motor")+" · "+String((build.revision ?? "—").prefix(8))).font(.system(size:10,design:.monospaced))}
+                        if let date=build.date {Text(text("Última compilación")+" · "+date.formatted(date:.abbreviated,time:.shortened))}
+                        else {Text(text("Fecha de compilación no registrada"))}
+                    }.font(.caption).foregroundStyle(.secondary)
                 }
-            }
+            }.padding(14).background(.white.opacity(0.025),in:RoundedRectangle(cornerRadius:10))
+            if let context {DisclosureGroup(text("Versión y mejoras")) {VStack(alignment:.leading,spacing:14) {GameVersionComparison(context:context,text:text);Button(text("Actualizar o renovar"),action:maintain).buttonStyle(EasyLinkStyle())}.padding(.top,12)}.font(.callout)}
             if hasFiles {Button(text("Archivos y opciones"),action:files).buttonStyle(EasyLinkStyle())}
             }.padding(.horizontal,28).padding(.top,12).padding(.bottom,30)
         }.frame(maxWidth:.infinity,alignment:.topLeading).background(EasyDesign.background)
-        .sheet(isPresented:$showScreenshot) {VStack(spacing:16){HStack{Text(title).font(.headline);Spacer();Button(text("Cerrar")){showScreenshot=false}};if let catalog {GameArtworkView(game:catalog).aspectRatio(16.0/9,contentMode:.fit)}}.padding(20).frame(minWidth:560,idealWidth:900).background(EasyDesign.background)}
+
         .alert(text("Respaldar tu partida"),isPresented:Binding(get:{backup != nil || backupMac},set:{if !$0 {backup=nil;backupMac=false}})) {
             Button(text("Cancelar"),role:.cancel){backup=nil;backupMac=false}
             Button(text("Ya guardé y cerré el juego")){if let backup {sideload.backupGame(backup,text:text)}else if let game=entry.local {saves.backupMac(repo:repo,game:game)};backup=nil;backupMac=false}
@@ -284,7 +286,7 @@ VStack(alignment:.leading,spacing:7) {
                 }
                 if reports.isEmpty && sideload.devices.isEmpty {
                     destination("iPhone / iPad",icon:"ipad.and.iphone",status:text("Conecta tu dispositivo cuando quieras instalar"),connected:false) {
-                        Button(text("Preparar versión móvil")){prepare("ios")}.buttonStyle(EasyLinkStyle()).disabled(disabled)
+                        Button(text("Preparar para iPhone / iPad")){prepare("ios")}.buttonStyle(EasyLinkStyle()).disabled(disabled)
                     }
                 }
             }
@@ -333,7 +335,7 @@ VStack(alignment:.leading,spacing:16) {
     private var launchAction:some View {
         HStack(spacing:8) {
             Button(action:primary){Label(text(primaryTitle),systemImage:entry.mac != nil ? "play.fill" : "arrow.down.to.line").frame(minWidth:120)}.buttonStyle(EasyPrimaryStyle()).disabled(disabled)
-            Menu {Button(text("Preparar en Mac")){prepare("mac")};Button(text("Instalar en iPhone / iPad"),action:install).disabled(entry.ios==nil);Button(text("Preparar versión móvil")){prepare("ios")}}label:{Image(systemName:"chevron.down").frame(width:18,height:24)}.menuStyle(.borderlessButton).menuIndicator(.hidden).fixedSize().padding(9).background(.white.opacity(0.04),in:RoundedRectangle(cornerRadius:8)).disabled(disabled).accessibilityLabel(text("Elegir dónde jugar"))
+            Menu {Button(text("Preparar en Mac")){prepare("mac")};Button(text("Instalar en iPhone / iPad"),action:install).disabled(entry.ios==nil);Button(text("Preparar para iPhone / iPad")){prepare("ios")}}label:{Image(systemName:"chevron.down").frame(width:18,height:24)}.menuStyle(.borderlessButton).menuIndicator(.hidden).fixedSize().padding(9).background(.white.opacity(0.04),in:RoundedRectangle(cornerRadius:8)).disabled(disabled).accessibilityLabel(text("Elegir dónde jugar"))
         }
     }
     private var launchMetadata:some View {
@@ -362,10 +364,10 @@ VStack(alignment:.leading,spacing:16) {
         VStack(alignment:.leading,spacing:4) {
           HStack(spacing:10) {
             Image(systemName:icon).font(.system(size:23,weight:.light)).foregroundStyle(connected ? EasyDesign.accent : .secondary).frame(width:34)
-            VStack(alignment:.leading,spacing:5) {Text(text(name)).font(.system(size:12,weight:.semibold));Text(status).font(.caption).foregroundStyle(.secondary)}
+            VStack(alignment:.leading,spacing:4) {Text(text(name)).font(.system(size:13,weight:.semibold));Text(status).font(.caption).foregroundStyle(.secondary)}
             Spacer(minLength:0)
           }
           HStack(spacing:12){actions()}.padding(.leading,44)
-        }.padding(.vertical,7)
+        }.padding(14).frame(maxWidth:.infinity,alignment:.leading).background(EasyDesign.panel,in:RoundedRectangle(cornerRadius:12)).overlay(RoundedRectangle(cornerRadius:12).strokeBorder(connected ? EasyDesign.accent.opacity(0.2) : EasyDesign.border))
     }
 }

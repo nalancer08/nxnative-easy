@@ -5,7 +5,7 @@ from contextlib import contextmanager
 import hashlib
 import tempfile
 import fcntl
-from datetime import datetime
+from datetime import datetime, timezone
 import importlib.util
 import json
 import os
@@ -28,7 +28,7 @@ def preparation_stamp():
         source = REPO / 'SOURCE_REVISION'
         revision = source.read_text().strip() if source.is_file() else None
     return dict(easy_version=release['version'], easy_build=release['build'],
-                source_revision=revision)
+                source_revision=revision, prepared_at=datetime.now(timezone.utc).isoformat(timespec="seconds"))
 
 
 @contextmanager

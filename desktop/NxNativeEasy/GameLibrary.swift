@@ -33,6 +33,7 @@ struct OwnedGame:Codable,Identifiable,Equatable {
     var macRevision:String?
     var iosRevision:String?
 }
+struct PreparedOutputStamp:Identifiable {let id,platform:String;let revision:String?;let date:Date?}
 struct OwnedGameOutput:Identifiable {
     let item:OwnedGame
     var id:String {item.id}
@@ -42,12 +43,20 @@ struct OwnedGameOutput:Identifiable {
     var macApp:URL?
     var iosIPA:URL?
     var iosSaveContinuity:Int?
+    var macPreparedAt:Date?
+    var iosPreparedAt:Date?
     var romfs:URL?
     var version:String?
     var macRevision:String?
     var iosRevision:String?
     var missing=false
     var ready:Bool {macApp != nil || iosIPA != nil}
+    var preparations:[PreparedOutputStamp] {
+        var result:[PreparedOutputStamp]=[]
+        if macApp != nil {result.append(PreparedOutputStamp(id:id+"mac",platform:"Mac",revision:macRevision,date:macPreparedAt))}
+        if iosIPA != nil {result.append(PreparedOutputStamp(id:id+"ios",platform:"iPhone / iPad",revision:iosRevision,date:iosPreparedAt))}
+        return result
+    }
     static func read(_ item:OwnedGame)->OwnedGameOutput {
         var output=OwnedGameOutput(item:item)
         let fm=FileManager.default
@@ -62,6 +71,8 @@ struct OwnedGameOutput:Identifiable {
         output.macRevision=(mac["source_revision"] as? String) ?? item.macRevision
         output.iosRevision=(ios["source_revision"] as? String) ?? item.iosRevision
         output.originalBundleID=ios["bundle_id"] as? String
+        func preparedDate(_ record:[String:Any],_ target:String)->Date? {if let stamp=record["prepared_at"] as? String,let value=ISO8601DateFormatter().date(from:stamp){return value};return (try? fm.attributesOfItem(atPath:output.folder.appendingPathComponent("nxnative-"+target+".json").path)[.modificationDate]) as? Date}
+        output.macPreparedAt=preparedDate(mac,"mac");output.iosPreparedAt=preparedDate(ios,"ios")
         if let path=mac["app_path"] as? String {
             let bundle=URL(fileURLWithPath:path)
             if let data=try? boundedLibraryData(bundle.appendingPathComponent("Contents/Info.plist")),

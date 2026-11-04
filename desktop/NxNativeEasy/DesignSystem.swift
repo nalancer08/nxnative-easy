@@ -31,10 +31,10 @@ private struct EasyPrimaryBody<Label:View>:View {
     let pressed:Bool
     @Environment(\.isEnabled) private var enabled
     var body:some View {
-        label.font(.system(size:14,weight:.bold)).padding(.horizontal,20).padding(.vertical,12).frame(minHeight:44)
+        label.font(.system(size:14,weight:.bold)).padding(.horizontal,20).padding(.vertical,12).frame(minHeight:44).contentShape(Rectangle())
             .foregroundStyle(enabled ? Color.black : Color.secondary)
             .background(LinearGradient(colors:enabled ? [EasyDesign.accent,Color(red:1,green:0.59,blue:0.31)] : [.white.opacity(0.065),.white.opacity(0.065)],startPoint:.topLeading,endPoint:.bottomTrailing),in:RoundedRectangle(cornerRadius:9))
-            .shadow(color:enabled ? EasyDesign.accent.opacity(0.14) : .clear,radius:14,y:4).opacity(pressed ? 0.8 : 1)
+            .shadow(color:enabled ? EasyDesign.accent.opacity(0.14) : .clear,radius:14,y:4).opacity(pressed ? 0.8 : 1).scaleEffect(pressed ? 0.985 : 1)
     }
 }
 struct EasySecondaryStyle:ButtonStyle {
@@ -45,10 +45,10 @@ private struct EasySecondaryBody<Label:View>:View {
     let pressed:Bool
     @Environment(\.isEnabled) private var enabled
     var body:some View {
-        label.font(.system(size:13,weight:.semibold)).padding(.horizontal,14).padding(.vertical,10).frame(minHeight:38)
+        label.font(.system(size:13,weight:.semibold)).padding(.horizontal,14).padding(.vertical,10).frame(minHeight:38).contentShape(Rectangle())
             .foregroundStyle(enabled ? EasyDesign.ink : Color.secondary)
             .background(Color.white.opacity(pressed ? 0.1 : 0.025),in:RoundedRectangle(cornerRadius:9))
-            .overlay(RoundedRectangle(cornerRadius:9).strokeBorder(.white.opacity(enabled ? 0.16 : 0.06)))
+            .overlay(RoundedRectangle(cornerRadius:9).strokeBorder(.white.opacity(enabled ? 0.16 : 0.06))).scaleEffect(pressed ? 0.985 : 1)
     }
 }
 struct EasyLinkStyle:ButtonStyle {
@@ -58,7 +58,7 @@ private struct EasyLinkBody<Label:View>:View {
     let label:Label
     let pressed:Bool
     @Environment(\.isEnabled) private var enabled
-    var body:some View {label.font(.callout).foregroundStyle(enabled ? EasyDesign.accent : Color.secondary).frame(minHeight:32).opacity(pressed ? 0.7 : 1)}
+    var body:some View {label.font(.callout).foregroundStyle(enabled ? EasyDesign.accent : Color.secondary).padding(.horizontal,8).frame(minHeight:34).contentShape(Rectangle()).opacity(pressed ? 0.7 : 1)}
 }
 struct EasyField<Content:View>:View {
     let title:String

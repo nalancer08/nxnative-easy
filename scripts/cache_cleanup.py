@@ -36,7 +36,7 @@ def candidates(folder):
     result=[]
     for build in sorted(folder.iterdir()):
         if not re.fullmatch('[0-9A-Fa-f]{16}_build',build.name) or build.is_symlink() or not build.is_dir():continue
-        for suffix in ('shader/cache','tmp'):
+        for suffix in ('shader/cache','tmp','ipa/build/ios/pkg/dd/Build/Intermediates.noindex','ipa/build/ios/pkg/dd/ModuleCache.noindex','ipa/build/ios/pkg/dd/Index.noindex','ipa/build/ios/pkg/dd/SDKStatCaches.noindex'):
             path=build/suffix
             if not path.exists():continue
             if any(p.is_symlink() for p in [build,build/'shader',path]):continue

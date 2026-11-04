@@ -2,7 +2,7 @@ import SwiftUI
 import AppKit
 
 @MainActor final class LauncherNavigation:ObservableObject {
-    enum Page:Equatable {case library,prepare,settings,compatibility}
+    enum Page:Equatable {case library,prepare,settings,compatibility,engine}
     @Published private(set) var page=Page.library
     @Published private(set) var history:[Page]=[]
     var canGoBack:Bool {!history.isEmpty}

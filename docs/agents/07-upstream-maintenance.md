@@ -82,6 +82,8 @@ appear everywhere without being forgotten. No recurring schedule is implied.
    ```sh
    python3 scripts/sync_game_catalog.py --write --upstream-ref PINNED_SHA
    python3 scripts/sync_game_catalog.py --check
+   python3 scripts/sync_engine_history.py
+   python3 scripts/sync_engine_history.py --check
    ```
 
    This generates `game-artwork.json`, `game-catalog.json` and the marked galleries

@@ -19,6 +19,16 @@ class Cleanup(unittest.TestCase):
         self.assertEqual(len(preview),1);self.assertEqual(preview[0]['bytes'],5)
         self.assertEqual(cleanup.delete(self.root,preview),5)
         for path in ['game.nsp','output.ipa','prod.keys','save/slot','romfs/game']:self.assertEqual((self.root/path).read_bytes(),b'original')
+    def test_xcode_intermediates_are_disposable_but_products_are_protected(self):
+        build=self.root/'010093801237C000_build/ipa/build/ios/pkg/dd/Build'
+        cache=build/'Intermediates.noindex';cache.mkdir(parents=True)
+        (cache/'object.o').write_bytes(b'generated')
+        app=build/'Products/Game.app';app.mkdir(parents=True)
+        (app/'game').write_bytes(b'keep app')
+        selected=[item for item in cleanup.candidates(self.root) if 'Intermediates' in item['path']]
+        self.assertEqual(len(selected),1)
+        self.assertEqual(cleanup.delete(self.root,selected),9)
+        self.assertEqual((app/'game').read_bytes(),b'keep app')
     def test_changed_preview_and_arbitrary_path_rejected(self):
         preview=cleanup.candidates(self.root);(self.cache/'compiled.bin').write_bytes(b'changed')
         with self.assertRaises(ValueError):cleanup.delete(self.root,preview)

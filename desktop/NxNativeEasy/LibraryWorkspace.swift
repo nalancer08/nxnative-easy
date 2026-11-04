@@ -16,6 +16,8 @@ struct LibraryWorkspace:View {
     @State private var reviewingSyncUpdate=false
     @State private var importingSave=false
     @State private var reviewingUpdate=false
+    @State private var showCloudWelcome=false
+    @State private var engine:EngineHistory?
     @State private var optionsGame:OwnedGameOutput?
     @State private var changeReasons:[String:[String]]=[:]
     @State private var rebuildAdvice:[String:String]=[:]
@@ -121,26 +123,27 @@ struct LibraryWorkspace:View {
     private func showBuildActivity() {page = .prepare;model.installingInline=false;let unfinished=model.running || model.failed || model.output==nil;model.preparationStep=unfinished ? 4 : 5;model.showDetails=true}
     private var shell:some View {
         VStack(spacing:0) {
-            HStack(spacing:12) {
-                Image(nsImage:AppArtwork.icon).resizable().frame(width:28,height:28).clipShape(RoundedRectangle(cornerRadius:7))
-                Text("nxnative").font(.system(size:15,weight:.bold)).tracking(-0.3).padding(.trailing,15)
-                LauncherButton(title:"",symbol:"chevron.left",enabled:navigation.canGoBack){navigation.back()}.frame(width:34,height:40).accessibilityLabel(model.text("Volver"))
-                LauncherButton(title:model.text("Biblioteca"),selected:page == .library){page = .library;maintaining=nil}.frame(width:96,height:44)
-                LauncherButton(title:model.text("Compatibilidad"),selected:page == .compatibility){page = .compatibility}.frame(width:126,height:44)
+            HStack(spacing:8) {
+                LauncherBrand()
+                if navigation.canGoBack {LauncherButton(title:"",symbol:"chevron.left"){navigation.back()}.frame(width:32,height:40).accessibilityLabel(model.text("Volver")).transition(.opacity.combined(with:.move(edge:.leading)))}
+                LauncherButton(title:model.text("Biblioteca"),selected:page == .library){page = .library;maintaining=nil}.frame(width:100,height:44)
+                LauncherButton(title:model.text("Compatibilidad"),selected:page == .compatibility){page = .compatibility}.frame(width:138,height:44)
                 Spacer(minLength:0)
-                if model.running {Label(model.text("Preparando tu juego…"),systemImage:"hammer").font(.caption).foregroundStyle(.secondary)}
-                if updater.visible {Button(model.text("Actualizar Easy")){reviewingUpdate=true}.buttonStyle(EasyLinkStyle())}
-                LauncherButton(title:model.text("Añadir juego"),symbol:"plus",enabled:!occupied,action:add).frame(width:134,height:44)
-            }.padding(.leading,82).padding(.trailing,16).frame(height:64).background(EasyDesign.background).overlay(alignment:.bottom){Divider()}.zIndex(100)
+                Button {page = .engine}label:{VStack(alignment:.leading,spacing:2){Text(model.text("MOTOR")).font(.system(size:8,weight:.bold)).tracking(1);Text(String(engine?.revision.prefix(7) ?? "—")).font(.system(size:11,design:.monospaced))}.frame(width:62,height:38).padding(.horizontal,10).contentShape(Rectangle()).background(EasyDesign.panel,in:RoundedRectangle(cornerRadius:8))}.buttonStyle(.plain).help(model.text("Historial del motor"))
+                if model.running {Image(systemName:"hammer").font(.callout).foregroundStyle(EasyDesign.accent).help(model.text("Preparando tu juego…"))}
+                if updater.visible && !model.running {Button {reviewingUpdate=true}label:{Image(systemName:"arrow.down.circle.fill").font(.title3).frame(width:34,height:38).contentShape(Rectangle())}.buttonStyle(.plain).foregroundStyle(EasyDesign.accent).accessibilityLabel(model.text("Actualizar Easy")).help(model.text("Actualizar Easy"))}
+                LauncherButton(title:model.text("Añadir juego"),symbol:"plus",enabled:!occupied,action:add).frame(width:146,height:44)
+            }.padding(.horizontal,16).frame(height:60).background(EasyDesign.background).overlay(alignment:.bottom){Divider()}.zIndex(100)
             ZStack {
                 ContentView(updater:updater,sideload:sideload,model:model,visible:page == .prepare && maintaining==nil).opacity(page == .prepare ? 1 : 0).allowsHitTesting(page == .prepare).accessibilityHidden(page != .prepare)
-                if page == .settings {WorkspaceSettingsView(model:model,sideload:sideload,saves:saves)}
+                if page == .settings {WorkspaceSettingsView(model:model,sideload:sideload,saves:saves,games:library.games,showEngine:{page = .engine},showCloud:{showCloudWelcome=true})}
                 if page == .compatibility {GameCatalogView(model:model)}
+                if page == .engine {EngineHistoryView(history:engine,updater:updater,text:model.text)}
                 if page == .library {
                     HStack(spacing:0) {
                         LauncherSidebar(entries:entries,catalog:model.catalog,text:model.text,selected:$selectedEntryID,query:$query,add:add,settings:{page = .settings})
                         if let entry=selected {
-                            ScrollView {GameContinuityDetail(entry:entry,title:entryTitle(entry),catalog:model.catalog.first{$0.id==entry.titleID},context:entry.ios.map{care($0)} ?? entry.local.map{care($0)},saves:saves,localSaves:localSaves,sideload:sideload,repo:model.repo,text:model.text,disabled:occupied,prepare:{prepare(entry,target:$0)},reviewSync:{if let game=entry.ios ?? entry.local {reviewingSyncUpdate=true;maintaining=game}else{addEntry(entry)}},chooseDestination:{addEntry(entry)},maintain:{if let game=entry.ios ?? entry.local {maintain(game)}else{addEntry(entry)}},maintainDevice:{report in if let game=entry.ios ?? entry.local {maintain(game,device:report.device)}else{addEntry(entry)}},install:{if let game=entry.ios {install(game)}else{prepare(entry,target:"ios")}},files:{optionsGame=entry.local},upload:{guard let game=entry.ios ?? entry.mac else{return};saves.gameID=game.id;saves.source=nil;saves.selectedRevision=nil;saves.completed=nil;saves.chooseSource(repo:model.repo);if saves.source != nil {importingSave=true}},reviewRevision:{revision in saves.inspect(repo:model.repo,url:URL(fileURLWithPath:revision.path),revision:revision);importingSave=true})}.id(entry.id).transition(.opacity)
+                            ScrollView {GameContinuityDetail(entry:entry,title:entryTitle(entry),catalog:model.catalog.first{$0.id==entry.titleID},context:entry.ios.map{care($0)} ?? entry.local.map{care($0)},saves:saves,localSaves:localSaves,sideload:sideload,repo:model.repo,text:model.text,disabled:occupied,prepare:{prepare(entry,target:$0)},reviewSync:{if let game=entry.ios ?? entry.local {reviewingSyncUpdate=true;maintaining=game}else{addEntry(entry)}},chooseDestination:{addEntry(entry)},maintain:{if let game=entry.ios ?? entry.local {maintain(game)}else{addEntry(entry)}},maintainDevice:{report in if let game=entry.ios ?? entry.local {maintain(game,device:report.device)}else{addEntry(entry)}},install:{if let game=entry.ios {install(game)}else{prepare(entry,target:"ios")}},files:{optionsGame=entry.local},upload:{guard let game=entry.ios ?? entry.mac else{return};saves.gameID=game.id;saves.source=nil;saves.selectedRevision=nil;saves.completed=nil;saves.chooseSource(repo:model.repo);if saves.source != nil {importingSave=true}},reviewRevision:{revision in saves.inspect(repo:model.repo,url:URL(fileURLWithPath:revision.path),revision:revision);importingSave=true})}.id(entry.id).transition(.opacity.combined(with:.offset(y:8)))
                         } else {LauncherWelcome(text:model.text,add:add)}
                     }
                 }
@@ -152,7 +155,7 @@ struct LibraryWorkspace:View {
                         case .rebuild(let target):configure(game);model.target=target;model.preparationStep=1}
                     },close:{maintaining=nil},reason:reviewingSyncUpdate ? "update" : "").frame(maxWidth:.infinity,maxHeight:.infinity).background(EasyDesign.background).transition(.opacity)
                 }
-            }.frame(maxWidth:.infinity,maxHeight:.infinity).clipped().zIndex(0).animation(reduceMotion ? nil : .easeOut(duration:0.18),value:selectedEntryID)
+            }.frame(maxWidth:.infinity,maxHeight:.infinity).clipped().zIndex(0).animation(reduceMotion ? nil : .easeInOut(duration:0.24),value:selectedEntryID).animation(reduceMotion ? nil : .easeInOut(duration:0.2),value:navigation.page)
             if model.running || (!model.buildDockDismissed && (model.failed || !model.activity.history.isEmpty)) {Divider();BuildDock(model:model,completion:sideload.completedInstallation && sideload.gameFolder?.path==model.folder?.path ? model.text("Instalación completada en")+" "+(sideload.devices.first{$0.id==sideload.device}?.name ?? "iPhone / iPad") : nil,show:{page = .prepare;model.showDetails=true;model.preparationStep=model.running || model.failed ? 4 : 5})}
         }.background(EasyDesign.background)
         .overlay(alignment:.bottomTrailing) {
@@ -168,8 +171,8 @@ struct LibraryWorkspace:View {
     }
     private var observingShell:some View {
         shell
-        .task {library.refresh();selectAvailableGame();refreshScope();sideload.canRefresh={!model.running && !updater.busy};checkBuildAdvice();saves.ensureManagedCloud(repo:model.repo)}
-        .task(id:scenePhase){if scenePhase == .active {await sideload.watchConnections()}}
+        .task {library.refresh();selectAvailableGame();refreshScope();sideload.canRefresh={!model.running && !updater.busy};Task{await updater.check()};checkBuildAdvice();engine=EngineHistory.load(repo:model.repo);saves.ensureManagedCloud(repo:model.repo);if !model.defaults.bool(forKey:"launcher.cloudWelcome.v1") {showCloudWelcome=true}}
+        .task(id:scenePhase){if scenePhase == .active {await updater.check();await sideload.watchConnections()}}
         .task(id:String(scenePhase == .active)+":"+(saves.cloud?.path ?? "")){if scenePhase == .active {await saves.watchCloud(repo:model.repo)}}
         .task(id:String(scenePhase == .active)+":"+entries.compactMap(\.titleID).sorted().joined(separator:",")){if scenePhase == .active {await localSaves.watch(titles:entries.compactMap(\.titleID))}}
         .task(id:sideload.justConnected?.id){if sideload.justConnected != nil {do {try await Task.sleep(nanoseconds:5_000_000_000)}catch{return};sideload.dismissConnectionNotice()}}
@@ -192,6 +195,8 @@ struct LibraryWorkspace:View {
     }
     var body:some View {
         observingShell
+        .allowsHitTesting(!showCloudWelcome).accessibilityHidden(showCloudWelcome)
+        .overlay {if showCloudWelcome {CloudWelcomeView(saves:saves,repo:model.repo,text:model.text,finish:{model.defaults.set(true,forKey:"launcher.cloudWelcome.v1");withAnimation(reduceMotion ? nil : .easeInOut(duration:0.25)){showCloudWelcome=false}}).transition(.opacity).zIndex(200)}}
         .sheet(isPresented:$importingSave,onDismiss:{saves.source=nil;saves.preview=nil;saves.completed=nil}) {
             VStack(spacing:0) {HStack {Text(model.text(saves.selectedRevision==nil ? "Subir un respaldo" : "Preparar una copia")).font(.headline);Spacer();Button(model.text("Cerrar")){importingSave=false}.disabled(saves.busy)}.padding(20);SaveCenterView(model:saves,repo:model.repo,games:library.games.filter{$0.titleID==selected?.titleID},catalog:model.catalog,text:model.text,focusTitle:selected?.titleID,devices:{})}.frame(width:820,height:740)
         }
@@ -224,23 +229,26 @@ struct WorkspaceSettingsView:View {
     @ObservedObject var model:BuildModel
     @ObservedObject var sideload:SideloadModel
     @ObservedObject var saves:SaveCenterModel
-    enum Section:String,CaseIterable {case general,apple,controllers}
+    var games:[OwnedGameOutput]=[]
+    var showEngine:()->Void={}
+    var showCloud:()->Void={}
+    enum Section:String,CaseIterable {case general,apple,controllers,storage}
     @State var section=Section.general
     @State private var copiedDiagnostics=false
     @State private var backgroundRenewal=SideloadModel.backgroundEnabled
     @AppStorage("buildNotifications") private var buildNotifications=true
     private var version:String {Bundle.main.object(forInfoDictionaryKey:"CFBundleShortVersionString") as? String ?? "development"}
     private func title(_ section:Section)->String {
-        switch section {case .general:return "General";case .apple:return "Cuenta Apple";case .controllers:return "Control"}
+        switch section {case .general:return "General";case .apple:return "Cuenta Apple";case .controllers:return "Control";case .storage:return "Almacenamiento"}
     }
     var body:some View {
         VStack(alignment:.leading,spacing:0) {
             VStack(alignment:.leading,spacing:20) {
                 EasyEyebrow(title:model.text("PREFERENCIAS"))
-                Text(model.text("Configuración")).font(.system(size:36,weight:.bold)).tracking(-1)
-                HStack(spacing:28) {
+                Text(model.text("Configuración")).font(.system(size:28,weight:.bold)).tracking(-1)
+                HStack(spacing:12) {
                     ForEach(Section.allCases,id:\.self) {item in
-                        Button {section=item} label:{Label(model.text(title(item)),systemImage:item == .general ? "slider.horizontal.3" : item == .apple ? "person.crop.circle" : "gamecontroller").font(.system(size:13,weight:section==item ? .semibold : .regular)).foregroundStyle(section==item ? EasyDesign.ink : .secondary).padding(.vertical,12).overlay(alignment:.bottom){if section==item {Capsule().fill(EasyDesign.accent).frame(height:2)}}}.buttonStyle(.plain)
+                        Button {section=item} label:{Label(model.text(title(item)),systemImage:item == .general ? "slider.horizontal.3" : item == .apple ? "person.crop.circle" : item == .storage ? "externaldrive" : "gamecontroller").font(.system(size:13,weight:section==item ? .semibold : .regular)).foregroundStyle(section==item ? EasyDesign.ink : .secondary).padding(.horizontal,12).padding(.vertical,12).contentShape(Rectangle()).overlay(alignment:.bottom){if section==item {Capsule().fill(EasyDesign.accent).frame(height:2)}}}.buttonStyle(.plain)
                     }
                 }
             }.padding(28)
@@ -267,8 +275,9 @@ struct WorkspaceSettingsView:View {
                             Label("iCloud",systemImage:"icloud").font(.headline)
                             Text(model.text(saves.cloud==nil ? "Activa iCloud Drive en Ajustes del Sistema. Easy prepara su carpeta automáticamente." : "Tus partidas se reciben automáticamente en la biblioteca.")).font(.callout).foregroundStyle(.secondary)
                             Text(model.text("Usa la cuenta de iCloud de macOS. La cuenta Apple para firmar apps es independiente.")).font(.caption).foregroundStyle(.secondary)
+                            Button(model.text("Cuenta de iCloud"),action:showCloud).buttonStyle(EasySecondaryStyle())
                             if let folder=saves.cloud {Button(model.text("Mostrar carpeta")){NSWorkspace.shared.activateFileViewerSelecting([folder])}.buttonStyle(EasyLinkStyle())}
-                            else {Button(model.text("Activar iCloud")){saves.enableManagedCloud(repo:model.repo)}.buttonStyle(EasySecondaryStyle())}
+                            else {Button(model.text("Conectar iCloud"),action:showCloud).buttonStyle(EasySecondaryStyle())}
                             DisclosureGroup(model.text("Opciones avanzadas")) {HStack {Button(model.text("Cambiar carpeta")){saves.chooseCloud(repo:model.repo)};if saves.cloud != nil {Button(model.text("Desconectar iCloud")){saves.disconnectCloud()}}}.padding(.top,12)}.font(.caption)
                         }.padding(22).frame(maxWidth:.infinity,alignment:.leading).background(.white.opacity(0.035),in:RoundedRectangle(cornerRadius:16))
                         VStack(alignment:.leading,spacing:16) {
@@ -276,11 +285,13 @@ struct WorkspaceSettingsView:View {
                             Text(model.text("Comparte un resumen de la app y del último proceso, con datos sensibles ocultos.")).font(.callout).foregroundStyle(.secondary)
                             Button(model.text(copiedDiagnostics ? "Diagnóstico copiado" : "Copiar diagnóstico")){model.copyDiagnostics();copiedDiagnostics=true}
                         }.padding(22).frame(maxWidth:.infinity,alignment:.leading).background(.white.opacity(0.035),in:RoundedRectangle(cornerRadius:16))
-                        Text("nxnative Easy · "+version).font(.caption).foregroundStyle(.secondary)
+                        Button(action:showEngine){Label(model.text("Motor y actualizaciones")+" · Easy "+version,systemImage:"shippingbox")}.buttonStyle(EasySecondaryStyle())
                     }.padding(28)
                 }
             case .apple:
                 SideloadView(model:sideload,text:model.text,accountOnly:true,embedded:true)
+            case .storage:
+                ScrollView {VStack(alignment:.leading,spacing:18) {Text(model.text("Tus originales y partidas se conservan. Libera archivos temporales que se pueden volver a generar.")).font(.callout).foregroundStyle(.secondary);ForEach(games) {game in VStack(alignment:.leading,spacing:10) {Text(game.folder.lastPathComponent).font(.headline);CacheCleanupView(folder:game.folder,repo:model.repo,text:model.text,disabled:model.running)}}}.padding(28)}
             case .controllers:
                 ScrollView {
                     VStack(alignment:.leading,spacing:12) {

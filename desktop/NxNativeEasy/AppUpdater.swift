@@ -23,9 +23,11 @@ import Foundation
         default:return "Preparando actualización…"
         }
     }
-    private var checking=false
+    @Published private(set) var checking=false
+    @Published private(set) var checkedAt:Date?
     private struct Event: Decodable {let phase:String;let progress:Double?;let message:String?}
-    init(failureURL:URL?=nil) {
+    init(failureURL:URL?=nil,fetcher:((String)async throws->Data)?=nil,currentBuild:Int?=nil) {
+        testFetch=fetcher;installedBuild=currentBuild
         let failure=failureURL ?? FileManager.default.homeDirectoryForCurrentUser
             .appendingPathComponent("Library/Application Support/nxnative Easy/Updates/last-error.json")
         if FileManager.default.fileExists(atPath:failure.path) {
@@ -34,9 +36,14 @@ import Foundation
         }
     }
     private var binaryAvailable=false
+    private var lastAttempt:Date?
+    private let testFetch:((String)async throws->Data)?
+    private let installedBuild:Int?
     private func fetch(_ url:String) async throws -> Data {
+        if let testFetch {return try await testFetch(url)}
         var request=URLRequest(url:URL(string:url)!,timeoutInterval:20)
         request.setValue("nxnative-Easy-Updater",forHTTPHeaderField:"User-Agent")
+        request.cachePolicy = .reloadIgnoringLocalCacheData
         let (data,response)=try await URLSession.shared.data(for:request)
         guard let http=response as? HTTPURLResponse,http.statusCode==200 else {throw URLError(.badServerResponse)}
         guard data.count<128*1024 else {throw URLError(.dataLengthExceedsMaximum)}
@@ -44,22 +51,26 @@ import Foundation
     }
     func check(manual:Bool=false) async {
         guard !busy,!checking else {return}
+        if !manual,let lastAttempt,Date().timeIntervalSince(lastAttempt)<900 {return}
+        lastAttempt=Date()
         checking=true;defer {checking=false}
         do {
-            let reference=try JSONDecoder().decode(RepositoryReference.self,from:await fetch("https://api.github.com/repos/nalancer08/nxnative-easy/git/ref/heads/main"))
+            // Follow the published release, not an unreleased main commit.
+            let listingData=try await fetch("https://api.github.com/repos/nalancer08/nxnative-easy/releases/latest")
+            guard let listing=(try JSONSerialization.jsonObject(with:listingData)) as? [String:Any],
+                  listing["draft"] as? Bool==false,listing["prerelease"] as? Bool==false,
+                  let tag=listing["tag_name"] as? String,tag.range(of:"^v[0-9]+\\.[0-9]+(?:\\.[0-9]+)?$",options:.regularExpression) != nil else {throw URLError(.cannotParseResponse)}
+            let reference=try JSONDecoder().decode(RepositoryReference.self,from:await fetch("https://api.github.com/repos/nalancer08/nxnative-easy/git/ref/tags/"+tag))
             let sha=try reference.commitSHA()
             let release=try JSONDecoder().decode(UpdateRelease.self,from:await fetch("https://raw.githubusercontent.com/nalancer08/nxnative-easy/\(sha)/desktop/release.json"))
-            try release.validate()
-            let current=Int(Bundle.main.object(forInfoDictionaryKey:"CFBundleVersion") as? String ?? "0") ?? 0
+            try release.validate();guard tag=="v"+release.version else{throw URLError(.cannotParseResponse)};checkedAt=Date()
+            let current=installedBuild ?? Int(Bundle.main.object(forInfoDictionaryKey:"CFBundleVersion") as? String ?? "0") ?? 0
             if release.isNewer(than:current) {
-                binaryAvailable=false
-                if let data=try? await fetch("https://api.github.com/repos/nalancer08/nxnative-easy/releases/tags/v\(release.version)"),let listing=try? JSONSerialization.jsonObject(with:data) as? [String:Any] {
-                    let names=(listing["assets"] as? [[String:Any]] ?? []).compactMap {$0["name"] as? String}
-                    binaryAvailable=names.contains("nxnative-Easy-macOS-arm64.zip") && names.contains("SHA256SUMS")
-                }
+                let names=(listing["assets"] as? [[String:Any]] ?? []).filter{$0["state"] as? String=="uploaded"}.compactMap{$0["name"] as? String}
+                binaryAvailable=names.contains("nxnative-Easy-macOS-arm64.zip") && names.contains("SHA256SUMS")
                 if PortableRuntime.tools != nil && !binaryAvailable {throw URLError(.resourceUnavailable)}
                 available=release;revision=sha;error=nil
-            } else if manual {showNotice=true}
+            } else {available=nil;error=nil;if manual {showNotice=true}}
         } catch {if manual {self.error="No pudimos buscar actualizaciones. Intenta de nuevo más tarde."}}
     }
     func start() {

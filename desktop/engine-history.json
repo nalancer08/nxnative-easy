@@ -1,0 +1,127 @@
+{
+  "schema": 1,
+  "revision": "0031fe49bb31b706fc2f23f8d4950922506a637c",
+  "upstream": "4a2a81a64f029d0a75ade9523c8ffc6c89465375",
+  "entries": [
+    {
+      "revision": "0031fe49bb31b706fc2f23f8d4950922506a637c",
+      "date": "2026-11-04T01:31:26-06:00",
+      "title": "Fix the production iOS audio framework dependency and expose linker diagnostics"
+    },
+    {
+      "revision": "d9dc1087fb85422c787ae6e3cb72a9c4c1a2b42c",
+      "date": "2026-11-03T19:09:26-06:00",
+      "title": "Rebuild Easy as a game launcher with managed iCloud saves and original 3D art"
+    },
+    {
+      "revision": "9933f3e7bc34487eff412c0ba91c3f2564f9e6bd",
+      "date": "2026-11-03T14:01:59-06:00",
+      "title": "Build one game library around cloud saves and device presence"
+    },
+    {
+      "revision": "7b4867b574a494b43eca1ebbcdd9d9bb7290b2df",
+      "date": "2026-11-03T10:58:17-06:00",
+      "title": "Resume automatic checking when a late save begins downloading"
+    },
+    {
+      "revision": "46e84d6128ba9c30f3f2c8739bfed9797597b11a",
+      "date": "2026-11-03T10:40:52-06:00",
+      "title": "Automatically retry pending save continuity before play"
+    },
+    {
+      "revision": "1f9da89e29896a7b31d7ea6491321346e599485f",
+      "date": "2026-11-02T18:21:16-06:00",
+      "title": "Keep the checkpoint lease until claimed workers finish"
+    },
+    {
+      "revision": "26ca8eac47f541ec067e7b593969f570f9958f85",
+      "date": "2026-11-02T18:01:25-06:00",
+      "title": "Finish iOS background checkpoints and bound save-history memory"
+    },
+    {
+      "revision": "4d62b2b71a2056bd633fc21a5e01fa096cdea375",
+      "date": "2026-11-02T17:29:23-06:00",
+      "title": "Add recoverable iCloud save continuity across rebuilt games"
+    },
+    {
+      "revision": "4a2a81a64f029d0a75ade9523c8ffc6c89465375",
+      "date": "2026-11-02T22:58:59+08:00",
+      "title": "jump_offsets refuses a site whose index changes after its check"
+    },
+    {
+      "revision": "0a759de7864b8c22bc0d9f596bb6b9a6f1c45486",
+      "date": "2026-11-02T22:57:14+08:00",
+      "title": "Fire Emblem Fortune's Weave plays on the Mac"
+    },
+    {
+      "revision": "e5620b1a05a5b7374e0135d6312d3e90994eab81",
+      "date": "2026-11-02T21:21:33+08:00",
+      "title": "Jump-table walks see overwritten indices and every write of a table base"
+    },
+    {
+      "revision": "22458aa14d6d9ec2708b7442af52e4e0f99e261c",
+      "date": "2026-11-02T20:07:45+08:00",
+      "title": "The rewriter reads register writes by what the registers are (#952)"
+    },
+    {
+      "revision": "1ae435d5dbe378a022ec336692a26787557a6cea",
+      "date": "2026-11-02T19:11:55+08:00",
+      "title": "Read Unity 2020.3's stripped ComputeShader objects (#939)"
+    },
+    {
+      "revision": "54ab7b1059eae8524ff60a320ea66f6ebac16506",
+      "date": "2026-11-02T18:44:35+08:00",
+      "title": "A texture whose memory pool object is gone makes nothing (#934)"
+    },
+    {
+      "revision": "39448be6ae65424fdde7eeab8653a33cde5024a1",
+      "date": "2026-11-02T16:36:33+08:00",
+      "title": "An empty vertex stream no longer keeps draws out of runs (#765)"
+    },
+    {
+      "revision": "e52afc48dfb715ff3073788cd59c03d2b7e278e2",
+      "date": "2026-11-02T17:58:48+08:00",
+      "title": "A shader's cache key includes whether dual_want.tsv lists it"
+    },
+    {
+      "revision": "c646d43d567fbd1b96777ff7f3bd6d9aabb1a36a",
+      "date": "2026-11-02T16:41:37+08:00",
+      "title": "A rewriter pool's shutdown no longer hangs on a worker that has just started"
+    },
+    {
+      "revision": "a861f1a03210d94948a2a40f0152912d01b039fb",
+      "date": "2026-11-02T16:32:23+08:00",
+      "title": "Four profiles declare the near-zero depth their games select"
+    },
+    {
+      "revision": "b03f44f84e6c7b8d5608c9ed14e4be07a594a3aa",
+      "date": "2026-11-02T16:26:10+08:00",
+      "title": "NVN: an unimplemented function's red line prints once, past 256 calls"
+    },
+    {
+      "revision": "7313ae48ad9c550550b23a24463233ecfb305584",
+      "date": "2026-11-02T16:26:10+08:00",
+      "title": "NSP script: the check boots set depth_mode from the game's own call"
+    },
+    {
+      "revision": "e1285d95f14e6a908081f7cd3c74bdd7be9021a9",
+      "date": "2026-11-02T16:06:16+08:00",
+      "title": "Super Mario RPG plays on the Mac"
+    },
+    {
+      "revision": "9e8f292b24d9a45e46ebced926c87e7d99af9bcc",
+      "date": "2026-11-02T15:29:10+08:00",
+      "title": "Read gzip-wrapped shader archives before shader discovery (#908)"
+    },
+    {
+      "revision": "39e3c6952909ad4d60159e4366cb77cf252985dd",
+      "date": "2026-11-02T15:29:59+08:00",
+      "title": "CI: the Splatoon Raiders commit's lint findings and switch rows"
+    },
+    {
+      "revision": "411223c6153e95ee4287222dcd4eb248b8ad301e",
+      "date": "2026-11-02T15:24:39+08:00",
+      "title": "File system calls end a same-core handoff, so Digimon's saves appear (#769)"
+    }
+  ]
+}
