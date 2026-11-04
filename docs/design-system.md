@@ -89,7 +89,8 @@ The new original orange 3D portal replaces the handset/controller branding.
 orbit lights. It decorates the first-game welcome and destination step; it never
 advances build/install state. Native opacity transitions accompany selection.
 
-Use the pinned, local Lottie runtime. Pause when inactive, remove players off
+Use the pinned, local Lottie runtime. `LauncherPortal.visible` removes the web
+player when the always-mounted preparation flow is hidden. Pause when inactive, remove players off
 screen and show the meaningful resting frame 60 for reduced motion. Never create
 a player for every game row. Reference provenance, prompts, access limits and
 verification notes are in [launcher-art-direction.md](launcher-art-direction.md).

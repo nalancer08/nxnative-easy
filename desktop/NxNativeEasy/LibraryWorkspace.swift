@@ -130,7 +130,7 @@ struct LibraryWorkspace:View {
                 LauncherButton(title:model.text("Añadir juego"),symbol:"plus",enabled:!occupied,action:add).frame(width:134,height:44)
             }.padding(.leading,82).padding(.trailing,16).frame(height:64).background(EasyDesign.background).overlay(alignment:.bottom){Divider()}.zIndex(100)
             ZStack {
-                ContentView(updater:updater,sideload:sideload,model:model).opacity(page == .prepare ? 1 : 0).allowsHitTesting(page == .prepare).accessibilityHidden(page != .prepare)
+                ContentView(updater:updater,sideload:sideload,model:model,visible:page == .prepare && maintaining==nil).opacity(page == .prepare ? 1 : 0).allowsHitTesting(page == .prepare).accessibilityHidden(page != .prepare)
                 if page == .settings {WorkspaceSettingsView(model:model,sideload:sideload,saves:saves)}
                 if page == .compatibility {GameCatalogView(model:model)}
                 if page == .library {

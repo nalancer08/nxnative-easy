@@ -98,7 +98,7 @@ struct LauncherWelcome:View {
     @Environment(\.scenePhase) private var phase
     var body:some View {
         VStack(spacing:18) {
-            LibraryDropMotion(playing:phase == .active && !reduceMotion,resource:"launcher-open").frame(width:390,height:260).allowsHitTesting(false).accessibilityHidden(true)
+            LauncherPortal().frame(width:390,height:260).allowsHitTesting(false).accessibilityHidden(true)
             Text(text("Tu próxima aventura, aquí.")).font(.system(size:34,weight:.bold)).tracking(-1)
             Text(text("Añade tu juego. Elige tu pantalla. A jugar.")).font(.callout).foregroundStyle(.secondary)
             Button(action:add){Label(text("Añadir juego"),systemImage:"plus")}.buttonStyle(EasyPrimaryStyle())

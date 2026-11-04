@@ -73,7 +73,8 @@ lights and seven animated properties. This is a real Lottie composition, rendere
 by the already pinned local lottie-web 5.13.0 runtime, not a video/GIF or remote
 asset. Eight seconds form a closed gentle float. It starts on the empty welcome
 or preparation destination scene, pauses inactive, and uses resting frame 60
-for reduced motion. It never announces a completed save/build/installation.
+for reduced motion. `LauncherPortal` unmounts its web player when preparation
+is hidden, without unmounting the compilation workflow. It never announces a completed save/build/installation.
 
 Native selection uses a 180ms opacity transition, disabled by Reduce Motion.
 The connection acknowledgement is short and textual after actual discovery;

@@ -63,6 +63,7 @@ struct PreparationIllustration:View {
     private let accent=EasyDesign.accent
     private var symbol:String {["gamecontroller","tray.and.arrow.down","key.horizontal","point.topleft.down.to.point.bottomright.curvepath","cpu","checkmark.seal"][min(5,max(0,step))]}
     var fraction:Double?=nil
+    var visible=true
     private var title:String {["¿Dónde quieres jugar?","Añade tu juego","Tus llaves, en tu Mac","Todo listo para preparar","Creando tu juego","Tu juego está preparado"][min(5,max(0,step))]}
     private var subtitle:String {["Elige el dispositivo. Te guiamos con el resto.","Elige su carpeta o arrastra tus archivos aquí. No los moveremos.","Selecciona tu prod.keys. Sólo recordamos su ubicación.","Revisa el destino antes de empezar. Conservamos tus originales y partidas.","Sigue cada etapa y abre el registro en vivo cuando quieras.","La preparación terminó. El siguiente paso depende de tu dispositivo."][min(5,max(0,step))]}
     var body:some View {
@@ -72,7 +73,7 @@ struct PreparationIllustration:View {
                 Text(text(subtitle)).font(.system(size:14)).lineSpacing(3).foregroundStyle(.secondary).fixedSize(horizontal:false,vertical:true)
             }.frame(maxWidth:.infinity,alignment:.leading)
             Group {
-                if step==0 {LibraryDropMotion(playing:scenePhase == .active && !reduceMotion,resource:"launcher-open")}
+                if step==0 {LauncherPortal(visible:visible)}
                 else if step==4 {EasyBuildMeter(fraction:fraction,text:text)}
                 else {artwork.scaleEffect(1.12)}
             }.frame(width:280,height:170).accessibilityHidden(true)
@@ -628,6 +629,7 @@ struct ContentView: View {
     @ObservedObject var updater: AppUpdater
     @ObservedObject var sideload:SideloadModel
     @ObservedObject var model:BuildModel
+    var visible=true
     private let ink=EasyDesign.ink
     private let lime=EasyDesign.accent
     var body: some View {
@@ -681,7 +683,7 @@ struct ContentView: View {
                         }
                         EasyStepRail(titles:["Destino","Archivos","Llaves","Revisar","Crear"].map(model.text),current:model.preparationStep)
                     }
-                    PreparationIllustration(step:model.preparationStep,isMac:model.isMac,text:model.text,fraction:model.activity.fraction)
+                    PreparationIllustration(step:model.preparationStep,isMac:model.isMac,text:model.text,fraction:model.activity.fraction,visible:visible)
                     VStack(alignment:.leading,spacing:18) {
                         if model.preparationStep==0 {
                         HStack(spacing:16) {
