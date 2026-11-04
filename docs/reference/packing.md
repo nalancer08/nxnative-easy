@@ -234,3 +234,19 @@
 - **Cause:** the base game's Program NCA is sparse: its code and data sections carry a sparse layer and leave out data that the update supplies, so the base is smaller than its update (1.6 GB against 2.9 GB). Horizon mounts such an NCA only through its patch; read alone, the left-out ranges fail the hash check from the first block of the ExeFS. The lookup (`same_build`) tries main's build ID of the newest update first, then of the base game alone, and `run` stopped the build on the second attempt's failure.
 - **Fix:** `dm/tools/nx_extract/Program.cs` stops with exit code 4 and `[RED] the base game's program is sparse: it can be read only with its update NSP` when it is given a sparse base without an update (any enabled section of the Program NCA with a sparse layer). `scripts/build_ipa_from_nsp.py` `run` takes the exit codes a caller accepts (`ok`), and `same_build` accepts 4: the base game alone then has no main of its own and the lookup goes on. The base game with its update reads as before (LibHac layers the update over the sparse base; the whole 4.2 GB merged RomFS of the game below reads with every hash check on).
 - **Found on:** Minecraft Dungeons II (`0100A7C01B792000`, no profile yet), base v0 (SDK 22.2.0) with update v131072 (1.1.3.0). Applies to any game whose base Program NCA is sparse.
+
+
+### The iOS app fails to link AVAudioSession
+
+- **Symptom:** the shaders finish with zero regressions, then the production iOS
+  link fails with undefined `_AVAudioSessionCategoryPlayback`,
+  `_AVAudioSessionInterruptionNotification` and `AVAudioSession` symbols.
+- **Cause:** the generated iOS link flags inherit the Mac host's frameworks. The
+  UIKit frontend uses AVFAudio independently, but the Xcode project had no explicit
+  dependency on that framework. Implicit autolinking was not a reliable dependency.
+- **Fix:** declare `AVFAudio.framework` in `dm/ios/project.yml`. The unsigned iOS
+  smoke build checks its load command with `otool -L`; `build_ipa.sh` now includes
+  bounded undefined-symbol context in its error output. The completed shader cache
+  remains reusable; neither signing nor installation is part of this correction.
+- **Found on:** [Link's Awakening](../../dm/games/01006BB00C6F0000/README.md#found-on-this-game),
+  version 1.1.0, with Xcode 27.2.

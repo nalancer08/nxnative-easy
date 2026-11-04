@@ -62,6 +62,9 @@ Game-specific findings; the general host changes they led to are listed under [F
 
 ## Found on this game
 
+- [The iOS app fails to link AVAudioSession](../../reference/packing.md#the-ios-app-fails-to-link-avaudiosession): resolved build dependency; the shader stage completed successfully.
+
+
 General host changes first needed here; each applies to every game:
 
 - **Lower-left window origin** (`g_origin_ll`), **copies drawn as passes** (`copy_t2t_draw`), **compute `c0` with the dispatch size** (`encode_args_`, `nvn_refl.m`), **stencil in depth-stencil copies**: [Lower-left window origin](../../../docs/reference/rendering.md#lower-left-window-origin), [Copies a blit cannot do, drawn](../../../docs/reference/rendering.md#copies-a-blit-cannot-do-drawn), [Compute `c0`: dispatch size and uniform buffer table](../../../docs/reference/shaders.md#compute-c0-dispatch-size-and-uniform-buffer-table), [Depth-stencil copies carry the stencil](../../../docs/reference/rendering.md#depth-stencil-copies-carry-the-stencil).

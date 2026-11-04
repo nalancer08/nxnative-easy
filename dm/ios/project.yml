@@ -22,6 +22,9 @@ targets:
       - path: Gen/src         # Source files from the compile commands of dm/host/Makefile (linked in by tools/gen_build.py)
       - path: Gen/main/main.c
         compilerFlags: "-Dmain=dm_main"
+    dependencies:
+      # The UIKit frontend uses AVAudioSession even when the Mac host does not.
+      - sdk: AVFAudio.framework
     postBuildScripts:
       - name: Copy game resources
         script: /bin/bash "${SRCROOT}/tools/stage_resources.sh"

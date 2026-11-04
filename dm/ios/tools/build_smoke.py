@@ -93,6 +93,9 @@ def main():
     executable = app / info['CFBundleExecutable']
     if not executable.is_file():
         raise RuntimeError(f'No linked executable: {executable}')
+    linked = run('otool', '-L', executable, capture=True).stdout
+    if '/AVFAudio.framework/AVFAudio' not in linked:
+        raise RuntimeError('The iOS frontend must explicitly link AVFAudio')
     for source, packed in ((romfs / marker, app / 'romfs' / marker),
                            (shaders / marker, app / 'msl' / f'b-{chain}' / marker),
                            (tables / 'save-compat.json', app / 'dm/save-compat.json')):

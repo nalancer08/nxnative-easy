@@ -34,6 +34,7 @@ One line per symptom in the [subsystem references](../reference/): what you see 
 - a replacement signer can append a second team suffix or produce another app identifier, separating the user from the existing app container. → [A sideload signer changes an existing game's bundle identifier](../reference/packing.md#a-sideload-signer-changes-an-existing-games-bundle-identifier)
 - a complete game update includes new bundled RomFS but an existing Documents/romfs can take priority when the app boots. → [A complete iOS IPA can still select older external game data](../reference/packing.md#a-complete-ios-ipa-can-still-select-older-external-game-data)
 - for a game with no profile, the NSP script stops at `build ID lookup · main of the base game` with `[RED] nx_extract exit code -6`; `<title ID>_survey/logs/exefs.log` ends in `ResultFsNonRealDataVerificationFailed (2002-4604): Hash error!` from `PartitionFileSystemMetaCore.QueryMetaDataSize` under `Nca.OpenFileSystem`, although every NCA in both NSPs matches its content ID (the SHA-256 that names it) and the base game with its update extracts cleanly. → [The survey's build ID lookup stops on the base game alone with a hash error](../reference/packing.md#the-surveys-build-id-lookup-stops-on-the-base-game-alone-with-a-hash-error)
+- the shaders finish with zero regressions, then the production iOS → [The iOS app fails to link AVAudioSession](../reference/packing.md#the-ios-app-fails-to-link-avaudiosession)
 
 ## Rewriter
 

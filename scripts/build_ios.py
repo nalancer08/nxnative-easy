@@ -233,7 +233,7 @@ def main(argv=None):
         if os.environ.get('NXE_PROGRESS')=='json' and not args.full_only:
             print(json.dumps({'ev':'stage','name':'Export lightweight IPA','step':'Separating game data','k':0,'n':0}),flush=True)
         light_dir = None if args.full_only else split_ipa(output)
-        record = dict(schema=1, **settings, version=info.get('CFBundleShortVersionString'),
+        record = dict(schema=1, **settings, version=info.get('CFBundleShortVersionString'), save_continuity=info.get('DMEasySaveContinuity', 0),
                       **preparation_stamp(), light_ipa=str(next(light_dir.glob("*.ipa"))) if light_dir else None, packaging="full" if args.full_only else "split", full_ipa=str(output), light_dir=str(light_dir) if light_dir else None)
         temp = state_path.with_suffix('.json.tmp')
         temp.write_text(json.dumps(record,indent=2)+'\n'); temp.replace(state_path)
