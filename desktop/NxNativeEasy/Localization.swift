@@ -31,7 +31,7 @@ struct EasyStrings {
         "Tus juegos y tus partidas locales siguen siendo tuyos. Los juegos antiguos necesitan actualizarse para sincronizar.":"Your games and local saves stay yours. Older games need an update to sync.",
         "Continuar con partidas locales":"Continue with local saves",
         "Continuar sin sincronizar":"Continue without syncing",
-        "Podrás jugar y guardar en este dispositivo. Tus partidas no se respaldarán en iCloud ni se sincronizarán con otras pantallas hasta que lo conectes.":"You can play and save on this device. Your saves will not be backed up to iCloud or synced to other screens until you connect it.",
+        "Podrás jugar y guardar en este dispositivo. Easy no recibirá ni sincronizará copias en iCloud hasta que lo conectes. Los juegos que ya configuraste conservan sus ajustes.":"You can play and save on this device. Easy will not receive or sync iCloud copies until you connect it. Games you already configured keep their settings.",
         "MOTOR Y ACTUALIZACIONES":"ENGINE & UPDATES",
         "Lo que mueve tus juegos.":"What powers your games.",
         "Motor integrado":"Integrated engine",

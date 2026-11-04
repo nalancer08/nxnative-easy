@@ -178,6 +178,7 @@ struct GameContinuityDetail:View {
     let reviewRevision:(SaveRevision)->Void
     @State private var backup:DeviceGameObservation?
     @State private var backupMac=false
+    @State private var choosingDestination=false
     @State private var copying:DeviceGameObservation?
     private var reports:[DeviceGameObservation] {sideload.observations(titleID:entry.titleID,originalID:entry.ios?.originalBundleID)}
     private var localPresence:LocalSavePresence? {entry.titleID.flatMap{localSaves.games[$0]}}
@@ -275,7 +276,7 @@ VStack(alignment:.leading,spacing:7) {
                         Menu {
                             Button(text((report.saveContinuity ?? 0)<2 ? "Actualizar para iCloud" : "Revisar app")){if (report.saveContinuity ?? 0)<2 {if syncUpdateReady {install()}else{reviewSync()}}else{maintainDevice(report)}}
                             if sideload.isVerified(report),sideload.dataFolder(for:InstalledGame(id:report.bundleID,name:title,version:report.version)) != nil {Button(text("Copiar archivos para jugar")){copying=report}}
-                        }label:{Image(systemName:"ellipsis")}.menuStyle(.borderlessButton).menuIndicator(.hidden).fixedSize().disabled(disabled).accessibilityLabel(text("Más opciones"))
+                        }label:{Image(systemName:"ellipsis").frame(width:32,height:32).contentShape(Rectangle())}.menuStyle(.borderlessButton).menuIndicator(.hidden).fixedSize().disabled(disabled).accessibilityLabel(text("Más opciones"))
 
                     }
                 }
@@ -335,7 +336,15 @@ VStack(alignment:.leading,spacing:16) {
     private var launchAction:some View {
         HStack(spacing:8) {
             Button(action:primary){Label(text(primaryTitle),systemImage:entry.mac != nil ? "play.fill" : "arrow.down.to.line").frame(minWidth:120)}.buttonStyle(EasyPrimaryStyle()).disabled(disabled)
-            Menu {Button(text("Preparar en Mac")){prepare("mac")};Button(text("Instalar en iPhone / iPad"),action:install).disabled(entry.ios==nil);Button(text("Preparar para iPhone / iPad")){prepare("ios")}}label:{Image(systemName:"chevron.down").frame(width:18,height:24)}.menuStyle(.borderlessButton).menuIndicator(.hidden).fixedSize().padding(9).background(.white.opacity(0.04),in:RoundedRectangle(cornerRadius:8)).disabled(disabled).accessibilityLabel(text("Elegir dónde jugar"))
+            LauncherButton(title:"",symbol:"chevron.down",enabled:!disabled){choosingDestination.toggle()}.frame(width:38,height:42).background(.white.opacity(0.04),in:RoundedRectangle(cornerRadius:8)).accessibilityLabel(text("Elegir dónde jugar"))
+                .popover(isPresented:$choosingDestination,arrowEdge:.bottom) {
+                    VStack(alignment:.leading,spacing:8) {
+                        Button {choosingDestination=false;prepare("mac")}label:{Label(text("Preparar en Mac"),systemImage:"desktopcomputer").frame(maxWidth:.infinity,alignment:.leading)}.buttonStyle(EasySecondaryStyle())
+                        Button {choosingDestination=false;install()}label:{Label(text("Instalar en iPhone / iPad"),systemImage:"ipad.and.iphone").frame(maxWidth:.infinity,alignment:.leading)}.buttonStyle(EasySecondaryStyle()).disabled(entry.ios==nil)
+                        Button {choosingDestination=false;prepare("ios")}label:{Label(text("Preparar para iPhone / iPad"),systemImage:"hammer").frame(maxWidth:.infinity,alignment:.leading)}.buttonStyle(EasySecondaryStyle())
+                    }.padding(12).frame(width:280).background(EasyDesign.background)
+                }
+
         }
     }
     private var launchMetadata:some View {
@@ -357,7 +366,7 @@ VStack(alignment:.leading,spacing:16) {
             VStack(alignment:.leading,spacing:5) {Text(revision.device).font(.callout.bold());Text(Date(timeIntervalSince1970:revision.date).formatted(date:.abbreviated,time:.shortened)+(revision.version.isEmpty ? "" : " · "+revision.version)).font(.caption).foregroundStyle(.secondary)}
             Spacer()
             Button(text("Guardar copia")){saves.download(repo:repo,revision:revision)}.buttonStyle(EasySecondaryStyle()).disabled(saves.busy || saves.cloud==nil || saves.cloudIssue != nil)
-            Menu {Button(text("Preparar para Switch")){reviewRevision(revision)}}label:{Image(systemName:"ellipsis")}.menuStyle(.borderlessButton).fixedSize().disabled(saves.busy || saves.cloud==nil || saves.cloudIssue != nil).accessibilityLabel(text("Más opciones"))
+            Menu {Button(text("Preparar para Switch")){reviewRevision(revision)}}label:{Image(systemName:"ellipsis").frame(width:32,height:32).contentShape(Rectangle())}.menuStyle(.borderlessButton).fixedSize().disabled(saves.busy || saves.cloud==nil || saves.cloudIssue != nil).accessibilityLabel(text("Más opciones"))
         }.padding(14).background(EasyDesign.surface,in:RoundedRectangle(cornerRadius:12))
     }
     private func destination<Actions:View>(_ name:String,icon:String,status:String,connected:Bool,@ViewBuilder actions:()->Actions)->some View {

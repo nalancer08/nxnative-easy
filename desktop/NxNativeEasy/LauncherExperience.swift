@@ -62,7 +62,7 @@ struct CloudWelcomeView:View {
         .alert(text("Continuar con partidas locales"),isPresented:$skipping) {
             Button(text("Conectar iCloud"),role:.cancel){}
             Button(text("Continuar sin sincronizar")){saves.disconnectCloud();finish()}
-        }message:{Text(text("Podrás jugar y guardar en este dispositivo. Tus partidas no se respaldarán en iCloud ni se sincronizarán con otras pantallas hasta que lo conectes."))}
+        }message:{Text(text("Podrás jugar y guardar en este dispositivo. Easy no recibirá ni sincronizará copias en iCloud hasta que lo conectes. Los juegos que ya configuraste conservan sus ajustes."))}
     }
 }
 
