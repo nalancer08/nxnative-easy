@@ -12,6 +12,7 @@ enum EasyLanguage: String, CaseIterable {
 
 struct EasyStrings {
     static let english: [String:String] = [
+        "Sin copias recibidas":"No received copies",
         "Conectado":"Connected",
         "Tus partidas se reciben automáticamente en la biblioteca.":"Your saves arrive automatically in your library.",
         "Usa la cuenta de iCloud de macOS. La cuenta Apple para firmar apps es independiente.":"Uses the macOS iCloud account. The Apple account used to sign apps is separate.",

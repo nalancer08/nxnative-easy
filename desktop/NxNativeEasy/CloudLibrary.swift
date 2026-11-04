@@ -310,7 +310,7 @@ VStack(alignment:.leading,spacing:16) {
                     Text(text("No pudimos comprobar la partida de este Mac.")).font(.caption).foregroundStyle(.orange)
                 }
                 if entry.revisions.isEmpty {
-                    Text(text(localPresence?.state == .present ? "Aún no recibimos una copia de iCloud." : "Tu partida aparecerá aquí cuando guardes dentro del juego.")).font(.callout).foregroundStyle(.secondary)
+                    Text(text("Aún no recibimos una copia de iCloud.")).font(.callout).foregroundStyle(.secondary)
 
                 } else {
                     Text(text("Continúa donde lo dejaste. Si hay un conflicto, conservamos ambas partidas.")).font(.caption).foregroundStyle(.secondary)
@@ -334,7 +334,7 @@ VStack(alignment:.leading,spacing:16) {
     private var launchMetadata:some View {
         HStack(spacing:20) {
             VStack(alignment:.leading,spacing:4){Text(text("VERSIÓN DEL JUEGO")).font(.system(size:9,weight:.medium)).tracking(1);Text(entry.local?.version ?? entry.revisions.first?.version ?? "—").font(.system(size:12,weight:.medium))}
-            VStack(alignment:.leading,spacing:4){Text(text("PARTIDAS")).font(.system(size:9,weight:.medium)).tracking(1);Text(text(entry.revisions.isEmpty && localPresence?.state != .present ? "Aún sin partida" : "Progreso guardado")).font(.system(size:12,weight:.medium))}
+            VStack(alignment:.leading,spacing:4){Text(text("PARTIDAS")).font(.system(size:9,weight:.medium)).tracking(1);Text(text(entry.revisions.isEmpty && localPresence?.state != .present ? "Sin copias recibidas" : "Progreso guardado")).font(.system(size:12,weight:.medium))}
         }.foregroundStyle(.secondary)
     }
     @ViewBuilder private var saveActions:some View {
