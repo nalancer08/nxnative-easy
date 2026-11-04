@@ -233,13 +233,14 @@ struct CloudSavePanel: View {
                 Spacer(minLength: 0)
                 if model.busy { ProgressView().controlSize(.small).accessibilityLabel(model.text("Checking saves", "Comprobando partidas")) }
             }
-            Text(model.text("Choose the same iCloud Drive folder on both devices. Save and close the game before switching devices. Your active save stays local.", "Elige la misma carpeta de iCloud Drive en ambos dispositivos. Guarda y cierra el juego antes de cambiar de dispositivo. Tu partida activa sigue siendo local."))
-                .font(.callout).foregroundStyle(.secondary)
+            if model.folder == nil {
+                Text(model.text("One-time setup: allow this game to use iCloud Drive → nxnative Easy → Saves. Easy manages that folder on your Mac.", "Sólo la primera vez: permite que este juego use iCloud Drive → nxnative Easy → Saves. Easy gestiona esa carpeta en tu Mac.")).font(.callout).foregroundStyle(.secondary)
+            }
             if let folder = model.folder {
                 Label(model.text("Automatic save continuity", "Continuidad automática"), systemImage: "arrow.triangle.2.circlepath.icloud").font(.callout.weight(.semibold)).foregroundStyle(accent)
                 Text(model.text("Save in the game; changes are copied automatically. Before playing here, we check for progress from your other device.", "Guarda dentro del juego; los cambios se copian automáticamente. Antes de jugar aquí, comprobamos la partida del otro dispositivo.")).font(.callout).foregroundStyle(.secondary)
                 if let source = model.restoredFrom { Label(model.text("Save received from \(source). Ready to continue.", "Partida recibida de \(source). Lista para continuar."), systemImage: "checkmark.icloud").font(.callout).foregroundStyle(accent) }
-                Label(folder.lastPathComponent, systemImage: "folder").font(.callout.weight(.medium))
+                DisclosureGroup(model.text("Sync folder", "Carpeta de sincronización")) {Label(folder.lastPathComponent, systemImage:"folder").font(.caption)}
                 Text(statusText).font(.callout).fixedSize(horizontal: false, vertical: true)
             }
             if let error = model.permissionError { Label(error, systemImage: "exclamationmark.triangle").font(.callout).foregroundStyle(.orange) }
@@ -282,7 +283,7 @@ struct CloudSavePanel: View {
         }
     }
     @ViewBuilder private var actions: some View {
-        Button(model.text(model.folder == nil ? "Choose iCloud folder" : "Change folder", model.folder == nil ? "Elegir carpeta de iCloud" : "Cambiar carpeta")) { picking = true }.buttonStyle(.bordered)
+        Button(model.text(model.folder == nil ? "Enable save sync" : "Change folder", model.folder == nil ? "Activar sincronización" : "Cambiar carpeta")) { picking = true }.buttonStyle(.bordered)
         if model.folder != nil {
             Button(model.text("Check now", "Comprobar ahora")) { Task { await model.check() } }.buttonStyle(.bordered)
             Button(model.text("Turn off", "Desactivar")) { Task { await model.disable() } }.buttonStyle(.borderless)

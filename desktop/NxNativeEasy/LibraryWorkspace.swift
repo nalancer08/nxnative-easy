@@ -6,10 +6,10 @@ struct LibraryWorkspace:View {
     @ObservedObject var library:GameLibrary
     @ObservedObject var updater:AppUpdater
     @ObservedObject var sideload:SideloadModel
-    private enum Page {case library,prepare,settings,compatibility}
+    @StateObject private var navigation=LauncherNavigation()
     @StateObject private var saves=SaveCenterModel()
     @StateObject private var localSaves=LocalSaveMonitor()
-    @State private var page=Page.library
+    private var page:LauncherNavigation.Page {get{navigation.page} nonmutating set{navigation.go(newValue)}}
     @State private var query=""
     @State private var selectedEntryID:String?
     @State private var maintaining:OwnedGameOutput?
@@ -110,31 +110,36 @@ struct LibraryWorkspace:View {
         return GameCareContext(reports:reports,changes:changes,prepared:EasyBuildStamp.prepared(folder:game.folder,target:game.iosIPA != nil ? "ios" : "mac"),current:EasyBuildStamp.current,localReady:game.macApp != nil,localRebuild:rebuildAdvice[game.id+"Mac"].flatMap{$0=="unknown" ? nil : $0=="rebuild"})
     }
 
+    private func selectAvailableGame() {
+        if let selectedEntryID,entries.contains(where:{$0.id==selectedEntryID}) {return}
+        let remembered=model.defaults.string(forKey:"launcher.selectedGame.v2")
+        selectedEntryID=entries.first(where:{$0.id==remembered})?.id ?? entries.first?.id
+    }
     private func showBuildActivity() {page = .prepare;model.installingInline=false;let unfinished=model.running || model.failed || model.output==nil;model.preparationStep=unfinished ? 4 : 5;model.showDetails=true}
     private var shell:some View {
         VStack(spacing:0) {
-            HStack(spacing:22) {
-                HStack(spacing:9) {Image(nsImage:AppArtwork.icon).resizable().frame(width:30,height:30);Text("nxnative Easy").font(.system(size:16,weight:.bold))}
-                Button(model.text("Biblioteca")){page = .library;selectedEntryID=nil;maintaining=nil}.buttonStyle(EasyLinkStyle())
-                if page == .prepare {Label(model.text(model.running ? "Preparando tu juego…" : "Añadir o actualizar"),systemImage:"hammer").font(.caption).foregroundStyle(.secondary)}
+            HStack(spacing:12) {
+                Image(nsImage:AppArtwork.icon).resizable().frame(width:28,height:28).clipShape(RoundedRectangle(cornerRadius:7))
+                Text("nxnative").font(.system(size:15,weight:.bold)).tracking(-0.3).padding(.trailing,15)
+                LauncherButton(title:"",symbol:"chevron.left",enabled:navigation.canGoBack){navigation.back()}.frame(width:34,height:40).accessibilityLabel(model.text("Volver"))
+                LauncherButton(title:model.text("Biblioteca"),selected:page == .library){page = .library;maintaining=nil}.frame(width:96,height:44)
+                LauncherButton(title:model.text("Compatibilidad"),selected:page == .compatibility){page = .compatibility}.frame(width:126,height:44)
                 Spacer(minLength:0)
-                Button(model.text("Compatibilidad")){page = .compatibility}.buttonStyle(EasyLinkStyle())
-                if page != .library || selected != nil {Button(action:add){Label(model.text("Añadir juego"),systemImage:"plus")}.buttonStyle(EasySecondaryStyle()).disabled(occupied)}
+                if model.running {Label(model.text("Preparando tu juego…"),systemImage:"hammer").font(.caption).foregroundStyle(.secondary)}
                 if updater.visible {Button(model.text("Actualizar Easy")){reviewingUpdate=true}.buttonStyle(EasyLinkStyle())}
-                Button {page = .settings} label:{Image(systemName:"gearshape").frame(width:38,height:38)}.buttonStyle(.plain).accessibilityLabel(model.text("Configuración"))
-            }.padding(.leading,82).padding(.trailing,24).padding(.vertical,12).background(EasyDesign.background)
-            WorkspaceConnectionBar(sideload:sideload,saves:saves,text:model.text,connectCloud:{saves.chooseCloud(repo:model.repo)})
+                LauncherButton(title:model.text("Añadir juego"),symbol:"plus",enabled:!occupied,action:add).frame(width:134,height:44)
+            }.padding(.leading,82).padding(.trailing,16).frame(height:64).background(EasyDesign.background).overlay(alignment:.bottom){Divider()}.zIndex(100)
             ZStack {
                 ContentView(updater:updater,sideload:sideload,model:model).opacity(page == .prepare ? 1 : 0).allowsHitTesting(page == .prepare).accessibilityHidden(page != .prepare)
-                if page == .settings {WorkspaceSettingsView(model:model,sideload:sideload)}
+                if page == .settings {WorkspaceSettingsView(model:model,sideload:sideload,saves:saves)}
                 if page == .compatibility {GameCatalogView(model:model)}
                 if page == .library {
-                    if let entry=selected {
-                        VStack(spacing:0) {
-                            HStack {Button {selectedEntryID=nil}label:{Label(model.text("Biblioteca"),systemImage:"arrow.left")}.buttonStyle(EasyLinkStyle());Spacer()}.padding(.horizontal,30).padding(.top,18)
-                            ScrollView {GameContinuityDetail(entry:entry,title:entryTitle(entry),catalog:model.catalog.first{$0.id==entry.titleID},context:entry.ios.map{care($0)} ?? entry.local.map{care($0)},saves:saves,localSaves:localSaves,sideload:sideload,repo:model.repo,text:model.text,disabled:occupied,prepare:{prepare(entry,target:$0)},chooseDestination:{addEntry(entry)},maintain:{if let game=entry.ios ?? entry.local {maintain(game)}else{addEntry(entry)}},maintainDevice:{report in if let game=entry.ios ?? entry.local {maintain(game,device:report.device)}else{addEntry(entry)}},install:{if let game=entry.ios {install(game)}else{prepare(entry,target:"ios")}},files:{optionsGame=entry.local},upload:{guard let game=entry.ios ?? entry.mac else{return};saves.gameID=game.id;saves.source=nil;saves.selectedRevision=nil;saves.completed=nil;saves.chooseSource(repo:model.repo);if saves.source != nil {importingSave=true}},reviewRevision:{revision in saves.inspect(repo:model.repo,url:URL(fileURLWithPath:revision.path),revision:revision);importingSave=true})}
-                        }
-                    } else {CloudLibraryHome(entries:entries,catalog:model.catalog,saves:saves,sideload:sideload,text:model.text,query:$query,disabled:occupied,connect:{saves.chooseCloud(repo:model.repo)},add:add,open:{selectedEntryID=$0.id})}
+                    HStack(spacing:0) {
+                        LauncherSidebar(entries:entries,catalog:model.catalog,text:model.text,selected:$selectedEntryID,query:$query,add:add,settings:{page = .settings})
+                        if let entry=selected {
+                            ScrollView {GameContinuityDetail(entry:entry,title:entryTitle(entry),catalog:model.catalog.first{$0.id==entry.titleID},context:entry.ios.map{care($0)} ?? entry.local.map{care($0)},saves:saves,localSaves:localSaves,sideload:sideload,repo:model.repo,text:model.text,disabled:occupied,prepare:{prepare(entry,target:$0)},chooseDestination:{addEntry(entry)},maintain:{if let game=entry.ios ?? entry.local {maintain(game)}else{addEntry(entry)}},maintainDevice:{report in if let game=entry.ios ?? entry.local {maintain(game,device:report.device)}else{addEntry(entry)}},install:{if let game=entry.ios {install(game)}else{prepare(entry,target:"ios")}},files:{optionsGame=entry.local},upload:{guard let game=entry.ios ?? entry.mac else{return};saves.gameID=game.id;saves.source=nil;saves.selectedRevision=nil;saves.completed=nil;saves.chooseSource(repo:model.repo);if saves.source != nil {importingSave=true}},reviewRevision:{revision in saves.inspect(repo:model.repo,url:URL(fileURLWithPath:revision.path),revision:revision);importingSave=true})}.id(entry.id).transition(.opacity)
+                        } else {LauncherWelcome(text:model.text,add:add)}
+                    }
                 }
                 if let game=maintaining {
                     GameMaintenanceView(game:game,title:name(game),jobs:sideload.jobs,needsRebuild:needsRebuild(game),context:care(game),text:model.text,choose:{action in
@@ -144,28 +149,30 @@ struct LibraryWorkspace:View {
                         case .rebuild(let target):configure(game);model.target=target;model.preparationStep=1}
                     },close:{maintaining=nil}).frame(maxWidth:.infinity,maxHeight:.infinity).background(EasyDesign.background).transition(.opacity)
                 }
-            }.frame(maxWidth:.infinity,maxHeight:.infinity)
+            }.frame(maxWidth:.infinity,maxHeight:.infinity).clipped().zIndex(0).animation(reduceMotion ? nil : .easeOut(duration:0.18),value:selectedEntryID)
             if model.running || (!model.buildDockDismissed && (model.failed || !model.activity.history.isEmpty)) {Divider();BuildDock(model:model,completion:sideload.completedInstallation && sideload.gameFolder?.path==model.folder?.path ? model.text("Instalación completada en")+" "+(sideload.devices.first{$0.id==sideload.device}?.name ?? "iPhone / iPad") : nil,show:{page = .prepare;model.showDetails=true;model.preparationStep=model.running || model.failed ? 4 : 5})}
         }.background(EasyDesign.background)
         .overlay(alignment:.bottomTrailing) {
             if let connected=sideload.justConnected {
-                HStack(spacing:10) {
-                    if !reduceMotion {LibraryDropMotion(playing:scenePhase == .active,resource:"device-connected").frame(width:72,height:60).accessibilityHidden(true)}
-                    else {Image(systemName:"checkmark.circle.fill").foregroundStyle(EasyDesign.accent)}
-                    VStack(alignment:.leading,spacing:4) {Text(model.text("Dispositivo conectado")).font(.headline);Text(connected.name).font(.caption).foregroundStyle(.secondary)}
-                    Button {sideload.dismissConnectionNotice()}label:{Image(systemName:"xmark")}.buttonStyle(.plain).accessibilityLabel(model.text("Cerrar"))
-                }.padding(15).background(EasyDesign.panel,in:RoundedRectangle(cornerRadius:16)).overlay(RoundedRectangle(cornerRadius:16).strokeBorder(EasyDesign.accent.opacity(0.35))).padding(22).id(connected.id)
+                HStack(spacing:9) {
+                    Image(systemName:"checkmark.circle.fill").foregroundStyle(.green)
+                    Text(connected.name).font(.system(size:12,weight:.medium)).lineLimit(1)
+                    Text(model.text("Conectado")).font(.caption).foregroundStyle(.secondary)
+                    Button {sideload.dismissConnectionNotice()}label:{Image(systemName:"xmark").font(.caption)}.buttonStyle(.plain).accessibilityLabel(model.text("Cerrar"))
+                }.padding(12).background(EasyDesign.panel,in:RoundedRectangle(cornerRadius:9)).overlay(RoundedRectangle(cornerRadius:9).strokeBorder(EasyDesign.border)).padding(16).id(connected.id)
             }
         }
     }
     private var observingShell:some View {
         shell
-        .task {library.refresh();refreshScope();sideload.canRefresh={!model.running && !updater.busy};checkBuildAdvice();saves.restoreFolder()}
+        .task {library.refresh();selectAvailableGame();refreshScope();sideload.canRefresh={!model.running && !updater.busy};checkBuildAdvice();saves.ensureManagedCloud(repo:model.repo)}
         .task(id:scenePhase){if scenePhase == .active {await sideload.watchConnections()}}
         .task(id:String(scenePhase == .active)+":"+(saves.cloud?.path ?? "")){if scenePhase == .active {await saves.watchCloud(repo:model.repo)}}
         .task(id:String(scenePhase == .active)+":"+entries.compactMap(\.titleID).sorted().joined(separator:",")){if scenePhase == .active {await localSaves.watch(titles:entries.compactMap(\.titleID))}}
         .task(id:sideload.justConnected?.id){if sideload.justConnected != nil {do {try await Task.sleep(nanoseconds:5_000_000_000)}catch{return};sideload.dismissConnectionNotice()}}
         .onReceive(library.$games){games in checkBuildAdvice(games);refreshScope(local:games)}
+        .onChange(of:entries.map(\.id)){_,_ in selectAvailableGame()}
+        .onChange(of:selectedEntryID){_,value in if let value {model.defaults.set(value,forKey:"launcher.selectedGame.v2")}}
         .onReceive(saves.$revisions){refreshScope(remote:$0)}
         .onReceive(saves.$knownCloudTitles){refreshScope(known:$0)}
         .onReceive(sideload.$jobs){checkBuildAdvice(jobsSnapshot:$0)}
@@ -176,7 +183,7 @@ struct LibraryWorkspace:View {
         .onChange(of:model.showCatalog){_,show in if show {page = .compatibility;model.showCatalog=false}}
         .onChange(of:model.showDeviceLibrary){_,show in if show {page = .library;model.showDeviceLibrary=false}}
         .onReceive(NotificationCenter.default.publisher(for:Notification.Name("nxnative.showDevices"))){_ in page = .library}
-        .onReceive(NotificationCenter.default.publisher(for:Notification.Name("nxnative.showLibrary"))){_ in page = .library;selectedEntryID=nil;maintaining=nil;library.refresh()}
+        .onReceive(NotificationCenter.default.publisher(for:Notification.Name("nxnative.showLibrary"))){_ in page = .library;maintaining=nil;library.refresh()}
         .onReceive(NotificationCenter.default.publisher(for:Notification.Name("nxnative.openSettings"))){_ in page = .settings}
         .onReceive(NotificationCenter.default.publisher(for:Notification.Name("nxnative.showBuildActivity"))){_ in showBuildActivity()}
     }
@@ -213,6 +220,7 @@ struct LibraryWorkspace:View {
 struct WorkspaceSettingsView:View {
     @ObservedObject var model:BuildModel
     @ObservedObject var sideload:SideloadModel
+    @ObservedObject var saves:SaveCenterModel
     enum Section:String,CaseIterable {case general,apple,controllers}
     @State var section=Section.general
     @State private var copiedDiagnostics=false
@@ -251,6 +259,14 @@ struct WorkspaceSettingsView:View {
                             Toggle(model.text("Renovar aunque la ventana esté cerrada"),isOn:$backgroundRenewal).toggleStyle(.switch).onChange(of:backgroundRenewal){_,value in sideload.setLoginItem(value)}
                             Text(model.text("Sólo renueva los juegos que hayas autorizado. Requiere este Mac despierto, sesión guardada y el dispositivo emparejado accesible por USB o Wi-Fi. macOS puede pedir permiso en Elementos de inicio.")).font(.caption).foregroundStyle(.secondary)
 
+                        }.padding(22).frame(maxWidth:.infinity,alignment:.leading).background(.white.opacity(0.035),in:RoundedRectangle(cornerRadius:16))
+                        VStack(alignment:.leading,spacing:12) {
+                            Label("iCloud",systemImage:"icloud").font(.headline)
+                            Text(model.text(saves.cloud==nil ? "Activa iCloud Drive en Ajustes del Sistema. Easy prepara su carpeta automáticamente." : "Tus partidas se reciben automáticamente en la biblioteca.")).font(.callout).foregroundStyle(.secondary)
+                            Text(model.text("Usa la cuenta de iCloud de macOS. La cuenta Apple para firmar apps es independiente.")).font(.caption).foregroundStyle(.secondary)
+                            if let folder=saves.cloud {Button(model.text("Mostrar carpeta")){NSWorkspace.shared.activateFileViewerSelecting([folder])}.buttonStyle(EasyLinkStyle())}
+                            else {Button(model.text("Activar iCloud")){saves.enableManagedCloud(repo:model.repo)}.buttonStyle(EasySecondaryStyle())}
+                            DisclosureGroup(model.text("Opciones avanzadas")) {HStack {Button(model.text("Cambiar carpeta")){saves.chooseCloud(repo:model.repo)};if saves.cloud != nil {Button(model.text("Desconectar iCloud")){saves.disconnectCloud()}}}.padding(.top,12)}.font(.caption)
                         }.padding(22).frame(maxWidth:.infinity,alignment:.leading).background(.white.opacity(0.035),in:RoundedRectangle(cornerRadius:16))
                         VStack(alignment:.leading,spacing:16) {
                             Label(model.text("Ayuda y diagnóstico"),systemImage:"lifepreserver").font(.headline)

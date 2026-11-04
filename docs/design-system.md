@@ -1,212 +1,106 @@
-# nxnative Easy desktop design system
+# nxnative Easy launcher design system
 
-The canonical implementation is [`DesignSystem.swift`](../desktop/NxNativeEasy/DesignSystem.swift). Use its tokens and components for future account, installation and preparation changes. Extend the shared system before inventing a parallel visual style. This system is original, built with native SwiftUI shapes and SF Symbols; it does not copy another frontend's artwork or layout.
+The canonical tokens and controls live in `desktop/NxNativeEasy/DesignSystem.swift`
+and `LauncherShell.swift`. The current direction is a desktop game launcher:
+one persistent game list and a selected game's detail. This replaces the previous
+grid-first workspace and global cloud/device connection strip.
 
-## Foundations
+## Structure and hierarchy
 
-| Token | Value / intent |
-|---|---|
-| Background | `EasyDesign.background`, RGB 0.035 / 0.043 / 0.068 |
-| Primary text | `EasyDesign.ink`, RGB 0.94 / 0.95 / 0.98 |
-| Accent | `EasyDesign.accent`, RGB 0.46 / 0.92 / 0.96; main action and selected navigation |
-| Surface | `EasyDesign.panel` navy or white at 4% over the background |
-| Border | White at 7.5%, 1 point |
-| Page padding | 36 points for workspace pages; 28 for forms |
-| Content spacing | 20 points; internal groups use 8 / 12 / 16 / 20 / 24 |
-| Card radius | 14 points; action radius 9; unboxed game stage |
-| Page heading | Default SF Pro, 34–38 points, bold; selected game 44–54 |
-| Milestone heading | Default SF Pro, 32 points, bold |
-| Section title / body | Native headline / callout; no custom font download |
-| Supporting text | Native caption, secondary; keep essential instructions in callout |
-| Technical output | Monospaced 11 points, selectable, bounded scroll area |
+- A fixed 64-point header contains back, Library, Compatibility and Add game.
+  Reserve 82 leading points for macOS window controls. Back restores the prior
+  route. Re-selecting the current route does not push another history entry.
+- Library has a 228-point game list with real artwork, search and selection.
+  Settings sits at the bottom. There is no second global navigation sidebar.
+- Keep the selected game when returning from another page and remember it across
+  launches. A game selection never launches, signs or installs anything.
+- The selected game uses a 300-point gameplay image, a clear title, one primary
+  play/install/maintenance action and a destination menu. Show installation
+  evidence, cloud revisions and screenshots within that game.
+- Show only repository-provided screenshots; one image is a one-image gallery.
+  Opening the image uses a dismissible viewer, not an invented screenshot set.
+- Keep the preparation view mounted while browsing, so a build is not reset.
+  Clip its drawing and hit testing to its content region. Header navigation must
+  remain interactive when another screen is mounted underneath it.
 
-Use orange plus an explanatory symbol and text for warnings. Green/accent indicates a confirmed state; never use color alone. Preserve native keyboard focus rings, accessibility labels, disabled semantics and text selection for account identifiers/errors. Do not log passwords, verification codes, key contents or provider responses.
+## Visual tokens
 
-## Reusable components
+| Token | Value / use |
+| --- | --- |
+| Background | RGB 0.065 / 0.075 / 0.098, graphite |
+| Sidebar | RGB 0.047 / 0.055 / 0.075 |
+| Panel | RGB 0.09 / 0.105 / 0.135 |
+| Accent | RGB 1 / 0.43 / 0.25, warm orange |
+| Primary text | RGB 0.94 / 0.95 / 0.98 |
+| Borders | White at 7.5%, 1 point |
+| Spacing | 8 / 12 / 16 / 20 / 24 / 28 |
+| Type | System font; game title 36 bold; body 13–14; metadata 10–12 |
+| Primary action | At least 44 points; orange gradient, dark label |
+| Supporting actions | Quiet links or low-contrast bordered buttons |
 
-- `EasyCard`: padded, bordered content surface with one coherent task.
-- `EasyMilestone`: a distinct native vector composition and a useful heading/explanation. Device, account, review, transfer and verified completion have separate compositions. Decorative geometry is hidden from accessibility.
-- `EasyStepRail`: completed, current and future milestones with labels and checkmarks. It is an indicator, not a shortcut that skips required checks.
-- `EasyField`: persistent label above a generously padded native text field. Keep forms at roughly 500 points, even on a wide page. Never rely on placeholders alone.
-- `EasyPrimaryStyle`: one dominant action per decision, 44-point minimum height; disabled state is clearly different. `LibraryPrimaryButtonStyle` delegates here.
-- `EasyLinkStyle`: quiet accent links with disabled feedback for back, recovery and sign out.
-- `EasySecondaryStyle`: supporting actions with quieter contrast. Back, sign out and alternatives should not compete with the primary action.
-- `InstallActivityView`: current operation, real percentage if supplied, elapsed time and cancellation. Errors are separate readable cards. Full redacted logs are always available in a **collapsed** disclosure; their history must not overwhelm the action.
+Use native focus, disabled semantics, keyboard actions and accessibility labels.
+Native navigation buttons accept the first mouse click in an inactive window and
+use the entire control bounds, not only the text. Avoid full-page status bars,
+large dashboard counts and promotional text competing with Play.
 
-Preparation's existing `PreparationIllustration` uses the same accent/text tokens and retains its unique per-step vector compositions.
+## Saves and device evidence
 
-## Navigation and flow contract
+Easy prepares `iCloud Drive/nxnative Easy/Saves` when the real system iCloud Drive
+is available. It never creates a pretend iCloud root. Existing custom bookmarks
+stay in place; opt-out is respected. Advanced folder controls are in Settings.
+The system iCloud account and the Apple account used for signing are independent.
+On iOS, each separately signed game needs a one-time system folder permission.
+Do not imply that a free signing account grants a shared iCloud container.
 
-A successful iPhone/iPad preparation continues **inline** in the main workspace: device → Apple account → review → install. Preserve the prepared game and its compilation output. The transition configures/discovers only; it does **not** sign, register a device, install, copy data or authorize a purchase.
+A local IPA means ready to install, not installed. A cloud save's origin is not
+installation proof. Device rows distinguish a current scoped query from an older
+installation record. A short connection notice may appear after real discovery;
+it must not obscure the game's actions or become permanent chrome.
 
-Installing later from the library or device management opens the same installer as a modal. Closing the modal returns to the originating context. The account in Settings uses the same account component, embedded as a normal page. There is one shared account/session model for this Mac.
+A local save is local progress; received archive revisions are cloud copies.
+Conflicts keep both branches and require a choice before restoration. Do not
+select a winner from timestamps. Manual export creates a checked copy and never
+replaces active saves. Keep history and technical explanations in disclosures.
 
-Each installer screen must answer:
+## Preparation, account and installation
 
-1. What game and destination am I working with?
-2. What is confirmed, and what is still needed?
-3. What single action takes me forward?
+Use shared `EasyCard`, `EasyMilestone`, `EasyStepRail`, `EasyField`, primary,
+secondary and link styles. Keep password, 2FA and account recovery forms compact,
+with persistent field labels and collapsed redacted logs. No credential is logged.
+A saved session is in Keychain; the password is not persisted.
 
-Device choice uses cards with actual discovery metadata and a visible selection. Account screens cover saved-session recovery, password login, 2FA, authenticated team selection and unknown membership without changing their authentication behavior. Keep privacy/provider configuration behind a disclosure. Saving the session means macOS Keychain, not password persistence.
+The preparation flow remains destination → files → keys → review → build.
+Successful mobile preparation continues inline into device → signing account →
+review → install. Installing later from a game opens the same guarded installer
+as a modal. Close returns to that game. Navigation never authorizes signing.
 
-The review shows destination, account, existing app identity, full versus split data behavior and actual registration status. Its single install action stays in a safe-area footer, with an actionable explanation while disabled; the scrollable content never covers it. Unknown registration blocks installation. A new device requires explicit approval; slot counts remain labelled estimates and appear only when membership metadata supplies a supported limit. Never infer a free account from `Individual` alone.
+Only the explicit final install action can register a new device, sign or copy.
+Retain game/team/bundle identity checks, registration disclosure and unknown-slot
+blocking. Never uninstall an existing app automatically. A success state requires
+a matching validated installation receipt. Progress uses actual stages and real
+fractions, with elapsed time when a percentage is unknown. No fabricated ETA.
+Completed build notices can be dismissed without deleting output or logs.
 
-Signing/installing happens only on the explicit final button. Keep matching-game/team/identity checks, save preservation, new-device consent and content-version checks in the model/helper. Present automatic renewal as an explicit choice, available only with a remembered session; advanced launch-at-login and app-only options live behind a disclosure. Never silently uninstall an existing app.
+## Art and motion
 
-A success illustration appears only after a **validated `installed` event matching the current game, account team and device**, not because a progress bar reaches 100% or the helper becomes idle. Failure and cancellation offer review/retry. Progress is real: unknown percentages stay indeterminate with elapsed time. Never invent an ETA or imply a partial data copy is a completed installation.
+The new original orange 3D portal replaces the handset/controller branding.
+`Assets/Launcher/app-icon-3d.png` is the source for both Dock and in-app branding.
+`launcher-open.json` combines the generated 3D portal with original keyed vector
+orbit lights. It decorates the first-game welcome and destination step; it never
+advances build/install state. Native opacity transitions accompany selection.
 
-## Verification before shipping
+Use the pinned, local Lottie runtime. Pause when inactive, remove players off
+screen and show the meaningful resting frame 60 for reduced motion. Never create
+a player for every game row. Reference provenance, prompts, access limits and
+verification notes are in [launcher-art-direction.md](launcher-art-direction.md).
 
-Compile the whole desktop target and run the synthetic client/workflow fixtures. Render at least: empty and selected device; password form in English and Spanish; saved-session recovery; 2FA; authenticated team/slots; new-device review; progress; verified success and failure. Check the minimum desktop content width (760 points), long names, scrolling, focus, one primary action and collapsed log history. Check the static reduced-motion alternative for any decorative animation.
+## Verification
 
-Use fake accounts, helper messages and devices for screenshots/tests. Do not initiate real account login, registration, signing or installation during agent validation. Real-device testing remains a separate user action.
+Compile the entire desktop target. Check English and Spanish, minimum 760-point
+width, long titles, cloud-only games, empty library, saves absent/present and
+conflicts. Verify actual coordinate clicks, keyboard navigation, inactive-window
+first click, Compatibility → back/Library and settings return. Observe the
+animation in a visible native window and its reduced-motion frame.
 
-## Library status and completed activity
-
-A local IPA is **ready to install**, not proof of device installation. A local Mac app is **ready to play on Mac**. Show per-device installation/version separately and update it immediately from the validated receipt. Persist observations; after restart distinguish historical evidence from a current device query. Older signing records may be displayed as recorded installations without invented dates or versions. A fresh scoped query that reports absence overrides a historical receipt. Rebuild advice is a separate line and must not replace the installation state.
-
-Completed preparation notices have a labelled dismiss action that hides only the notice. Retain logs, timeline, source files and outputs. Do not allow dismissal to obscure a running build; the next actual build resets the dismissal. Viewing completed activity must not label the job as still building.
-
-
-## Desktop workspace (1.25)
-
-Use `CinematicLibrary`, `LibrarySpotlight`, `LibraryShelfCover` and
-`LibrarySpotlightItem` for the owned collection. A cover selects the full-width
-stage; it does not launch or open installation. The stage provides an explicit
-Mac Play, iOS review or Prepare action based on real outputs. Details uses
-Where to play, Files & options, and Saves tabs. Keep prepared version labelled
-separately from installed versions and observations; historical evidence stays
-historical. Mobile filtering includes linked observed installations even when a
-local IPA is unavailable. Adding a game clears stale collection filters.
-
-Top navigation uses underlined destinations and a quiet Add action. The hidden
-native title bar reserves 82 leading points for the Mac window controls. No
-adjacent game sidebar or oversized dashboard metrics. Preparation stays mounted
-when browsing. Its step rail, destination cards and phase artwork use the shared
-system. `EasyBuildMeter` displays only the current stage's real fraction; unknown
-progress remains unknown. Never label that fraction overall completion.
-
-Use the shared `EasyPrimaryStyle` and `EasySecondaryStyle`: their child views
-read `isEnabled`, so disabled forms remain visually distinct. Keep native focus,
-keyboard and accessibility semantics. Settings uses workspace tabs. Embedded
-Apple Account lays the introduction beside the existing form; the installer
-retains its guarded sequential steps and explicit final confirmation. Devices
-uses actual discovery state and prioritizes the scoped installed games list.
-Compatibility is a profile gallery, not the personal library or a source of games.
-
-The original generated archive and new `play-destinations.png` are bundled
-illustrations; text, choices, statuses and actions remain native. The real local
-Lottie still appears only during an actual file drag, pauses in background and
-uses frame 60 for reduced motion. Native stage/shelf animations also respect
-reduced motion. Keep one temporary player, no remote content and no account,
-filename or save data in its web view. Retain pinned runtime/license and teardown.
-
-Research, resource prompts and verification scope:
-[cinematic frontend](design/cinematic-frontend-2026-11.md).
-Quiet account recovery must not block browsing or introduce startup Keychain
-prompts. Keep the business guards and source/save identities unchanged.
-
-## Save continuity in rebuilt games (1.24)
-
-`dm/ios/Sources/CloudSavePanel.swift` is shared by the native iOS and Mac game
-launchers. Reuse the dark surface, 18-point radius, rounded hierarchy and lime
-accent; orange plus a branch symbol identifies a conflict without relying on
-color alone. Keep one explicit Use save action per revision, a confirmation that
-explains retention, and collapsed history/details. No invented progress or cloud
-delivery claim: distinguish a local snapshot, provider download and a file
-available in the selected folder. Play rechecks before starting; discovering a
-new conflict stays on this screen. Running games never import remote progress.
-The desktop library offers a collapsed bilingual setup guide. Folder permission
-is distinct from Apple signing-account login. Synthetic preview images are not
-evidence of iCloud/device synchronization.
-
-## Save transfers and game maintenance (1.26)
-
-Saves is a workspace destination, not a modal catalog. Its overview uses the
-original archive illustration and received revisions grouped by title. Selecting
-a revision performs a full check before an action becomes available. The review
-uses a compact header and a pinned bottom action, so the copy action never falls
-below long instructions. Original and historical saves remain distinct from an
-active restore. Unknown console/title/version capabilities are explicit.
-
-Update or renew separates signature expiry from recompilation. Selecting an
-intent advances the scene; a pinned action opens the existing guarded installer
-or preparation flow. Keep the original installation identity and source IPA for
-renewal. Never hide the final confirmation in scrollable content or change an
-automatic-renewal preference during manual review.
-
-The save-transfer Lottie exists only during an actual helper operation, pauses in
-the background and uses frame 60 for reduced motion. It depicts two retained
-saves, not business completion. Use elapsed time for unknown progress; verified
-helper output alone may show a copy as prepared. A console export is always
-labelled prepared, never restored. Native dialogs remain appropriate for choosing
-files/folders. The macOS signing account is unrelated to iCloud folder access.
-
-## Game-centred library (1.27)
-
-Devices are context in the library, not a separate administrative destination.
-The connection strip exposes actual discovered devices. The selected-game stage
-shows one evidence-based recommendation beside its artwork; each cover carries
-its own attention label. Installed never implies outdated. An installed iOS
-primary action opens **View my game**, rather than an unexplained Update button.
-
-`GameHub` has **My game** and **Saves and backups** tabs. The former presents
-platform presence, recorded expiry, preparation/signing Easy versions, the current
-launcher version and concrete affected components. The latter offers per-game
-read-only iPhone export, committed Mac backup, received iCloud versions and a
-review path for importing a copied backup. Never claim one-click live save restore
-or infer conflicts/winners from timestamps. The runtime applies cloud saves.
-
-A missing legacy receipt/version is **Not recorded**, not a guessed release. A
-source change matters only when it affects the engine/profile/build inputs, not
-just the launcher UI. Separate game-content versions from Easy versions. Record
-preparation provenance at build time and signing provenance on validated receipts;
-renewal retains the original preparation stamp. Show expiry as recorded evidence,
-not a fresh examination of an external install's provisioning profile.
-
-
-Contextual maintenance uses a compact game heading and a collapsed build-history
-disclosure. Keep both initial intent choices visible at minimum height. Recorded
-expiry may preselect renewal, but must never start it. The pinned review action
-remains visible even while history is expanded. Validate these views with an
-actual care context; a context-free preview misses the extra content.
-
-## Current library contract (1.29; supersedes older navigation sections)
-
-`CloudLibraryHome`, `LibraryEntry`, `WorkspaceConnectionBar` and
-`GameContinuityDetail` implement the current collection. One cover grid leads to
-one game page: destinations, received saves, manual backup actions and collapsed
-version/history details. No per-game tabs, global Saves page, device-management
-page, second sidebar or repeated primary Add action. Compatibility is separate.
-Settings contains the signing account and controller tester. Keep preparation
-mounted to preserve running work, and retain the existing inline/later-modal
-installer contract and its final confirmation.
-
-A cloud-only title is a library record, not an invented game folder or installed
-app. Add to play retains the expected title through the destination/files flow.
-The runtime, not the library, chooses a compatible continuation. Source-device
-metadata never proves installed presence, a timestamp never proves more progress,
-and available local provider data never proves global cloud freshness.
-
-The persistent connection strip uses independently queried device readiness and
-cloud-provider availability. First verified arrival triggers the local
-`device-connected` Lottie once; it cannot trigger signing, copying or installation.
-It ends after 2 seconds, its notice is dismissible and auto-hides after 5 seconds.
-Reduced motion shows a native checkmark. Background/invisible animation pauses.
-
-Account recovery is one compact card with the remembered address, one actionable
-recovery explanation and a primary password/retry path. Technical Apple errors
-stay behind Details; they do not appear in the library or imply iCloud failed.
-Browsing and read-only device discovery remain usable during authentication.
-
-See [research, original assets and verification](design/library-continuity-2026-11.md).
-
-## First save presence (1.29.1)
-
-A library game exists independently of its saves. `LocalSaveMonitor` reads only
-committed local metadata for known titles while active. The game's **Your save**
-section distinguishes a local Mac save from received iCloud copies. Show the
-observed modification date as **Last modified**, never progress percentage,
-cloud receipt or a branch winner. Empty-state copy waits for a real in-game save;
-opening the app alone is insufficient. Do not create placeholder save files or
-inspect unrelated device apps to fill an empty state.
+Use synthetic accounts, devices and saves for tests. Agent checks never sign,
+install, launch a real game or change the owner's active progress.

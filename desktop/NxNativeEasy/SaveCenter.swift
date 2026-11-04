@@ -46,6 +46,7 @@ struct SavePreview:Decodable {
     private var signature:String?
     @Published private(set) var usesICloud=false
     private let isCloudLocation:(URL)->Bool
+    private let managedDrive:()->URL?
     nonisolated static func isICloudLocation(_ folder:URL)->Bool {
         let root=FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Library/Mobile Documents/com~apple~CloudDocs").standardizedFileURL.path
         let selected=folder.standardizedFileURL.path
@@ -53,7 +54,30 @@ struct SavePreview:Decodable {
         return (try? folder.resourceValues(forKeys:[.isUbiquitousItemKey]).isUbiquitousItem)==true
     }
     private struct CloudCache:Codable {let bookmark:Data;let revisions:[SaveRevision];var titles:[String]?=nil}
-    init(defaults:UserDefaults = .standard,isCloudLocation:@escaping(URL)->Bool = SaveCenterModel.isICloudLocation) {self.defaults=defaults;self.isCloudLocation=isCloudLocation}
+    init(defaults:UserDefaults = .standard,isCloudLocation:@escaping(URL)->Bool = SaveCenterModel.isICloudLocation,managedDrive:@escaping()->URL? = {FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Library/Mobile Documents/com~apple~CloudDocs")}) {self.defaults=defaults;self.isCloudLocation=isCloudLocation;self.managedDrive=managedDrive}
+    // Easy owns only this namespace. Never invent an iCloud root, follow a
+    // symlink or replace an existing custom bookmark during automatic setup.
+    func ensureManagedCloud(repo:URL) {
+        restoreFolder()
+        guard cloud==nil,!busy,!defaults.bool(forKey:"saveCenter.disabled.v1"),defaults.data(forKey:"saveCenter.folder.v1")==nil else{return}
+        guard let drive=managedDrive() else{cloudIssue="icloud_unavailable";return}
+        let fm=FileManager.default
+        func safeDirectory(_ url:URL)->Bool {
+            guard url.standardizedFileURL==url.resolvingSymlinksInPath().standardizedFileURL,let values=try? url.resourceValues(forKeys:[.isDirectoryKey,.isSymbolicLinkKey]),values.isDirectory==true,values.isSymbolicLink != true else{return false}
+            return fm.isWritableFile(atPath:url.path)
+        }
+        guard safeDirectory(drive) else{cloudIssue="icloud_unavailable";return}
+        do {
+            var directory=drive
+            for name in ["nxnative Easy","Saves"] {
+                directory.appendPathComponent(name,isDirectory:true)
+                if !fm.fileExists(atPath:directory.path) {try fm.createDirectory(at:directory,withIntermediateDirectories:false)}
+                guard safeDirectory(directory) else{cloudIssue="folder_access";return}
+            }
+            connectCloud(folder:directory,repo:repo)
+        } catch {cloudIssue="folder_access"}
+    }
+    func enableManagedCloud(repo:URL) {defaults.removeObject(forKey:"saveCenter.disabled.v1");ensureManagedCloud(repo:repo)}
     func restoreFolder() {
         guard cloud==nil,let data=defaults.data(forKey:"saveCenter.folder.v1") else {return}
         if let cached=defaults.data(forKey:"cloudLibrary.cache.v1"),cached.count<=1048576,let value=try? JSONDecoder().decode(CloudCache.self,from:cached),value.bookmark==data {knownCloudTitles=(value.titles ?? value.revisions.map(\.title)).filter{$0.range(of:"^[0-9A-F]{16}$",options:.regularExpression) != nil}}
@@ -70,7 +94,7 @@ struct SavePreview:Decodable {
                 }
                 knownCloudTitles=(value.titles ?? revisions.map(\.title)).filter{$0.range(of:"^[0-9A-F]{16}$",options:.regularExpression) != nil}
             }
-        }
+        } else {cloudIssue="folder_access"}
     }
     func chooseCloud(repo:URL) {
         guard !busy else {return}
@@ -87,7 +111,7 @@ struct SavePreview:Decodable {
         do {
             let data=try url.bookmarkData(options:.withSecurityScope,includingResourceValuesForKeys:nil,relativeTo:nil)
             access?.stopAccessingSecurityScopedResource();access=scoped ? url : nil
-            listGeneration=UUID();scanning=false;defaults.set(data,forKey:"saveCenter.folder.v1");defaults.removeObject(forKey:"cloudLibrary.cache.v1");revisions=[];knownCloudTitles=[];cloud=url;usesICloud=isCloudLocation(url);signature=nil;cloudCheckedAt=nil;cloudIssue=nil
+            listGeneration=UUID();scanning=false;defaults.removeObject(forKey:"saveCenter.disabled.v1");defaults.set(data,forKey:"saveCenter.folder.v1");defaults.removeObject(forKey:"cloudLibrary.cache.v1");revisions=[];knownCloudTitles=[];cloud=url;usesICloud=isCloudLocation(url);signature=nil;cloudCheckedAt=nil;cloudIssue=nil
             refresh(repo:repo)
         } catch {if scoped {url.stopAccessingSecurityScopedResource()};self.error="folder_access"}
     }
@@ -120,6 +144,7 @@ struct SavePreview:Decodable {
         }
     }
     func disconnectCloud() {
+        defaults.set(true,forKey:"saveCenter.disabled.v1")
         listGeneration=UUID();access?.stopAccessingSecurityScopedResource();access=nil;cloud=nil
         revisions=[];knownCloudTitles=[];usesICloud=false;signature=nil;cloudCheckedAt=nil;cloudIssue=nil;scanning=false
         defaults.removeObject(forKey:"saveCenter.folder.v1");defaults.removeObject(forKey:"cloudLibrary.cache.v1")
@@ -141,8 +166,9 @@ struct SavePreview:Decodable {
         return rows.sorted().joined(separator:"\n")
     }
     func watchCloud(repo:URL) async {
-        restoreFolder()
+        ensureManagedCloud(repo:repo)
         while !Task.isCancelled {
+            if cloud==nil {ensureManagedCloud(repo:repo)}
             refresh(repo:repo,force:false)
             do {try await Task.sleep(nanoseconds:5_000_000_000)}catch{return}
         }

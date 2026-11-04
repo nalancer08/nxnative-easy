@@ -42,13 +42,13 @@ private func require(_ ok:Bool,_ message:String)throws {if !ok {throw Failure.ch
         """#.write(to:scripts.appendingPathComponent("save_transfer.py"),atomically:true,encoding:.utf8)
         let slow=root.appendingPathComponent("slow"),fast=root.appendingPathComponent("fast")
         for folder in [slow,fast] {try fm.createDirectory(at:folder,withIntermediateDirectories:true)}
-        let saves=SaveCenterModel(defaults:defaults,isCloudLocation:{_ in false})
+        let saves=SaveCenterModel(defaults:defaults,isCloudLocation:{_ in false},managedDrive:{nil})
         saves.connectCloud(folder:slow,repo:repo);saves.connectCloud(folder:fast,repo:repo)
         try await until{!saves.scanning && saves.cloudCheckedAt != nil}
         try await Task.sleep(nanoseconds:400_000_000)
         try require(saves.cloud==fast && saves.knownCloudTitles==[title] && saves.revisions.first?.title==title,"stale folder response must not replace the selected account")
         try require(!saves.usesICloud && !saves.busy,"local provider never claims iCloud or blocks browsing")
-        let cached=SaveCenterModel(defaults:defaults,isCloudLocation:{_ in false});cached.restoreFolder()
+        let cached=SaveCenterModel(defaults:defaults,isCloudLocation:{_ in false},managedDrive:{nil});cached.restoreFolder()
         try require(cached.revisions.count==1 && cached.knownCloudTitles==[title],"cached library before network: revisions=\(cached.revisions.count) titles=\(cached.knownCloudTitles) folder=\(String(describing:cached.cloud)) cache=\(defaults.data(forKey:"cloudLibrary.cache.v1")?.count ?? 0)")
         let moved=root.appendingPathComponent("unavailable");try fm.moveItem(at:fast,to:moved)
         saves.refresh(repo:repo,force:false);try await until{!saves.scanning}
@@ -57,6 +57,46 @@ private func require(_ ok:Bool,_ message:String)throws {if !ok {throw Failure.ch
         try require(saves.cloudIssue==nil && saves.revisions.count==1,"same folder stamp after reconnect must clear offline state")
         saves.disconnectCloud();try require(saves.revisions.isEmpty && saves.knownCloudTitles.isEmpty && defaults.data(forKey:"cloudLibrary.cache.v1")==nil,"disconnect clears only metadata")
         try require(fm.fileExists(atPath:fast.path),"disconnect must not remove files")
+
+        // Automatic setup touches only Easy's namespace in an existing drive.
+        let managedDefaults=UserDefaults(suiteName:suite+".managed")!
+        defer{managedDefaults.removePersistentDomain(forName:suite+".managed")}
+        let drive=root.appendingPathComponent("Drive"),missingDrive=root.appendingPathComponent("MissingDrive")
+        let absent=SaveCenterModel(defaults:managedDefaults,managedDrive:{missingDrive})
+        absent.ensureManagedCloud(repo:repo)
+        try require(absent.cloud==nil && !fm.fileExists(atPath:missingDrive.path),"do not manufacture iCloud when unavailable")
+        try fm.createDirectory(at:drive,withIntermediateDirectories:true)
+        let managed=SaveCenterModel(defaults:managedDefaults,isCloudLocation:{_ in true},managedDrive:{drive})
+        managed.ensureManagedCloud(repo:repo)
+        let expected=drive.appendingPathComponent("nxnative Easy/Saves")
+        try require(managed.cloud==expected && managed.usesICloud,"managed folder requires no picker")
+        try await until{!managed.scanning}
+        let sentinel=expected.appendingPathComponent("keep-my-save.bin")
+        try Data("existing progress".utf8).write(to:sentinel)
+        managed.disconnectCloud();managed.ensureManagedCloud(repo:repo)
+        try require(managed.cloud==nil,"automatic setup respects explicit opt-out")
+        managed.enableManagedCloud(repo:repo);try await until{!managed.scanning}
+        try require(managed.cloud==expected && (try Data(contentsOf:sentinel))==Data("existing progress".utf8),"re-enable preserves existing save files")
+        managed.connectCloud(folder:fast,repo:repo);try await until{!managed.scanning}
+        managed.ensureManagedCloud(repo:repo)
+        try require(managed.cloud==fast,"keep an existing custom folder choice")
+        managed.disconnectCloud()
+        let linked=root.appendingPathComponent("LinkedDrive")
+        try fm.createSymbolicLink(at:linked,withDestinationURL:drive)
+        let rejected=SaveCenterModel(defaults:managedDefaults,managedDrive:{linked})
+        rejected.enableManagedCloud(repo:repo)
+        try require(rejected.cloud==nil,"do not follow a linked drive")
+        let unsafe=root.appendingPathComponent("UnsafeDrive");try fm.createDirectory(at:unsafe,withIntermediateDirectories:true)
+        try fm.createSymbolicLink(at:unsafe.appendingPathComponent("nxnative Easy"),withDestinationURL:fast)
+        let unsafeModel=SaveCenterModel(defaults:managedDefaults,managedDrive:{unsafe})
+        unsafeModel.enableManagedCloud(repo:repo)
+        try require(unsafeModel.cloud==nil && !fm.fileExists(atPath:fast.appendingPathComponent("Saves").path),"do not create children through a symlink")
+        let navigation=LauncherNavigation()
+        navigation.go(.library);try require(!navigation.canGoBack,"same-page click must be a no-op")
+        navigation.go(.compatibility);navigation.go(.settings);navigation.back()
+        try require(navigation.page == .compatibility,"back restores prior route")
+        navigation.back();try require(navigation.page == .library && !navigation.canGoBack,"compatibility returns to library")
+        navigation.back();try require(navigation.page == .library,"empty history remains safe")
 
         let helper=root.appendingPathComponent("helper.py")
         try #"""

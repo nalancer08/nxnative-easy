@@ -2,11 +2,11 @@ import SwiftUI
 
 // Shared desktop design tokens. Keep account, installer and preparation on one visual system.
 enum EasyDesign {
-    static let background=Color(red:0.035,green:0.043,blue:0.068)
-    static let accent=Color(red:0.46,green:0.92,blue:0.96)
+    static let background=Color(red:0.065,green:0.075,blue:0.098)
+    static let accent=Color(red:1,green:0.43,blue:0.25)
     static let ink=Color(red:0.94,green:0.95,blue:0.98)
     static let violet=Color(red:0.56,green:0.47,blue:1)
-    static let panel=Color(red:0.063,green:0.075,blue:0.11)
+    static let panel=Color(red:0.09,green:0.105,blue:0.135)
     static let surface=Color.white.opacity(0.04)
     static let border=Color.white.opacity(0.075)
     static let radius:CGFloat=14
@@ -33,7 +33,7 @@ private struct EasyPrimaryBody<Label:View>:View {
     var body:some View {
         label.font(.system(size:14,weight:.bold)).padding(.horizontal,20).padding(.vertical,12).frame(minHeight:44)
             .foregroundStyle(enabled ? Color.black : Color.secondary)
-            .background(LinearGradient(colors:enabled ? [EasyDesign.accent,Color(red:0.44,green:0.77,blue:1)] : [.white.opacity(0.065),.white.opacity(0.065)],startPoint:.topLeading,endPoint:.bottomTrailing),in:RoundedRectangle(cornerRadius:9))
+            .background(LinearGradient(colors:enabled ? [EasyDesign.accent,Color(red:1,green:0.59,blue:0.31)] : [.white.opacity(0.065),.white.opacity(0.065)],startPoint:.topLeading,endPoint:.bottomTrailing),in:RoundedRectangle(cornerRadius:9))
             .shadow(color:enabled ? EasyDesign.accent.opacity(0.14) : .clear,radius:14,y:4).opacity(pressed ? 0.8 : 1)
     }
 }

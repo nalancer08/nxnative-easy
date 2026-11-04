@@ -175,6 +175,7 @@ struct GameContinuityDetail:View {
     let files:()->Void
     let upload:()->Void
     let reviewRevision:(SaveRevision)->Void
+    @State private var showScreenshot=false
     @State private var backup:DeviceGameObservation?
     @State private var backupMac=false
     @State private var copying:DeviceGameObservation?
@@ -209,20 +210,55 @@ struct GameContinuityDetail:View {
         else {chooseDestination()}
     }
     var body:some View {
-        VStack(alignment:.leading,spacing:26) {
-            HStack(spacing:28) {
-                VStack(alignment:.leading,spacing:13) {
-                    Text(title).font(.system(size:34,weight:.bold)).tracking(-0.9).fixedSize(horizontal:false,vertical:true)
-                    if let context,context.state != .unknown,context.state != .current {Label(text(context.title),systemImage:context.state == .expired || context.state == .expiring ? "clock.badge.exclamationmark" : "sparkles").font(.callout.bold()).foregroundStyle(.orange)}
-                    if !hasFiles {Text(text(entry.knownInCloud ? "Tu partida está aquí. Añade tus archivos para jugar." : "Añade tus archivos para preparar este juego.")).font(.callout).foregroundStyle(.secondary)}
-                    Button(action:primary){Label(text(primaryTitle),systemImage:entry.mac != nil ? "play.fill" : "plus")}.buttonStyle(EasyPrimaryStyle()).disabled(disabled)
-                    if let context,context.state != .unknown,context.state != .current {Text(text(context.reason)).font(.caption).foregroundStyle(.secondary).lineLimit(3)}
-                }.frame(maxWidth:.infinity,alignment:.leading)
-                if let catalog {GameArtworkView(game:catalog).frame(width:280,height:180).clipped().clipShape(RoundedRectangle(cornerRadius:18)).accessibilityHidden(true)}
-            }
+        VStack(alignment:.leading,spacing:0) {
+            ZStack(alignment:.bottomLeading) {
+                GeometryReader {geometry in
+                    if let catalog {GameArtworkView(game:catalog).frame(width:geometry.size.width,height:300).clipped()}
+                    else {EasyDesign.panel}
+                }
+                LinearGradient(stops:[.init(color:.black.opacity(0.05),location:0),.init(color:EasyDesign.background.opacity(0.3),location:0.42),.init(color:EasyDesign.background,location:1)],startPoint:.top,endPoint:.bottom)
+                VStack(alignment:.leading,spacing:12) {
+                    Text(text("EN TU BIBLIOTECA")).font(.system(size:10,weight:.semibold)).tracking(2).foregroundStyle(.white.opacity(0.7))
+                    Text(title).font(.system(size:36,weight:.bold)).tracking(-1).foregroundStyle(.white).fixedSize(horizontal:false,vertical:true)
+                }.padding(.horizontal,28).padding(.bottom,12).shadow(color:.black.opacity(0.3),radius:16)
+            }.frame(height:300).accessibilityElement(children:.combine)
+            VStack(alignment:.leading,spacing:24) {
+                ViewThatFits(in:.horizontal) {
+                    HStack(spacing:16) {launchAction;Spacer(minLength:8);launchMetadata}
+                    VStack(alignment:.leading,spacing:14) {launchAction;launchMetadata}
+                }
+                if let context,context.state != .unknown,context.state != .current {
+                    HStack(spacing:9) {Image(systemName:context.state == .expired || context.state == .expiring ? "clock.badge.exclamationmark" : "sparkles").foregroundStyle(EasyDesign.accent);Text(text(context.reason)).font(.caption).foregroundStyle(.secondary);Spacer();Button(text("Revisar"),action:maintain).buttonStyle(EasyLinkStyle()).disabled(disabled)}
+                }
+                if !hasFiles {Text(text(entry.knownInCloud ? "Tu partida está aquí. Añade tus archivos para jugar." : "Añade tus archivos para preparar este juego.")).font(.callout).foregroundStyle(.secondary)}
             if sideload.blocksGameWork {InstallActivityView(model:sideload,text:text)}
-            VStack(alignment:.leading,spacing:14) {
-                Text(text("Dónde puedes jugar")).font(.title3.bold())
+                ViewThatFits(in:.horizontal) {
+                    HStack(alignment:.top,spacing:24) {savedProgress.frame(minWidth:330,maxWidth:.infinity);destinations.frame(width:270)}
+                    VStack(alignment:.leading,spacing:24) {savedProgress;destinations}
+                }
+            if let context {DisclosureGroup(text("Versión y mejoras")) {VStack(alignment:.leading,spacing:14) {GameVersionComparison(context:context,text:text);Button(text("Actualizar o renovar"),action:maintain).buttonStyle(EasyLinkStyle())}.padding(.top,12)}.font(.callout)}
+            if let catalog {
+                VStack(alignment:.leading,spacing:12) {
+                    Text(text("CAPTURAS")).font(.system(size:10,weight:.semibold)).tracking(1.8).foregroundStyle(.secondary)
+                    Button {showScreenshot=true}label:{GameArtworkView(game:catalog).frame(width:220,height:124).clipped().clipShape(RoundedRectangle(cornerRadius:8)).overlay(alignment:.bottomTrailing){Image(systemName:"arrow.up.left.and.arrow.down.right").font(.caption).padding(9).background(.black.opacity(0.5),in:RoundedRectangle(cornerRadius:6)).padding(7)}}.buttonStyle(.plain).accessibilityLabel(text("Ver captura"))
+                }
+            }
+            if hasFiles {Button(text("Archivos y opciones"),action:files).buttonStyle(EasyLinkStyle())}
+            }.padding(.horizontal,28).padding(.top,12).padding(.bottom,30)
+        }.frame(maxWidth:.infinity,alignment:.topLeading).background(EasyDesign.background)
+        .sheet(isPresented:$showScreenshot) {VStack(spacing:16){HStack{Text(title).font(.headline);Spacer();Button(text("Cerrar")){showScreenshot=false}};if let catalog {GameArtworkView(game:catalog).aspectRatio(16.0/9,contentMode:.fit)}}.padding(20).frame(minWidth:560,idealWidth:900).background(EasyDesign.background)}
+        .alert(text("Guardar una copia"),isPresented:Binding(get:{backup != nil || backupMac},set:{if !$0 {backup=nil;backupMac=false}})) {
+            Button(text("Cancelar"),role:.cancel){backup=nil;backupMac=false}
+            Button(text("Ya guardé y cerré el juego")){if let backup {sideload.backupGame(backup,text:text)}else if let game=entry.local {saves.backupMac(repo:repo,game:game)};backup=nil;backupMac=false}
+        }message:{Text(text("Se crea un respaldo nuevo. La partida original se conserva."))}
+        .alert(text("Copiar datos del juego"),isPresented:Binding(get:{copying != nil},set:{if !$0 {copying=nil}})) {
+            Button(text("Cancelar"),role:.cancel){copying=nil}
+            Button(text("Ya guardé y cerré el juego")){if let report=copying {sideload.copyGame(report)};copying=nil}
+        }message:{Text(text("Copiaremos el romfs preparado en este Mac al juego seleccionado. Conservamos tus partidas y no reinstalamos la app. Mantén el juego cerrado hasta terminar."))}
+    }
+    private var destinations:some View {
+VStack(alignment:.leading,spacing:7) {
+                HStack {Text(text("JUGAR EN")).font(.system(size:10,weight:.semibold)).tracking(1.8).foregroundStyle(.secondary);Spacer();Button {Task {await sideload.refreshConnections()}}label:{Image(systemName:"arrow.clockwise")}.buttonStyle(EasyLinkStyle()).accessibilityLabel(text("Comprobar dispositivos")).disabled(sideload.busy)}
                 destination("Este Mac",icon:"desktopcomputer",status:text(entry.mac != nil ? "Listo para jugar" : "Sin instalar"),connected:true) {
                     if entry.mac != nil {Button(text("Jugar"),action:primary).buttonStyle(EasySecondaryStyle())}
                     else {Button(text("Añadir en Mac")){prepare("mac")}.buttonStyle(EasyLinkStyle()).disabled(disabled)}
@@ -247,13 +283,16 @@ struct GameContinuityDetail:View {
                     }
                 }
             }
-            VStack(alignment:.leading,spacing:16) {
+    }
+    private var savedProgress:some View {
+VStack(alignment:.leading,spacing:16) {
                 HStack {
-                    Label(text("Tu partida"),systemImage:"icloud").font(.title3.bold())
+                    Label(text("Partidas guardadas"),systemImage:"icloud").font(.headline)
                     Spacer()
                     if saves.scanning {ProgressView().controlSize(.small)}
-                    Text(text(saves.cloud==nil ? "iCloud sin conectar" : saves.cloudIssue != nil ? "Últimas copias conocidas" : saves.usesICloud ? "iCloud conectado" : "Carpeta local conectada")).font(.caption).foregroundStyle(saves.cloud != nil && saves.cloudIssue==nil ? EasyDesign.accent : .secondary)
+                    Text(text(saves.cloud==nil ? "iCloud no disponible" : saves.cloudIssue != nil ? "Últimas copias conocidas" : saves.usesICloud ? "iCloud conectado" : "Carpeta local conectada")).font(.caption).foregroundStyle(saves.cloud != nil && saves.cloudIssue==nil ? EasyDesign.accent : .secondary)
                 }
+                if saves.cloud==nil && saves.cloudIssue != nil {Text(text("Activa iCloud Drive en Ajustes del Sistema. Easy prepara su carpeta automáticamente.")).font(.caption).foregroundStyle(.secondary)}
                 if (entry.mac?.macApp).flatMap({Bundle(url:$0)?.object(forInfoDictionaryKey:"DMEasySaveContinuity") as? Int}) == nil && entry.mac != nil {
                     HStack {Text(text("Actualiza la app de Mac para recibir las partidas automáticamente.")).font(.caption).foregroundStyle(.secondary);Spacer();Button(text("Activar iCloud en Mac")){prepare("mac")}.buttonStyle(EasyLinkStyle()).disabled(disabled)}
                 }
@@ -263,7 +302,7 @@ struct GameContinuityDetail:View {
                         VStack(alignment:.leading,spacing:5) {
                             Text(text("Partida en este Mac")).font(.callout.bold())
                             if let date=presence.modified {Text(text("Última modificación")+" · "+date.formatted(date:.abbreviated,time:.shortened)).font(.caption).foregroundStyle(.secondary)}
-                            Text(text("Guardada en el dispositivo. Las copias recibidas de iCloud aparecen debajo.")).font(.caption).foregroundStyle(.secondary)
+                            EmptyView()
                         }
                         Spacer()
                     }.padding(14).background(EasyDesign.surface,in:RoundedRectangle(cornerRadius:12))
@@ -272,34 +311,37 @@ struct GameContinuityDetail:View {
                 }
                 if entry.revisions.isEmpty {
                     Text(text(localPresence?.state == .present ? "Aún no recibimos una copia de iCloud." : "Tu partida aparecerá aquí cuando guardes dentro del juego.")).font(.callout).foregroundStyle(.secondary)
-                    if !reports.isEmpty {Text(text("Las partidas de iPhone y iPad aparecen cuando iCloud las entrega.")).font(.caption).foregroundStyle(.secondary)}
+
                 } else {
-                    Text(text("Se reciben automáticamente. El juego aplica tu continuación al abrirlo.")).font(.callout).foregroundStyle(.secondary)
+                    Text(text("Continúa donde lo dejaste. Si hay un conflicto, conservamos ambas partidas.")).font(.caption).foregroundStyle(.secondary)
                     ForEach(Array(entry.revisions.prefix(2))) {revision in revisionRow(revision)}
                     if entry.revisions.count>2 {DisclosureGroup(text("Ver historial")+" · "+String(entry.revisions.count)) {ForEach(Array(entry.revisions.dropFirst(2))) {revision in revisionRow(revision)}}.font(.callout)}
                 }
-                HStack(spacing:18) {
-                    Button(text("Subir un respaldo"),action:upload).buttonStyle(EasyLinkStyle()).disabled(disabled || saves.busy || !hasFiles || saves.cloud==nil)
-                    if let local=entry.local,localPresence?.state == .present {Button(text("Guardar partida de este Mac")){backupMac=true}.buttonStyle(EasyLinkStyle()).disabled(saves.busy || local.missing)}
-                    ForEach(reports.filter{sideload.isVerified($0)}) {report in Button(text("Sacar copia del iPhone")){backup=report}.buttonStyle(EasyLinkStyle()).disabled(sideload.busy)}
-                }
+                ViewThatFits(in:.horizontal) {saveActions;VStack(alignment:.leading,spacing:8){saveActions}}
                 if let url=saves.localBackup,saves.localBackupTitle==entry.titleID {Button{textShow(url)}label:{Label(text("Mostrar copia guardada"),systemImage:"checkmark.shield")}.buttonStyle(EasyLinkStyle())}
                 if let url=sideload.exportedSaves,sideload.gameFolder==entry.ios?.folder {Button{textShow(url)}label:{Label(text("Mostrar copia guardada"),systemImage:"checkmark.shield")}.buttonStyle(EasyLinkStyle())}
                 if saves.busy {ProgressView(text("Comprobando tu partida…"))}
                 if saves.error != nil {Text(text("No pudimos preparar la copia. El original sigue intacto.")).font(.caption).foregroundStyle(.orange)}
                 DisclosureGroup(text("Cómo funciona")) {Text(text("Guarda dentro del juego. Si ambas pantallas tienen contenido compatible, tu continuación se recibe antes de jugar. Si jugaste por separado, se conservan ambas partidas y eliges. Los juegos antiguos necesitan una actualización y la carpeta de iCloud se autoriza una vez dentro de cada juego.")).font(.caption).foregroundStyle(.secondary)}.font(.caption)
-            }.padding(22).background(EasyDesign.panel,in:RoundedRectangle(cornerRadius:18))
-            if let context {DisclosureGroup(text("Versión y mejoras")) {VStack(alignment:.leading,spacing:14) {GameVersionComparison(context:context,text:text);Button(text("Actualizar o renovar"),action:maintain).buttonStyle(EasyLinkStyle())}.padding(.top,12)}.font(.callout)}
-            if hasFiles {Button(text("Archivos y opciones"),action:files).buttonStyle(EasyLinkStyle())}
-        }.padding(30).frame(maxWidth:1120).frame(maxWidth:.infinity,alignment:.top).background(EasyDesign.background)
-        .alert(text("Guardar una copia"),isPresented:Binding(get:{backup != nil || backupMac},set:{if !$0 {backup=nil;backupMac=false}})) {
-            Button(text("Cancelar"),role:.cancel){backup=nil;backupMac=false}
-            Button(text("Ya guardé y cerré el juego")){if let backup {sideload.backupGame(backup,text:text)}else if let game=entry.local {saves.backupMac(repo:repo,game:game)};backup=nil;backupMac=false}
-        }message:{Text(text("Se crea un respaldo nuevo. La partida original se conserva."))}
-        .alert(text("Copiar datos del juego"),isPresented:Binding(get:{copying != nil},set:{if !$0 {copying=nil}})) {
-            Button(text("Cancelar"),role:.cancel){copying=nil}
-            Button(text("Ya guardé y cerré el juego")){if let report=copying {sideload.copyGame(report)};copying=nil}
-        }message:{Text(text("Copiaremos el romfs preparado en este Mac al juego seleccionado. Conservamos tus partidas y no reinstalamos la app. Mantén el juego cerrado hasta terminar."))}
+            }.padding(20).background(EasyDesign.panel,in:RoundedRectangle(cornerRadius:12))
+    }
+    private var launchAction:some View {
+        HStack(spacing:8) {
+            Button(action:primary){Label(text(primaryTitle),systemImage:entry.mac != nil ? "play.fill" : "arrow.down.to.line").frame(minWidth:120)}.buttonStyle(EasyPrimaryStyle()).disabled(disabled)
+            Menu {Button(text("Preparar en Mac")){prepare("mac")};Button(text("Instalar en iPhone / iPad"),action:install).disabled(entry.ios==nil);Button(text("Preparar versión móvil")){prepare("ios")}}label:{Image(systemName:"chevron.down").frame(width:18,height:24)}.menuStyle(.borderlessButton).menuIndicator(.hidden).fixedSize().padding(9).background(.white.opacity(0.04),in:RoundedRectangle(cornerRadius:8)).disabled(disabled).accessibilityLabel(text("Elegir dónde jugar"))
+        }
+    }
+    private var launchMetadata:some View {
+        HStack(spacing:20) {
+            VStack(alignment:.leading,spacing:4){Text(text("VERSIÓN DEL JUEGO")).font(.system(size:9,weight:.medium)).tracking(1);Text(entry.local?.version ?? entry.revisions.first?.version ?? "—").font(.system(size:12,weight:.medium))}
+            VStack(alignment:.leading,spacing:4){Text(text("PARTIDAS")).font(.system(size:9,weight:.medium)).tracking(1);Text(text(entry.revisions.isEmpty && localPresence?.state != .present ? "Aún sin partida" : "Progreso guardado")).font(.system(size:12,weight:.medium))}
+        }.foregroundStyle(.secondary)
+    }
+    @ViewBuilder private var saveActions:some View {
+        HStack(spacing:14) {
+            Menu {Button(text("Subir un respaldo"),action:upload).disabled(disabled || saves.busy || !hasFiles || saves.cloud==nil);if let local=entry.local,localPresence?.state == .present {Button(text("Guardar partida de este Mac")){backupMac=true}.disabled(saves.busy || local.missing)};ForEach(reports.filter{sideload.isVerified($0)}) {report in Button(text("Sacar copia del iPhone")){backup=report}.disabled(sideload.busy)}}label:{Label(text("Gestionar copias"),systemImage:"square.and.arrow.up")}.menuStyle(.borderlessButton).fixedSize().disabled(disabled)
+            if saves.cloud==nil {Button(text("Activar iCloud")){saves.enableManagedCloud(repo:repo)}.buttonStyle(EasyLinkStyle()).disabled(saves.busy)}
+        }
     }
     private func textShow(_ url:URL){NSWorkspace.shared.activateFileViewerSelecting([url])}
     private func revisionRow(_ revision:SaveRevision)->some View {
@@ -312,10 +354,13 @@ struct GameContinuityDetail:View {
         }.padding(14).background(EasyDesign.surface,in:RoundedRectangle(cornerRadius:12))
     }
     private func destination<Actions:View>(_ name:String,icon:String,status:String,connected:Bool,@ViewBuilder actions:()->Actions)->some View {
-        HStack(spacing:14) {
+        VStack(alignment:.leading,spacing:4) {
+          HStack(spacing:10) {
             Image(systemName:icon).font(.system(size:23,weight:.light)).foregroundStyle(connected ? EasyDesign.accent : .secondary).frame(width:34)
-            VStack(alignment:.leading,spacing:5) {Text(text(name)).font(.callout.bold());Text(status).font(.caption).foregroundStyle(.secondary)}
-            Spacer();actions()
-        }.padding(17).background(EasyDesign.surface,in:RoundedRectangle(cornerRadius:14))
+            VStack(alignment:.leading,spacing:5) {Text(text(name)).font(.system(size:12,weight:.semibold));Text(status).font(.caption).foregroundStyle(.secondary)}
+            Spacer(minLength:0)
+          }
+          HStack(spacing:12){actions()}.padding(.leading,44)
+        }.padding(.vertical,7)
     }
 }

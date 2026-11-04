@@ -58,6 +58,8 @@ struct PreparationIllustration:View {
     let step:Int
     let isMac:Bool
     let text:(String)->String
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
     private let accent=EasyDesign.accent
     private var symbol:String {["gamecontroller","tray.and.arrow.down","key.horizontal","point.topleft.down.to.point.bottomright.curvepath","cpu","checkmark.seal"][min(5,max(0,step))]}
     var fraction:Double?=nil
@@ -70,7 +72,7 @@ struct PreparationIllustration:View {
                 Text(text(subtitle)).font(.system(size:14)).lineSpacing(3).foregroundStyle(.secondary).fixedSize(horizontal:false,vertical:true)
             }.frame(maxWidth:.infinity,alignment:.leading)
             Group {
-                if step==0,let image=Bundle.main.url(forResource:"play-destinations",withExtension:"png",subdirectory:"Library").flatMap({NSImage(contentsOf:$0)}) {Image(nsImage:image).resizable().scaledToFit()}
+                if step==0 {LibraryDropMotion(playing:scenePhase == .active && !reduceMotion,resource:"launcher-open")}
                 else if step==4 {EasyBuildMeter(fraction:fraction,text:text)}
                 else {artwork.scaleEffect(1.12)}
             }.frame(width:280,height:170).accessibilityHidden(true)

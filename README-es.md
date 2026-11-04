@@ -10,7 +10,7 @@ Una biblioteca que te lleva de tus propios archivos a una app lista para jugar, 
 
 Descomprime → arrastra **nxnative Easy.app** a **Aplicaciones** → ábrela. **Sin Terminal ni compilar la interfaz.** La app incluye sus herramientas.
 
-![Tu biblioteca de juegos](docs/images/nxnative-library-es-v1.29.jpg)
+![Tu biblioteca de juegos](docs/images/nxnative-library-es-v1.30.jpg)
 
 ## Switch 2 en Mac
 
@@ -33,7 +33,7 @@ Si macOS bloquea la primera apertura, entra a **Configuración del Sistema → P
 3. Revisa y pulsa **Preparar juego**. Durante el proceso verás etapas, contadores y el registro en vivo.
 4. **Mac:** pulsa **Jugar en Mac**. **iPhone / iPad:** continúa con **dispositivo → cuenta Apple → revisar → instalar**. La app te guía con la firma, instalación y transferencia de los datos del juego.
 
-<img src="docs/images/nxnative-prepare-es-v1.25.jpg" width="49%" alt="Preparación guiada del juego"> <img src="docs/images/nxnative-progress-es-v1.25.jpg" width="49%" alt="Etapas y progreso de compilación">
+<img src="docs/images/nxnative-prepare-es-v1.30.jpg" width="49%" alt="Preparación guiada del juego"> <img src="docs/images/nxnative-portal-es-v1.30.jpg" width="49%" alt="Escena original del launcher en 3D">
 
 | Juega en… | Qué obtienes |
 |---|---|
@@ -44,16 +44,15 @@ Si macOS bloquea la primera apertura, entra a **Configuración del Sistema → P
 
 ## Todo en un lugar
 
-- **Tu biblioteca:** una portada por juego, también los que aparecen por tus partidas de iCloud. Ábrela para jugar en Mac, añadir archivos o ver las instalaciones actuales y conocidas de tu iPhone/iPad.
+- **Tu biblioteca:** una lista de juegos con iconos y buscador, también los que aparecen por tus partidas de iCloud. Ábrela para jugar en Mac, añadir archivos o ver las instalaciones actuales y conocidas de tu iPhone/iPad.
 - **Tus controles:** Xbox, PS5 y PS4, con una prueba de botones y sticks en **Configuración**. En iPhone/iPad puedes mover y cambiar el tamaño de los botones táctiles y guardar **cuatro perfiles con nombre** por juego.
 - **Tus ajustes:** opciones de inicio por juego en Mac y limpieza de cachés con una vista previa de lo que se borrará.
-- **Tus partidas:** conecta iCloud en la biblioteca y abre tu juego para ver las versiones recibidas por dispositivo, versión y fecha. Añade un respaldo compatible como una versión nueva o prepara una copia para consola sin reemplazar el progreso anterior. Activa la [continuidad con iCloud](docs/icloud-saves.md) al preparar juegos con el mismo contenido; los conflictos conservan ambas partidas. No necesitas la cuenta de firma. [Transferencias y requisitos de consola](docs/save-transfer.md). El juego permanece en la biblioteca aunque no tenga partidas; el primer guardado de Mac aparece en su detalle incluso sin iCloud.
+- **Tus partidas:** Easy gestiona su carpeta en iCloud Drive. Abre tu juego para ver las versiones recibidas por dispositivo, versión y fecha. Añade un respaldo compatible como una versión nueva o prepara una copia para consola sin reemplazar el progreso anterior. Activa la [continuidad con iCloud](docs/icloud-saves.md) al preparar juegos con el mismo contenido; los conflictos conservan ambas partidas. No necesitas la cuenta de firma. [Transferencias y requisitos de consola](docs/save-transfer.md). El juego permanece en la biblioteca aunque no tenga partidas; el primer guardado de Mac aparece en su detalle incluso sin iCloud.
 - **Tu cuenta Apple:** una para toda la app, con sesión recordada en el Llavero, revisión de dispositivos y renovación opcional de firmas en segundo plano. [Requisitos de renovación](docs/background-renewal.md).
 - **Actualizaciones de la app:** pulsa **Actualizar ahora** cuando aparezca una versión. La app descarga y verifica el paquete, conserva la app anterior como respaldo y mantiene tus juegos y partidas. Para aplicar un motor nuevo a un juego existente, vuelve a prepararlo.
 
-<img src="docs/images/nxnative-details-es-v1.29.jpg" width="49%" alt="Detalle del juego y dónde jugar"> <img src="docs/images/nxnative-account-es-v1.29.jpg" width="49%" alt="Tu cuenta Apple global en Configuración">
+<img src="docs/images/nxnative-details-es-v1.30.jpg" width="49%" alt="Detalle del juego y dónde jugar"> <img src="docs/images/nxnative-account-es-v1.30.jpg" width="49%" alt="Tu cuenta Apple global en Configuración">
 
-<img src="docs/images/nxnative-saves-es-v1.26.jpg" width="49%" alt="Versiones de partidas recibidas en la carpeta de iCloud; ejemplos ficticios"> <img src="docs/images/nxnative-maintenance-es-v1.27.jpg" width="49%" alt="Elegir entre renovar la firma y actualizar el juego">
 
 **Respaldos de Switch:** una Switch 1 o 2 sin modificar no importa partidas sólo por copiarlas a la SD. Easy prepara archivos comprobados; restaurarlos requiere una herramienta compatible configurada por separado en la consola. No conecta con la nube de Nintendo. [Qué se puede hacer](docs/save-transfer.md).
 
@@ -61,9 +60,9 @@ Si macOS bloquea la primera apertura, entra a **Configuración del Sistema → P
 
 La interfaz empieza en **inglés**; cámbiala a **Español** en **Settings → General**.
 
-**Sigue en otra pantalla:** conecta la misma carpeta de iCloud Drive en Easy y una
-vez dentro de cada juego reconstruido de iPhone/iPad. Las nuevas apps de Mac
-reciben la carpeta elegida al pulsar **Jugar**. Una continuación compatible se
+**Sigue en otra pantalla:** Easy prepara **iCloud Drive → nxnative Easy → Saves**.
+Autoriza esa carpeta una vez dentro de cada juego reconstruido de iPhone/iPad.
+Las nuevas apps de Mac reciben esa carpeta al pulsar **Jugar**. Una continuación compatible se
 recibe antes de jugar; guardar en el juego prepara la subida automáticamente.
 Si hay conflicto, se conservan ambas partidas y eliges. Las apps antiguas necesitan
 actualizarse sobre su instalación existente. La cuenta de iCloud del sistema puede

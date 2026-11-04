@@ -26,12 +26,15 @@ playable game or evidence of physical-device synchronization.
    the existing iOS app with the same signing account, team and app identity.
    **Do not uninstall your game.** Updating Easy alone cannot change an already
    installed game's runtime. Keep a manual export before the first trial.
-2. Choose a folder such as **My game saves** in **iCloud Drive** in Easy. New
-   Mac apps prepared with this release receive that selection when you click
-   **Play**. If a Mac game already chose another folder, it asks you to review
-   instead of silently replacing the choice. On iPhone/iPad, open each rebuilt
-   game and grant access to this **same folder** once in the system picker.
-   Folder permission belongs to each app; signing credentials cannot grant it.
+2. Easy prepares **iCloud Drive → nxnative Easy → Saves** automatically when
+   iCloud Drive is available on this Mac. It preserves an existing custom folder
+   choice and respects turning sync off. Advanced folder controls live in
+   Settings. New Mac apps receive Easy's folder when you click **Play**. If a Mac
+   game already chose another folder, it asks you to review instead of silently
+   replacing it. On iPhone/iPad, open each rebuilt game, press **Enable save sync**
+   and grant access to **iCloud Drive → nxnative Easy → Saves** once in the system
+   picker. Folder permission belongs to each app; signing credentials cannot
+   grant it. If you already use a custom folder, keep that same folder everywhere.
 3. Save using the game's own save function. Save commits queue snapshots in the
    background. On Mac, the launcher also checks after the game exits; on iOS,
    entering the background requests another snapshot and a finite background
