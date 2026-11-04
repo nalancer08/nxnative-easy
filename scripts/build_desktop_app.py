@@ -68,7 +68,7 @@ def build_bundle(output,portable=False):
     build_helper(macos/'nxnative-sideload',helper_cache)
     shutil.move(str(macos/'sideload-licenses'),str(resources/'SideloadLicenses'))
     shutil.copytree(REPO/'desktop/NxNativeEasy/Assets/Library',resources/'Library')
-    for name in ('drop-game','save-transfer','device-connected','launcher-open','ecosystem-sync'):
+    for name in ('drop-game','save-transfer','device-connected','launcher-open','ecosystem-sync','continuity-world'):
         motion_page=resources/('Library/'+name+'.html')
         motion_template=motion_page.read_text()
         if motion_template.count('__NXE_ANIMATION_DATA__')!=1:

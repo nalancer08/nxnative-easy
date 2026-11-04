@@ -37,6 +37,7 @@ struct CloudWelcomeView:View {
     let finish:()->Void
     @State private var skipping=false
     @State private var attempted=false
+    @State private var otherAccount=false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var phase
     var body:some View {
@@ -47,10 +48,10 @@ struct CloudWelcomeView:View {
                     ViewThatFits(in:.horizontal) {
                         HStack(spacing:38) {
                             message.frame(width:370)
-                            artwork.frame(width:470,height:340)
+                            artwork.frame(width:490,height:430)
                         }
                         VStack(alignment:.leading,spacing:20) {
-                            artwork.frame(maxWidth:.infinity).frame(height:250)
+                            artwork.frame(maxWidth:.infinity).frame(height:geometry.size.height<760 ? 195 : 250)
                             message
                         }.frame(maxWidth:560)
                     }
@@ -59,27 +60,45 @@ struct CloudWelcomeView:View {
             }.background(EasyDesign.background)
         }
         .alert(text("Continuar con partidas locales"),isPresented:$skipping) {
-            Button(text("Conectar iCloud"),role:.cancel){}
+            Button(text("Volver"),role:.cancel){}
             Button(text("Continuar sin sincronizar")){saves.disconnectCloud();finish()}
         }message:{Text(text("Podrás jugar y guardar en este dispositivo. Easy no recibirá ni sincronizará copias en iCloud hasta que lo conectes. Los juegos que ya configuraste conservan sus ajustes."))}
     }
     private var artwork:some View {
-        LibraryDropMotion(playing:phase == .active && !reduceMotion,resource:"ecosystem-sync")
-            .allowsHitTesting(false).accessibilityHidden(true)
+        VStack(spacing:8) {
+            LivingCloudScene(playing:phase == .active,reducedMotion:reduceMotion,label:text(reduceMotion ? "Escena de aventura" : "Mueve el cursor o pulsa para transformar la escena."))
+            if !reduceMotion {Text(text("Mueve el cursor. Pulsa y descubre.")).font(.caption).foregroundStyle(.secondary)}
+        }
     }
     private var message:some View {
                 VStack(alignment:.leading,spacing:22) {
-                    Text(text("Tu partida. Todas tus pantallas.")).font(.system(size:36,weight:.bold)).tracking(-1).fixedSize(horizontal:false,vertical:true)
-                    Text(text("Conecta iCloud para recibir tus partidas y continuar en Mac, iPhone o iPad.")).font(.system(size:15)).foregroundStyle(.secondary).fixedSize(horizontal:false,vertical:true)
-                    HStack(spacing:12) {Image(systemName:saves.usesICloud ? "checkmark.icloud.fill" : "person.icloud").font(.title2).foregroundStyle(EasyDesign.accent);VStack(alignment:.leading,spacing:5) {Text(text(saves.usesICloud ? "iCloud de este Mac disponible" : "Usa tu cuenta de iCloud de macOS")).font(.headline);Text(text("La cuenta para firmar apps es independiente.")).font(.caption).foregroundStyle(.secondary)}}.padding(18).frame(maxWidth:.infinity,alignment:.leading).background(EasyDesign.panel,in:RoundedRectangle(cornerRadius:12))
+                    Text(text("Tu progreso, contigo.")).font(.system(size:40,weight:.bold)).tracking(-1.2).fixedSize(horizontal:false,vertical:true)
+                    Text(text("Guarda tus partidas en iCloud y continúa en Mac, iPhone o iPad.")).font(.system(size:15)).foregroundStyle(.secondary).fixedSize(horizontal:false,vertical:true)
                     if attempted && saves.cloud==nil {Text(text("Activa iCloud Drive en Ajustes del Sistema y vuelve aquí. Tus partidas locales se conservan.")).font(.callout).foregroundStyle(.orange)}
                     VStack(alignment:.leading,spacing:12) {
-                        Button {attempted=true;saves.enableManagedCloud(repo:repo);if saves.usesICloud {finish()}else{NSWorkspace.shared.open(URL(fileURLWithPath:"/System/Applications/System Settings.app"))}}label:{Label(text(saves.usesICloud ? "Continuar con iCloud" : "Conectar iCloud"),systemImage:"icloud")}.buttonStyle(EasyPrimaryStyle()).disabled(saves.busy)
+                        Button {attempted=true;saves.enableManagedCloud(repo:repo);if saves.usesICloud {finish()}else{openAccountSettings()}}label:{
+                            HStack(spacing:12) {
+                                Image(systemName:"person.icloud").font(.system(size:25,weight:.medium))
+                                Text(text("Usar iCloud de este Mac")).font(.system(size:15,weight:.semibold))
+                                Spacer(minLength:8)
+                                Image(systemName:"arrow.right").font(.system(size:14,weight:.semibold))
+                            }.frame(maxWidth:.infinity,alignment:.leading)
+                        }.buttonStyle(EasyPrimaryStyle()).disabled(saves.busy)
+                        Button(text("Usar otra cuenta de iCloud")){withAnimation(reduceMotion ? nil : .easeInOut(duration:0.2)){otherAccount.toggle()}}.buttonStyle(EasyLinkStyle())
+                        if otherAccount {
+                            VStack(alignment:.leading,spacing:12) {
+                                Text(text("iCloud usa la cuenta de macOS. Puedes administrarla en Ajustes o usar una carpeta que te comparta otra cuenta.")).font(.callout).foregroundStyle(.secondary).fixedSize(horizontal:false,vertical:true)
+                                Button(text("Administrar cuenta en macOS"),action:openAccountSettings).buttonStyle(EasySecondaryStyle())
+                                Button(text("Usar una carpeta compartida")){if saves.chooseCloud(repo:repo,requireICloud:true) {finish()}}.buttonStyle(EasyLinkStyle())
+                                if saves.error=="icloud_folder_required" {Text(text("Elige una carpeta de iCloud Drive, incluida una que te hayan compartido.")).font(.caption).foregroundStyle(.orange)}
+                            }.padding(16).background(EasyDesign.panel,in:RoundedRectangle(cornerRadius:12))
+                        }
                         Button(text("Continuar sin iCloud")){skipping=true}.buttonStyle(EasySecondaryStyle())
                     }
-                    Text(text("Tus juegos y tus partidas locales siguen siendo tuyos. Los juegos antiguos necesitan actualizarse para sincronizar.")).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal:false,vertical:true)
+                    Text(text("La cuenta para instalar tus juegos se elige después.")).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal:false,vertical:true)
                 }
     }
+    private func openAccountSettings() {NSWorkspace.shared.open(URL(fileURLWithPath:"/System/Applications/System Settings.app"))}
 }
 
 struct EngineHistoryView:View {

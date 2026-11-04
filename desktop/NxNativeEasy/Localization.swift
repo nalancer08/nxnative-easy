@@ -12,6 +12,18 @@ enum EasyLanguage: String, CaseIterable {
 
 struct EasyStrings {
     static let english: [String:String] = [
+        "Escena de aventura":"Adventure scene",
+        "Tu progreso, contigo.":"Your progress, with you.",
+        "Guarda tus partidas en iCloud y continúa en Mac, iPhone o iPad.":"Save your progress to iCloud and continue on Mac, iPhone or iPad.",
+        "Usar iCloud de este Mac":"Use this Mac’s iCloud",
+        "Usar otra cuenta de iCloud":"Use another iCloud account",
+        "iCloud usa la cuenta de macOS. Puedes administrarla en Ajustes o usar una carpeta que te comparta otra cuenta.":"iCloud uses your macOS account. Manage it in Settings, or use a folder shared with you by another account.",
+        "Administrar cuenta en macOS":"Manage account in macOS",
+        "Usar una carpeta compartida":"Use a shared folder",
+        "Elige una carpeta de iCloud Drive, incluida una que te hayan compartido.":"Choose an iCloud Drive folder, including one shared with you.",
+        "La cuenta para instalar tus juegos se elige después.":"The account used to install games is chosen later.",
+        "Mueve el cursor. Pulsa y descubre.":"Move the pointer. Click to discover.",
+        "Mueve el cursor o pulsa para transformar la escena.":"Move the pointer or press to transform the scene.",
         "Cuenta de iCloud":"iCloud account",
         "Fecha de compilación no registrada":"Preparation date not recorded",
         "Archivos temporales de Xcode":"Xcode build intermediates",

@@ -1,0 +1,16 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#111319}
+#halo,canvas{position:absolute;inset:0;width:100%;height:100%}
+canvas{outline:0;cursor:grab;touch-action:none}canvas:active{cursor:grabbing}
+canvas:focus-visible{outline:2px solid #ff6e40;outline-offset:-5px;border-radius:24px}
+#fallback{position:absolute;inset:12% 5%;width:90%;height:76%;object-fit:cover;border-radius:28px;display:none}
+</style></head><body>
+<div id="halo" aria-hidden="true"></div><img id="fallback" alt=""><canvas id="world" tabindex="0" role="button" aria-label="Interactive adventure scene"></canvas>
+<script src="lottie-light-5.13.0.min.js"></script>
+<script>window.sceneData=__NXE_ANIMATION_DATA__;</script>
+<script src="continuity-world.js"></script>
+</body></html>

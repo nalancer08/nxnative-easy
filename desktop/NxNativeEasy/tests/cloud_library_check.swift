@@ -43,6 +43,9 @@ private func require(_ ok:Bool,_ message:String)throws {if !ok {throw Failure.ch
         let slow=root.appendingPathComponent("slow"),fast=root.appendingPathComponent("fast")
         for folder in [slow,fast] {try fm.createDirectory(at:folder,withIntermediateDirectories:true)}
         let saves=SaveCenterModel(defaults:defaults,isCloudLocation:{_ in false},managedDrive:{nil})
+        let beforeSelection=defaults.data(forKey:"saveCenter.folder.v1")
+        try require(!saves.connectCloud(folder:slow,repo:repo,requireICloud:true),"shared iCloud flow rejects an ordinary local folder")
+        try require(saves.cloud==nil && defaults.data(forKey:"saveCenter.folder.v1")==beforeSelection && !saves.scanning,"rejected selection preserves the old account and starts no scan")
         saves.connectCloud(folder:slow,repo:repo);saves.connectCloud(folder:fast,repo:repo)
         try await until{!saves.scanning && saves.cloudCheckedAt != nil}
         try await Task.sleep(nanoseconds:400_000_000)

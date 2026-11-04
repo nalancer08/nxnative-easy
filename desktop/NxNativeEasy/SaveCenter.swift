@@ -96,24 +96,26 @@ struct SavePreview:Decodable {
             }
         } else {cloudIssue="folder_access"}
     }
-    func chooseCloud(repo:URL) {
-        guard !busy else {return}
+    @discardableResult func chooseCloud(repo:URL,requireICloud:Bool=false)->Bool {
+        guard !busy else {return false}
         let panel=NSOpenPanel();panel.canChooseDirectories=true;panel.canChooseFiles=false;panel.allowsMultipleSelection=false
         panel.title="iCloud Drive";panel.canCreateDirectories=true
         let drive=FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Library/Mobile Documents/com~apple~CloudDocs")
         if FileManager.default.fileExists(atPath:drive.path) {panel.directoryURL=drive}
-        guard panel.runModal() == .OK,let url=panel.url else {return}
-        connectCloud(folder:url,repo:repo)
+        guard panel.runModal() == .OK,let url=panel.url else {return false}
+        return connectCloud(folder:url,repo:repo,requireICloud:requireICloud)
     }
-    func connectCloud(folder url:URL,repo:URL) {
-        guard !busy else{return}
+    @discardableResult func connectCloud(folder url:URL,repo:URL,requireICloud:Bool=false)->Bool {
+        guard !busy else{return false}
+        guard !requireICloud || isCloudLocation(url) else {error="icloud_folder_required";return false}
         let scoped=url.startAccessingSecurityScopedResource()
         do {
             let data=try url.bookmarkData(options:.withSecurityScope,includingResourceValuesForKeys:nil,relativeTo:nil)
             access?.stopAccessingSecurityScopedResource();access=scoped ? url : nil
             listGeneration=UUID();scanning=false;defaults.removeObject(forKey:"saveCenter.disabled.v1");defaults.set(data,forKey:"saveCenter.folder.v1");defaults.removeObject(forKey:"cloudLibrary.cache.v1");revisions=[];knownCloudTitles=[];cloud=url;usesICloud=isCloudLocation(url);signature=nil;cloudCheckedAt=nil;cloudIssue=nil
             refresh(repo:repo)
-        } catch {if scoped {url.stopAccessingSecurityScopedResource()};self.error="folder_access"}
+            return true
+        } catch {if scoped {url.stopAccessingSecurityScopedResource()};self.error="folder_access";return false}
     }
     nonisolated private static func execute(repo:URL,request:[String:Any])->Data {
         let process=Process(),input=Pipe(),output=Pipe()
