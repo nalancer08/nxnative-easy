@@ -37,6 +37,7 @@ import Foundation
         var stream=BuildActivity()
         stream.receive(Data("{\"ev\":\"stage\",\"k\":1,\"n\":2,\"name\":\"Extract\"}\n{\"ev\":\"stage_end\",\"ok\":true}\n{\"ev\":\"stage\",\"k\":2,\"n\":3,\"name\":\"Rewrite\"}\n{\"ev\":\"progress\",\"frac\":0.25,\"eta\":42,\"est\":true}\n".utf8))
         assert(stream.stages==3 && stream.history.count==2 && stream.history[0].state == .done && stream.eta==42 && stream.estimated)
+        stream.receive(Data("{\"ev\":\"progress\",\"k\":2,\"n\":0}\n".utf8));assert(stream.stages==3)
         stream.receive(Data("{\"ev\":\"progress\",\"eta\":1e100}\n".utf8));assert(stream.eta==nil)
         stream.receive(Data("{\"ev\":\"shaders_stale\",\"reason\":\"chain\",\"count\":1010}\n".utf8))
         assert(stream.shaderCacheReason=="chain" && stream.scheduledShaders==1010 && stream.fraction==nil)

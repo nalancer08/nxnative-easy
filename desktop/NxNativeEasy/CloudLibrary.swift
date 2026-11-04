@@ -168,6 +168,7 @@ struct GameContinuityDetail:View {
     let text:(String)->String
     let disabled:Bool
     let prepare:(String)->Void
+    let reviewSync:()->Void
     let chooseDestination:()->Void
     let maintain:()->Void
     let maintainDevice:(DeviceGameObservation)->Void
@@ -182,10 +183,12 @@ struct GameContinuityDetail:View {
     private var reports:[DeviceGameObservation] {sideload.observations(titleID:entry.titleID,originalID:entry.ios?.originalBundleID)}
     private var localPresence:LocalSavePresence? {entry.titleID.flatMap{localSaves.games[$0]}}
     private var hasFiles:Bool {entry.sources.contains{!$0.missing}}
+    private var syncUpdateReady:Bool {entry.ios?.iosIPA != nil && (entry.ios?.iosSaveContinuity ?? 0)>=2}
+    private var needsSyncUpdate:Bool {saves.cloud != nil && reports.contains{($0.saveContinuity ?? 0)<2}}
     private var primaryTitle:String {
         if entry.mac != nil {return "Jugar"}
         if !reports.isEmpty {
-            if saves.cloud != nil,reports.contains(where:{($0.saveContinuity ?? 0)<1}) {return "Activar iCloud en iPhone / iPad"}
+            if needsSyncUpdate {return syncUpdateReady ? "Actualizar en iPhone / iPad" : "Actualizar para sincronizar partidas"}
             if context?.state == .expired || context?.state == .expiring {return "Renovar firma"}
             return context?.state == .rebuild || context?.state == .contentUpdate ? "Actualizar en iPhone / iPad" : "Preparar en Mac"
         }
@@ -202,7 +205,7 @@ struct GameContinuityDetail:View {
     private func primary() {
         if let app=entry.mac?.macApp {play(app)}
         else if !reports.isEmpty {
-            if saves.cloud != nil,reports.contains(where:{($0.saveContinuity ?? 0)<1}) {prepare("ios")}
+            if needsSyncUpdate {if syncUpdateReady {install()}else{reviewSync()}}
             else if context?.state == .unknown || context?.state == .current {prepare("mac")}
             else {maintain()}
         }
@@ -247,14 +250,14 @@ struct GameContinuityDetail:View {
             }.padding(.horizontal,28).padding(.top,12).padding(.bottom,30)
         }.frame(maxWidth:.infinity,alignment:.topLeading).background(EasyDesign.background)
         .sheet(isPresented:$showScreenshot) {VStack(spacing:16){HStack{Text(title).font(.headline);Spacer();Button(text("Cerrar")){showScreenshot=false}};if let catalog {GameArtworkView(game:catalog).aspectRatio(16.0/9,contentMode:.fit)}}.padding(20).frame(minWidth:560,idealWidth:900).background(EasyDesign.background)}
-        .alert(text("Guardar una copia"),isPresented:Binding(get:{backup != nil || backupMac},set:{if !$0 {backup=nil;backupMac=false}})) {
+        .alert(text("Respaldar tu partida"),isPresented:Binding(get:{backup != nil || backupMac},set:{if !$0 {backup=nil;backupMac=false}})) {
             Button(text("Cancelar"),role:.cancel){backup=nil;backupMac=false}
             Button(text("Ya guardé y cerré el juego")){if let backup {sideload.backupGame(backup,text:text)}else if let game=entry.local {saves.backupMac(repo:repo,game:game)};backup=nil;backupMac=false}
-        }message:{Text(text("Se crea un respaldo nuevo. La partida original se conserva."))}
-        .alert(text("Copiar datos del juego"),isPresented:Binding(get:{copying != nil},set:{if !$0 {copying=nil}})) {
+        }message:{Text(text("Se creará un ZIP en tu Mac con el guardado. La partida original no se modifica."))}
+        .alert(text("Copiar archivos para jugar"),isPresented:Binding(get:{copying != nil},set:{if !$0 {copying=nil}})) {
             Button(text("Cancelar"),role:.cancel){copying=nil}
             Button(text("Ya guardé y cerré el juego")){if let report=copying {sideload.copyGame(report)};copying=nil}
-        }message:{Text(text("Copiaremos el romfs preparado en este Mac al juego seleccionado. Conservamos tus partidas y no reinstalamos la app. Mantén el juego cerrado hasta terminar."))}
+        }message:{Text(text("Copia los archivos grandes necesarios para jugar desde este Mac al iPhone. No respalda ni sincroniza partidas. Mantén el juego cerrado hasta terminar."))}
     }
     private var destinations:some View {
 VStack(alignment:.leading,spacing:7) {
@@ -266,10 +269,12 @@ VStack(alignment:.leading,spacing:7) {
                 ForEach(reports) {report in
                     let connected=sideload.devices.contains{$0.id==report.device && $0.ready} && !sideload.connectionIssue
                     destination(report.deviceName,icon:"iphone",status:text(connected ? sideload.isVerified(report) ? "Conectado · Juego instalado" : "Conectado · Comprobando juego" : "Desconectado · Última instalación conocida"),connected:connected) {
-                        if sideload.isVerified(report),sideload.dataFolder(for:InstalledGame(id:report.bundleID,name:title,version:report.version)) != nil {
-                            Button(text("Copiar datos del juego")){copying=report}.buttonStyle(EasyLinkStyle()).disabled(disabled)
-                        }
-                        Button(text((report.saveContinuity ?? 0)<1 ? "Activar iCloud" : "Revisar")){if (report.saveContinuity ?? 0)<1 {prepare("ios")}else{maintainDevice(report)}}.buttonStyle(EasyLinkStyle()).disabled(disabled)
+                        Button(text("Respaldar partida")){backup=report}.buttonStyle(EasyLinkStyle()).disabled(disabled || !sideload.isVerified(report))
+                        Menu {
+                            Button(text((report.saveContinuity ?? 0)<2 ? "Actualizar para iCloud" : "Revisar app")){if (report.saveContinuity ?? 0)<2 {if syncUpdateReady {install()}else{reviewSync()}}else{maintainDevice(report)}}
+                            if sideload.isVerified(report),sideload.dataFolder(for:InstalledGame(id:report.bundleID,name:title,version:report.version)) != nil {Button(text("Copiar archivos para jugar")){copying=report}}
+                        }label:{Image(systemName:"ellipsis")}.menuStyle(.borderlessButton).menuIndicator(.hidden).fixedSize().disabled(disabled).accessibilityLabel(text("Más opciones"))
+
                     }
                 }
                 ForEach(sideload.devices.filter{device in !reports.contains{$0.device==device.id}}) {device in
@@ -339,7 +344,7 @@ VStack(alignment:.leading,spacing:16) {
     }
     @ViewBuilder private var saveActions:some View {
         HStack(spacing:14) {
-            Menu {Button(text("Subir un respaldo"),action:upload).disabled(disabled || saves.busy || !hasFiles || saves.cloud==nil);if let local=entry.local,localPresence?.state == .present {Button(text("Guardar partida de este Mac")){backupMac=true}.disabled(saves.busy || local.missing)};ForEach(reports.filter{sideload.isVerified($0)}) {report in Button(text("Sacar copia del iPhone")){backup=report}.disabled(sideload.busy)}}label:{Label(text("Gestionar copias"),systemImage:"square.and.arrow.up")}.menuStyle(.borderlessButton).fixedSize().disabled(disabled)
+            Menu {Button(text("Subir un respaldo"),action:upload).disabled(disabled || saves.busy || !hasFiles || saves.cloud==nil);if let local=entry.local,localPresence?.state == .present {Button(text("Guardar partida de este Mac")){backupMac=true}.disabled(saves.busy || local.missing)};ForEach(reports.filter{sideload.isVerified($0)}) {report in Button(text("Respaldar partida")+" · "+report.deviceName){backup=report}.disabled(sideload.busy)}}label:{Label(text("Respaldar o importar partida"),systemImage:"square.and.arrow.up")}.menuStyle(.borderlessButton).fixedSize().disabled(disabled)
             if saves.cloud==nil {Button(text("Activar iCloud")){saves.enableManagedCloud(repo:repo)}.buttonStyle(EasyLinkStyle()).disabled(saves.busy)}
         }
     }

@@ -13,6 +13,7 @@ import Foundation
         #!/usr/bin/python3
         import sys,json,time,zipfile,os
         def emit(value):print(json.dumps(value),flush=True)
+        time.sleep(.1)
         emit({'event':'hello','protocol':1,'architecture':'aarch64','capabilities':['scoped-games-v1','save-export-v1','romfs-copy-v1','registration-consent-v1','quiet-keychain-v1','account-vault-v1']})
         for line in sys.stdin:
             value=json.loads(line)
@@ -214,6 +215,13 @@ import Foundation
         model.copyGame(copyReport);try await wait {!model.busy}
         let copyAudit=try String(contentsOf:root.appendingPathComponent("operations.log"),encoding:.utf8)
         guard model.error==nil,copyAudit.split(separator:"\n").filter({$0=="copy_romfs"}).count==2 else {fputs("Per-game data copy must recheck the exact installed identity\n",stderr);exit(1)}
+        let cold=SideloadModel(stateURL:root.appendingPathComponent("cold/jobs.json"),defaults:defaults,helperURL:helper)
+        cold.devices=model.devices;cold.jobs=model.jobs;cold.preparedIdentifiers=["org.game"];cold.preparedFolders=model.preparedFolders
+        cold.error="old account failure";cold.copyGame(copyReport)
+        try await wait {!cold.busy}
+        let coldAudit=try String(contentsOf:root.appendingPathComponent("operations.log"),encoding:.utf8)
+        guard cold.error==nil,cold.fraction==1,!cold.authenticated,coldAudit.split(separator:"\n").filter({$0=="copy_romfs"}).count==3 else {fputs("Cold helper startup must finish its handshake before scoped copy, without signing in\n",stderr);exit(1)}
+        cold.cancel()
         model.copyData(InstalledGame(id:selected.id,name:selected.name,version:"9.0"),confirmedClosed:true);assert(!model.busy && model.error != nil)
         let unrelated=root.appendingPathComponent("unrelated.zip")
         model.exportSaves(InstalledGame(id:"com.unrelated.private",name:selected.name),destination:unrelated,confirmedClosed:true);assert(!FileManager.default.fileExists(atPath:unrelated.path))

@@ -64,8 +64,9 @@ struct PreparationIllustration:View {
     private var symbol:String {["gamecontroller","tray.and.arrow.down","key.horizontal","point.topleft.down.to.point.bottomright.curvepath","cpu","checkmark.seal"][min(5,max(0,step))]}
     var fraction:Double?=nil
     var visible=true
-    private var title:String {["¿Dónde quieres jugar?","Añade tu juego","Tus llaves, en tu Mac","Todo listo para preparar","Creando tu juego","Tu juego está preparado"][min(5,max(0,step))]}
-    private var subtitle:String {["Elige el dispositivo. Te guiamos con el resto.","Elige su carpeta o arrastra tus archivos aquí. No los moveremos.","Selecciona tu prod.keys. Sólo recordamos su ubicación.","Revisa el destino antes de empezar. Conservamos tus originales y partidas.","Sigue cada etapa y abre el registro en vivo cuando quieras.","La preparación terminó. El siguiente paso depende de tu dispositivo."][min(5,max(0,step))]}
+    var updating=false
+    private var title:String {if updating {return ["Dónde actualizarás","Archivos de tu juego","Confirma tus llaves","Revisa la actualización","Actualizando tu juego","Actualización preparada"][min(5,max(0,step))]};return ["¿Dónde quieres jugar?","Añade tu juego","Tus llaves, en tu Mac","Todo listo para preparar","Creando tu juego","Tu juego está preparado"][min(5,max(0,step))]}
+    private var subtitle:String {if updating && step==1 {return "Usaremos la carpeta de tu biblioteca para actualizar el mismo juego."};return ["Elige el dispositivo. Te guiamos con el resto.","Elige su carpeta o arrastra tus archivos aquí. No los moveremos.","Selecciona tu prod.keys. Sólo recordamos su ubicación.","Revisa el destino antes de empezar. Conservamos tus originales y partidas.","Sigue cada etapa y abre el registro en vivo cuando quieras.","La preparación terminó. El siguiente paso depende de tu dispositivo."][min(5,max(0,step))]}
     var body:some View {
         HStack(spacing:32) {
             VStack(alignment:.leading,spacing:14) {
@@ -228,6 +229,7 @@ struct PackageIdentityView:View {
     }
     func text(_ source: String) -> String {EasyStrings.text(source, language:language)}
     @Published var preparationStep=0
+    @Published var updatingGame=false
     var buildRevision:String?
     @Published var target = "" {
         didSet { output=nil;assets=nil;failed=false;restoreOutput() }
@@ -464,6 +466,10 @@ struct PackageIdentityView:View {
                         self.detail="Instala Xcode y ábrelo una vez. Después vuelve a intentar."
                     } else if log.contains("install xcode 27.2") {
                         self.detail="Instala Xcode 27.2 o posterior y ábrelo una vez. Después vuelve a intentar."
+                    } else if log.contains("avaudiosession") {
+                        self.phase="No se pudo enlazar el audio de la app.";self.detail="Los gráficos terminados se conservan. Actualiza Easy y reintenta la preparación."
+                    } else if log.contains("linker command failed") || log.contains("undefined symbols") {
+                        self.phase="Falló el enlace final de la app.";self.detail="La preparación no llegó a instalar nada. Los gráficos terminados se conservan para reintentar."
                     } else if log.contains("install homebrew") {
                         self.detail="Instala Homebrew desde brew.sh y vuelve a intentar."
                     } else if log.contains("ios sdk 26 or newer") {
@@ -677,13 +683,13 @@ struct ContentView: View {
                     }
                     VStack(alignment:.leading,spacing:18) {
                         HStack {
-                            EasyEyebrow(title:model.text("PREPARACIÓN")+"  /  "+String(format:"%02d",min(6,model.preparationStep+1)))
+                            EasyEyebrow(title:model.text(model.updatingGame ? "ACTUALIZACIÓN" : "PREPARACIÓN")+"  /  "+String(format:"%02d",min(6,model.preparationStep+1)))
                             Spacer()
                             if model.preparationStep>0 && model.preparationStep<4 {Button {model.preparationStep-=1} label:{Label(model.text("Atrás"),systemImage:"arrow.left")}.buttonStyle(EasyLinkStyle()).disabled(model.running || sideload.blocksGameWork || updater.busy)}
                         }
                         EasyStepRail(titles:["Destino","Archivos","Llaves","Revisar","Crear"].map(model.text),current:model.preparationStep)
                     }
-                    PreparationIllustration(step:model.preparationStep,isMac:model.isMac,text:model.text,fraction:model.activity.fraction,visible:visible)
+                    PreparationIllustration(step:model.preparationStep,isMac:model.isMac,text:model.text,fraction:model.activity.fraction,visible:visible,updating:model.updatingGame)
                     VStack(alignment:.leading,spacing:18) {
                         if model.preparationStep==0 {
                         HStack(spacing:16) {

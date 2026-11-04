@@ -41,6 +41,7 @@ struct OwnedGameOutput:Identifiable {
     var titleID:String?
     var macApp:URL?
     var iosIPA:URL?
+    var iosSaveContinuity:Int?
     var romfs:URL?
     var version:String?
     var macRevision:String?
@@ -58,8 +59,8 @@ struct OwnedGameOutput:Identifiable {
             return value
         }
         let mac=record("nxnative-mac.json"),ios=record("nxnative-ios.json")
-        output.macRevision=item.macRevision ?? mac["source_revision"] as? String
-        output.iosRevision=item.iosRevision ?? ios["source_revision"] as? String
+        output.macRevision=(mac["source_revision"] as? String) ?? item.macRevision
+        output.iosRevision=(ios["source_revision"] as? String) ?? item.iosRevision
         output.originalBundleID=ios["bundle_id"] as? String
         if let path=mac["app_path"] as? String {
             let bundle=URL(fileURLWithPath:path)
@@ -85,7 +86,7 @@ struct OwnedGameOutput:Identifiable {
         if let identifier=ios["bundle_id"] as? String,!identifier.isEmpty,
            let prepared=IOSPackageOutput.load(record:ios,split:split),
            prepared.romfs.map({fm.fileExists(atPath:$0.path)}) ?? true {
-            output.iosIPA=prepared.ipa;output.romfs=prepared.romfs
+            output.iosIPA=prepared.ipa;output.romfs=prepared.romfs;output.iosSaveContinuity=ios["save_continuity"] as? Int
             if output.version==nil {output.version=ios["version"] as? String}
         }
         return output

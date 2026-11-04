@@ -81,6 +81,21 @@ a matching validated installation receipt. Progress uses actual stages and real
 fractions, with elapsed time when a percentage is unknown. No fabricated ETA.
 Completed build notices can be dismissed without deleting output or logs.
 
+For an existing game, iCloud maintenance opens an update review for that library
+entry, never the Add game entry point. A ready IPA carrying save-continuity v2
+continues to the guarded installer instead of requesting another compilation.
+Successful preparation metadata takes precedence over older library revision
+stamps. Unknown or legacy metadata must not claim that the runtime supports sync.
+
+Use **Back up save** for a checked ZIP export. Use **Copy game content** only for
+the large romfs content needed to play; keep that operation in the device's more
+menu and explicitly distinguish it from a save backup. Both require a confirmed
+closed game and current scoped device evidence, but no signing-account login.
+Offer backup in the existing-app installation review before final consent.
+Starting a new scoped game query clears an earlier operation's displayed error;
+retain the redacted activity history in its disclosure. Show readable build stage
+names while keeping detailed tool names and linker symbols in the logs.
+
 ## Art and motion
 
 The new original orange 3D portal replaces the handset/controller branding.

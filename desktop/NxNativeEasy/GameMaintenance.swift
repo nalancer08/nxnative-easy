@@ -8,6 +8,7 @@ struct GameMaintenanceView:View {
     let jobs:[RefreshJob]
     let needsRebuild:Bool
     var context:GameCareContext?=nil
+    var cloudSync=false
     let text:(String)->String
     let choose:(GameMaintenanceAction)->Void
     let close:()->Void
@@ -23,12 +24,12 @@ struct GameMaintenanceView:View {
     var body:some View {
         ScrollView {
             VStack(alignment:.leading,spacing:24) {
-                HStack {EasyEyebrow(title:text("MEJORA TU JUEGO"));Spacer();Button(text("Cerrar"),action:close).buttonStyle(EasyLinkStyle())}
+                HStack {EasyEyebrow(title:text(cloudSync ? "ACTUALIZAR PARA ICLOUD" : "MEJORA TU JUEGO"));Spacer();Button(text("Cerrar"),action:close).buttonStyle(EasyLinkStyle())}
                 EasyStepRail(titles:["Qué necesitas","Revisar","Continuar"].map(text),current:reason.isEmpty ? 0 : 1)
                 if context==nil {
                     EasyMilestone(kind:reason=="renew" ? .account : .review,title:text(reason=="renew" ? "Vuelve a jugar. Tu progreso sigue." : "Tu juego, mejor que antes."),subtitle:title)
                 } else {Text(title).font(.system(size:26,weight:.bold)).lineLimit(2)}
-                Text(text("Tu partida se conserva. Elige qué quieres actualizar.")).font(.callout).foregroundStyle(.secondary)
+                Text(text(cloudSync ? "Actualiza este juego para sincronizar sus partidas. Conservamos su identidad y su progreso." : "Tu partida se conserva. Elige qué quieres actualizar.")).font(.callout).foregroundStyle(.secondary)
                 if let context,context.state != .unknown,context.state != .current {
                     EasyCard {VStack(alignment:.leading,spacing:12) {Text(text(context.title)).font(.headline);Text(text(context.reason)).font(.callout).foregroundStyle(.secondary);ForEach(context.changes,id:\.self){Label(text($0),systemImage:"sparkles").font(.caption)}}}
                 }
@@ -55,7 +56,7 @@ struct GameMaintenanceView:View {
                 } else if reason=="update" {
                     EasyCard {
                         VStack(alignment:.leading,spacing:16) {
-                            Picker(text("Dónde quieres actualizar"),selection:$platform) {Text("Mac").tag("mac");Text("iPhone / iPad").tag("ios")}.pickerStyle(.segmented)
+                            if cloudSync {Label("iPhone / iPad",systemImage:"ipad.and.iphone").font(.headline);Text(text("Prepararemos una actualización de tu juego existente. Después autorizarás iCloud una vez dentro del juego.")).font(.callout).foregroundStyle(.secondary)}else{Picker(text("Dónde quieres actualizar"),selection:$platform) {Text("Mac").tag("mac");Text("iPhone / iPad").tag("ios")}.pickerStyle(.segmented)}
                             if needsRebuild {Label(text("Conviene recompilar: cambiaron herramientas o el perfil de este juego."),systemImage:"sparkles").font(.callout).foregroundStyle(EasyDesign.accent)}
                             else {Text(text("Puedes aplicar tus archivos de update o volver a preparar con el motor actual. No se descarga ningún juego.")).font(.callout).foregroundStyle(.secondary)}
                             Label(text("Tus archivos originales y partidas permanecen en su lugar."),systemImage:"checkmark.shield").font(.callout)
@@ -70,7 +71,7 @@ struct GameMaintenanceView:View {
                     Text(text("Continuar no instala ni modifica el juego. Primero revisarás el destino.")).font(.caption).foregroundStyle(.secondary).frame(maxWidth:.infinity,alignment:.leading)
                     Button {
                         if reason=="renew" {if let job {choose(.renew(job))}else {choose(.install)}}else {choose(.rebuild(platform))}
-                    } label:{Label(text(reason=="renew" ? "Revisar renovación" : "Revisar archivos"),systemImage:"arrow.right")}.buttonStyle(EasyPrimaryStyle()).disabled(reason=="renew" ? job==nil && game.iosIPA==nil : game.missing)
+                    } label:{Label(text(reason=="renew" ? "Revisar renovación" : cloudSync ? "Revisar actualización" : "Revisar archivos"),systemImage:"arrow.right")}.buttonStyle(EasyPrimaryStyle()).disabled(reason=="renew" ? job==nil && game.iosIPA==nil : game.missing)
                 }.padding(20).background(EasyDesign.background).overlay(alignment:.top){Divider()}
             }
         }.frame(minWidth:720,idealWidth:820,maxWidth:820,minHeight:520,idealHeight:700,maxHeight:760).background(EasyDesign.background).preferredColorScheme(.dark)

@@ -13,6 +13,7 @@ struct LibraryWorkspace:View {
     @State private var query=""
     @State private var selectedEntryID:String?
     @State private var maintaining:OwnedGameOutput?
+    @State private var reviewingSyncUpdate=false
     @State private var importingSave=false
     @State private var reviewingUpdate=false
     @State private var optionsGame:OwnedGameOutput?
@@ -33,20 +34,22 @@ struct LibraryWorkspace:View {
     private func needsRebuild(_ game:OwnedGameOutput)->Bool {["Mac","iPhone / iPad"].contains {rebuildAdvice[game.id+$0]=="rebuild"}}
     private func configure(_ game:OwnedGameOutput) {
         guard !occupied else{return}
-        model.expectedLibraryTitleID=game.titleID;model.folder=game.folder;model.defaults.set(game.item.folder,forKey:"lastGameFolder")
+        model.updatingGame=true;model.expectedLibraryTitleID=game.titleID;model.folder=game.folder;model.defaults.set(game.item.folder,forKey:"lastGameFolder")
         model.output=nil;model.assets=nil;model.target=game.macApp != nil ? "mac" : game.iosIPA != nil ? "ios" : ""
         if model.target=="ios" {model.splitIOS=game.romfs != nil}
         model.restoreOutput();model.installingInline=false;model.preparationStep=0;page = .prepare
     }
     private func prepare(_ entry:LibraryEntry,target:String) {
         guard !occupied else{return};model.expectedLibraryTitleID=entry.titleID
-        if let source=entry.source(target),!source.missing {configure(source);model.target=target;model.preparationStep=1}
+        model.updatingGame = target=="ios" ? !sideload.observations(titleID:entry.titleID,originalID:entry.ios?.originalBundleID).isEmpty : entry.mac != nil
+        if let source=entry.source(target),!source.missing {configure(source);model.target=target;model.updatingGame = target=="ios" ? !sideload.observations(titleID:entry.titleID,originalID:entry.ios?.originalBundleID).isEmpty : entry.mac != nil;model.preparationStep=1}
         else {model.folder=nil;model.target=target;model.output=nil;model.installingInline=false;model.preparationStep=1;page = .prepare}
     }
     private func addEntry(_ entry:LibraryEntry) {
         guard !occupied else{return};model.expectedLibraryTitleID=entry.titleID;model.folder=entry.sources.first(where:{!$0.missing})?.folder;model.target="";model.output=nil;model.installingInline=false;model.preparationStep=0;page = .prepare
     }
     private func maintain(_ game:OwnedGameOutput,device:String?=nil) {
+        reviewingSyncUpdate=false
         let value=care(game,device:device)
         if (value.state == .expired || value.state == .expiring),let job=value.attention?.job {sideload.reviewRenewal(job);model.showSideload=true}
         else if value.state == .rebuild || value.state == .contentUpdate {configure(game);model.target="ios";model.preparationStep=1}
@@ -57,7 +60,7 @@ struct LibraryWorkspace:View {
         model.installingInline=false;sideload.configure(ipa:ipa,folder:game.folder,romfs:game.romfs);model.showSideload=true
     }
     private func add() {
-        guard !occupied else{return};query="";model.expectedLibraryTitleID=nil;model.installingInline=false;model.folder=nil;model.target="";model.failed=false;model.preparationStep=0;page = .prepare
+        guard !occupied else{return};model.updatingGame=false;query="";model.expectedLibraryTitleID=nil;model.installingInline=false;model.folder=nil;model.target="";model.failed=false;model.preparationStep=0;page = .prepare
     }
     private func remember() {guard let folder=model.folder else{return};do {try library.add(folder)}catch{library.error="No pudimos añadir esa carpeta a la biblioteca. Tus archivos siguen intactos."}}
     private func refreshScope(local:[OwnedGameOutput]?=nil,remote:[SaveRevision]?=nil,known:[String]?=nil) {
@@ -137,17 +140,17 @@ struct LibraryWorkspace:View {
                     HStack(spacing:0) {
                         LauncherSidebar(entries:entries,catalog:model.catalog,text:model.text,selected:$selectedEntryID,query:$query,add:add,settings:{page = .settings})
                         if let entry=selected {
-                            ScrollView {GameContinuityDetail(entry:entry,title:entryTitle(entry),catalog:model.catalog.first{$0.id==entry.titleID},context:entry.ios.map{care($0)} ?? entry.local.map{care($0)},saves:saves,localSaves:localSaves,sideload:sideload,repo:model.repo,text:model.text,disabled:occupied,prepare:{prepare(entry,target:$0)},chooseDestination:{addEntry(entry)},maintain:{if let game=entry.ios ?? entry.local {maintain(game)}else{addEntry(entry)}},maintainDevice:{report in if let game=entry.ios ?? entry.local {maintain(game,device:report.device)}else{addEntry(entry)}},install:{if let game=entry.ios {install(game)}else{prepare(entry,target:"ios")}},files:{optionsGame=entry.local},upload:{guard let game=entry.ios ?? entry.mac else{return};saves.gameID=game.id;saves.source=nil;saves.selectedRevision=nil;saves.completed=nil;saves.chooseSource(repo:model.repo);if saves.source != nil {importingSave=true}},reviewRevision:{revision in saves.inspect(repo:model.repo,url:URL(fileURLWithPath:revision.path),revision:revision);importingSave=true})}.id(entry.id).transition(.opacity)
+                            ScrollView {GameContinuityDetail(entry:entry,title:entryTitle(entry),catalog:model.catalog.first{$0.id==entry.titleID},context:entry.ios.map{care($0)} ?? entry.local.map{care($0)},saves:saves,localSaves:localSaves,sideload:sideload,repo:model.repo,text:model.text,disabled:occupied,prepare:{prepare(entry,target:$0)},reviewSync:{if let game=entry.ios ?? entry.local {reviewingSyncUpdate=true;maintaining=game}else{addEntry(entry)}},chooseDestination:{addEntry(entry)},maintain:{if let game=entry.ios ?? entry.local {maintain(game)}else{addEntry(entry)}},maintainDevice:{report in if let game=entry.ios ?? entry.local {maintain(game,device:report.device)}else{addEntry(entry)}},install:{if let game=entry.ios {install(game)}else{prepare(entry,target:"ios")}},files:{optionsGame=entry.local},upload:{guard let game=entry.ios ?? entry.mac else{return};saves.gameID=game.id;saves.source=nil;saves.selectedRevision=nil;saves.completed=nil;saves.chooseSource(repo:model.repo);if saves.source != nil {importingSave=true}},reviewRevision:{revision in saves.inspect(repo:model.repo,url:URL(fileURLWithPath:revision.path),revision:revision);importingSave=true})}.id(entry.id).transition(.opacity)
                         } else {LauncherWelcome(text:model.text,add:add)}
                     }
                 }
                 if let game=maintaining {
-                    GameMaintenanceView(game:game,title:name(game),jobs:sideload.jobs,needsRebuild:needsRebuild(game),context:care(game),text:model.text,choose:{action in
+                    GameMaintenanceView(game:game,title:name(game),jobs:sideload.jobs,needsRebuild:needsRebuild(game),context:care(game),cloudSync:reviewingSyncUpdate,text:model.text,choose:{action in
                         maintaining=nil
                         switch action {case .renew(let job):sideload.reviewRenewal(job);model.showSideload=true
                         case .install:install(game)
                         case .rebuild(let target):configure(game);model.target=target;model.preparationStep=1}
-                    },close:{maintaining=nil}).frame(maxWidth:.infinity,maxHeight:.infinity).background(EasyDesign.background).transition(.opacity)
+                    },close:{maintaining=nil},reason:reviewingSyncUpdate ? "update" : "").frame(maxWidth:.infinity,maxHeight:.infinity).background(EasyDesign.background).transition(.opacity)
                 }
             }.frame(maxWidth:.infinity,maxHeight:.infinity).clipped().zIndex(0).animation(reduceMotion ? nil : .easeOut(duration:0.18),value:selectedEntryID)
             if model.running || (!model.buildDockDismissed && (model.failed || !model.activity.history.isEmpty)) {Divider();BuildDock(model:model,completion:sideload.completedInstallation && sideload.gameFolder?.path==model.folder?.path ? model.text("Instalación completada en")+" "+(sideload.devices.first{$0.id==sideload.device}?.name ?? "iPhone / iPad") : nil,show:{page = .prepare;model.showDetails=true;model.preparationStep=model.running || model.failed ? 4 : 5})}
@@ -425,7 +428,7 @@ struct BuildTimeline:View {
                     VStack(spacing:4) {Image(systemName:stage.state == .done ? "checkmark.circle.fill" : stage.state == .failed ? "xmark.circle.fill" : stage.state == .cancelled ? "pause.circle" : "circle.inset.filled").foregroundStyle(stage.state == .failed ? Color.orange : stage.state == .done ? Color.green : Color.primary)
                         if stage.id != activity.history.last?.id {Rectangle().fill(.secondary.opacity(0.3)).frame(width:1,height:14)}
                     }
-                    VStack(alignment:.leading,spacing:3) {Text(stage.name).font(.callout.weight(stage.state == .active ? .semibold : .regular));if stage.state == .active && !activity.step.isEmpty {Text(activity.step).font(.caption).foregroundStyle(.secondary)}}
+                    VStack(alignment:.leading,spacing:3) {Text(text(BuildActivity.displayName(stage.name))).font(.callout.weight(stage.state == .active ? .semibold : .regular));if stage.state == .active && !activity.step.isEmpty {Text(activity.step).font(.caption).foregroundStyle(.secondary)}}
                     Spacer()
                 }
             }

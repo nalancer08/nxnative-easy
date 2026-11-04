@@ -62,7 +62,7 @@ Game-specific findings; the general host changes they led to are listed under [F
 
 ## Found on this game
 
-- [The iOS app fails to link AVAudioSession](../../reference/packing.md#the-ios-app-fails-to-link-avaudiosession): resolved build dependency; the shader stage completed successfully.
+- [The iOS app fails to link AVAudioSession](../../../docs/reference/packing.md#the-ios-app-fails-to-link-avaudiosession): resolved build dependency; the shader stage completed successfully.
 
 
 General host changes first needed here; each applies to every game:

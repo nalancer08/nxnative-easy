@@ -149,6 +149,8 @@ enum RefreshPolicy {
     var preparedFolders:[String:URL]=[:]
     @Published var exportedSaves:URL?
     private var helperCapabilities:Set<String>=[]
+    private var helperReady=false
+    private var queuedGameQuery:String?
     private var requestedCopy:DeviceGameObservation?
     private var requestedBackup:(DeviceGameObservation,(String)->String)?
     private var pendingExport:URL?
@@ -312,7 +314,7 @@ enum RefreshPolicy {
         guard !busy,!device.isEmpty,appQueryScope.permits(app.id),let source=dataFolder(for:app),helperCapabilities.contains("romfs-copy-v1") else {return}
         guard let id=titleID(for:app),let folder=preparedFolders[id],let version=PreviousPreparation.load(folder:folder,target:"ios")?.version,version==app.version else {error="Actualiza primero la app con la misma versión que los datos preparados.";return}
         gameFolder=folder;logURL=nil
-        pendingContentID=app.id;busy=true;error=nil;fraction=nil;startedAt=Date();phase="Copiando datos del juego…";record(phase)
+        pendingContentID=app.id;busy=true;error=nil;fraction=nil;startedAt=Date();phase="Copiando archivos para jugar…";record(phase)
         send(["op":"copy_romfs","udid":device,"effective_id":app.id,"romfs":source.path,"confirmed_closed":confirmedClosed,"game_version":app.version,"original_ids":appQueryScope.originals.sorted(),"known_ids":appQueryScope.known.sorted()])
     }
     var hasPendingUpdate:Bool {pendingUpdate != nil}
@@ -354,7 +356,7 @@ enum RefreshPolicy {
     }
     func connect() {
         if let process,process.isRunning {return}
-        process=nil;input=nil;scopedDiscovery=false;helperCapabilities=[]
+        process=nil;input=nil;scopedDiscovery=false;helperReady=false;helperCapabilities=[]
         if installerLease>=0 {Darwin.close(installerLease);installerLease = -1}
         guard let acquired=InstallerLease.acquire(at:stateURL.appendingPathExtension("lock")) else {error="Hay una instalación o renovación en curso. Intenta de nuevo en un momento.";busy=false;return}
         installerLease=acquired
@@ -373,7 +375,7 @@ enum RefreshPolicy {
             guard let self,self.process === finished else {return}
             let recovering=self.recoveringSession
             if self.installerLease>=0 {Darwin.close(self.installerLease);self.installerLease = -1}
-            self.process=nil;self.input=nil;self.scopedDiscovery=false;self.requestedBackup=nil;self.requestedCopy=nil;self.authenticated=false;self.codeRequired=false;self.recoveringSession=false;self.quietSessionRecovery=false;self.pendingRemember=nil
+            self.process=nil;self.input=nil;self.scopedDiscovery=false;self.helperReady=false;self.queuedGameQuery=nil;self.requestedBackup=nil;self.requestedCopy=nil;self.authenticated=false;self.codeRequired=false;self.recoveringSession=false;self.quietSessionRecovery=false;self.pendingRemember=nil
             if self.busy {self.error=recovering ? "No pudimos recuperar la sesión guardada. Revisa Internet y el acceso al Llavero, o vuelve a iniciar sesión." : "Instalación detenida. Vuelve a intentar; las partidas no se tocaron."}
             self.busy=false;self.activeRefresh=nil;self.installIntent=nil;self.refreshAuthenticated=false
         }}
@@ -445,9 +447,14 @@ enum RefreshPolicy {
         if !originalID.isEmpty {originals.insert(originalID)}
         let scope=GameAppScope(originals:originals,known:Set(jobs.filter{$0.udid==device}.map(\.effectiveID)))
         verifiedDevices.remove(device)
-        apps=[];appQueryScope=scope
+        apps=[];appQueryScope=scope;error=nil;appleFailureCode=nil;failureOperation=""
         guard !scope.isEmpty else {phase="Añade la carpeta preparada del juego para reconocer instalaciones anteriores.";return}
-        guard scopedDiscovery else {error="Actualiza la app para buscar juegos sin consultar otras aplicaciones.";return}
+        if !helperReady {
+            connect();guard process?.isRunning==true else {return}
+            queuedGameQuery=device;busy=true;startedAt=Date();fraction=nil;phase="Buscando tus juegos instalados…"
+            return
+        }
+        guard scopedDiscovery else {requestedBackup=nil;requestedCopy=nil;error="Actualiza la app para buscar juegos sin consultar otras aplicaciones.";return}
         busy=true;startedAt=Date();fraction=nil;phase="Buscando tus juegos instalados…";record(phase)
         send(["op":"installed_apps","udid":device,"original_ids":scope.originals.sorted(),"known_ids":scope.known.sorted()])
     }
@@ -467,7 +474,7 @@ enum RefreshPolicy {
     func sendSMS(_ number:Int) {phase="Solicitando un nuevo código…";codeRequired=false;send(["op":"sms","number":number])}
     func resend() {phase="Solicitando un nuevo código…";codeRequired=false;send(["op":"resend"])}
     func signOut() {guard !busy else {return};connect();guard process?.isRunning==true else{return};recoveryRequested=false;automaticRecoveryAttempted=true;defaults.removeObject(forKey:"sideloadTeam."+RefreshPolicy.account(email));send(["op":"logout","email":email]);defaults.removeObject(forKey:"sideloadEmail");for index in jobs.indices {jobs[index].enabled=false};saveJobs()}
-    func cancel() {requestedBackup=nil;requestedCopy=nil;recoveryRequested=false;automaticRecoveryAttempted=true;pendingRemember=nil;record("Operación cancelada; puedes volver a intentar.");if let refresh=activeRefresh,let index=jobs.firstIndex(where:{$0.id==refresh.id}) {jobs[index].retryAfter=Date().addingTimeInterval(6*3600);saveJobs()};if let process,process.isRunning {if kill(-process.processIdentifier,SIGTERM) != 0 {process.terminate()}}}
+    func cancel() {requestedBackup=nil;requestedCopy=nil;queuedGameQuery=nil;recoveryRequested=false;automaticRecoveryAttempted=true;pendingRemember=nil;record("Operación cancelada; puedes volver a intentar.");if let refresh=activeRefresh,let index=jobs.firstIndex(where:{$0.id==refresh.id}) {jobs[index].retryAfter=Date().addingTimeInterval(6*3600);saveJobs()};if let process,process.isRunning {if kill(-process.processIdentifier,SIGTERM) != 0 {process.terminate()}}}
     var canUpdateAppOnly:Bool {
         guard let folder=gameFolder,let version=PreviousPreparation.load(folder:folder,target:"ios")?.version,!version.isEmpty,
               let app=apps.first(where:{$0.id==existing}) else {return false}
@@ -506,7 +513,11 @@ enum RefreshPolicy {
     }
     private func handle(_ event:[String:Any]) {
         switch event["event"] as? String {
-        case "hello":helperCapabilities=Set(event["capabilities"] as? [String] ?? []);scopedDiscovery=(event["capabilities"] as? [String] ?? []).contains("scoped-games-v1");if (event["protocol"] as? Int) != 1 || event["architecture"] as? String != "aarch64" {error="El instalador debe compilarse para Apple silicon.";cancel()};if recoveryRequested {Task {@MainActor [weak self] in self?.recoverRememberedSessionIfNeeded()}}
+        case "hello":
+            guard (event["protocol"] as? Int)==1,event["architecture"] as? String=="aarch64" else {error="El instalador debe compilarse para Apple silicon.";cancel();return}
+            helperReady=true;helperCapabilities=Set(event["capabilities"] as? [String] ?? []);scopedDiscovery=helperCapabilities.contains("scoped-games-v1")
+            if let requested=queuedGameQuery {queuedGameQuery=nil;busy=false;if requested==device {inspectApps()}}
+            if recoveryRequested {Task {@MainActor [weak self] in self?.recoverRememberedSessionIfNeeded()}}
         case "connection_diagnostics":
             guard event["udid"] as? String==device else{return}
             let results=(event["items"] as? [[String:Any]]) ?? []
@@ -567,7 +578,7 @@ enum RefreshPolicy {
             if let refresh=activeRefresh {refreshAuthenticated=true;continueRefresh(refresh)}
         case "signed_out":recoveringSession=false;quietSessionRecovery=false;recoveryRequested=false;automaticRecoveryAttempted=true;authenticated=false;accountDevices=[];accountDeviceTeam="";accountDeviceLimit=nil;accountDevicesCheckedAt=nil;teams=[];team="";busy=false
         case "progress":
-            let phases=["Exporting saves":"Exportando partidas…","Verifying saves":"Verificando el respaldo…","Registering device":"Registrando el dispositivo con Apple…","Verifying signature":"Verificando firma y vencimiento…","Preparing IPA":"Preparando IPA…","Signing app":"Firmando la app…","Installing app":"Instalando la app…","Copying game data":"Copiando datos del juego…","Game data ready":"Datos del juego listos."]
+            let phases=["Exporting saves":"Exportando partidas…","Verifying saves":"Verificando el respaldo…","Registering device":"Registrando el dispositivo con Apple…","Verifying signature":"Verificando firma y vencimiento…","Preparing IPA":"Preparando IPA…","Signing app":"Firmando la app…","Installing app":"Instalando la app…","Copying game data":"Copiando archivos para jugar…","Game data ready":"Datos del juego listos."]
             phase=phases[event["phase"] as? String ?? ""] ?? phase;if let value=event["fraction"] as? Double,value.isFinite,value>=0,value<=1 {fraction=value}else{fraction=nil}
             let bucket=Int((fraction ?? 0)*10)
             if loggedPhase != phase || loggedBucket != bucket {record(phase,progress:fraction);loggedPhase=phase;loggedBucket=bucket}
@@ -739,6 +750,7 @@ struct SideloadView:View {
     @State private var remember=true
     @State private var autoRefresh=true
     @State private var includeGameData=true
+    @State private var backupBeforeUpdate=false
     @State private var loginItem=SMAppService.agent(plistName:"com.nalancer08.nxnative.refresh.plist").status == .enabled
     init(model:SideloadModel,text:@escaping (String)->String,accountOnly:Bool=false,embedded:Bool=false,guided:Bool=false,gameName:String?=nil,onReturn:@escaping ()->Void={},initialStep:Int=0) {
         self.model=model;self.text=text;self.accountOnly=accountOnly;self.embedded=embedded;self.guided=guided;self.gameName=gameName;self.onReturn=onReturn
@@ -940,6 +952,13 @@ struct SideloadView:View {
                         }.padding(.top,12)
                     }.font(.callout)
                     Label(text("Guarda y cierra el juego antes de instalar. No desinstales la app anterior."),systemImage:"info.circle").font(.callout)
+                    if !model.existing.isEmpty,model.apps.contains(where:{$0.id==model.existing}) {
+                        Button {backupBeforeUpdate=true}label:{Label(text("Respaldar partida antes de actualizar"),systemImage:"externaldrive.badge.checkmark")}.buttonStyle(EasySecondaryStyle()).disabled(model.busy || !model.supportsSaveExport)
+                        .alert(text("Respaldar tu partida"),isPresented:$backupBeforeUpdate) {
+                            Button(text("Cancelar"),role:.cancel){}
+                            Button(text("Ya guardé y cerré el juego")){if let app=model.apps.first(where:{$0.id==model.existing}) {model.chooseSaveDestination(app,text:text)}}
+                        }message:{Text(text("Se creará un ZIP en tu Mac con el guardado. La partida original no se modifica."))}
+                    }
 
                     if model.originalID.isEmpty || model.ipa==nil {Text(text("Falta una IPA preparada con su identidad. Vuelve a preparar el juego antes de instalar.")).font(.caption).foregroundStyle(.orange)}
                 }
@@ -1085,12 +1104,12 @@ struct SideloadLibraryView:View {
     private var matchingApps:[InstalledGame] {model.apps.filter {search.isEmpty || ($0.name+" "+$0.id).localizedCaseInsensitiveContains(search)}}
     private let accent=EasyDesign.accent
     private var confirmationTitle:String {
-        switch confirmation {case .export:return "Exportar partidas";case .copy:return "Copiar datos del juego";case .forget:return "¿Quitar este registro?";case nil:return ""}
+        switch confirmation {case .export:return "Exportar partidas";case .copy:return "Copiar archivos para jugar";case .forget:return "¿Quitar este registro?";case nil:return ""}
     }
     private func confirmationMessage(_ action:Confirmation)->String {
         switch action {
         case .export:return "Guarda tu progreso y cierra el juego desde el selector de apps. Copiaremos save y save_device a un ZIP local, sin modificar el dispositivo."
-        case .copy:return "Copiaremos el romfs preparado en este Mac al juego seleccionado. Conservamos tus partidas y no reinstalamos la app. Mantén el juego cerrado hasta terminar."
+        case .copy:return "Copia los archivos grandes necesarios para jugar desde este Mac al iPhone. No respalda ni sincroniza partidas. Mantén el juego cerrado hasta terminar."
         case .forget:return "Sólo detiene la renovación y quita el registro de este Mac. El juego, sus archivos y sus partidas siguen en tu dispositivo."
         }
     }
@@ -1155,7 +1174,7 @@ struct SideloadLibraryView:View {
                                     Button(text("Actualizar con mis archivos")){model.prepareUpdate(app);prepare()}
                                     HStack {
                                         Button(text("Exportar partidas")){confirmation = .export(app)}.disabled(!model.supportsSaveExport)
-                                        if model.dataFolder(for:app) != nil {Button(text("Copiar datos del juego")){confirmation = .copy(app)}.disabled(!model.supportsContentCopy)}
+                                        if model.dataFolder(for:app) != nil {Button(text("Copiar archivos para jugar")){confirmation = .copy(app)}.disabled(!model.supportsContentCopy)}
                                     }.font(.caption)
                                 }.disabled(model.busy || !canInstall)
                             }.padding(18).background(EasyDesign.panel,in:RoundedRectangle(cornerRadius:14))

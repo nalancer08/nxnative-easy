@@ -25,6 +25,11 @@ struct BuildActivity {
     private(set) var estimated=false
     private(set) var shaderCacheReason:String?
     private(set) var scheduledShaders:Int?
+    static func displayName(_ name:String)->String {
+        if name.hasPrefix("build nx_extract") {return "Preparar herramientas"}
+        if name.hasPrefix("extract ") {return "Leer el juego"}
+        switch name {case "rewrite":return "Adaptar el juego";case "shader split":return "Preparar gráficos";case "iOS shaders":return "Compilar gráficos para iPhone";case "app build":return "Crear la app";case "IPA pack":return "Crear la IPA";case "Export lightweight IPA":return "Preparar instalación";default:return name}
+    }
     mutating func receive(_ data:Data) {
         pending.append(data)
         while let end=pending.firstIndex(of:10) {
@@ -65,7 +70,7 @@ struct BuildActivity {
         if let name=obj["name"] as? String {stage=name}
         if let value=obj["step"] as? String {step=value}
         if let k=obj["k"] as? Int {stageNumber=k}
-        if let n=obj["n"] as? Int {stages=n}
+        if let n=obj["n"] as? Int,n>0 {stages=n}
         if event=="stage" || event=="step" {fraction=nil;count="";eta=nil;estimated=false}
         if event=="shaders_stale",let reason=obj["reason"] as? String,["chain","inputs"].contains(reason) {
             shaderCacheReason=reason
@@ -89,7 +94,7 @@ struct BuildActivity {
             if let index=history.firstIndex(where:{$0.id==key}) {history[index].name=stage;history[index].state=state}
             else {history.append(BuildStage(id:key,number:stageNumber,name:stage,state:state))}
         }
-        if ["stage","step","stage_end"].contains(event) {record("[\(stageNumber)/\(stages)] \(stage) · \(step)")}
+        if ["stage","step","stage_end"].contains(event) {record((stageNumber>0 && stages>0 ? "[\(stageNumber)/\(stages)] " : "")+stage+" · "+step)}
         if event=="progress" && !count.isEmpty {record(count)}
         if event=="stage_end" {eta=nil;fraction=(obj["ok"] as? Bool)==true ? 1 : nil}
         if let skipped=obj["skipped"] as? Int,skipped>0 {record("Live preview skipped \(skipped) older bytes; the original compiler log is complete.")}
