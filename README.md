@@ -18,6 +18,8 @@ Unzip → drag **nxnative Easy.app** to **Applications** → open it. **No Termi
 
 Our Mario Kart World base-version dump matches the registered executable and now builds and reaches an interactive race on this Mac. This is Mac evidence, not iPhone/iPad validation or whole-game certification. Encrypted Switch 2 NSP/XCI extraction is not included. See [formats, tested versions and limits](docs/switch2.md). Existing games and saves stay where they are.
 
+![Mario Kart World race check on Mac with an isolated test save](docs/images/mario-kart-world-easy-mac-first-lap.png)
+
 ## Before you start
 
 - **A Mac with Apple silicon** (M1 or newer), **macOS 26.6+**, and **[Xcode](https://apps.apple.com/app/xcode/id497799835) 27.2** installed and opened once. Xcode builds your games; you do not need to build nxnative Easy itself.
@@ -75,8 +77,6 @@ Native UI previews use synthetic devices and save metadata; they are not proof o
 Browse **Compatibility** in the app, or open a game below for supported versions, tested devices and any game-specific notes. Support varies by game, version and device. The current runtime supports offline play; Nintendo online services and LAN/netplay are not available.
 
 The images below show supported game profiles. **Bring your own game files.**
-
-![Browse the current game profiles](docs/images/nxnative-compatibility-en-v1.25.jpg)
 
 <!-- BEGIN GENERATED GAME GALLERY -->
 143 profiles. See each game's notes for tested versions and devices.

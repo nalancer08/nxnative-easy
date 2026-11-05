@@ -220,3 +220,5 @@ publication and manual cloud review. Never route save actions to an unrestricted
 device app inventory or write active iOS saves from the desktop.
 
 Preserve validated keyless NUP identification on Mac, including bounded container metadata reads and pre-build source revalidation. Internal `program_of` profiles belong to their parent application, not separate catalog cards. Multi-program save compatibility must include every child executable and RomFS while sharing the parent app identity. Keep the new portrait/live iOS game menu alongside Easy's four editable touch profiles; never replace one with the other.
+
+A draft review proposal is not an integration. When the owner asks to apply original-main changes, resolve the conflicts, finish the gates, integrate and publish within the authorized scope; do not describe a draft-only result as shipped. Close superseded proposals after the reviewed integration reaches main. For long validation jobs, record the owned process ID and its command: process IDs can wrap and do not establish start order. Keep fixture adaptations and cache migration isolated from player folders.

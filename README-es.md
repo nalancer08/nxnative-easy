@@ -18,6 +18,8 @@ Descomprime → arrastra **nxnative Easy.app** a **Aplicaciones** → ábrela. *
 
 La copia base de Mario Kart World revisada coincide con el ejecutable compatible: ya compila y llega a una carrera con controles en esta Mac. Esto no acredita funcionamiento en iPhone/iPad ni una partida completa. No se incluye extracción de NSP/XCI cifrados de Switch 2. Consulta [formatos, versiones y límites](docs/switch2.md). Tus juegos y partidas se conservan.
 
+![Prueba de carrera de Mario Kart World en Mac con una partida aislada](docs/images/mario-kart-world-easy-mac-first-lap.png)
+
 ## Antes de empezar
 
 - **Una Mac con Apple silicon** (M1 o posterior), **macOS 26.6+** y **[Xcode](https://apps.apple.com/app/xcode/id497799835) 27.2** instalado y abierto al menos una vez. Xcode compila tus juegos; tú no necesitas compilar nxnative Easy.
@@ -76,7 +78,6 @@ Consulta **Compatibilidad** en la app o abre una ficha de abajo para ver version
 
 Las imágenes de abajo muestran perfiles de juegos con soporte. **Tú debes aportar los archivos del juego.**
 
-![Consulta los perfiles de juegos actuales](docs/images/nxnative-compatibility-es-v1.25.jpg)
 
 <!-- BEGIN GENERATED GAME GALLERY -->
 143 perfiles. Consulta la ficha de cada juego para ver versiones y dispositivos probados.
