@@ -50,8 +50,8 @@ struct EngineBuildComparison:View {
             }
             if let prepared,let current=history?.number {
                 Label(text(prepared==current ? "Mismo motor que esta app" : prepared<current ? "Hay un motor posterior disponible" : "Este juego usa un motor posterior a esta app"),systemImage:prepared==current ? "checkmark.circle" : "arrow.up.circle").foregroundStyle(prepared==current ? Color.secondary : EasyDesign.accent)
-            } else {Text(text("Esta preparación antigua no tiene un motor identificable.")).foregroundStyle(.secondary)}
-        }.font(.caption)
+            } else {Text(text("Esta preparación antigua no tiene un motor identificable.")).foregroundStyle(EasyDesign.muted)}
+        }.font(EasyDesign.metadata)
         .help(revision.map{text("Revisión técnica")+": "+$0} ?? text("Motor sin registrar"))
     }
 }
@@ -65,7 +65,7 @@ struct LauncherBrand:View {
             Image(nsImage:AppArtwork.icon).resizable().frame(width:24,height:24)
                 .offset(x:appeared ? 0 : -5).opacity(appeared ? 1 : 0)
             Text("nxnative").font(.system(size:14,weight:.semibold)).tracking(-0.4)
-            Text("easy").font(.system(size:10,weight:.medium)).foregroundStyle(.secondary)
+            Text("easy").font(.system(size:10,weight:.medium)).foregroundStyle(EasyDesign.muted)
         }.frame(width:132,alignment:.leading)
         .onAppear{withAnimation(reduceMotion || phase != .active ? nil : .easeOut(duration:0.45)){appeared=true}}
         .accessibilityElement(children:.ignore).accessibilityLabel("nxnative Easy")
@@ -115,7 +115,7 @@ struct CloudWelcomeView:View {
     private var artwork:some View {
         VStack(spacing:8) {
             LivingCloudScene(playing:phase == .active,reducedMotion:reduceMotion,label:text(reduceMotion ? "Escena de aventura" : "Mueve el cursor o pulsa para transformar la escena."))
-            if !reduceMotion {Text(text("Mueve el cursor. Pulsa y descubre.")).font(.caption).foregroundStyle(.secondary)}
+            if !reduceMotion {Text(text("Mueve el cursor. Pulsa y descubre.")).font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted)}
         }
     }
     @ViewBuilder private var message:some View {
@@ -123,7 +123,7 @@ struct CloudWelcomeView:View {
         else {
                 VStack(alignment:.leading,spacing:22) {
                     Text(text("Tu progreso, contigo.")).font(.system(size:40,weight:.bold)).tracking(-1.2).fixedSize(horizontal:false,vertical:true)
-                    Text(text("Guarda tus partidas en iCloud y continúa en Mac, iPhone o iPad.")).font(.system(size:15)).foregroundStyle(.secondary).fixedSize(horizontal:false,vertical:true)
+                    Text(text("Guarda tus partidas en iCloud y continúa en Mac, iPhone o iPad.")).font(.system(size:15)).foregroundStyle(EasyDesign.muted).fixedSize(horizontal:false,vertical:true)
                     if attempted && saves.cloud==nil {Text(text("Activa iCloud Drive en Ajustes del Sistema y vuelve aquí. Tus partidas locales se conservan.")).font(.callout).foregroundStyle(.orange)}
                     VStack(alignment:.leading,spacing:12) {
                         Button {attempted=true;connecting=true;sharedSelection=false;saves.enableManagedCloud(repo:repo);if saves.usesICloud {saves.refresh(repo:repo)}else{connecting=false;openAccountSettings()}}label:{
@@ -137,16 +137,16 @@ struct CloudWelcomeView:View {
                         Button(text("Usar otra cuenta de iCloud")){withAnimation(reduceMotion ? nil : .easeInOut(duration:0.2)){otherAccount.toggle()}}.buttonStyle(EasyLinkStyle()).disabled(connecting)
                         if otherAccount {
                             VStack(alignment:.leading,spacing:12) {
-                                Text(text("iCloud usa la cuenta de macOS. Puedes administrarla en Ajustes o usar una carpeta que te comparta otra cuenta.")).font(.callout).foregroundStyle(.secondary).fixedSize(horizontal:false,vertical:true)
+                                Text(text("iCloud usa la cuenta de macOS. Puedes administrarla en Ajustes o usar una carpeta que te comparta otra cuenta.")).font(.callout).foregroundStyle(EasyDesign.muted).fixedSize(horizontal:false,vertical:true)
                                 Button(text("Administrar cuenta en macOS"),action:openAccountSettings).buttonStyle(EasySecondaryStyle())
                                 Button(text("Usar una carpeta compartida")){if saves.chooseCloud(repo:repo,requireICloud:true) {connecting=true;attempted=true;sharedSelection=true}}.buttonStyle(EasyLinkStyle()).disabled(connecting || saves.busy)
-                                if saves.error=="icloud_folder_required" {Text(text("Elige una carpeta de iCloud Drive, incluida una que te hayan compartido.")).font(.caption).foregroundStyle(.orange)}
+                                if saves.error=="icloud_folder_required" {Text(text("Elige una carpeta de iCloud Drive, incluida una que te hayan compartido.")).font(EasyDesign.metadata).foregroundStyle(.orange)}
                             }.padding(16).background(EasyDesign.panel,in:RoundedRectangle(cornerRadius:12))
                         }
                         Button(text("Continuar sin iCloud")){skipping=true}.buttonStyle(EasySecondaryStyle())
                     }
-                    if attempted && saves.cloudIssue != nil && saves.cloud != nil {Text(text("No pudimos comprobar iCloud. Revisa la conexión e inténtalo de nuevo.")).font(.caption).foregroundStyle(.orange)}
-                    Text(text("La cuenta para instalar tus juegos se elige después.")).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal:false,vertical:true)
+                    if attempted && saves.cloudIssue != nil && saves.cloud != nil {Text(text("No pudimos comprobar iCloud. Revisa la conexión e inténtalo de nuevo.")).font(EasyDesign.metadata).foregroundStyle(.orange)}
+                    Text(text("La cuenta para instalar tus juegos se elige después.")).font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted).fixedSize(horizontal:false,vertical:true)
                 }
         }
     }
@@ -154,11 +154,11 @@ struct CloudWelcomeView:View {
         VStack(alignment:.leading,spacing:22) {
             Image(systemName:"checkmark.icloud.fill").font(.system(size:42)).foregroundStyle(.green)
             Text(text("iCloud conectado")).font(.system(size:34,weight:.bold)).tracking(-1)
-            Text(text(sharedSelection ? "Usando la carpeta de iCloud que elegiste." : "Usando la cuenta de iCloud configurada en este Mac.")).font(.callout).foregroundStyle(.secondary)
+            Text(text(sharedSelection ? "Usando la carpeta de iCloud que elegiste." : "Usando la cuenta de iCloud configurada en este Mac.")).font(.callout).foregroundStyle(EasyDesign.muted)
             VStack(alignment:.leading,spacing:12) {
-                HStack(spacing:12) {MacProfileAvatar();VStack(alignment:.leading,spacing:4) {Text(MacProfile().name).font(.callout.bold());Text(text("Perfil de este Mac")).font(.caption).foregroundStyle(.secondary)}}
+                HStack(spacing:12) {MacProfileAvatar();VStack(alignment:.leading,spacing:4) {Text(MacProfile().name).font(.callout.bold());Text(text("Perfil de este Mac")).font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted)}}
                 if let folder=saves.cloud {Label(folder.lastPathComponent,systemImage:"folder").font(.callout).help(folder.path)}
-                Text(text(saves.revisions.isEmpty ? "No hay copias recibidas todavía." : "Tus partidas ya aparecen en la biblioteca.")).font(.caption).foregroundStyle(.secondary)
+                Text(text(saves.revisions.isEmpty ? "No hay copias recibidas todavía." : "Tus partidas ya aparecen en la biblioteca.")).font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted)
             }.padding(18).frame(maxWidth:.infinity,alignment:.leading).background(EasyDesign.panel,in:RoundedRectangle(cornerRadius:12))
             Button(text("Abrir mi biblioteca"),action:finish).buttonStyle(EasyPrimaryStyle())
             Button(text("Ver cuenta en macOS"),action:openAccountSettings).buttonStyle(EasyLinkStyle())
@@ -179,21 +179,21 @@ struct EngineHistoryView:View {
                 EasyEyebrow(title:text("MOTOR Y ACTUALIZACIONES"))
                 Text(text("Lo que mueve tus juegos.")).font(.system(size:34,weight:.bold)).tracking(-1)
                 HStack(spacing:20) {
-                    VStack(alignment:.leading,spacing:7) {Text("nxnative Easy "+version).font(.title2.bold());Text(text("Motor")+" "+(history?.version ?? "—")).font(.title3.bold()).foregroundStyle(EasyDesign.accent);if let history {Text(text("Base original")+" · "+history.upstream.prefix(8)).font(.caption).foregroundStyle(.secondary)}}
+                    VStack(alignment:.leading,spacing:7) {Text("nxnative Easy "+version).font(.title2.bold());Text(text("Motor")+" "+(history?.version ?? "—")).font(.title3.bold()).foregroundStyle(EasyDesign.accent);if let history {Text(text("Base original")+" · "+history.upstream.prefix(8)).font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted)}}
                     Spacer()
                     if updater.available != nil {Button(text("Actualizar Easy")){updater.start()}.buttonStyle(EasyPrimaryStyle()).disabled(updater.busy)}
                     else {Button(text(updater.checking ? "Buscando…" : "Buscar actualizaciones")){Task{await updater.check(manual:true)}}.buttonStyle(EasySecondaryStyle()).disabled(updater.checking || updater.busy)}
                 }.padding(24).background(EasyDesign.panel,in:RoundedRectangle(cornerRadius:14))
-                if let checked=updater.checkedAt {Text(text("Última comprobación")+" · "+checked.formatted(date:.abbreviated,time:.shortened)).font(.caption).foregroundStyle(.secondary)}
+                if let checked=updater.checkedAt {Text(text("Última comprobación")+" · "+checked.formatted(date:.abbreviated,time:.shortened)).font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted)}
                 if updater.available==nil,updater.checkedAt != nil,updater.error==nil {Label(text("Tienes la versión más reciente"),systemImage:"checkmark.circle").foregroundStyle(.green)}
                 if updater.error != nil {Label(text("No pudimos buscar actualizaciones. Intenta de nuevo más tarde."),systemImage:"wifi.exclamationmark").foregroundStyle(.orange)}
                 if updater.busy {ProgressView(value:updater.progress);Text(text(updater.phaseText)).font(.callout)}
-                Text(text("Historial del motor")).font(.title2.bold());Text(text("Un motor 1.0.2 es posterior a 1.0.1. La versión de Easy se actualiza por separado.")).font(.callout).foregroundStyle(.secondary)
-                Text(text("Cambios integrados en esta app. Una nueva versión de Easy no obliga a recompilar todos tus juegos.")).font(.callout).foregroundStyle(.secondary)
+                Text(text("Historial del motor")).font(.title2.bold());Text(text("Un motor 1.0.2 es posterior a 1.0.1. La versión de Easy se actualiza por separado.")).font(.callout).foregroundStyle(EasyDesign.muted)
+                Text(text("Cambios integrados en esta app. Una nueva versión de Easy no obliga a recompilar todos tus juegos.")).font(.callout).foregroundStyle(EasyDesign.muted)
                 ForEach(history?.entries ?? []) {entry in
                     HStack(alignment:.top,spacing:18) {
                         Image(systemName:"shippingbox").foregroundStyle(EasyDesign.accent).frame(width:22)
-                        VStack(alignment:.leading,spacing:8) {Text(entry.title).font(.system(size:13,weight:.semibold)).fixedSize(horizontal:false,vertical:true);HStack {Text(entry.version.map{text("Motor")+" "+$0} ?? text("Antes de 1.0.0")).font(.caption.bold());Text(ISO8601DateFormatter().date(from:entry.date)?.formatted(date:.abbreviated,time:.omitted) ?? String(entry.date.prefix(10)))}.foregroundStyle(.secondary).font(.caption)}
+                        VStack(alignment:.leading,spacing:8) {Text(entry.title).font(.system(size:13,weight:.semibold)).fixedSize(horizontal:false,vertical:true);HStack {Text(entry.version.map{text("Motor")+" "+$0} ?? text("Antes de 1.0.0")).font(EasyDesign.metadata.bold());Text(ISO8601DateFormatter().date(from:entry.date)?.formatted(date:.abbreviated,time:.omitted) ?? String(entry.date.prefix(10)))}.foregroundStyle(EasyDesign.muted).font(EasyDesign.metadata)}
                         Spacer(minLength:8)
                         Link(destination:URL(string:"https://github.com/nalancer08/nxnative-easy/commit/"+entry.revision)!){Image(systemName:"arrow.up.right").frame(width:36,height:36).contentShape(Rectangle())}.help(text("Ver cambio"))
                     }.padding(18).background(.white.opacity(0.025),in:RoundedRectangle(cornerRadius:10))

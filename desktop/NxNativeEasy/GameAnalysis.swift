@@ -51,7 +51,7 @@ struct GameAnalysisView:View {
             HStack {Text(text("Analizar con REA")).font(.title2.bold());Spacer();Button(text("Cerrar")){dismiss()}.disabled(model.running)}
             Text(text("Análisis opcional del código original extraído. No modifica ni recompila el juego y no lo convierte automáticamente en un juego compatible."))
             Text(text("REA necesita Node/npm y un motor local compatible: Ghidra, Hopper o IDA. Su licencia e instalación son independientes. El análisis usa versiones fijas en una caché de este juego; no cambia la configuración de tu agente."))
-                .font(.callout).foregroundStyle(.secondary)
+                .font(.callout).foregroundStyle(EasyDesign.muted)
             HStack {
                 Button(text("Exportar para analizar")){model.start(repo:repo,game:game,run:false)}.disabled(model.running)
                 Button(text("Exportar y ejecutar REA")){model.start(repo:repo,game:game,run:true,ghidra:ghidra)}.disabled(model.running)
@@ -62,11 +62,11 @@ struct GameAnalysisView:View {
                     let panel=NSOpenPanel();panel.canChooseDirectories=true;panel.canChooseFiles=false;panel.allowsMultipleSelection=false
                     if panel.runModal() == .OK,let path=panel.url,FileManager.default.fileExists(atPath:path.appendingPathComponent("support/analyzeHeadless").path) {ghidra=path.path}
                 }.disabled(model.running)
-                Text(ghidra.isEmpty ? text("Opcional: usa tu instalación local de Ghidra.") : URL(fileURLWithPath:ghidra).lastPathComponent).font(.caption).foregroundStyle(.secondary)
+                Text(ghidra.isEmpty ? text("Opcional: usa tu instalación local de Ghidra.") : URL(fileURLWithPath:ghidra).lastPathComponent).font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted)
             }
             if model.running {
                 ProgressView().progressViewStyle(.linear)
-                TimelineView(.periodic(from:.now,by:1)) {context in Text(text("Tiempo transcurrido")+" "+String(Int(context.date.timeIntervalSince(model.started ?? context.date)))+" s").font(.caption)}
+                TimelineView(.periodic(from:.now,by:1)) {context in Text(text("Tiempo transcurrido")+" "+String(Int(context.date.timeIntervalSince(model.started ?? context.date)))+" s").font(EasyDesign.metadata)}
                 Button(text("Cancelar")){model.cancel()}
             }
             ScrollView {Text(model.transcript).font(.system(size:11,design:.monospaced)).textSelection(.enabled).frame(maxWidth:.infinity,alignment:.leading)}.frame(minHeight:180)

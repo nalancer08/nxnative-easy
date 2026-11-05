@@ -38,11 +38,11 @@ struct CacheCleanupView:View {
     var body:some View {
         DisclosureGroup(text("Liberar espacio de compilación"),isExpanded:$expanded) {
             VStack(alignment:.leading,spacing:14) {
-                Text(text("Sólo cachés que se pueden regenerar. No se incluyen juegos, IPA, apps, RomFS, llaves ni partidas. La próxima compilación puede tardar más.")).font(.caption).foregroundStyle(.secondary)
-                ForEach(items) {item in Toggle(isOn:Binding(get:{selected.contains(item.id)},set:{if $0 {selected.insert(item.id)}else{selected.remove(item.id)}})) {HStack {Text(text(item.path.contains("Intermediates") ? "Archivos temporales de Xcode" : item.path.contains("Cache") ? "Caché de herramientas de Apple" : item.path.hasSuffix("/tmp") ? "Archivos temporales de compilación" : "Caché de gráficos")).font(.caption);Spacer();Text(ByteCountFormatter.string(fromByteCount:item.bytes,countStyle:.file))}}.disabled(busy || disabled)}
+                Text(text("Sólo cachés que se pueden regenerar. No se incluyen juegos, IPA, apps, RomFS, llaves ni partidas. La próxima compilación puede tardar más.")).font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted)
+                ForEach(items) {item in Toggle(isOn:Binding(get:{selected.contains(item.id)},set:{if $0 {selected.insert(item.id)}else{selected.remove(item.id)}})) {HStack {Text(text(item.path.contains("Intermediates") ? "Archivos temporales de Xcode" : item.path.contains("Cache") ? "Caché de herramientas de Apple" : item.path.hasSuffix("/tmp") ? "Archivos temporales de compilación" : "Caché de gráficos")).font(EasyDesign.metadata);Spacer();Text(ByteCountFormatter.string(fromByteCount:item.bytes,countStyle:.file))}}.disabled(busy || disabled)}
                 HStack {Button(text("Revisar cachés")){run(deleting:false)}.disabled(busy || disabled);if !selected.isEmpty {Button(text("Eliminar seleccionadas")+" · "+size,role:.destructive){confirm=true}.disabled(busy || disabled)}}
                 if busy {ProgressView().controlSize(.small)}
-                if !message.isEmpty {Text(text(message)).font(.caption)}
+                if !message.isEmpty {Text(text(message)).font(EasyDesign.metadata)}
             }.padding(.top,14)
         }.padding(18).background(.white.opacity(0.035),in:RoundedRectangle(cornerRadius:18))
         .confirmationDialog(text("¿Eliminar estas cachés?"),isPresented:$confirm) {Button(text("Eliminar seleccionadas"),role:.destructive){run(deleting:true)}} message:{Text(size+" · "+text("Se regenerarán cuando prepares el juego otra vez."))}

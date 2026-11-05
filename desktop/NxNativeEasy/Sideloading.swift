@@ -777,7 +777,7 @@ struct SideloadView:View {
             if accountOnly && embedded {
                 VStack(alignment:.leading,spacing:20) {
                     Text(text("Cuenta de instalación")).font(.title2.bold())
-                    Text(text("Para instalar y renovar apps. iCloud funciona por separado.")).font(.callout).foregroundStyle(.secondary)
+                    Text(text("Para instalar y renovar apps. iCloud funciona por separado.")).font(.callout).foregroundStyle(EasyDesign.muted)
                     accountContent
                     InstallActivityView(model:model,text:text,showBusy:false,showError:false)
                 }.frame(maxWidth:570,alignment:.leading).frame(maxWidth:.infinity,alignment:.leading).padding(30)
@@ -786,19 +786,19 @@ struct SideloadView:View {
                 HStack(alignment:.center) {
                     VStack(alignment:.leading,spacing:5) {
                         Text(text(accountOnly ? "Tu cuenta Apple" : model.renewalJob != nil ? "Renovar para seguir jugando" : guided ? "Del juego a tu dispositivo" : "Instalar en iPhone / iPad")).font(.system(size:30,weight:.bold,design:.default))
-                        if !accountOnly {Label(displayedGame,systemImage:"checkmark.circle.fill").font(.callout).foregroundStyle(.secondary)}
+                        if !accountOnly {Label(displayedGame,systemImage:"checkmark.circle.fill").font(.callout).foregroundStyle(EasyDesign.muted)}
                     }
                     Spacer()
                     if !embedded {Button(text("Cerrar")){dismiss()}.disabled(model.busy)}
                     else if guided {Button(text("Ver preparación"),action:onReturn).disabled(model.busy)}
                 }
                 if !accountOnly {
-                    if guided {Label(text("Preparación completada · Ahora vamos a instalar"),systemImage:"checkmark.seal.fill").font(.caption.weight(.semibold)).foregroundStyle(EasyDesign.accent)}
+                    if guided {Label(text("Preparación completada · Ahora vamos a instalar"),systemImage:"checkmark.seal.fill").font(EasyDesign.metadata.weight(.semibold)).foregroundStyle(EasyDesign.accent)}
                     EasyStepRail(titles:["Dispositivo","Cuenta Apple","Revisar","Instalar"].map(text),current:installStep)
                 }
                 if accountOnly || installStep==1 {Text(text(model.codeRequired ? "Verifica tu cuenta" : "Cuenta de instalación")).font(.title2.bold())}
                 else {EasyMilestone(kind:kind,title:text(title),subtitle:text(subtitle))}
-                if !accountOnly {Label(text(model.devices.contains{$0.ready} ? "Dispositivo conectado" : "Conecta tu iPhone o iPad")+(selectedDevice.map{" · "+$0.name} ?? ""),systemImage:model.devices.contains{$0.ready} ? "checkmark.circle.fill" : "cable.connector").font(.callout).foregroundStyle(model.devices.contains{$0.ready} ? EasyDesign.accent : .secondary)}
+                if !accountOnly {Label(text(model.devices.contains{$0.ready} ? "Dispositivo conectado" : "Conecta tu iPhone o iPad")+(selectedDevice.map{" · "+$0.name} ?? ""),systemImage:model.devices.contains{$0.ready} ? "checkmark.circle.fill" : "cable.connector").font(.callout).foregroundStyle(model.devices.contains{$0.ready} ? EasyDesign.accent : EasyDesign.muted)}
                 if accountOnly || installStep==1 {accountContent}
                 else if installStep==0 {deviceContent}
                 else if installStep==2 {reviewContent}
@@ -831,19 +831,19 @@ struct SideloadView:View {
                     Spacer();Button(text("Buscar dispositivos")){model.listDevices()}.disabled(model.busy)
                 }
                 if model.devices.isEmpty {
-                    Text(text("Conecta por USB, desbloquea y pulsa Confiar si tu dispositivo lo pide.")).font(.callout).foregroundStyle(.secondary)
+                    Text(text("Conecta por USB, desbloquea y pulsa Confiar si tu dispositivo lo pide.")).font(.callout).foregroundStyle(EasyDesign.muted)
                 } else {
                     ForEach(model.devices) {device in
                         Button {model.device=device.id;model.existing="";model.inspectApps()} label:{
                             HStack(spacing:14) {
                                 Image(systemName:device.kind=="iPad" ? "ipad" : "iphone").font(.system(size:30,weight:.light)).foregroundStyle(EasyDesign.accent).frame(width:40)
-                                VStack(alignment:.leading,spacing:6) {Text(device.name).font(.headline);if !device.detail.isEmpty {Text(device.detail).font(.caption).foregroundStyle(.secondary)}}
-                                Spacer();Image(systemName:model.device==device.id ? "checkmark.circle.fill" : "circle").foregroundStyle(model.device==device.id ? EasyDesign.accent : .secondary)
+                                VStack(alignment:.leading,spacing:6) {Text(device.name).font(.headline);if !device.detail.isEmpty {Text(device.detail).font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted)}}
+                                Spacer();Image(systemName:model.device==device.id ? "checkmark.circle.fill" : "circle").foregroundStyle(model.device==device.id ? EasyDesign.accent : EasyDesign.muted)
                             }.padding(16).background(model.device==device.id ? EasyDesign.accent.opacity(0.08) : .white.opacity(0.025),in:RoundedRectangle(cornerRadius:12))
-                        }.buttonStyle(.plain).disabled(model.busy || (model.renewalJob != nil && model.renewalJob?.udid != device.id)).accessibilityLabel(device.name).accessibilityAddTraits(model.device==device.id ? .isSelected : [])
+                        }.buttonStyle(EasySelectionStyle(selected:model.device==device.id)).disabled(model.busy || (model.renewalJob != nil && model.renewalJob?.udid != device.id)).accessibilityLabel(device.name).accessibilityAddTraits(model.device==device.id ? .isSelected : [])
                     }
                 }
-                Text(text("Desbloquea el dispositivo, confía en este Mac y activa Modo de desarrollador si iOS lo pide.")).font(.caption).foregroundStyle(.secondary)
+                Text(text("Desbloquea el dispositivo, confía en este Mac y activa Modo de desarrollador si iOS lo pide.")).font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted)
                 Button {installStep=model.authenticated && !model.team.isEmpty ? 2 : 1} label:{Label(text("Continuar con este dispositivo"),systemImage:"arrow.right")}.buttonStyle(EasyPrimaryStyle()).disabled(model.busy || model.device.isEmpty)
             }
         }
@@ -853,20 +853,20 @@ struct SideloadView:View {
             if model.codeRequired {AppleVerificationView(model:model,text:text)}
             else if model.authenticated {signedInContent}
             else if model.busy {
-                HStack(spacing:14) {ProgressView().controlSize(.small);VStack(alignment:.leading,spacing:5) {Text(text("Conectando tu cuenta…")).font(.headline);Text(model.email).font(.callout).foregroundStyle(.secondary)};Spacer();Button(text("Cancelar")){model.cancel()}.buttonStyle(EasyLinkStyle())}.padding(20).background(EasyDesign.panel,in:RoundedRectangle(cornerRadius:16))
+                HStack(spacing:14) {ProgressView().controlSize(.small);VStack(alignment:.leading,spacing:5) {Text(text("Conectando tu cuenta…")).font(.headline);Text(model.email).font(.callout).foregroundStyle(EasyDesign.muted)};Spacer();Button(text("Cancelar")){model.cancel()}.buttonStyle(EasyLinkStyle())}.padding(20).background(EasyDesign.panel,in:RoundedRectangle(cornerRadius:16))
             } else if model.hasRememberedSession && !usePassword {
                 let failed=model.error != nil && ["restore","login"].contains(model.failureOperation)
                 EasyCard {
                     VStack(alignment:.leading,spacing:16) {
-                        HStack(spacing:12) {Image(systemName:"person.crop.circle").font(.system(size:32,weight:.light)).foregroundStyle(EasyDesign.accent);VStack(alignment:.leading,spacing:5) {Text(model.email).font(.headline).textSelection(.enabled);Text(text(failed ? "La cuenta necesita volver a conectarse" : "Cuenta guardada en este Mac")).font(.caption).foregroundStyle(.secondary)}}
-                        if failed {Text(text("No pudimos usar la sesión guardada. Entra con tu contraseña para continuar.")).font(.callout).foregroundStyle(.secondary)}
+                        HStack(spacing:12) {Image(systemName:"person.crop.circle").font(.system(size:32,weight:.light)).foregroundStyle(EasyDesign.accent);VStack(alignment:.leading,spacing:5) {Text(model.email).font(.headline).textSelection(.enabled);Text(text(failed ? "La cuenta necesita volver a conectarse" : "Cuenta guardada en este Mac")).font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted)}}
+                        if failed {Text(text("No pudimos usar la sesión guardada. Entra con tu contraseña para continuar.")).font(.callout).foregroundStyle(EasyDesign.muted)}
                         Button(text(failed ? "Entrar con contraseña" : "Conectar cuenta")){if failed {model.clearAccountIssue();usePassword=true}else{model.restoreSession()}}.buttonStyle(EasyPrimaryStyle())
                         Button(text(failed ? "Intentar de nuevo" : "Usar otra cuenta")){if failed {model.restoreSession()}else{model.clearAccountIssue();usePassword=true}}.buttonStyle(EasyLinkStyle())
                     }
                 }
             } else {loginContent}
             if let error=model.error,["login","restore","verify"].contains(model.failureOperation),!model.busy {
-                DisclosureGroup(text("Detalles de conexión")) {Text(text(error)+(model.appleFailureCode.map{" · Apple: \($0)"} ?? "")).font(.caption).foregroundStyle(.secondary).textSelection(.enabled)}.font(.caption)
+                DisclosureGroup(text("Detalles de conexión")) {Text(text(error)+(model.appleFailureCode.map{" · Apple: \($0)"} ?? "")).font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted).textSelection(.enabled)}.font(EasyDesign.metadata)
             }
             if !accountOnly && model.authenticated && !model.codeRequired {
                 Button {installStep=2} label:{Label(text("Continuar"),systemImage:"arrow.right")}.buttonStyle(EasyPrimaryStyle()).disabled(model.busy || model.team.isEmpty)
@@ -876,21 +876,21 @@ struct SideloadView:View {
     private var loginContent:some View {
         EasyCard {
             VStack(alignment:.leading,spacing:20) {
-                VStack(alignment:.leading,spacing:6) {Text(text("Inicia sesión en Apple")).font(.title3.bold());Text(text("Para instalar en tu iPhone o iPad.")).font(.callout).foregroundStyle(.secondary)}
+                VStack(alignment:.leading,spacing:6) {Text(text("Inicia sesión en Apple")).font(.title3.bold());Text(text("Para instalar en tu iPhone o iPad.")).font(.callout).foregroundStyle(EasyDesign.muted)}
                 VStack(alignment:.leading,spacing:16) {
                     EasyField(text("Cuenta Apple personal")){TextField("name@example.com",text:$model.email).accessibilityLabel(text("Cuenta Apple personal"))}
                     EasyField(text("Contraseña de Apple")){SecureField(text("Contraseña de Apple"),text:$password).accessibilityLabel(text("Contraseña de Apple")).onSubmit {signIn()}}
                     Toggle(text("Recordar sesión en este Mac"),isOn:$remember).onChange(of:remember){_,value in if !value {autoRefresh=false}}
-                    Text(text("Guardamos la sesión en el Llavero, nunca tu contraseña.")).font(.caption).foregroundStyle(.secondary)
+                    Text(text("Guardamos la sesión en el Llavero, nunca tu contraseña.")).font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted)
                     Button {signIn()} label:{Label(text("Iniciar sesión"),systemImage:"arrow.right")}.buttonStyle(EasyPrimaryStyle()).disabled(model.email.trimmingCharacters(in:.whitespacesAndNewlines).isEmpty || password.isEmpty)
                     if model.hasRememberedSession {Button(text("Usar sesión del Llavero")){usePassword=false;password="";model.restoreSession()}.buttonStyle(EasyLinkStyle())}
                 }.frame(maxWidth:500,alignment:.leading)
                 DisclosureGroup(text("Privacidad y conexión")) {
                     VStack(alignment:.leading,spacing:12) {
-                        Text(text("La contraseña y el código se envían a Apple. El servicio anisette recibe los datos técnicos que requiere la autenticación, no tu contraseña.")).font(.caption).foregroundStyle(.secondary)
+                        Text(text("La contraseña y el código se envían a Apple. El servicio anisette recibe los datos técnicos que requiere la autenticación, no tu contraseña.")).font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted)
                         EasyField(text("Servicio de autenticación")){TextField("Anisette HTTPS",text:$model.anisette)}
                     }.padding(.top,12)
-                }.font(.caption)
+                }.font(EasyDesign.metadata)
             }
         }.disabled(model.busy)
     }
@@ -907,19 +907,19 @@ struct SideloadView:View {
                 VStack(alignment:.leading,spacing:8) {
                     Text(text("Equipo para firmar tus apps")).font(.callout.bold())
                     Picker(text("Tu equipo personal"),selection:$model.team) {Text(text("Selecciona tu equipo")).tag("");ForEach(model.teams){Text($0.name+" · "+$0.id).tag($0.id)}}.labelsHidden().frame(maxWidth:520).disabled(model.busy)
-                    if let selected=model.teams.first(where:{$0.id==model.team}),!selected.kind.isEmpty {Text(selected.freeDeviceLimit==3 ? text("Cuenta gratuita") : selected.kind).font(.caption).foregroundStyle(.secondary)}
+                    if let selected=model.teams.first(where:{$0.id==model.team}),!selected.kind.isEmpty {Text(selected.freeDeviceLimit==3 ? text("Cuenta gratuita") : selected.kind).font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted)}
                 }
                 if model.accountDeviceTeam==model.team && !model.team.isEmpty {
                     HStack(spacing:20) {
-                        VStack(alignment:.leading,spacing:4) {Text(String(model.accountDevices.count)).font(.system(size:28,weight:.bold,design:.default));Text(text("Dispositivos registrados")).font(.caption).foregroundStyle(.secondary)}
-                        if let remaining=model.estimatedDeviceSlots {Divider().frame(height:44);VStack(alignment:.leading,spacing:4) {Text("\(remaining) / 3").font(.system(size:28,weight:.bold,design:.default)).foregroundStyle(EasyDesign.accent);Text(text("Cupos disponibles estimados")).font(.caption).foregroundStyle(.secondary)}}
+                        VStack(alignment:.leading,spacing:4) {Text(String(model.accountDevices.count)).font(.system(size:28,weight:.bold,design:.default));Text(text("Dispositivos registrados")).font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted)}
+                        if let remaining=model.estimatedDeviceSlots {Divider().frame(height:44);VStack(alignment:.leading,spacing:4) {Text("\(remaining) / 3").font(.system(size:28,weight:.bold,design:.default)).foregroundStyle(EasyDesign.accent);Text(text("Cupos disponibles estimados")).font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted)}}
                     }
-                    if model.estimatedDeviceSlots==nil {Text(text("Apple aún no confirmó cuántos dispositivos puedes registrar.")).font(.caption).foregroundStyle(.secondary)}
-                    else {Text(text("Estimación según los registros devueltos. Apple confirma el cupo al registrar un dispositivo nuevo.")).font(.caption).foregroundStyle(.secondary)}
+                    if model.estimatedDeviceSlots==nil {Text(text("Apple aún no confirmó cuántos dispositivos puedes registrar.")).font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted)}
+                    else {Text(text("Estimación según los registros devueltos. Apple confirma el cupo al registrar un dispositivo nuevo.")).font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted)}
                     DisclosureGroup(text("Ver dispositivos registrados")) {VStack(alignment:.leading,spacing:10) {ForEach(model.accountDevices) {item in Label(model.accountDeviceName(item),systemImage:"iphone")}}.padding(.top,12)}.font(.callout)
                 }
                 Button(text("Actualizar dispositivos de mi cuenta")){model.inspectAccountDevices()}.disabled(model.busy || model.team.isEmpty)
-                Text(text("El cupo corresponde al dispositivo, no a cada juego. Actualizar en un dispositivo ya registrado no consume otro cupo de dispositivo.")).font(.caption).foregroundStyle(.secondary)
+                Text(text("El cupo corresponde al dispositivo, no a cada juego. Actualizar en un dispositivo ya registrado no consume otro cupo de dispositivo.")).font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted)
             }
         }
     }
@@ -929,13 +929,13 @@ struct SideloadView:View {
                 VStack(alignment:.leading,spacing:16) {
                     Text(displayedGame).font(.title3.bold())
                     Label(selectedDevice?.name ?? "iPhone / iPad",systemImage:"iphone").font(.headline)
-                    Label(model.email,systemImage:"person.crop.circle").font(.callout).foregroundStyle(.secondary)
-                    Label(text(model.renewalJob != nil ? "Sólo renovaremos la firma. No recompilamos ni copiamos romfs o partidas." : model.romfs == nil ? "IPA completa: el juego va dentro de la app." : "IPA ligera: instalaremos la app y copiaremos romfs por separado."),systemImage:"shippingbox").font(.callout).foregroundStyle(.secondary)
+                    Label(model.email,systemImage:"person.crop.circle").font(.callout).foregroundStyle(EasyDesign.muted)
+                    Label(text(model.renewalJob != nil ? "Sólo renovaremos la firma. No recompilamos ni copiamos romfs o partidas." : model.romfs == nil ? "IPA completa: el juego va dentro de la app." : "IPA ligera: instalaremos la app y copiaremos romfs por separado."),systemImage:"shippingbox").font(.callout).foregroundStyle(EasyDesign.muted)
                     VStack(alignment:.leading,spacing:8) {
                         Text(text("App existente que actualizarás")).font(.callout.bold())
                         Picker(text("App existente que actualizarás"),selection:$model.existing) {Text(text("Primera instalación")).tag("");ForEach(model.apps){Text($0.name+" · "+$0.id).tag($0.id)}}.labelsHidden().frame(maxWidth:.infinity).disabled(model.busy || model.renewalJob != nil)
                     }
-                    Text(text("Se conserva el identificador efectivo. Si no corresponde al juego y equipo, la instalación se detiene; no se desinstala la app anterior.")).font(.caption).foregroundStyle(.secondary)
+                    Text(text("Se conserva el identificador efectivo. Si no corresponde al juego y equipo, la instalación se detiene; no se desinstala la app anterior.")).font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted)
                 }
             }
             RegistrationReviewView(model:model,text:text,approved:$approveRegistration)
@@ -943,12 +943,12 @@ struct SideloadView:View {
             EasyCard {
                 VStack(alignment:.leading,spacing:16) {
                     Toggle(text("Renovar automáticamente antes de que caduque"),isOn:$autoRefresh).disabled(model.busy || !model.hasRememberedSession)
-                    if !model.hasRememberedSession {Text(text("Para renovar automáticamente, inicia sesión recordándola en el Llavero.")).font(.caption).foregroundStyle(.secondary)}
-                    Text(text("La renovación necesita este Mac encendido, nxnative Easy abierto, conexión a Internet y el dispositivo accesible. Conserva la IPA original.")).font(.caption).foregroundStyle(.secondary)
+                    if !model.hasRememberedSession {Text(text("Para renovar automáticamente, inicia sesión recordándola en el Llavero.")).font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted)}
+                    Text(text("La renovación necesita este Mac encendido, nxnative Easy abierto, conexión a Internet y el dispositivo accesible. Conserva la IPA original.")).font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted)
                     DisclosureGroup(text("Más opciones")) {
                         VStack(alignment:.leading,spacing:14) {
                             Toggle(text("Renovar aunque la ventana esté cerrada"),isOn:$loginItem).onChange(of:loginItem){_,value in model.setLoginItem(value)}
-                            if model.renewalJob == nil && model.canUpdateAppOnly {Toggle(text("Copiar también los datos del juego"),isOn:$includeGameData);Text(text("Para cambios de controles o de la app con la misma versión del juego. Si cambió el juego o DLC, usa la instalación con datos nuevos.")).font(.caption).foregroundStyle(.secondary)}
+                            if model.renewalJob == nil && model.canUpdateAppOnly {Toggle(text("Copiar también los datos del juego"),isOn:$includeGameData);Text(text("Para cambios de controles o de la app con la misma versión del juego. Si cambió el juego o DLC, usa la instalación con datos nuevos.")).font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted)}
                         }.padding(.top,12)
                     }.font(.callout)
                     Label(text("Guarda y cierra el juego antes de instalar. No desinstales la app anterior."),systemImage:"info.circle").font(.callout)
@@ -960,11 +960,11 @@ struct SideloadView:View {
                         }message:{Text(text("Se creará un ZIP en tu Mac con el guardado. La partida original no se modifica."))}
                     }
 
-                    if model.originalID.isEmpty || model.ipa==nil {Text(text("Falta una IPA preparada con su identidad. Vuelve a preparar el juego antes de instalar.")).font(.caption).foregroundStyle(.orange)}
+                    if model.originalID.isEmpty || model.ipa==nil {Text(text("Falta una IPA preparada con su identidad. Vuelve a preparar el juego antes de instalar.")).font(EasyDesign.metadata).foregroundStyle(.orange)}
                 }
             }.disabled(model.busy)
             } else {
-                Label(text("Se reutiliza la IPA registrada. Tus partidas y datos del juego no se vuelven a copiar."),systemImage:"checkmark.shield").font(.callout).foregroundStyle(.secondary)
+                Label(text("Se reutiliza la IPA registrada. Tus partidas y datos del juego no se vuelven a copiar."),systemImage:"checkmark.shield").font(.callout).foregroundStyle(EasyDesign.muted)
             }
         }
     }
@@ -983,7 +983,7 @@ struct SideloadView:View {
         HStack(spacing:18) {
             VStack(alignment:.leading,spacing:5) {
                 Text(text(canInstall ? "Listo para instalar" : "Antes de instalar")).font(.headline)
-                Text(text(readinessMessage)).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal:false,vertical:true)
+                Text(text(readinessMessage)).font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted).fixedSize(horizontal:false,vertical:true)
             }.frame(maxWidth:.infinity,alignment:.leading)
             Button {installStep=3;if let job=model.renewalJob {model.renew(job)}else {model.install(autoRefresh:autoRefresh,includeContent:includeGameData,approveRegistration:approveRegistration)}} label:{Label(text(model.renewalJob != nil ? "Renovar y conservar mi progreso" : model.existing.isEmpty ? "Firmar e instalar" : "Firmar y actualizar"),systemImage:"arrow.down.app")}.buttonStyle(EasyPrimaryStyle()).disabled(!canInstall)
         }.padding(20).frame(maxWidth:860).frame(maxWidth:.infinity).background(EasyDesign.background).overlay(alignment:.top){Divider()}
@@ -992,15 +992,15 @@ struct SideloadView:View {
         EasyCard {
             VStack(alignment:.leading,spacing:16) {
                 Label(displayedGame,systemImage:model.completedInstallation ? "checkmark.seal.fill" : "shippingbox").font(.title3.bold())
-                Text(selectedDevice?.name ?? "iPhone / iPad").font(.callout).foregroundStyle(.secondary)
+                Text(selectedDevice?.name ?? "iPhone / iPad").font(.callout).foregroundStyle(EasyDesign.muted)
                 if model.completedInstallation {
                     Text(text("Instalación confirmada. Ya puedes abrir el juego en tu dispositivo.")).font(.callout)
                     if guided {Button(text("Volver a la preparación"),action:onReturn).buttonStyle(EasyPrimaryStyle())}
                     else if !embedded {Button(text("Listo")){dismiss()}.buttonStyle(EasyPrimaryStyle())}
                 } else if !model.busy {
-                    Text(text("La instalación no ha terminado. Revisa el mensaje y vuelve a intentarlo.")).font(.callout).foregroundStyle(.secondary)
+                    Text(text("La instalación no ha terminado. Revisa el mensaje y vuelve a intentarlo.")).font(.callout).foregroundStyle(EasyDesign.muted)
                     Button(text("Revisar e intentar de nuevo")){installStep=2}.buttonStyle(EasyPrimaryStyle())
-                } else {Text(text("Mantén el dispositivo conectado y la app abierta hasta que terminemos.")).font(.callout).foregroundStyle(.secondary)}
+                } else {Text(text("Mantén el dispositivo conectado y la app abierta hasta que terminemos.")).font(.callout).foregroundStyle(EasyDesign.muted)}
             }
         }
     }
@@ -1021,14 +1021,14 @@ struct RegistrationReviewView:View {
                 Label(text("Este dispositivo usará un cupo nuevo"),systemImage:"plus.circle.fill").font(.headline).foregroundStyle(.orange)
                 Text(text("Al confirmar la instalación, registraremos este dispositivo con tu equipo Apple y consumirá un cupo.")).font(.callout)
                 if let remaining=model.estimatedDeviceSlots {Text(text("Disponibles estimados antes de instalar")+": "+String(remaining)+" · "+text("Después")+": "+String(max(0,remaining-1))).font(.callout.bold())}
-                Text(text("El registro puede consumir el cupo aunque la instalación falle después.")).font(.caption).foregroundStyle(.secondary)
+                Text(text("El registro puede consumir el cupo aunque la instalación falle después.")).font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted)
                 Toggle(text("Acepto registrar este dispositivo y usar un cupo"),isOn:$approved).disabled(model.busy)
             case .unknown:
                 Label(text("Comprueba el registro antes de instalar"),systemImage:"questionmark.circle").font(.headline)
                 Button(text("Consultar mi cuenta Apple")){model.inspectAccountDevices()}.disabled(model.busy)
             }
             if model.registrationState != .unknown {Button(text("Actualizar consulta")){approved=false;model.inspectAccountDevices()}.disabled(model.busy)}
-            Text(text("La consulta no registra ni elimina dispositivos. Apple confirma la disponibilidad al instalar.")).font(.caption).foregroundStyle(.secondary)
+            Text(text("La consulta no registra ni elimina dispositivos. Apple confirma la disponibilidad al instalar.")).font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted)
         }.padding(18).frame(maxWidth:.infinity,alignment:.leading).background(.white.opacity(0.04),in:RoundedRectangle(cornerRadius:14))
     }
 }
@@ -1047,8 +1047,8 @@ struct AppleVerificationView:View {
                 Image(systemName:"lock.shield").font(.system(size:28,weight:.light)).foregroundStyle(EasyDesign.accent).frame(width:48,height:48).background(.white.opacity(0.04),in:RoundedRectangle(cornerRadius:12))
                 VStack(alignment:.leading,spacing:6) {
                     Text(text("Verifica tu cuenta")).font(.title2.bold())
-                    if !model.email.isEmpty {Text(model.email).font(.caption).foregroundStyle(.secondary)}
-                    Text(text("Introduce los 6 dígitos que Apple muestra en tu dispositivo de confianza o envía por SMS.")).font(.callout).foregroundStyle(.secondary).fixedSize(horizontal:false,vertical:true)
+                    if !model.email.isEmpty {Text(model.email).font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted)}
+                    Text(text("Introduce los 6 dígitos que Apple muestra en tu dispositivo de confianza o envía por SMS.")).font(.callout).foregroundStyle(EasyDesign.muted).fixedSize(horizontal:false,vertical:true)
                 }
             }
             VStack(alignment:.leading,spacing:10) {
@@ -1060,13 +1060,13 @@ struct AppleVerificationView:View {
                     .focused($focused).accessibilityLabel(text("Código de verificación"))
                     .onChange(of:code){_,value in code=String(value.utf8.filter {48...57 ~= $0}.prefix(6).map {Character(UnicodeScalar($0))})}
                     .onSubmit {confirm()}
-                Text(text("Puedes pegar el código completo.")).font(.caption).foregroundStyle(.secondary)
+                Text(text("Puedes pegar el código completo.")).font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted)
             }
             Button(action:confirm){Label(text("Verificar y continuar"),systemImage:"arrow.right")}.buttonStyle(EasyPrimaryStyle()).disabled(!valid)
             Divider().overlay(.white.opacity(0.06))
             DisclosureGroup(text("¿No recibiste el código?")) {
                 VStack(alignment:.leading,spacing:12) {
-                    Text(text("Elige dónde quieres recibir uno nuevo.")).font(.caption).foregroundStyle(.secondary)
+                    Text(text("Elige dónde quieres recibir uno nuevo.")).font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted)
                     Button {code="";model.sendToDevices()} label:{Label(text("Mostrar en mis dispositivos Apple"),systemImage:"ipad.and.iphone")}
                     ForEach(model.smsNumbers) {number in
                         Button {code="";model.sendSMS(number.id)} label:{Label(text("Enviar SMS al número terminado en")+" "+number.digits,systemImage:"message")}
@@ -1075,7 +1075,7 @@ struct AppleVerificationView:View {
                 }.padding(.top,12)
             }.font(.callout)
             HStack(alignment:.firstTextBaseline) {
-                Text(text("El código se envía a Apple y no se guarda.")).font(.caption).foregroundStyle(.secondary)
+                Text(text("El código se envía a Apple y no se guarda.")).font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted)
                 Spacer()
                 Button(text("Cancelar")){code="";model.cancel()}.buttonStyle(EasyLinkStyle())
             }
@@ -1120,9 +1120,9 @@ struct SideloadLibraryView:View {
                 VStack(alignment:.leading,spacing:14) {
                     EasyEyebrow(title:text("TUS DISPOSITIVOS"))
                     Text(text("Mis iPhones y iPads")).font(.system(size:34,weight:.bold)).tracking(-1)
-                    Text(text("Conecta. Elige tu juego. Instala o actualiza.")).font(.callout).foregroundStyle(.secondary)
+                    Text(text("Conecta. Elige tu juego. Instala o actualiza.")).font(.callout).foregroundStyle(EasyDesign.muted)
                     HStack(spacing:10) {
-                        Label(text(model.devices.isEmpty ? "Sin dispositivos conectados" : "Dispositivos conectados")+(model.devices.isEmpty ? "" : " · "+String(model.devices.count)),systemImage:model.devices.isEmpty ? "cable.connector" : "checkmark.circle.fill").font(.caption).foregroundStyle(model.devices.isEmpty ? .secondary : EasyDesign.accent)
+                        Label(text(model.devices.isEmpty ? "Sin dispositivos conectados" : "Dispositivos conectados")+(model.devices.isEmpty ? "" : " · "+String(model.devices.count)),systemImage:model.devices.isEmpty ? "cable.connector" : "checkmark.circle.fill").font(EasyDesign.metadata).foregroundStyle(model.devices.isEmpty ? EasyDesign.muted : EasyDesign.accent)
                         if !embedded {Button(text("Cerrar")){dismiss()}.buttonStyle(EasyLinkStyle()).disabled(model.busy)}
                     }
                 }.frame(maxWidth:.infinity,alignment:.leading)
@@ -1130,7 +1130,7 @@ struct SideloadLibraryView:View {
             }.padding(.horizontal,36).padding(.vertical,24).background(RadialGradient(colors:[EasyDesign.violet.opacity(0.14),.clear],center:.trailing,startRadius:0,endRadius:560))
             ScrollView {
                 VStack(alignment:.leading,spacing:20) {
-                    Text(text("Exportar partidas y copiar romfs no requieren iniciar sesión con Apple. Sólo conecta y autoriza tu dispositivo.")).font(.caption).foregroundStyle(.secondary)
+                    Text(text("Exportar partidas y copiar romfs no requieren iniciar sesión con Apple. Sólo conecta y autoriza tu dispositivo.")).font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted)
                     HStack {
                         Label(text("Dispositivos conectados"),systemImage:"cable.connector").font(.headline)
                         Spacer();Button(text("Buscar dispositivos")){model.listDevices()}.disabled(model.busy || !canInstall)
@@ -1138,10 +1138,10 @@ struct SideloadLibraryView:View {
                     if model.devices.isEmpty && !model.busy {
                         VStack(alignment:.leading,spacing:10) {
                             Text(text("Conecta tu iPhone o iPad")).font(.headline)
-                            Text(text("Desbloquea el dispositivo, confía en este Mac y activa Modo de desarrollador si iOS lo pide.")).foregroundStyle(.secondary)
+                            Text(text("Desbloquea el dispositivo, confía en este Mac y activa Modo de desarrollador si iOS lo pide.")).foregroundStyle(EasyDesign.muted)
                             if !model.device.isEmpty {
                         Button(text("Comprobar USB y Wi-Fi")){model.checkConnections()}.disabled(model.busy)
-                        if !model.connectionSummary.isEmpty {Text(model.connectionSummary).font(.callout.monospaced());Text(text("Esto verifica la conexión, no la firma ni la instalación. Para Wi-Fi, empareja por USB y activa la sincronización en Finder.")).font(.caption).foregroundStyle(.secondary)}
+                        if !model.connectionSummary.isEmpty {Text(model.connectionSummary).font(.callout.monospaced());Text(text("Esto verifica la conexión, no la firma ni la instalación. Para Wi-Fi, empareja por USB y activa la sincronización en Finder.")).font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted)}
                     }
                     Button(text("Buscar dispositivos")){model.listDevices()}
                         }.padding(18).frame(maxWidth:.infinity,minHeight:136,alignment:.topLeading).background(.white.opacity(0.04),in:RoundedRectangle(cornerRadius:14))
@@ -1150,10 +1150,10 @@ struct SideloadLibraryView:View {
                         Button {model.openDevice(device.id)} label:{
                             HStack(spacing:14) {
                                 Image(systemName:device.kind=="iPad" ? "ipad" : "iphone").font(.system(size:30)).foregroundStyle(accent).frame(width:42)
-                                VStack(alignment:.leading,spacing:5) {Text(device.name).font(.headline);Text(device.detail.isEmpty ? text("Información del dispositivo no disponible") : device.detail).font(.caption).foregroundStyle(.secondary);if !device.ready {Text(text("Desbloquea y confía en este Mac para leer las apps.")).font(.caption).foregroundStyle(.orange)}}
-                                Spacer();Image(systemName:model.device==device.id ? "checkmark.circle.fill" : "circle").foregroundStyle(model.device==device.id ? accent : .secondary)
+                                VStack(alignment:.leading,spacing:5) {Text(device.name).font(.headline);Text(device.detail.isEmpty ? text("Información del dispositivo no disponible") : device.detail).font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted);if !device.ready {Text(text("Desbloquea y confía en este Mac para leer las apps.")).font(EasyDesign.metadata).foregroundStyle(.orange)}}
+                                Spacer();Image(systemName:model.device==device.id ? "checkmark.circle.fill" : "circle").foregroundStyle(model.device==device.id ? accent : EasyDesign.muted)
                             }.padding(16).background(model.device==device.id ? accent.opacity(0.08) : .white.opacity(0.035),in:RoundedRectangle(cornerRadius:14))
-                        }.buttonStyle(.plain).disabled(model.busy || !canInstall)
+                        }.buttonStyle(EasySelectionStyle(selected:model.device==device.id)).disabled(model.busy || !canInstall)
                     }
                     HStack {
                         Label(text("Instalar otro juego"),systemImage:"plus.app").font(.callout.weight(.medium))
@@ -1161,34 +1161,34 @@ struct SideloadLibraryView:View {
                         Button(text("Elegir carpeta de juego")){model.cancelPendingUpdate();prepare()}.buttonStyle(EasySecondaryStyle()).disabled(model.busy || !canInstall)
                     }
                     if !model.device.isEmpty {
-                        HStack {Label(text("Tus juegos instalados"),systemImage:"square.grid.2x2").font(.headline);Spacer();Text(String(model.apps.count)).foregroundStyle(.secondary)}
+                        HStack {Label(text("Tus juegos instalados"),systemImage:"square.grid.2x2").font(.headline);Spacer();Text(String(model.apps.count)).foregroundStyle(EasyDesign.muted)}
                         TextField(text("Buscar por nombre o identificador"),text:$search).textFieldStyle(.roundedBorder)
-                        if model.apps.isEmpty && !model.busy {Text(text("No encontramos juegos vinculados. Añade su carpeta preparada a la biblioteca y vuelve a buscar.")).foregroundStyle(.secondary)}
+                        if model.apps.isEmpty && !model.busy {Text(text("No encontramos juegos vinculados. Añade su carpeta preparada a la biblioteca y vuelve a buscar.")).foregroundStyle(EasyDesign.muted)}
                         ForEach(Array(matchingApps.prefix(appLimit))) {app in
                             HStack(spacing:12) {
                                 if let image=artwork(app) {Image(nsImage:image).resizable().scaledToFill().frame(width:120,height:72).clipped().clipShape(RoundedRectangle(cornerRadius:8))}
                                 else {Image(systemName:"gamecontroller").font(.title2).frame(width:120,height:72).background(.white.opacity(0.04),in:RoundedRectangle(cornerRadius:8))}
-                                VStack(alignment:.leading,spacing:4) {Text(app.name).font(.headline);Text(app.id+(app.version.isEmpty ? "" : " · "+app.version)).font(.caption).foregroundStyle(.secondary).textSelection(.enabled)}
+                                VStack(alignment:.leading,spacing:4) {Text(app.name).font(.headline);Text(app.id+(app.version.isEmpty ? "" : " · "+app.version)).font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted).textSelection(.enabled)}
                                 Spacer()
                                 VStack(alignment:.trailing,spacing:7) {
                                     Button(text("Actualizar con mis archivos")){model.prepareUpdate(app);prepare()}
                                     HStack {
                                         Button(text("Exportar partidas")){confirmation = .export(app)}.disabled(!model.supportsSaveExport)
                                         if model.dataFolder(for:app) != nil {Button(text("Copiar archivos para jugar")){confirmation = .copy(app)}.disabled(!model.supportsContentCopy)}
-                                    }.font(.caption)
+                                    }.font(EasyDesign.metadata)
                                 }.disabled(model.busy || !canInstall)
                             }.padding(18).background(EasyDesign.panel,in:RoundedRectangle(cornerRadius:14))
                         }
                         if matchingApps.count>appLimit {Button(text("Mostrar más juegos")+" · "+String(min(appLimit,matchingApps.count))+" / "+String(matchingApps.count)){appLimit+=8}}
-                        Text(text("Actualizar requiere tus archivos del mismo juego y la cuenta/equipo originales. No desinstalamos la app existente.")).font(.caption).foregroundStyle(.secondary)
+                        Text(text("Actualizar requiere tus archivos del mismo juego y la cuenta/equipo originales. No desinstalamos la app existente.")).font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted)
                     }
                     if !model.jobs.isEmpty {
                         Label(text("Firmas y renovación"),systemImage:"arrow.clockwise.circle").font(.headline)
                         ForEach(model.jobs.filter {model.device.isEmpty || $0.udid==model.device}.sorted {$0.expires<$1.expires}) {job in
                             VStack(alignment:.leading,spacing:10) {
                                 Text(URL(fileURLWithPath:job.ipa).deletingPathExtension().lastPathComponent).font(.headline)
-                                Text(job.effectiveID).font(.caption).textSelection(.enabled)
-                                Text(text(job.expires<=Date() ? "Firma vencida" : "La firma vence")+" "+job.expires.formatted(date:.abbreviated,time:.shortened)).font(.caption)
+                                Text(job.effectiveID).font(EasyDesign.metadata).textSelection(.enabled)
+                                Text(text(job.expires<=Date() ? "Firma vencida" : "La firma vence")+" "+job.expires.formatted(date:.abbreviated,time:.shortened)).font(EasyDesign.metadata)
                                 if job.needsLogin {Text(text("Inicia sesión para renovar este juego.")).foregroundStyle(.orange)}
                                 Toggle(text("Renovar automáticamente antes de que caduque"),isOn:Binding(get:{model.jobs.first(where:{$0.id==job.id})?.enabled ?? false},set:{model.setRefresh(job,enabled:$0)}))
                                 HStack {Button(text("Renovar ahora")){model.renew(job)};Button(text("Revisar cuenta e instalación")){model.select(job);accountOnly=false;showInstaller=true};Spacer();Button(text("Quitar de esta lista")){confirmation = .forget(job)}}
@@ -1230,17 +1230,17 @@ struct InstallActivityView:View {
                 EasyCard {
                     VStack(alignment:.leading,spacing:14) {
                         HStack {Label(text(model.phase),systemImage:"arrow.triangle.2.circlepath").font(.headline);Spacer();Button(text("Cancelar")){model.cancel()}.buttonStyle(EasyLinkStyle())}
-                        if let fraction=model.fraction {ProgressView(value:fraction).tint(EasyDesign.accent);Text(String(Int(fraction*100))+" %").font(.caption.monospacedDigit())}
-                        else {ProgressView().progressViewStyle(.linear).tint(EasyDesign.accent);Text(text("Esta operación no informa un porcentaje. Puedes seguir el tiempo transcurrido y el registro.")).font(.caption).foregroundStyle(.secondary)}
-                        TimelineView(.periodic(from:.now,by:1)){context in Text(text("Tiempo transcurrido")+" "+String(max(0,Int(context.date.timeIntervalSince(model.startedAt ?? context.date))))+" s").font(.caption.monospacedDigit()).foregroundStyle(.secondary)}
+                        if let fraction=model.fraction {ProgressView(value:fraction).tint(EasyDesign.accent);Text(String(Int(fraction*100))+" %").font(EasyDesign.metadata.monospacedDigit())}
+                        else {ProgressView().progressViewStyle(.linear).tint(EasyDesign.accent);Text(text("Esta operación no informa un porcentaje. Puedes seguir el tiempo transcurrido y el registro.")).font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted)}
+                        TimelineView(.periodic(from:.now,by:1)){context in Text(text("Tiempo transcurrido")+" "+String(max(0,Int(context.date.timeIntervalSince(model.startedAt ?? context.date))))+" s").font(EasyDesign.metadata.monospacedDigit()).foregroundStyle(EasyDesign.muted)}
                     }
                 }
             }
             if let memory=model.increasedMemoryLimit,model.completedInstallation {
-                Text(text(memory ? "Memoria ampliada: confirmada en la firma." : "La firma no incluye memoria ampliada. Algunos juegos grandes pueden cerrarse por falta de memoria.")).font(.caption).foregroundStyle(memory ? Color.secondary : Color.orange)
+                Text(text(memory ? "Memoria ampliada: confirmada en la firma." : "La firma no incluye memoria ampliada. Algunos juegos grandes pueden cerrarse por falta de memoria.")).font(EasyDesign.metadata).foregroundStyle(memory ? EasyDesign.muted : Color.orange)
             }
             if showError,let error=model.error {
-                VStack(alignment:.leading,spacing:10) {Label(text("No pudimos completar este paso"),systemImage:"exclamationmark.triangle").font(.callout.bold()).foregroundStyle(.orange);DisclosureGroup(text("Ver detalles")){Text(text(error)).font(.caption).textSelection(.enabled)}}.padding(18).background(EasyDesign.panel,in:RoundedRectangle(cornerRadius:14))
+                VStack(alignment:.leading,spacing:10) {Label(text("No pudimos completar este paso"),systemImage:"exclamationmark.triangle").font(.callout.bold()).foregroundStyle(.orange);DisclosureGroup(text("Ver detalles")){Text(text(error)).font(EasyDesign.metadata).textSelection(.enabled)}}.padding(18).background(EasyDesign.panel,in:RoundedRectangle(cornerRadius:14))
             }
             if let export=model.exportedSaves {Button(text("Mostrar ZIP de partidas")){NSWorkspace.shared.activateFileViewerSelecting([export])}}
             if !model.logs.isEmpty {

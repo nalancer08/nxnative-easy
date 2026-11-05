@@ -9,7 +9,7 @@ grid-first workspace and global cloud/device connection strip.
 
 - A 60-point header starts at a 16-point inset: the system already reserves its
   titlebar controls. Do not add a second traffic-light gutter. Back exists only
-  when navigation history is non-empty. Keep Library, Compatibility and Add game
+  when navigation history is non-empty or a maintenance review can be closed. Keep Library, Compatibility and Add game
   labels readable at the 760-point minimum; use the entire visible button bounds.
 - The header's engine chip shows the integrated engine's dotted version, such as
   1.0.1, independently of the Easy app version. A game compares its own engine
@@ -34,8 +34,11 @@ grid-first workspace and global cloud/device connection strip.
 - Show only repository-provided screenshots. When there is only one, use it as
   the hero and omit a redundant one-image gallery. Never invent more screenshots.
 - Keep the preparation view mounted while browsing, so a build is not reset.
-  Clip its drawing and hit testing to its content region. Header navigation must
-  remain interactive when another screen is mounted underneath it.
+  `RetainedPage` keeps its hosting view and local state alive, but sets the native
+  view hidden when inactive. Opacity and SwiftUI hit-testing alone do not remove
+  represented AppKit controls from accessibility. Present shared installation,
+  save help and analysis sheets from the visible workspace root. Header navigation
+  remains interactive and the titlebar is the window drag region; content is not.
 
 ## Visual tokens
 
@@ -46,16 +49,43 @@ grid-first workspace and global cloud/device connection strip.
 | Panel | RGB 0.09 / 0.105 / 0.135 |
 | Accent | RGB 1 / 0.43 / 0.25, warm orange |
 | Primary text | RGB 0.94 / 0.95 / 0.98 |
-| Borders | White at 7.5%, 1 point |
+| Decorative borders | RGB 0.27 / 0.31 / 0.38 |
+| Control fill / outline | #272E3A / #75839A (3.56:1) |
+| Supporting text | #B6C0D0 (at least 7.4:1 on control fill) |
+| Disabled text | #98A4B6; legible, without an active outline |
+| Keyboard focus | #9ACBFF, 2-point outer ring |
 | Spacing | 8 / 12 / 16 / 20 / 24 / 28 |
-| Type | System font; game title 36 bold; body 13–14; metadata 10–12 |
-| Primary action | At least 44 points; orange gradient, dark label |
-| Supporting actions | Quiet links or low-contrast bordered buttons |
+| Type | System font; game title 36 bold; body 13–14; metadata 12; compact uppercase eyebrows 10–11 |
+| Primary action | At least 44 points; orange fill, dark label |
+| Supporting actions | Quiet padded actions or filled, clearly outlined buttons |
 
 Use native focus, disabled semantics, keyboard actions and accessibility labels.
-Native navigation buttons accept the first mouse click in an inactive window and
+All interactive styles explicitly accept window activation events. Native navigation buttons accept the first mouse click in an inactive window and
 use the entire control bounds, not only the text. Avoid full-page status bars,
 large dashboard counts and promotional text competing with Play.
+
+## Interaction contract
+
+`EasyPrimaryStyle`, `EasySecondaryStyle`, `EasyLinkStyle`, `EasyIconStyle` and
+`EasySelectionStyle` own the complete padded interaction rectangle. Do not put
+padding outside a button and expect it to be clickable. Icon controls and back
+have a 44 × 44 point target. `EasyMenuStyle` uses button-backed native menus with the same control styles
+and minimum geometry. A borderless native menu flattens its SwiftUI label and
+discards custom label backgrounds; do not style only that label. Decorative overlays cannot intercept input. Use hover/pressed feedback
+without scaling the hit region; respect Reduced Motion. Keep system keyboard
+navigation preferences and provide Cmd-1 Library, Cmd-2 Compatibility, Cmd-F
+search, Cmd-N Add game, Cmd-[ back and Cmd-comma Settings.
+
+The label and handler of a game's primary action come from `GamePrimaryIntent`.
+An expired/expiring signature takes priority over an optional iCloud upgrade:
+show **Renew signing**, open the existing renewal review, and keep recompilation
+separate. Disable actions for operations that actually conflict. A disconnected
+phone shows “Connect to back up your save” instead of an inert backup link.
+Search has an explicit empty result and a large clear control.
+
+A control boundary needs at least 3:1 contrast and normal text 4.5:1 against its
+actual fill. These are measured palette checks, not a certification of every
+photographic pixel or system-provided control. Test real native screenshots too.
 
 ## Saves and device evidence
 
@@ -155,7 +185,13 @@ in [brand-motion-2026-11.md](brand-motion-2026-11.md).
 
 ## Verification
 
-Compile the entire desktop target. Check English and Spanish, minimum 760-point
+Compile the entire desktop target. Run `scripts.tests.test_desktop_interaction`
+for resolved color contrast, native corner hit tests, hidden-page isolation,
+retained form state and maintenance intent precedence. The test throws and exits
+on failure instead of creating crash-report dialogs. See the detailed
+[interaction audit](ui-ux-audit-2026-11.md) for evidence and limits.
+
+ Check English and Spanish, minimum 760-point
 width, long titles, cloud-only games, empty library, saves absent/present and
 conflicts. Verify actual coordinate clicks, keyboard navigation, inactive-window
 first click, Compatibility → back/Library and settings return. Observe the

@@ -8,17 +8,17 @@ struct EasyDestinationCard:View {
         HStack(spacing:22) {
             ZStack {
                 Circle().fill(EasyDesign.accent.opacity(selected ? 0.12 : 0.03)).frame(width:90,height:90)
-                Image(systemName:target=="mac" ? "desktopcomputer" : "ipad.and.iphone").font(.system(size:43,weight:.ultraLight)).foregroundStyle(selected ? EasyDesign.accent : .secondary)
+                Image(systemName:target=="mac" ? "desktopcomputer" : "ipad.and.iphone").font(.system(size:43,weight:.ultraLight)).foregroundStyle(selected ? EasyDesign.accent : EasyDesign.muted)
             }
             VStack(alignment:.leading,spacing:9) {
                 Text(target=="mac" ? "Mac" : "iPhone / iPad").font(.system(size:22,weight:.bold))
-                Text(text(target=="ios" ? "Prepara la IPA y te guiamos para instalarla." : "Una app completa. Preparar y jugar en este Mac.")).font(.system(size:12)).foregroundStyle(.secondary).multilineTextAlignment(.leading)
+                Text(text(target=="ios" ? "Prepara la IPA y te guiamos para instalarla." : "Una app completa. Preparar y jugar en este Mac.")).font(.system(size:12)).foregroundStyle(EasyDesign.muted).multilineTextAlignment(.leading)
             }
             Spacer(minLength:0)
-            Image(systemName:selected ? "checkmark.circle.fill" : "circle").font(.system(size:18)).foregroundStyle(selected ? EasyDesign.accent : .white.opacity(0.14))
+            Image(systemName:selected ? "checkmark.circle.fill" : "circle").font(.system(size:18)).foregroundStyle(selected ? EasyDesign.accent : EasyDesign.controlOutline)
         }.padding(22).frame(maxWidth:.infinity,minHeight:140,alignment:.leading)
             .background(LinearGradient(colors:[EasyDesign.panel,EasyDesign.panel.opacity(0.3)],startPoint:.topLeading,endPoint:.bottomTrailing),in:RoundedRectangle(cornerRadius:14))
-            .overlay(RoundedRectangle(cornerRadius:14).strokeBorder(selected ? EasyDesign.accent.opacity(0.65) : .white.opacity(0.08)))
+            .overlay(RoundedRectangle(cornerRadius:14).strokeBorder(selected ? EasyDesign.accent.opacity(0.65) : EasyDesign.controlOutline))
             .foregroundStyle(EasyDesign.ink)
     }
 }
@@ -34,7 +34,7 @@ struct EasyBuildMeter:View {
             VStack(spacing:8) {
                 if let fraction {Text(String(Int(min(1,max(0,fraction))*100))+"%").font(.system(size:34,weight:.medium,design:.monospaced)).foregroundStyle(EasyDesign.ink)}
                 else {Image(systemName:"cpu").font(.system(size:34,weight:.ultraLight)).foregroundStyle(EasyDesign.accent)}
-                Text(text("Etapa actual")).font(.system(size:10)).foregroundStyle(.secondary)
+                Text(text("Etapa actual")).font(.system(size:10)).foregroundStyle(EasyDesign.muted)
             }
         }
     }
@@ -73,7 +73,7 @@ struct AccountSceneIntro:View {
             }.frame(width:200,height:190).accessibilityHidden(true)
             EasyEyebrow(title:text("CUENTA APPLE"))
             Text(text(authenticated ? "Tu cuenta, lista para instalar" : "Conecta tu cuenta Apple")).font(.system(size:28,weight:.bold)).tracking(-0.7)
-            Text(text("Una cuenta para firmar e instalar en todos tus dispositivos.")).font(.callout).foregroundStyle(.secondary).lineSpacing(4)
+            Text(text("Una cuenta para firmar e instalar en todos tus dispositivos.")).font(.callout).foregroundStyle(EasyDesign.muted).lineSpacing(4)
         }.padding(.top,12)
     }
 }

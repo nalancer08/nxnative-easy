@@ -275,13 +275,13 @@ struct SaveCenterView:View {
                         EasyEyebrow(title:text("TUS PARTIDAS"))
                         Text(text(model.source==nil ? "Tu aventura continúa." : "Prepara el siguiente capítulo.")).font(.system(size:model.source==nil ? 38 : 28,weight:.bold)).tracking(-1.1)
                         if model.source==nil {
-                        Text(text("De iPhone a Mac. De un respaldo a tu próximo juego. Tú eliges qué partida usar.")).font(.callout).foregroundStyle(.secondary).lineSpacing(3)
+                        Text(text("De iPhone a Mac. De un respaldo a tu próximo juego. Tú eliges qué partida usar.")).font(.callout).foregroundStyle(EasyDesign.muted).lineSpacing(3)
                         HStack(spacing:12) {
                             Button(model.cloud==nil ? text("Conectar carpeta de iCloud") : text("Cambiar carpeta")){model.chooseCloud(repo:repo)}.buttonStyle(EasyPrimaryStyle())
                             if model.cloud != nil {Button {model.refresh(repo:repo)} label:{Image(systemName:"arrow.clockwise")}.buttonStyle(EasySecondaryStyle()).accessibilityLabel(text("Actualizar partidas"))}
                         }.disabled(model.busy)
                         }
-                        if let cloud=model.cloud {Label(cloud.lastPathComponent,systemImage:"icloud").font(.caption).foregroundStyle(.secondary)}
+                        if let cloud=model.cloud {Label(cloud.lastPathComponent,systemImage:"icloud").font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted)}
                     }.frame(maxWidth:.infinity,alignment:.leading)
                     if let image=Bundle.main.url(forResource:"save-vault",withExtension:"png",subdirectory:"Library").flatMap({NSImage(contentsOf:$0)}) {Image(nsImage:image).resizable().scaledToFit().frame(width:model.source==nil ? 300 : 180,height:model.source==nil ? 220 : 120).accessibilityHidden(true)}
                 }}
@@ -289,16 +289,16 @@ struct SaveCenterView:View {
                     VStack(alignment:.leading,spacing:10) {
                         Label(text("Guarda y continúa. Automáticamente."),systemImage:"arrow.triangle.2.circlepath.icloud").font(.headline).foregroundStyle(EasyDesign.accent)
                         Text(text("Una sola vez: prepara las versiones de Mac y iPhone con Easy actualizado y elige la misma carpeta de iCloud dentro de cada juego.")).font(.callout)
-                        Text(text("Después, guarda y cierra el juego. Al abrirlo en el otro dispositivo, busca y recibe tu continuación antes de jugar. Si jugaste en ambos, te pide elegir y conserva las dos partidas.")).font(.callout).foregroundStyle(.secondary)
-                        Text(text("Esta pantalla permite revisar copias y guardarlas a mano. No activa la sincronización dentro de una app antigua. iCloud puede tardar; no confirma entregas que aún no ha recibido.")).font(.caption).foregroundStyle(.secondary)
+                        Text(text("Después, guarda y cierra el juego. Al abrirlo en el otro dispositivo, busca y recibe tu continuación antes de jugar. Si jugaste en ambos, te pide elegir y conserva las dos partidas.")).font(.callout).foregroundStyle(EasyDesign.muted)
+                        Text(text("Esta pantalla permite revisar copias y guardarlas a mano. No activa la sincronización dentro de una app antigua. iCloud puede tardar; no confirma entregas que aún no ha recibido.")).font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted)
                     }.frame(maxWidth:.infinity,alignment:.leading).padding(20).background(EasyDesign.panel,in:RoundedRectangle(cornerRadius:16))
                 }
                 if model.busy {
                     HStack(spacing:18) {
                         LibraryDropMotion(playing:scenePhase == .active && !reduceMotion,resource:"save-transfer").frame(width:110,height:82).accessibilityHidden(true)
-                        VStack(alignment:.leading,spacing:7) {Text(text("Comprobando tu partida…")).font(.headline);Text(text("Leemos y verificamos la copia. Tus partidas activas siguen en su lugar.")).font(.callout).foregroundStyle(.secondary)}
+                        VStack(alignment:.leading,spacing:7) {Text(text("Comprobando tu partida…")).font(.headline);Text(text("Leemos y verificamos la copia. Tus partidas activas siguen en su lugar.")).font(.callout).foregroundStyle(EasyDesign.muted)}
                         Spacer()
-                        if let start=model.startedAt {TimelineView(.periodic(from:.now,by:1)){context in Text(String(max(0,Int(context.date.timeIntervalSince(start))))+" s").font(.caption.monospacedDigit()).foregroundStyle(.secondary)}}
+                        if let start=model.startedAt {TimelineView(.periodic(from:.now,by:1)){context in Text(String(max(0,Int(context.date.timeIntervalSince(start))))+" s").font(EasyDesign.metadata.monospacedDigit()).foregroundStyle(EasyDesign.muted)}}
                         ProgressView().controlSize(.small)
                     }.padding(18).background(EasyDesign.panel,in:RoundedRectangle(cornerRadius:14))
                 }
@@ -311,7 +311,7 @@ struct SaveCenterView:View {
         }.safeAreaInset(edge:.bottom,spacing:0) {
             if model.preview != nil && model.completed==nil {
                 HStack(spacing:18) {
-                    Text(text("Tu original y las otras versiones se conservan.")).font(.caption).foregroundStyle(.secondary).frame(maxWidth:.infinity,alignment:.leading)
+                    Text(text("Tu original y las otras versiones se conservan.")).font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted).frame(maxWidth:.infinity,alignment:.leading)
                     if importing {
                         Button {if let game=chosenGame {model.importSave(repo:repo,game:game)}} label:{Label(text("Añadir a iCloud"),systemImage:"plus.icloud")}.buttonStyle(EasyPrimaryStyle()).disabled(!agreed || chosenGame==nil || model.cloud==nil || model.busy)
                     } else {
@@ -342,16 +342,16 @@ struct SaveCenterView:View {
                     Button {importing=false;agreed=false;consoleReady=false;model.inspect(repo:repo,url:URL(fileURLWithPath:revision.path),revision:revision)} label:{
                         HStack(spacing:16) {
                             if let game=catalog.first(where:{$0.id==revision.title}) {GameArtworkView(game:game).frame(width:104,height:62).clipped().clipShape(RoundedRectangle(cornerRadius:8))}
-                            VStack(alignment:.leading,spacing:6) {Text(title(revision.title)).font(.headline);Text(revision.device+" · "+revision.version).font(.caption).foregroundStyle(.secondary)}
-                            Spacer();Text(Date(timeIntervalSince1970:revision.date),style:.date).font(.caption).foregroundStyle(.secondary)
+                            VStack(alignment:.leading,spacing:6) {Text(title(revision.title)).font(.headline);Text(revision.device+" · "+revision.version).font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted)}
+                            Spacer();Text(Date(timeIntervalSince1970:revision.date),style:.date).font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted)
                             Image(systemName:"arrow.up.right").foregroundStyle(EasyDesign.accent)
                         }.padding(16).background(EasyDesign.panel,in:RoundedRectangle(cornerRadius:12)).foregroundStyle(EasyDesign.ink)
-                    }.buttonStyle(.plain).disabled(model.busy)
+                    }.buttonStyle(EasySelectionStyle()).disabled(model.busy)
                 }
-                Text(text("Elige una versión para comprobarla. Las fechas ayudan a reconocerla; no deciden cuál se conserva.")).font(.caption).foregroundStyle(.secondary)
+                Text(text("Elige una versión para comprobarla. Las fechas ayudan a reconocerla; no deciden cuál se conserva.")).font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted)
             }
             if model.pending>0 {Label(text("Hay partidas pendientes de descargar de iCloud. Comprueba de nuevo cuando estén disponibles."),systemImage:"icloud.and.arrow.down").font(.callout).foregroundStyle(.orange)}
-            if model.invalid>0 {Label(text("Algunos archivos no se pudieron leer. No se modificaron ni se ocultaron tus otras partidas."),systemImage:"exclamationmark.triangle").font(.caption).foregroundStyle(.orange)}
+            if model.invalid>0 {Label(text("Algunos archivos no se pudieron leer. No se modificaron ni se ocultaron tus otras partidas."),systemImage:"exclamationmark.triangle").font(EasyDesign.metadata).foregroundStyle(.orange)}
             consoleNotice
         }
     }
@@ -368,9 +368,9 @@ struct SaveCenterView:View {
                 EasyCard {
                     VStack(alignment:.leading,spacing:14) {
                         Label(preview.title.map(title) ?? model.source?.lastPathComponent ?? text("Respaldo"),systemImage:"checkmark.shield").font(.title3.bold())
-                        Text(String(preview.files)+" "+text("archivos verificados")+" · "+ByteCountFormatter.string(fromByteCount:Int64(preview.bytes),countStyle:.file)).font(.callout).foregroundStyle(.secondary)
+                        Text(String(preview.files)+" "+text("archivos verificados")+" · "+ByteCountFormatter.string(fromByteCount:Int64(preview.bytes),countStyle:.file)).font(.callout).foregroundStyle(EasyDesign.muted)
                         if let version=preview.version {Label(text("Versión del juego")+" · "+version,systemImage:"tag").font(.callout)}
-                        if preview.roots.contains("save_device") {Text(text("Incluye datos compartidos del juego. Se mantienen separados de la partida personal.")).font(.caption).foregroundStyle(.secondary)}
+                        if preview.roots.contains("save_device") {Text(text("Incluye datos compartidos del juego. Se mantienen separados de la partida personal.")).font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted)}
                         Text(text("El archivo original y el historial de iCloud se conservan. Esta operación prepara una copia nueva.")).font(.callout)
                     }
                 }
@@ -380,10 +380,10 @@ struct SaveCenterView:View {
                             if let focusTitle {Label(title(focusTitle),systemImage:"gamecontroller").font(.headline)}
                             else {Text(text("¿A qué juego pertenece?")).font(.headline)
                             Picker(text("Tu juego"),selection:$model.gameID) {Text(text("Elige de tu biblioteca")).tag("");ForEach(games.filter{$0.titleID != nil}) {game in Text(title(game.titleID!)+" · "+(game.version ?? "—")).tag(game.id)}}}
-                            Text(text("Los respaldos de consola no siempre indican versión o DLC. Comprueba que sean los mismos que preparaste; no convertimos partidas entre juegos ni ediciones.")).font(.callout).foregroundStyle(.secondary)
+                            Text(text("Los respaldos de consola no siempre indican versión o DLC. Comprueba que sean los mismos que preparaste; no convertimos partidas entre juegos ni ediciones.")).font(.callout).foregroundStyle(EasyDesign.muted)
                             Toggle(text("Confirmo que es el mismo juego, versión y contenido."),isOn:$agreed)
                             if model.cloud==nil {Button(text("Elegir carpeta de iCloud")){model.chooseCloud(repo:repo)}.buttonStyle(EasySecondaryStyle())}
-                            Text(text("Después abre el juego en Mac, iPhone o iPad. Su lanzador comprobará esta versión y te dejará elegir si encuentra otro progreso.")).font(.caption).foregroundStyle(.secondary)
+                            Text(text("Después abre el juego en Mac, iPhone o iPad. Su lanzador comprobará esta versión y te dejará elegir si encuentra otro progreso.")).font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted)
                         }
                     }.disabled(model.busy)
                 } else {
@@ -392,7 +392,7 @@ struct SaveCenterView:View {
                             Label(text("Preparar para Switch"),systemImage:"sdcard").font(.headline)
                             consoleNotice
                             Toggle(text("Entiendo que necesitaré una herramienta compatible para restaurar en la consola."),isOn:$consoleReady)
-                            Text(text("Al continuar, elige tu SD o una carpeta. Se creará un respaldo nuevo, sin reemplazar los anteriores.")).font(.caption).foregroundStyle(.secondary)
+                            Text(text("Al continuar, elige tu SD o una carpeta. Se creará un respaldo nuevo, sin reemplazar los anteriores.")).font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted)
                         }
                     }
                 }
@@ -402,8 +402,8 @@ struct SaveCenterView:View {
     private var consoleNotice:some View {
         VStack(alignment:.leading,spacing:8) {
             Label(text("Tu consola necesita una vía de restauración"),systemImage:"info.circle").font(.callout.weight(.semibold))
-            Text(text("Una Switch 1 o 2 sin modificar no importa partidas sólo por ponerlas en la SD. Easy prepara archivos; la restauración ocurre en una herramienta compatible de la consola. No conectamos con la nube de Nintendo ni modificamos tu consola.")).font(.callout).foregroundStyle(.secondary)
-            Link(text("Cómo funciona la transferencia con Switch"),destination:URL(string:"https://github.com/nalancer08/nxnative-easy/blob/main/docs/save-transfer.md")!).font(.caption)
+            Text(text("Una Switch 1 o 2 sin modificar no importa partidas sólo por ponerlas en la SD. Easy prepara archivos; la restauración ocurre en una herramienta compatible de la consola. No conectamos con la nube de Nintendo ni modificamos tu consola.")).font(.callout).foregroundStyle(EasyDesign.muted)
+            Link(text("Cómo funciona la transferencia con Switch"),destination:URL(string:"https://github.com/nalancer08/nxnative-easy/blob/main/docs/save-transfer.md")!).font(EasyDesign.metadata)
         }
     }
     private func completion(_ url:URL)->some View {
@@ -415,10 +415,10 @@ struct SaveCenterView:View {
         }
     }
     private func action(_ title:String,_ subtitle:String,icon:String,run:@escaping()->Void)->some View {
-        Button(action:run){HStack(alignment:.top,spacing:16) {Image(systemName:icon).font(.system(size:28,weight:.light)).foregroundStyle(EasyDesign.accent);VStack(alignment:.leading,spacing:10) {Text(text(title)).font(.headline);Text(text(subtitle)).font(.callout).foregroundStyle(.secondary).multilineTextAlignment(.leading)};Spacer(minLength:0)}.padding(22).frame(maxWidth:.infinity,minHeight:132,alignment:.topLeading).background(EasyDesign.panel,in:RoundedRectangle(cornerRadius:14)).foregroundStyle(EasyDesign.ink)}.buttonStyle(.plain)
+        Button(action:run){HStack(alignment:.top,spacing:16) {Image(systemName:icon).font(.system(size:28,weight:.light)).foregroundStyle(EasyDesign.accent);VStack(alignment:.leading,spacing:10) {Text(text(title)).font(.headline);Text(text(subtitle)).font(.callout).foregroundStyle(EasyDesign.muted).multilineTextAlignment(.leading)};Spacer(minLength:0)}.padding(22).frame(maxWidth:.infinity,minHeight:132,alignment:.topLeading).background(EasyDesign.panel,in:RoundedRectangle(cornerRadius:14)).foregroundStyle(EasyDesign.ink)}.buttonStyle(EasySelectionStyle())
     }
     private func empty(_ title:String,_ subtitle:String,icon:String)->some View {
-        HStack(spacing:20) {Image(systemName:icon).font(.system(size:38,weight:.ultraLight)).foregroundStyle(EasyDesign.accent);VStack(alignment:.leading,spacing:9) {Text(text(title)).font(.title3.bold());Text(text(subtitle)).font(.callout).foregroundStyle(.secondary)}}.padding(28).frame(maxWidth:.infinity,alignment:.leading).background(EasyDesign.panel,in:RoundedRectangle(cornerRadius:14))
+        HStack(spacing:20) {Image(systemName:icon).font(.system(size:38,weight:.ultraLight)).foregroundStyle(EasyDesign.accent);VStack(alignment:.leading,spacing:9) {Text(text(title)).font(.title3.bold());Text(text(subtitle)).font(.callout).foregroundStyle(EasyDesign.muted)}}.padding(28).frame(maxWidth:.infinity,alignment:.leading).background(EasyDesign.panel,in:RoundedRectangle(cornerRadius:14))
     }
     private func message(_ code:String)->String {
         let values=["wrong_save_layout":"El respaldo contiene carpetas distintas de las que usa este juego. Comprueba el tipo de partida y elige el respaldo correcto.","create_first_cloud_save":"Abre este juego, conecta esta carpeta de iCloud y guarda una vez. Así reconocemos su estructura antes de traer tu respaldo.","incomplete_save_pair":"Este juego usa dos carpetas de partidas. Elige un respaldo completo con save y save_device; nunca mezclamos versiones parciales.","rebuild_for_save_transfer":"Prepara este juego otra vez para añadir su identidad de partidas. No borres la app instalada.","platform_content_mismatch":"Las versiones de Mac y iPhone tienen contenido diferente. Prepara ambas con el mismo juego, update y DLC.","different_game_content":"Esta partida corresponde a otro juego o contenido. Se conservó sin importar.","source_changed":"El respaldo cambió mientras lo leíamos. Cierra el juego y vuelve a elegirlo.","case_collision_for_sd":"Este respaldo contiene nombres que tu SD no puede conservar. No se renombró ni se perdió ningún archivo.","missing_guest_metadata":"Este respaldo perdió metadatos de nombres. Usa una copia completa compatible.","not_save_data":"Seleccionaste archivos de juego o llaves. Elige sólo un respaldo de partidas.","not_committed_save_data":"Elige sólo la partida guardada, no romfs ni carpetas temporales.","empty_or_large_save":"No encontramos una partida completa dentro de los límites de transferencia.","checksum_mismatch":"El respaldo no pasó la comprobación. Se conservó el original.","folder_access":"Elige de nuevo la carpeta para dar acceso a tus partidas."]

@@ -81,7 +81,7 @@ struct GameLaunchOptionsView:View {
     var body:some View {
         DisclosureGroup(text("Opciones del juego en Mac"),isExpanded:$expanded) {
             VStack(alignment:.leading,spacing:18) {
-                Text(text("Se aplican al próximo inicio y se conservan al recompilar. Los ajustes del archivo env.txt tienen prioridad.")).font(.caption).foregroundStyle(.secondary)
+                Text(text("Se aplican al próximo inicio y se conservan al recompilar. Los ajustes del archivo env.txt tienen prioridad.")).font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted)
                 ForEach(model.rows.filter{model.visible($0) && (advanced || basic($0))}) {row in
                     VStack(alignment:.leading,spacing:5) {
                         let binding=Binding<String>(get:{model.values[row.env] ?? row.default},set:{model.values[row.env]=$0;model.save()})
@@ -93,7 +93,7 @@ struct GameLaunchOptionsView:View {
                             HStack {Text(title(row.label));Spacer();Text(binding.wrappedValue).monospacedDigit()}
                             Slider(value:Binding(get:{Double(binding.wrappedValue) ?? low},set:{binding.wrappedValue=String(format:"%.3f",$0)}),in:low...high,step:Swift.max(row.step ?? 0.05,0.001))
                         }
-                        if let note=row.note,!note.isEmpty {Text(text(note)).font(.caption).foregroundStyle(.secondary)}
+                        if let note=row.note,!note.isEmpty {Text(text(note)).font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted)}
                     }
                 }
                 if model.rows.contains(where:{!basic($0)}) {Button(text(advanced ? "Menos opciones" : "Más opciones")){advanced.toggle()}.buttonStyle(EasyLinkStyle())}

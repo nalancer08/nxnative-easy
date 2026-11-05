@@ -37,7 +37,7 @@ struct SavesHelpView:View {
             Text(text("Guarda y cierra el juego antes de copiar. Conserva juntas save y save_device si existe. No copies save.work ni save.new."))
             Text(text("Al actualizar en iPhone/iPad: misma cuenta e identificador, instala encima y no desinstales. Reemplaza sólo romfs si cambió el juego."))
             Text(text("Los perfiles de controles son preferencias separadas; copiar save no los transfiere. Algunas partidas requieren metadatos que una copia manual puede perder."))
-                .font(.callout).foregroundStyle(.secondary)
+                .font(.callout).foregroundStyle(EasyDesign.muted)
             Link(text("Guía completa de partidas y respaldos"),destination:URL(string:"https://github.com/nalancer08/nxnative-easy/blob/main/docs/"+(language == .spanish ? "saves-es.md" : "saves.md"))!)
         }.padding(24).frame(width:680)
     }

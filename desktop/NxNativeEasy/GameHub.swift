@@ -49,16 +49,16 @@ struct GameVersionComparison:View {
             EngineBuildComparison(history:context.engine,revision:context.prepared?.revision,text:text)
             ForEach(context.reports) {item in
                 VStack(alignment:.leading,spacing:5) {
-                    Text(item.observation.deviceName).font(.caption.weight(.semibold))
+                    Text(item.observation.deviceName).font(EasyDesign.metadata.weight(.semibold))
                     EngineBuildComparison(history:context.engine,revision:item.job?.preparedWith?.revision,text:text)
-                    Text(text("Última firma con")+" · "+(item.job?.signedWith.map{"Easy "+$0.version+" · "+String($0.build)} ?? text("Sin registro"))).font(.caption).foregroundStyle(.secondary)
-                    if let expiry=item.job?.expires {Text(text("Vencimiento registrado")+" · "+expiry.formatted(date:.abbreviated,time:.shortened)).font(.caption).foregroundStyle(.secondary)}
+                    Text(text("Última firma con")+" · "+(item.job?.signedWith.map{"Easy "+$0.version+" · "+String($0.build)} ?? text("Sin registro"))).font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted)
+                    if let expiry=item.job?.expires {Text(text("Vencimiento registrado")+" · "+expiry.formatted(date:.abbreviated,time:.shortened)).font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted)}
                 }
             }
-            Text(text("Preparar cambia el juego; renovar sólo cambia la firma. Una actualización de Easy puede mejorar únicamente esta interfaz.")).font(.caption).foregroundStyle(.secondary)
+            Text(text("Preparar cambia el juego; renovar sólo cambia la firma. Una actualización de Easy puede mejorar únicamente esta interfaz.")).font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted)
         }
     }
-    private func value(_ title:String,_ value:String?)->some View {VStack(alignment:.leading,spacing:6) {Text(text(title)).font(.caption).foregroundStyle(.secondary);Text(value ?? text("Sin registro")).font(.callout.weight(.semibold))}.frame(maxWidth:.infinity,alignment:.leading)}
+    private func value(_ title:String,_ value:String?)->some View {VStack(alignment:.leading,spacing:6) {Text(text(title)).font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted);Text(value ?? text("Sin registro")).font(.callout.weight(.semibold))}.frame(maxWidth:.infinity,alignment:.leading)}
 }
 
 struct GameHub:View {
@@ -87,8 +87,8 @@ struct GameHub:View {
                     EasyEyebrow(title:text("TU JUEGO · TUS PANTALLAS"))
                     Text(title).font(.system(size:38,weight:.bold)).tracking(-1.2).fixedSize(horizontal:false,vertical:true)
                     Text(text(context.title)).font(.title3.weight(.semibold)).foregroundStyle(context.state == .expired || context.state == .expiring ? .orange : EasyDesign.accent)
-                    Text(text(context.reason)).font(.callout).foregroundStyle(.secondary).lineSpacing(3)
-                    ForEach(context.changes,id:\.self){Label(text($0),systemImage:"sparkles").font(.caption)}
+                    Text(text(context.reason)).font(.callout).foregroundStyle(EasyDesign.muted).lineSpacing(3)
+                    ForEach(context.changes,id:\.self){Label(text($0),systemImage:"sparkles").font(EasyDesign.metadata)}
                     Button(text(context.state == .current || context.state == .unknown ? "Opciones de actualización" : context.action),action:maintain).buttonStyle(EasyPrimaryStyle()).disabled(disabled)
                 }.frame(maxWidth:.infinity,alignment:.leading)
                 if let catalog {GameArtworkView(game:catalog).frame(width:300,height:200).clipped().clipShape(RoundedRectangle(cornerRadius:16)).accessibilityHidden(true)}
@@ -103,7 +103,7 @@ struct GameHub:View {
                 EasyCard {VStack(alignment:.leading,spacing:14) {
                     Label("Mac",systemImage:"desktopcomputer").font(.title3.bold())
                     Text(text(game.macApp==nil ? "Aún no tienes este juego en Mac" : "Listo en este Mac")).font(.callout)
-                    Text(text("Versión del juego")+" · "+(game.version ?? "—")).font(.caption).foregroundStyle(.secondary)
+                    Text(text("Versión del juego")+" · "+(game.version ?? "—")).font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted)
                     Button(text(game.macApp==nil ? "Preparar en Mac" : "Continuar en Mac")) {if let app=game.macApp {NSWorkspace.shared.open(app)}else{prepareMac()}}.buttonStyle(EasySecondaryStyle()).disabled(disabled || game.missing)
                 }}
                 EasyCard {VStack(alignment:.leading,spacing:14) {
@@ -112,32 +112,32 @@ struct GameHub:View {
                     ForEach(context.reports) {report in
                         VStack(alignment:.leading,spacing:5) {
                             Label(report.observation.deviceName,systemImage:report.verified ? "checkmark.circle.fill" : "clock").font(.callout.weight(.semibold))
-                            Text(text(report.verified ? "Instalación comprobada" : "Última instalación conocida")+" · "+(report.observation.version.isEmpty ? text("Versión sin registro") : report.observation.version)).font(.caption).foregroundStyle(.secondary)
-                            if let expiry=report.job?.expires {Text(text("Firma registrada hasta")+" · "+expiry.formatted(date:.abbreviated,time:.omitted)).font(.caption).foregroundStyle(report.state == .expired || report.state == .expiring ? .orange : .secondary)}
+                            Text(text(report.verified ? "Instalación comprobada" : "Última instalación conocida")+" · "+(report.observation.version.isEmpty ? text("Versión sin registro") : report.observation.version)).font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted)
+                            if let expiry=report.job?.expires {Text(text("Firma registrada hasta")+" · "+expiry.formatted(date:.abbreviated,time:.omitted)).font(EasyDesign.metadata).foregroundStyle(report.state == .expired || report.state == .expiring ? .orange : .secondary)}
                         }
                     }
                     HStack {Button(text("Comprobar conexión")){sideload.listDevices()}.buttonStyle(EasyLinkStyle());if context.reports.isEmpty {Button(text("Instalar en mi dispositivo"),action:install).buttonStyle(EasyLinkStyle()).disabled(game.iosIPA==nil)}}.disabled(disabled || sideload.busy)
                 }}
             }
             EasyCard {GameVersionComparison(context:context,text:text)}
-            if !context.reports.isEmpty {DisclosureGroup(text("Renovación automática")) {ForEach(context.reports) {report in if let job=report.job {Toggle(report.observation.deviceName,isOn:Binding(get:{sideload.jobs.first(where:{$0.id==job.id})?.enabled ?? false},set:{sideload.setRefresh(job,enabled:$0)})).disabled(sideload.busy)}}}.font(.caption)}
+            if !context.reports.isEmpty {DisclosureGroup(text("Renovación automática")) {ForEach(context.reports) {report in if let job=report.job {Toggle(report.observation.deviceName,isOn:Binding(get:{sideload.jobs.first(where:{$0.id==job.id})?.enabled ?? false},set:{sideload.setRefresh(job,enabled:$0)})).disabled(sideload.busy)}}}.font(EasyDesign.metadata)}
             } else {
             HStack(alignment:.center,spacing:24) {
                 VStack(alignment:.leading,spacing:12) {
                     EasyEyebrow(title:text("TU PROGRESO"))
                     Text(text("Continúa donde lo dejaste.")).font(.system(size:28,weight:.bold)).tracking(-0.7)
-                    Text(text("Trae una copia del iPhone, guárdala en tu Mac o revisa tus versiones de iCloud. El original se conserva.")).font(.callout).foregroundStyle(.secondary)
+                    Text(text("Trae una copia del iPhone, guárdala en tu Mac o revisa tus versiones de iCloud. El original se conserva.")).font(.callout).foregroundStyle(EasyDesign.muted)
                 }.frame(maxWidth:.infinity,alignment:.leading)
                 if let image=Bundle.main.url(forResource:"save-vault",withExtension:"png",subdirectory:"Library").flatMap({NSImage(contentsOf:$0)}) {Image(nsImage:image).resizable().scaledToFit().frame(width:180,height:120).accessibilityHidden(true)}
             }
             HStack(alignment:.top,spacing:18) {
                 EasyCard {VStack(alignment:.leading,spacing:14) {
                     Label(text("Guardar una copia en mi Mac"),systemImage:"externaldrive").font(.headline)
-                    Text(text("Guarda y cierra el juego antes de copiar. No hace falta iniciar sesión con Apple.")).font(.callout).foregroundStyle(.secondary)
+                    Text(text("Guarda y cierra el juego antes de copiar. No hace falta iniciar sesión con Apple.")).font(.callout).foregroundStyle(EasyDesign.muted)
                     ForEach(context.reports) {report in
                         Button {backup=report.observation} label:{Label(text("Traer partida de")+" "+report.observation.deviceName,systemImage:"iphone.and.arrow.forward")}.buttonStyle(EasySecondaryStyle()).disabled(disabled || sideload.busy || !sideload.devices.contains(where:{$0.id==report.observation.device}))
                     }
-                    if context.reports.isEmpty {Text(text("Conecta el iPhone y comprueba su instalación para sacar una copia.")).font(.caption).foregroundStyle(.secondary)}
+                    if context.reports.isEmpty {Text(text("Conecta el iPhone y comprueba su instalación para sacar una copia.")).font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted)}
                     if let id=game.titleID,FileManager.default.fileExists(atPath:SaveLocations.macRoot(titleID:id).appendingPathComponent("save").path) {Button(text("Respaldar partida de este Mac")){confirmMac=true}.buttonStyle(EasyLinkStyle()).disabled(disabled || saves.busy)}
                     if let url=sideload.exportedSaves,sideload.gameFolder==game.folder {
                         Label(text("Tu respaldo local está listo"),systemImage:"checkmark.shield").font(.callout)
@@ -149,17 +149,17 @@ struct GameHub:View {
                 EasyCard {VStack(alignment:.leading,spacing:14) {
                     Label(text("Continuar con iCloud"),systemImage:"icloud").font(.headline)
                     let count=saves.revisions.filter{$0.title==game.titleID}.count
-                    Text(text(saves.cloud==nil ? "Elige la misma carpeta de iCloud dentro de tus juegos y en Easy." : count==0 ? "Todavía no hay versiones recibidas de este juego en la carpeta elegida." : "Hay versiones recibidas de este juego. Revísalas antes de elegir con cuál continuar.")).font(.callout).foregroundStyle(.secondary)
+                    Text(text(saves.cloud==nil ? "Elige la misma carpeta de iCloud dentro de tus juegos y en Easy." : count==0 ? "Todavía no hay versiones recibidas de este juego en la carpeta elegida." : "Hay versiones recibidas de este juego. Revísalas antes de elegir con cuál continuar.")).font(.callout).foregroundStyle(EasyDesign.muted)
                     Button(text("Ver mis partidas y elegir"),action:openSaves).buttonStyle(EasySecondaryStyle()).disabled(disabled)
-                    Text(text("Abre el juego en el destino para aplicar la partida. Los conflictos conservan ambas versiones; Easy no reemplaza un juego abierto.")).font(.caption).foregroundStyle(.secondary)
-                    Text(text("Si tu juego es anterior a la continuidad con iCloud, prepáralo de nuevo con el mismo contenido en ambos dispositivos.")).font(.caption).foregroundStyle(.secondary)
+                    Text(text("Abre el juego en el destino para aplicar la partida. Los conflictos conservan ambas versiones; Easy no reemplaza un juego abierto.")).font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted)
+                    Text(text("Si tu juego es anterior a la continuidad con iCloud, prepáralo de nuevo con el mismo contenido en ambos dispositivos.")).font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted)
                 }}
             }
             }
             if sideload.busy {InstallActivityView(model:sideload,text:text)}
             if let error=sideload.error {Label(text(error),systemImage:"exclamationmark.triangle").font(.callout).foregroundStyle(.orange)}
             if saves.busy {ProgressView(text("Comprobando tu partida…"))}
-            if let error=saves.error {Text(text(error=="close_game_first" ? "Guarda y cierra el juego antes de copiar. No hace falta iniciar sesión con Apple." : error=="destination_exists" ? "Ese respaldo ya existe. Elige otro nombre para conservar ambos." : "No pudimos preparar la copia. El original se conservó.")).font(.caption).foregroundStyle(.orange)}
+            if let error=saves.error {Text(text(error=="close_game_first" ? "Guarda y cierra el juego antes de copiar. No hace falta iniciar sesión con Apple." : error=="destination_exists" ? "Ese respaldo ya existe. Elige otro nombre para conservar ambos." : "No pudimos preparar la copia. El original se conservó.")).font(EasyDesign.metadata).foregroundStyle(.orange)}
             Button(text("Archivos y opciones avanzadas"),action:files).buttonStyle(EasyLinkStyle())
         }.padding(36).frame(maxWidth:1140).frame(maxWidth:.infinity,alignment:.top).background(EasyDesign.background)
         .task {saves.restoreFolder();if saves.cloud != nil && !saves.busy {saves.refresh(repo:repo)}}

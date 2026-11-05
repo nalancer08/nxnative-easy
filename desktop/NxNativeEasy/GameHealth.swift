@@ -42,3 +42,24 @@ struct EasyBuildStamp:Codable,Equatable {
         return Self(version:version,build:build,revision:record["source_revision"] as? String)
     }
 }
+
+// One decision supplies both the primary label and its action. Expiring signing
+// takes priority over optional upgrades, so a renewal never starts a rebuild.
+enum GamePrimaryIntent:Equatable {
+    case play,renew,installSync,prepareSync,reviewUpdate,prepareMac,install,choose
+    static func resolve(macReady:Bool,hasDevice:Bool,needsSync:Bool,syncReady:Bool,hasIPA:Bool,state:GameCareState?)->Self {
+        if macReady {return .play}
+        if hasDevice {
+            if state == .expired || state == .expiring {return .renew}
+            if needsSync {return syncReady ? .installSync : .prepareSync}
+            if state == .rebuild || state == .contentUpdate {return .reviewUpdate}
+            return .prepareMac
+        }
+        return hasIPA ? .install : .choose
+    }
+    var title:String {
+        switch self {case .play:return "Jugar";case .renew:return "Renovar firma";case .installSync,.reviewUpdate:return "Actualizar en iPhone / iPad";case .prepareSync:return "Actualizar para sincronizar partidas";case .prepareMac:return "Preparar en Mac";case .install:return "Instalar en iPhone / iPad";case .choose:return "Añadir para jugar"}
+    }
+    var symbol:String {self == .play ? "play.fill" : self == .renew ? "arrow.clockwise" : "arrow.down.to.line"}
+    var needsInstaller:Bool {[Self.renew,.installSync,.reviewUpdate,.install].contains(self)}
+}

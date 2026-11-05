@@ -12,6 +12,7 @@ enum EasyLanguage: String, CaseIterable {
 
 struct EasyStrings {
     static let english: [String:String] = [
+        "Conecta para respaldar tu partida":"Connect to back up your save",
         "Motor sin registrar":"Engine not recorded",
         "Actual":"Current",
         "Mismo motor que esta app":"Same engine as this app",

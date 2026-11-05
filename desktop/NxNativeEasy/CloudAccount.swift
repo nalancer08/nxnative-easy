@@ -55,7 +55,7 @@ struct CloudProfileButton:View {
                     .font(.system(size:12)).foregroundStyle(saves.connectionState == .connected ? Color.green : EasyDesign.accent)
                     .background(EasyDesign.background,in:Circle()).offset(x:2,y:2)
             }.frame(width:44,height:44).contentShape(Rectangle())
-        }.buttonStyle(.plain).accessibilityLabel(text("Perfil de este Mac")+" · "+text(saves.connectionState.title))
+        }.buttonStyle(EasySelectionStyle()).accessibilityLabel(text("Perfil de este Mac")+" · "+text(saves.connectionState.title))
         .help(text("Cuenta de iCloud")+" · "+text(saves.connectionState.title))
     }
 }
@@ -76,7 +76,7 @@ struct CloudAccountPanel:View {
                 MacProfileAvatar(profile:profile)
                 VStack(alignment:.leading,spacing:3) {
                     Text(profile.name.isEmpty ? text("Este Mac") : profile.name).font(.headline).lineLimit(2)
-                    Text(text("Perfil de este Mac")).font(.caption).foregroundStyle(.secondary)
+                    Text(text("Perfil de este Mac")).font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted)
                 }
             }
             Divider()
@@ -87,9 +87,9 @@ struct CloudAccountPanel:View {
                     else {Image(systemName:saves.connectionState.symbol)}
                     Text(text(saves.connectionState.title)).font(.callout)
                 }.foregroundStyle(saves.connectionState == .connected ? Color.green : EasyDesign.accent)
-                if let checked=saves.cloudCheckedAt {Text(text("Última comprobación")+" · "+checked.formatted(date:.omitted,time:.shortened)).font(.caption).foregroundStyle(.secondary)}
-                if let folder=saves.cloud {Label(folder.lastPathComponent,systemImage:"folder").font(.caption).lineLimit(1).help(folder.path)}
-                Text(text("macOS no comparte el correo ni la foto de iCloud con Easy. Puedes ver la cuenta real en Ajustes.")).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal:false,vertical:true)
+                if let checked=saves.cloudCheckedAt {Text(text("Última comprobación")+" · "+checked.formatted(date:.omitted,time:.shortened)).font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted)}
+                if let folder=saves.cloud {Label(folder.lastPathComponent,systemImage:"folder").font(EasyDesign.metadata).lineLimit(1).help(folder.path)}
+                Text(text("macOS no comparte el correo ni la foto de iCloud con Easy. Puedes ver la cuenta real en Ajustes.")).font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted).fixedSize(horizontal:false,vertical:true)
             }
             Button(text("Ver cuenta en macOS"),action:SystemCloudAccount.open).buttonStyle(EasySecondaryStyle())
             if saves.cloud != nil {Button(text("Comprobar conexión")){saves.refresh(repo:repo)}.buttonStyle(EasyLinkStyle()).disabled(saves.scanning)}
