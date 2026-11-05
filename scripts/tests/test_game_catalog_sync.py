@@ -18,6 +18,13 @@ class GameCatalogSync(unittest.TestCase):
         row=sync.gallery_rows(source)[0]
         self.assertEqual(row['caption'],'Switch 2, Mac only, from a dump')
         self.assertEqual(sync.gallery_rows(source.replace('Switch 2, Mac only, from a dump','Switch 2, sólo Mac, carpeta extraída'))[0]['caption'],row['caption'])
+    def test_nup_and_nested_program_limits_stay_bilingual_and_idempotent(self):
+        source=self.source().replace('~1 GB','Switch 2, Mac only, from a NUP')
+        sync.sync(self.root,write=True,upstream_html=source)
+        self.assertIn('Switch 2, sólo Mac, archivo NUP',(self.root/'README-es.md').read_text())
+        self.assertEqual(sync.sync(self.root),[])
+        self.assertEqual(json.loads((self.root/sync.CATALOG).read_text())['games'][0]['caption'],'Switch 2, Mac only, from a NUP')
+
     def setUp(self):
         self.temp=tempfile.TemporaryDirectory();self.addCleanup(self.temp.cleanup)
         self.root=Path(self.temp.name)

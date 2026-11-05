@@ -20,6 +20,15 @@ def normalized(name):
     return ''.join(c for c in unicodedata.normalize('NFKD',html.unescape(name)).casefold() if c.isalnum() and not unicodedata.combining(c))
 
 
+CAPTIONS_ES = {
+    'Switch 2, Mac only, from a dump': 'Switch 2, sólo Mac, carpeta extraída',
+    'Switch 2, Mac only, from a NUP': 'Switch 2, sólo Mac, archivo NUP',
+    'Switch 2, Mac only': 'Switch 2, sólo Mac',
+    'up to 120 fps': 'hasta 120 fps',
+    '60 fps with 1.0.0': '60 fps con 1.0.0',
+    'Super Mario 64 and Sunshine; Galaxy is 32-bit ARM, which Apple silicon cannot run': 'Super Mario 64 y Sunshine; Galaxy usa ARM de 32 bits, que Apple silicon no puede ejecutar',
+}
+
 def gallery_rows(source):
     rows=[]
     for cell in re.findall(r'<td\b[^>]*>(.*?)</td>',source,re.S|re.I):
@@ -28,7 +37,7 @@ def gallery_rows(source):
         caption=re.search(r'<(sub|small)>(.*?)</\1>',cell,re.S|re.I)
         detail=re.sub(r'^\s*<b>.*?</b>(?:<br\s*/?>)?', '', caption[2], count=1, flags=re.S|re.I) if caption else ''
         detail=html.unescape(re.sub('<[^>]+>','',detail))
-        if detail=='Switch 2, sólo Mac, carpeta extraída':detail='Switch 2, Mac only, from a dump'
+        detail=next((english for english,spanish in CAPTIONS_ES.items() if detail==spanish),detail)
         if detail in ('See game notes','Ver ficha del juego'):detail=''
         rows.append(dict(image=html.unescape(image[1]),name=html.unescape(image[2]),
                          caption=detail))
@@ -93,7 +102,7 @@ def render(games,spanish):
         if i%3==0:lines.append('<tr>')
         name=html.escape(game['name'],quote=True);image=html.escape(game['artwork'],quote=True);notes=game['notes']
         detail=game['caption']
-        if spanish and detail=='Switch 2, Mac only, from a dump':detail='Switch 2, sólo Mac, carpeta extraída'
+        if spanish:detail=CAPTIONS_ES.get(detail,detail)
         caption=html.escape(detail or ('Ver ficha del juego' if spanish else 'See game notes'))
         lines.append(f'<td align="center" valign="top" width="33%" data-title-id="{game["id"]}"><a href="{notes}"><img src="{image}" width="256" alt="{name}"></a><br><a href="{notes}">{name}</a><br><sub>{caption}</sub></td>')
         if i%3==2 or i==len(games)-1:lines.append('</tr>')

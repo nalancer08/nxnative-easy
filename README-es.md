@@ -178,7 +178,7 @@ Las imágenes de abajo muestran perfiles de juegos con soporte. **Tú debes apor
 <td align="center" valign="top" width="33%" data-title-id="01002B00111A2000"><a href="dm/games/01002B00111A2000/README.md"><img src="docs/images/hyrule-warriors-age-of-calamity.jpg" width="256" alt="Hyrule Warriors: Age of Calamity"></a><br><a href="dm/games/01002B00111A2000/README.md">Hyrule Warriors: Age of Calamity</a><br><sub>60 fps with 1.3.0</sub></td>
 </tr>
 <tr>
-<td align="center" valign="top" width="33%" data-title-id="04003F40232DE000"><a href="dm/games/04003F40232DE000/README.md"><img src="docs/images/hyrule-warriors-age-of-imprisonment.jpg" width="256" alt="Hyrule Warriors: Age of Imprisonment"></a><br><a href="dm/games/04003F40232DE000/README.md">Hyrule Warriors: Age of Imprisonment</a><br><sub>Switch 2, Mac only, from a NUP</sub></td>
+<td align="center" valign="top" width="33%" data-title-id="04003F40232DE000"><a href="dm/games/04003F40232DE000/README.md"><img src="docs/images/hyrule-warriors-age-of-imprisonment.jpg" width="256" alt="Hyrule Warriors: Age of Imprisonment"></a><br><a href="dm/games/04003F40232DE000/README.md">Hyrule Warriors: Age of Imprisonment</a><br><sub>Switch 2, sólo Mac, archivo NUP</sub></td>
 <td align="center" valign="top" width="33%" data-title-id="0100AE00096EA000"><a href="dm/games/0100AE00096EA000/README.md"><img src="docs/images/hyrule-warriors-definitive-edition.jpg" width="256" alt="Hyrule Warriors: Definitive Edition"></a><br><a href="dm/games/0100AE00096EA000/README.md">Hyrule Warriors: Definitive Edition</a><br><sub>Ver ficha del juego</sub></td>
 <td align="center" valign="top" width="33%" data-title-id="01004D300C5AE000"><a href="dm/games/01004D300C5AE000/README.md"><img src="docs/images/kirby-and-the-forgotten-land.jpg" width="256" alt="Kirby and the Forgotten Land"></a><br><a href="dm/games/01004D300C5AE000/README.md">Kirby and the Forgotten Land</a><br><sub>Ver ficha del juego</sub></td>
 </tr>
@@ -189,7 +189,7 @@ Las imágenes de abajo muestran perfiles de juegos con soporte. **Tú debes apor
 </tr>
 <tr>
 <td align="center" valign="top" width="33%" data-title-id="0400C3F00006E000"><a href="dm/games/0400C3F00006E000/README.md"><img src="docs/images/mario-kart-world.jpg" width="256" alt="Mario Kart World"></a><br><a href="dm/games/0400C3F00006E000/README.md">Mario Kart World</a><br><sub>Switch 2, sólo Mac, carpeta extraída</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="01006D0017F7A000"><a href="dm/games/01006D0017F7A000/README.md"><img src="docs/images/mario-luigi-brothership.jpg" width="256" alt="Mario &amp; Luigi: Brothership"></a><br><a href="dm/games/01006D0017F7A000/README.md">Mario &amp; Luigi: Brothership</a><br><sub>up to 120 fps</sub></td>
+<td align="center" valign="top" width="33%" data-title-id="01006D0017F7A000"><a href="dm/games/01006D0017F7A000/README.md"><img src="docs/images/mario-luigi-brothership.jpg" width="256" alt="Mario &amp; Luigi: Brothership"></a><br><a href="dm/games/01006D0017F7A000/README.md">Mario &amp; Luigi: Brothership</a><br><sub>hasta 120 fps</sub></td>
 <td align="center" valign="top" width="33%" data-title-id="01006FE013472000"><a href="dm/games/01006FE013472000/README.md"><img src="docs/images/mario-party-superstars.jpg" width="256" alt="Mario Party Superstars"></a><br><a href="dm/games/01006FE013472000/README.md">Mario Party Superstars</a><br><sub>Ver ficha del juego</sub></td>
 </tr>
 <tr>
@@ -243,7 +243,7 @@ Las imágenes de abajo muestran perfiles de juegos con soporte. **Tú debes apor
 <td align="center" valign="top" width="33%" data-title-id="0100ABD01785C000"><a href="dm/games/0100ABD01785C000/README.md"><img src="docs/images/portal-2.jpg" width="256" alt="Portal 2"></a><br><a href="dm/games/0100ABD01785C000/README.md">Portal 2</a><br><sub>Ver ficha del juego</sub></td>
 </tr>
 <tr>
-<td align="center" valign="top" width="33%" data-title-id="01007A3009184000"><a href="dm/games/01007A3009184000/README.md"><img src="docs/images/princess-peach-showtime.jpg" width="256" alt="Princess Peach: Showtime!"></a><br><a href="dm/games/01007A3009184000/README.md">Princess Peach: Showtime!</a><br><sub>60 fps with 1.0.0</sub></td>
+<td align="center" valign="top" width="33%" data-title-id="01007A3009184000"><a href="dm/games/01007A3009184000/README.md"><img src="docs/images/princess-peach-showtime.jpg" width="256" alt="Princess Peach: Showtime!"></a><br><a href="dm/games/01007A3009184000/README.md">Princess Peach: Showtime!</a><br><sub>60 fps con 1.0.0</sub></td>
 <td align="center" valign="top" width="33%" data-title-id="010020400E1C2000"><a href="dm/games/010020400E1C2000/README.md"><img src="docs/images/raging-loop.jpg" width="256" alt="Raging Loop"></a><br><a href="dm/games/010020400E1C2000/README.md">Raging Loop</a><br><sub>Ver ficha del juego</sub></td>
 <td align="center" valign="top" width="33%" data-title-id="010032E00E6E2000"><a href="dm/games/010032E00E6E2000/README.md"><img src="docs/images/return-of-the-obra-dinn.png" width="256" alt="Return of the Obra Dinn"></a><br><a href="dm/games/010032E00E6E2000/README.md">Return of the Obra Dinn</a><br><sub>Ver ficha del juego</sub></td>
 </tr>
@@ -259,7 +259,7 @@ Las imágenes de abajo muestran perfiles de juegos con soporte. **Tú debes apor
 </tr>
 <tr>
 <td align="center" valign="top" width="33%" data-title-id="0100E65002BB8000"><a href="dm/games/0100E65002BB8000/README.md"><img src="docs/images/stardew-valley.jpg" width="256" alt="Stardew Valley"></a><br><a href="dm/games/0100E65002BB8000/README.md">Stardew Valley</a><br><sub>Ver ficha del juego</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="0400E88025B1A000"><a href="dm/games/0400E88025B1A000/README.md"><img src="docs/images/star-fox.jpg" width="256" alt="Star Fox"></a><br><a href="dm/games/0400E88025B1A000/README.md">Star Fox</a><br><sub>Switch 2, Mac only, from a NUP</sub></td>
+<td align="center" valign="top" width="33%" data-title-id="0400E88025B1A000"><a href="dm/games/0400E88025B1A000/README.md"><img src="docs/images/star-fox.jpg" width="256" alt="Star Fox"></a><br><a href="dm/games/0400E88025B1A000/README.md">Star Fox</a><br><sub>Switch 2, sólo Mac, archivo NUP</sub></td>
 <td align="center" valign="top" width="33%" data-title-id="01009320084A4000"><a href="dm/games/01009320084A4000/README.md"><img src="docs/images/steamworld-dig.jpg" width="256" alt="SteamWorld Dig"></a><br><a href="dm/games/01009320084A4000/README.md">SteamWorld Dig</a><br><sub>Ver ficha del juego</sub></td>
 </tr>
 <tr>
@@ -274,7 +274,7 @@ Las imágenes de abajo muestran perfiles de juegos con soporte. **Tú debes apor
 </tr>
 <tr>
 <td align="center" valign="top" width="33%" data-title-id="010014C011146000"><a href="dm/games/010014C011146000/README.md"><img src="docs/images/subnautica-below-zero.jpg" width="256" alt="Subnautica: Below Zero"></a><br><a href="dm/games/010014C011146000/README.md">Subnautica: Below Zero</a><br><sub>Ver ficha del juego</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="010049900F546000"><a href="dm/games/010049900F546000/README.md"><img src="docs/images/super-mario-3d-all-stars.jpg" width="256" alt="Super Mario 3D All-Stars"></a><br><a href="dm/games/010049900F546000/README.md">Super Mario 3D All-Stars</a><br><sub>Super Mario 64 and Sunshine; Galaxy is 32-bit ARM, which Apple silicon cannot run</sub></td>
+<td align="center" valign="top" width="33%" data-title-id="010049900F546000"><a href="dm/games/010049900F546000/README.md"><img src="docs/images/super-mario-3d-all-stars.jpg" width="256" alt="Super Mario 3D All-Stars"></a><br><a href="dm/games/010049900F546000/README.md">Super Mario 3D All-Stars</a><br><sub>Super Mario 64 y Sunshine; Galaxy usa ARM de 32 bits, que Apple silicon no puede ejecutar</sub></td>
 <td align="center" valign="top" width="33%" data-title-id="010028600EBDA000"><a href="dm/games/010028600EBDA000/README.md"><img src="docs/images/super-mario-3d-world.jpg" width="256" alt="Super Mario 3D World + Bowser&#x27;s Fury"></a><br><a href="dm/games/010028600EBDA000/README.md">Super Mario 3D World + Bowser&#x27;s Fury</a><br><sub>Ver ficha del juego</sub></td>
 </tr>
 <tr>
@@ -318,7 +318,7 @@ Las imágenes de abajo muestran perfiles de juegos con soporte. **Tú debes apor
 <td align="center" valign="top" width="33%" data-title-id="0100FF500E34A000"><a href="dm/games/0100FF500E34A000/README.md"><img src="docs/images/xenoblade-chronicles-definitive-edition.jpg" width="256" alt="Xenoblade Chronicles: Definitive Edition"></a><br><a href="dm/games/0100FF500E34A000/README.md">Xenoblade Chronicles: Definitive Edition</a><br><sub>Ver ficha del juego</sub></td>
 </tr>
 <tr>
-<td align="center" valign="top" width="33%" data-title-id="0400245021D2C000"><a href="dm/games/0400245021D2C000/README.md"><img src="docs/images/yoshi-and-the-mysterious-book.jpg" width="256" alt="Yoshi and the Mysterious Book"></a><br><a href="dm/games/0400245021D2C000/README.md">Yoshi and the Mysterious Book</a><br><sub>Switch 2, Mac only</sub></td>
+<td align="center" valign="top" width="33%" data-title-id="0400245021D2C000"><a href="dm/games/0400245021D2C000/README.md"><img src="docs/images/yoshi-and-the-mysterious-book.jpg" width="256" alt="Yoshi and the Mysterious Book"></a><br><a href="dm/games/0400245021D2C000/README.md">Yoshi and the Mysterious Book</a><br><sub>Switch 2, sólo Mac</sub></td>
 <td align="center" valign="top" width="33%" data-title-id="01006000040C2000"><a href="dm/games/01006000040C2000/README.md"><img src="docs/images/yoshis-crafted-world.jpg" width="256" alt="Yoshi&#x27;s Crafted World"></a><br><a href="dm/games/01006000040C2000/README.md">Yoshi&#x27;s Crafted World</a><br><sub>Ver ficha del juego</sub></td>
 </tr>
 </table>
