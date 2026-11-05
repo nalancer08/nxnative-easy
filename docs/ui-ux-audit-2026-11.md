@@ -1,5 +1,9 @@
 # Desktop interaction and accessibility audit — November 2026
 
+This records the 1.31.5 interaction audit. The compact native toolbar and desktop
+control density introduced in 1.31.6 supersede its previous 44-point/header layout;
+see the current [design system](design-system.md).
+
 Scope: the SwiftUI/AppKit launcher, library detail, compatibility, preparation,
 installation/account flow, save actions, settings, diagnostics and storage.
 The accepted brand, artwork, game runtime and engine version are retained.

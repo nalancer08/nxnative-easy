@@ -49,7 +49,7 @@ struct CloudLibraryHome:View {
             VStack(alignment:.leading,spacing:24) {
                 HStack {
                     VStack(alignment:.leading,spacing:7) {
-                        Text(text("Tu biblioteca")).font(.system(size:36,weight:.bold)).tracking(-1)
+                        Text(text("Tu biblioteca")).font(.system(size:30,weight:.bold)).tracking(-1)
                         Text(text(saves.cloud==nil ? "Tus juegos y tu progreso. En todas tus pantallas." : "Tus juegos. Tus partidas. Siempre contigo.")).font(.callout).foregroundStyle(EasyDesign.muted)
                     }
                     Spacer()
@@ -179,7 +179,6 @@ struct GameContinuityDetail:View {
     var engineHistory:EngineHistory?=nil
     @State private var backup:DeviceGameObservation?
     @State private var backupMac=false
-    @State private var choosingDestination=false
     @State private var copying:DeviceGameObservation?
     private var reports:[DeviceGameObservation] {sideload.observations(titleID:entry.titleID,originalID:entry.ios?.originalBundleID)}
     private var localPresence:LocalSavePresence? {entry.titleID.flatMap{localSaves.games[$0]}}
@@ -211,28 +210,30 @@ struct GameContinuityDetail:View {
         VStack(alignment:.leading,spacing:0) {
             ZStack(alignment:.bottomLeading) {
                 GeometryReader {geometry in
-                    if let catalog {GameArtworkView(game:catalog).frame(width:geometry.size.width,height:300).clipped().allowsHitTesting(false)}
+                    if let catalog {GameArtworkView(game:catalog).frame(width:geometry.size.width,height:224).clipped().allowsHitTesting(false)}
                     else {EasyDesign.panel}
                 }
                 LinearGradient(stops:[.init(color:.black.opacity(0.05),location:0),.init(color:EasyDesign.background.opacity(0.3),location:0.42),.init(color:EasyDesign.background,location:1)],startPoint:.top,endPoint:.bottom).allowsHitTesting(false)
                 VStack(alignment:.leading,spacing:12) {
-                    Text(text("EN TU BIBLIOTECA")).font(.system(size:10,weight:.semibold)).tracking(2).foregroundStyle(.white.opacity(0.7))
-                    Text(title).font(.system(size:36,weight:.bold)).tracking(-1).foregroundStyle(.white).fixedSize(horizontal:false,vertical:true)
+                    Text(title).font(.system(size:30,weight:.bold)).tracking(-1).foregroundStyle(.white).fixedSize(horizontal:false,vertical:true)
                 }.padding(.horizontal,28).padding(.bottom,12).shadow(color:.black.opacity(0.3),radius:16)
-            }.frame(height:300).contentShape(Rectangle()).accessibilityElement(children:.combine)
-            VStack(alignment:.leading,spacing:24) {
-                ViewThatFits(in:.horizontal) {
-                    HStack(spacing:16) {launchAction;Spacer(minLength:8);launchMetadata}
-                    VStack(alignment:.leading,spacing:14) {launchAction;launchMetadata}
-                }
-                if let context,context.state != .unknown,context.state != .current {
-                    HStack(spacing:9) {Image(systemName:context.state == .expired || context.state == .expiring ? "clock.badge.exclamationmark" : "sparkles").foregroundStyle(EasyDesign.accent);Text(text(context.reason)).font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted);Spacer();Button(text("Revisar"),action:maintain).buttonStyle(EasyLinkStyle()).disabled(disabled)}
+            }.frame(height:224).contentShape(Rectangle()).accessibilityElement(children:.combine)
+            VStack(alignment:.leading,spacing:20) {
+                VStack(alignment:.leading,spacing:10) {
+                    HStack(spacing:16) {
+                        launchAction
+                        Text(text("Versión")+" "+(entry.local?.version ?? entry.revisions.first?.version ?? "—")).font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted)
+                    }
+                    if let context,context.state != .unknown,context.state != .current {
+                        Label(text(context.reason),systemImage:context.state == .expired || context.state == .expiring ? "clock.badge.exclamationmark" : "sparkles")
+                            .font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted).fixedSize(horizontal:false,vertical:true)
+                    }
                 }
                 if !hasFiles {Text(text(entry.knownInCloud ? "Tu partida está aquí. Añade tus archivos para jugar." : "Añade tus archivos para preparar este juego.")).font(.callout).foregroundStyle(EasyDesign.muted)}
             if sideload.busy || sideload.blocksGameWork {InstallActivityView(model:sideload,text:text)}
                 ViewThatFits(in:.horizontal) {
-                    HStack(alignment:.top,spacing:24) {savedProgress.frame(minWidth:330,maxWidth:.infinity);destinations.frame(width:300)}
-                    VStack(alignment:.leading,spacing:24) {savedProgress;destinations}
+                    HStack(alignment:.top,spacing:16) {savedProgress.frame(minWidth:300,maxWidth:.infinity);destinations.frame(width:340)}
+                    VStack(alignment:.leading,spacing:16) {savedProgress;destinations}
                 }
             VStack(alignment:.leading,spacing:10) {
                 ForEach(entry.sources.flatMap(\.preparations)) {build in
@@ -244,7 +245,7 @@ struct GameContinuityDetail:View {
                     }.font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted)
                 }
             }.padding(14).background(.white.opacity(0.025),in:RoundedRectangle(cornerRadius:10))
-            if let context {DisclosureGroup(text("Versión y mejoras")) {VStack(alignment:.leading,spacing:14) {GameVersionComparison(context:context,text:text);Button(text("Actualizar o renovar"),action:maintain).buttonStyle(EasyLinkStyle())}.padding(.top,12)}.font(.callout)}
+            if let context {DisclosureGroup(text("Versión y mejoras")) {VStack(alignment:.leading,spacing:14) {GameVersionComparison(context:context,text:text)}.padding(.top,12)}.font(.callout)}
             if hasFiles {Button(text("Archivos y opciones"),action:files).buttonStyle(EasyLinkStyle())}
             }.padding(.horizontal,28).padding(.top,12).padding(.bottom,30)
         }.frame(maxWidth:.infinity,alignment:.topLeading).background(EasyDesign.background)
@@ -259,17 +260,14 @@ struct GameContinuityDetail:View {
         }message:{Text(text("Copia los archivos grandes necesarios para jugar desde este Mac al iPhone. No respalda ni sincroniza partidas. Mantén el juego cerrado hasta terminar."))}
     }
     private var destinations:some View {
-VStack(alignment:.leading,spacing:7) {
+VStack(alignment:.leading,spacing:12) {
                 HStack {Text(text("JUGAR EN")).font(.system(size:10,weight:.semibold)).tracking(1.8).foregroundStyle(EasyDesign.muted);Spacer();Button {Task {await sideload.refreshConnections()}}label:{Image(systemName:"arrow.clockwise")}.buttonStyle(EasyIconStyle()).accessibilityLabel(text("Comprobar dispositivos")).disabled(sideload.busy)}
                 destination("Este Mac",icon:"desktopcomputer",status:text(entry.mac != nil ? "Listo para jugar" : "Sin instalar"),connected:true) {
-                    if entry.mac != nil {Button(text("Jugar"),action:primary).buttonStyle(EasySecondaryStyle())}
-                    else {Button(text("Añadir en Mac")){prepare("mac")}.buttonStyle(EasyLinkStyle()).disabled(disabled)}
+                    if entry.mac == nil && primaryIntent != .prepareMac {Button(text("Preparar")){prepare("mac")}.buttonStyle(EasySecondaryStyle()).disabled(disabled)}
                 }
                 ForEach(reports) {report in
                     let connected=sideload.devices.contains{$0.id==report.device && $0.ready} && !sideload.connectionIssue
                     destination(report.deviceName,icon:"iphone",status:text(connected ? sideload.isVerified(report) ? "Conectado · Juego instalado" : "Conectado · Comprobando juego" : "Desconectado · Última instalación conocida"),connected:connected) {
-                        if sideload.isVerified(report) {Button(text("Respaldar partida")){backup=report}.buttonStyle(EasySecondaryStyle()).disabled(disabled)}
-                        else {Label(text("Conecta para respaldar tu partida"),systemImage:"cable.connector").font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted)}
                         Menu {
                             Button(text((report.saveContinuity ?? 0)<2 ? "Actualizar para iCloud" : "Revisar app")){if (report.saveContinuity ?? 0)<2 {if syncUpdateReady {install()}else{reviewSync()}}else{maintainDevice(report)}}
                             if sideload.isVerified(report),sideload.dataFolder(for:InstalledGame(id:report.bundleID,name:title,version:report.version)) != nil {Button(text("Copiar archivos para jugar")){copying=report}}
@@ -287,10 +285,10 @@ VStack(alignment:.leading,spacing:7) {
                         Button(text("Preparar para iPhone / iPad")){prepare("ios")}.buttonStyle(EasyLinkStyle()).disabled(disabled)
                     }
                 }
-            }
+            }.padding(16).background(EasyDesign.panel,in:RoundedRectangle(cornerRadius:12))
     }
     private var savedProgress:some View {
-VStack(alignment:.leading,spacing:16) {
+VStack(alignment:.leading,spacing:12) {
                 HStack {
                     Label(text("Partidas guardadas"),systemImage:"icloud").font(.headline)
                     Spacer()
@@ -331,28 +329,11 @@ VStack(alignment:.leading,spacing:16) {
             }.padding(20).background(EasyDesign.panel,in:RoundedRectangle(cornerRadius:12))
     }
     private var launchAction:some View {
-        HStack(spacing:8) {
-            Button(action:primary){Label(text(primaryTitle),systemImage:primaryIntent.symbol).frame(minWidth:120)}.buttonStyle(EasyPrimaryStyle()).disabled(primaryDisabled)
-            Button {choosingDestination.toggle()}label:{Image(systemName:"chevron.down").font(.system(size:12,weight:.semibold))}.buttonStyle(EasyIconStyle()).disabled(disabled).accessibilityLabel(text("Elegir dónde jugar"))
-                .popover(isPresented:$choosingDestination,arrowEdge:.bottom) {
-                    VStack(alignment:.leading,spacing:8) {
-                        Button {choosingDestination=false;prepare("mac")}label:{Label(text("Preparar en Mac"),systemImage:"desktopcomputer").frame(maxWidth:.infinity,alignment:.leading)}.buttonStyle(EasySecondaryStyle())
-                        Button {choosingDestination=false;install()}label:{Label(text("Instalar en iPhone / iPad"),systemImage:"ipad.and.iphone").frame(maxWidth:.infinity,alignment:.leading)}.buttonStyle(EasySecondaryStyle()).disabled(entry.ios==nil)
-                        Button {choosingDestination=false;prepare("ios")}label:{Label(text("Preparar para iPhone / iPad"),systemImage:"hammer").frame(maxWidth:.infinity,alignment:.leading)}.buttonStyle(EasySecondaryStyle())
-                    }.padding(12).frame(width:280).background(EasyDesign.background)
-                }
-
-        }
-    }
-    private var launchMetadata:some View {
-        HStack(spacing:20) {
-            VStack(alignment:.leading,spacing:4){Text(text("VERSIÓN DEL JUEGO")).font(.system(size:11,weight:.semibold)).tracking(1);Text(entry.local?.version ?? entry.revisions.first?.version ?? "—").font(.system(size:12,weight:.medium))}
-            VStack(alignment:.leading,spacing:4){Text(text("PARTIDAS")).font(.system(size:11,weight:.semibold)).tracking(1);Text(text(entry.revisions.isEmpty && localPresence?.state != .present ? "Sin copias recibidas" : "Progreso guardado")).font(.system(size:12,weight:.medium))}
-        }.foregroundStyle(EasyDesign.muted)
+        Button(action:primary){Label(text(primaryTitle),systemImage:primaryIntent.symbol)}.buttonStyle(EasyPrimaryStyle()).disabled(primaryDisabled)
     }
     @ViewBuilder private var saveActions:some View {
         HStack(spacing:14) {
-            Menu {Button(text("Subir un respaldo"),action:upload).disabled(disabled || saves.busy || !hasFiles || saves.cloud==nil);if let local=entry.local,localPresence?.state == .present {Button(text("Guardar partida de este Mac")){backupMac=true}.disabled(saves.busy || local.missing)};ForEach(reports.filter{sideload.isVerified($0)}) {report in Button(text("Respaldar partida")+" · "+report.deviceName){backup=report}.disabled(sideload.busy)}}label:{Label(text("Respaldar o importar partida"),systemImage:"square.and.arrow.up")}.menuStyle(EasyMenuStyle()).fixedSize().disabled(disabled)
+            Menu {Button(text("Subir un respaldo"),action:upload).disabled(disabled || saves.busy || !hasFiles || saves.cloud==nil);if let local=entry.local,localPresence?.state == .present {Button(text("Guardar partida de este Mac")){backupMac=true}.disabled(saves.busy || local.missing)};ForEach(reports.filter{sideload.isVerified($0)}) {report in Button(text("Respaldar partida")+" · "+report.deviceName){backup=report}.disabled(sideload.busy)}}label:{Label(text("Gestionar partidas"),systemImage:"square.and.arrow.up")}.menuStyle(EasyMenuStyle()).menuIndicator(.visible).accessibilityLabel(text("Gestionar partidas")).fixedSize().disabled(disabled)
             if saves.cloud==nil {Button(text("Activar iCloud")){saves.enableManagedCloud(repo:repo)}.buttonStyle(EasyLinkStyle()).disabled(saves.busy)}
         }
     }
@@ -367,13 +348,11 @@ VStack(alignment:.leading,spacing:16) {
         }.padding(14).background(EasyDesign.surface,in:RoundedRectangle(cornerRadius:12))
     }
     private func destination<Actions:View>(_ name:String,icon:String,status:String,connected:Bool,@ViewBuilder actions:()->Actions)->some View {
-        VStack(alignment:.leading,spacing:4) {
-          HStack(spacing:10) {
-            Image(systemName:icon).font(.system(size:23,weight:.light)).foregroundStyle(connected ? EasyDesign.accent : EasyDesign.muted).frame(width:34)
-            VStack(alignment:.leading,spacing:4) {Text(text(name)).font(.system(size:13,weight:.semibold));Text(status).font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted)}
-            Spacer(minLength:0)
-          }
-          HStack(spacing:12){actions()}.padding(.leading,44)
-        }.padding(14).frame(maxWidth:.infinity,alignment:.leading).background(EasyDesign.panel,in:RoundedRectangle(cornerRadius:12)).overlay(RoundedRectangle(cornerRadius:12).strokeBorder(connected ? EasyDesign.accent.opacity(0.2) : EasyDesign.border))
+        HStack(spacing:12) {
+            Image(systemName:icon).font(.system(size:22,weight:.regular)).foregroundStyle(connected ? EasyDesign.accent : EasyDesign.muted).frame(width:28)
+            VStack(alignment:.leading,spacing:4) {Text(text(name)).font(.system(size:13,weight:.semibold));Text(status).font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted).fixedSize(horizontal:false,vertical:true)}
+            Spacer(minLength:4)
+            actions()
+        }.padding(.vertical,8).frame(maxWidth:.infinity,alignment:.leading)
     }
 }

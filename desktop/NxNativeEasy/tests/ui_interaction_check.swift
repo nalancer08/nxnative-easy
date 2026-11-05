@@ -31,7 +31,7 @@ private struct ProbeRoot:View {
     }
     @MainActor private static func run()async throws {
         NSApplication.shared.setActivationPolicy(.prohibited)
-        for fill in [EasyDesign.background,EasyDesign.panel,EasyDesign.control] {
+        for fill in [EasyDesign.background,EasyDesign.panel,EasyDesign.control,EasyDesign.controlHover] {
             try require(contrast(EasyDesign.ink,fill)>=4.5,"primary text contrast")
             try require(contrast(EasyDesign.muted,fill)>=4.5,"secondary text contrast")
             try require(contrast(EasyDesign.focus,fill)>=3,"keyboard focus contrast")

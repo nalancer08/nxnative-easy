@@ -10,13 +10,14 @@ enum EasyDesign {
     static let surface=Color(red:0.12,green:0.14,blue:0.18)
     static let border=Color(red:0.27,green:0.31,blue:0.38)
     static let control=Color(red:39/255,green:46/255,blue:58/255)
+    static let controlHover=Color(red:49/255,green:59/255,blue:75/255)
     static let controlOutline=Color(red:117/255,green:131/255,blue:154/255)
     static let muted=Color(red:182/255,green:192/255,blue:208/255)
     static let disabledInk=Color(red:152/255,green:164/255,blue:182/255)
     static let focus=Color(red:154/255,green:203/255,blue:1)
     static let danger=Color(red:1,green:147/255,blue:152/255)
     static let metadata=Font.system(size:12)
-    static let controlHeight:CGFloat=44
+    static let controlHeight:CGFloat=36
     static let radius:CGFloat=14
     static let pagePadding:CGFloat=28
     static let spacing:CGFloat=20
@@ -62,17 +63,19 @@ private struct EasyControlBody<Label:View>:View {
     private var fill:Color {
         if !enabled {return EasyDesign.surface}
         if kind == .primary {return pressed ? Color(red:0.96,green:0.36,blue:0.20) : hovered ? Color(red:1,green:0.54,blue:0.36) : EasyDesign.accent}
-        return kind == .secondary || kind == .icon || pressed || hovered || selected ? EasyDesign.control : .clear
+        if pressed {return EasyDesign.surface}
+        if hovered {return EasyDesign.controlHover}
+        return kind == .secondary || kind == .icon || selected ? EasyDesign.control : .clear
     }
     var body:some View {
         label
             .font(.system(size:kind == .primary ? 14 : 13,weight:kind == .primary ? .bold : .semibold))
             .foregroundStyle(!enabled ? EasyDesign.disabledInk : kind == .primary ? Color.black : kind == .quiet ? EasyDesign.accent : EasyDesign.ink)
-            .padding(.horizontal, kind == .selection ? 0 : kind == .icon ? 0 : kind == .primary ? 20 : 12)
-            .padding(.vertical,kind == .selection || kind == .icon ? 0 : 10)
-            .frame(minWidth:kind == .icon ? EasyDesign.controlHeight : 0,minHeight:EasyDesign.controlHeight)
+            .padding(.horizontal, kind == .selection ? 0 : kind == .icon ? 0 : kind == .primary ? 16 : 10)
+            .padding(.vertical,kind == .selection || kind == .icon ? 0 : kind == .primary ? 10 : 7)
+            .frame(minWidth:kind == .icon ? EasyDesign.controlHeight : 0,minHeight:kind == .primary ? 40 : EasyDesign.controlHeight)
             .background(fill,in:RoundedRectangle(cornerRadius:9))
-            .overlay {RoundedRectangle(cornerRadius:9).strokeBorder(enabled && (kind == .secondary || kind == .icon || hovered || selected) ? EasyDesign.controlOutline : .clear,lineWidth:1).allowsHitTesting(false)}
+            .overlay {RoundedRectangle(cornerRadius:9).strokeBorder(enabled && (kind == .secondary || kind == .icon || hovered || selected) ? (hovered ? EasyDesign.muted : EasyDesign.controlOutline) : .clear,lineWidth:1).allowsHitTesting(false)}
             .overlay {RoundedRectangle(cornerRadius:12).inset(by:-3).strokeBorder(focused ? EasyDesign.focus : .clear,lineWidth:2).allowsHitTesting(false)}
             .contentShape(.interaction,Rectangle())
             .onHover {hovered=$0}
@@ -88,6 +91,30 @@ struct EasyMenuStyle:MenuStyle {
     @ViewBuilder func makeBody(configuration:Configuration)->some View {
         if compact {Menu(configuration).menuStyle(.button).buttonStyle(EasyIconStyle()).menuIndicator(.hidden)}
         else {Menu(configuration).menuStyle(.button).buttonStyle(EasySecondaryStyle())}
+    }
+}
+// Native window chrome uses a compact desktop control, independent of game CTAs.
+struct EasyToolbarStyle:ButtonStyle {
+    var selected=false
+    var icon=false
+    func makeBody(configuration:Configuration)->some View {ToolbarControl(label:configuration.label,pressed:configuration.isPressed,selected:selected,icon:icon)}
+    private struct ToolbarControl<Label:View>:View {
+        let label:Label
+        let pressed:Bool
+        let selected:Bool
+        let icon:Bool
+        @Environment(\.isEnabled) private var enabled
+        @Environment(\.isFocused) private var focused
+        @Environment(\.accessibilityReduceMotion) private var reduceMotion
+        @State private var hovered=false
+        var body:some View {
+            label.font(.system(size:12,weight:.semibold)).foregroundStyle(enabled ? EasyDesign.ink : EasyDesign.disabledInk)
+                .padding(.horizontal,icon ? 0 : 10).frame(minWidth:32,minHeight:32)
+                .background(enabled && pressed ? EasyDesign.surface : enabled && hovered ? EasyDesign.controlHover : selected ? EasyDesign.control : .clear,in:RoundedRectangle(cornerRadius:7))
+                .overlay(RoundedRectangle(cornerRadius:7).strokeBorder(focused ? EasyDesign.focus : .clear,lineWidth:2).allowsHitTesting(false))
+                .contentShape(.interaction,Rectangle()).allowsWindowActivationEvents().onHover{hovered=$0}
+                .animation(reduceMotion ? nil : .easeOut(duration:0.12),value:hovered)
+        }
     }
 }
 struct EasyField<Content:View>:View {

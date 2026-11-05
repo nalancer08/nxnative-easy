@@ -54,8 +54,8 @@ struct CloudProfileButton:View {
                 Image(systemName:saves.connectionState == .connected ? "checkmark.circle.fill" : "icloud.circle.fill")
                     .font(.system(size:12)).foregroundStyle(saves.connectionState == .connected ? Color.green : EasyDesign.accent)
                     .background(EasyDesign.background,in:Circle()).offset(x:2,y:2)
-            }.frame(width:44,height:44).contentShape(Rectangle())
-        }.buttonStyle(EasySelectionStyle()).accessibilityLabel(text("Perfil de este Mac")+" · "+text(saves.connectionState.title))
+            }.frame(width:36,height:36).contentShape(Rectangle())
+        }.buttonStyle(.plain).allowsWindowActivationEvents().accessibilityLabel(text("Perfil de este Mac")+" · "+text(saves.connectionState.title))
         .help(text("Cuenta de iCloud")+" · "+text(saves.connectionState.title))
     }
 }

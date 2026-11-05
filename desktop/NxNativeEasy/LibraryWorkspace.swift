@@ -123,23 +123,32 @@ struct LibraryWorkspace:View {
         selectedEntryID=entries.first(where:{$0.id==remembered})?.id ?? entries.first?.id
     }
     private func showBuildActivity() {page = .prepare;model.installingInline=false;let unfinished=model.running || model.failed || model.output==nil;model.preparationStep=unfinished ? 4 : 5;model.showDetails=true}
-    private func header(compact:Bool)->some View {
-        HStack(spacing:8) {
-                if compact {Image(nsImage:AppArtwork.icon).resizable().frame(width:24,height:24).frame(width:32).accessibilityLabel("nxnative Easy")}else{LauncherBrand()}
-                if navigation.canGoBack || maintaining != nil {LauncherButton(title:"",symbol:"chevron.left"){if maintaining != nil {maintaining=nil}else{navigation.back()}}.frame(width:44,height:44).accessibilityLabel(model.text("Volver")).transition(.opacity.combined(with:.move(edge:.leading)))}
-                LauncherButton(title:model.text("Biblioteca"),selected:page == .library){page = .library;maintaining=nil}.frame(width:100,height:44)
-                LauncherButton(title:model.text("Compatibilidad"),selected:page == .compatibility){page = .compatibility}.frame(width:138,height:44)
-                Spacer(minLength:0)
-                Button {page = .engine}label:{VStack(alignment:.leading,spacing:2){Text(model.text("MOTOR")).font(.system(size:10,weight:.bold)).tracking(1);Text(engine?.version ?? "—").font(.system(size:13,weight:.semibold))}.frame(width:62,height:38).padding(.horizontal,10).contentShape(Rectangle()).background(EasyDesign.panel,in:RoundedRectangle(cornerRadius:8))}.buttonStyle(EasySelectionStyle(selected:page == .engine)).help(model.text("Historial del motor"))
-                if model.running {Image(systemName:"hammer").font(.callout).foregroundStyle(EasyDesign.accent).help(model.text("Preparando tu juego…"))}
-                if updater.visible && !model.running {Button {reviewingUpdate=true}label:{Image(systemName:"arrow.down.circle.fill").font(.title3).frame(width:34,height:38).contentShape(Rectangle())}.buttonStyle(EasyIconStyle()).foregroundStyle(EasyDesign.accent).accessibilityLabel(model.text("Actualizar Easy")).help(model.text("Actualizar Easy"))}
-                LauncherButton(title:compact ? "" : model.text("Añadir juego"),symbol:"plus",enabled:!occupied,action:add).frame(width:compact ? 44 : 146,height:44).accessibilityLabel(model.text("Añadir juego"))
-                CloudProfileButton(saves:saves,text:model.text){showCloudAccount.toggle()}.popover(isPresented:$showCloudAccount,arrowEdge:.bottom){CloudAccountPanel(saves:saves,repo:model.repo,text:model.text,configure:{showCloudAccount=false;showCloudWelcome=true})}
-            }.padding(.horizontal,16).frame(height:60).background(EasyDesign.background).overlay(alignment:.bottom){Divider()}.zIndex(100)
+    @ToolbarContentBuilder private var launcherToolbar:some ToolbarContent {
+        ToolbarItemGroup(placement:.navigation) {
+            Image(nsImage:AppArtwork.icon).resizable().frame(width:22,height:22)
+                .accessibilityLabel("nxnative Easy").help("nxnative Easy · "+(Bundle.main.object(forInfoDictionaryKey:"CFBundleShortVersionString") as? String ?? ""))
+            if navigation.canGoBack || maintaining != nil {
+                Button {if maintaining != nil {maintaining=nil}else{navigation.back()}}label:{Image(systemName:"chevron.left")}
+                    .buttonStyle(EasyToolbarStyle(icon:true)).accessibilityLabel(model.text("Volver"))
+            }
+            Button(model.text("Biblioteca")){page = .library;maintaining=nil}.buttonStyle(EasyToolbarStyle(selected:page == .library)).accessibilityLabel(model.text("Biblioteca")).accessibilityAddTraits(page == .library ? .isSelected : [])
+            Button(model.text("Compatibilidad")){page = .compatibility;maintaining=nil}.buttonStyle(EasyToolbarStyle(selected:page == .compatibility)).accessibilityLabel(model.text("Compatibilidad")).accessibilityAddTraits(page == .compatibility ? .isSelected : [])
+        }.sharedBackgroundVisibility(.hidden)
+        ToolbarSpacer(.flexible,placement:.primaryAction)
+        ToolbarItemGroup(placement:.primaryAction) {
+            Button {page = .engine}label:{Label(model.text("Motor")+" "+(engine?.version ?? "—"),systemImage:"cpu").labelStyle(.titleAndIcon).lineLimit(1).fixedSize()}
+                .buttonStyle(EasyToolbarStyle(selected:page == .engine)).help(model.text("Historial del motor"))
+            if model.running {Image(systemName:"hammer").foregroundStyle(EasyDesign.accent).help(model.text("Preparando tu juego…"))}
+            if updater.visible && !model.running {
+                Button {reviewingUpdate=true}label:{Image(systemName:"arrow.down.circle.fill")}
+                    .buttonStyle(EasyToolbarStyle(icon:true)).accessibilityLabel(model.text("Actualizar Easy"))
+            }
+            Button(action:add){Label(model.text("Añadir juego"),systemImage:"plus").labelStyle(.titleAndIcon).lineLimit(1).fixedSize()}.buttonStyle(EasyToolbarStyle(selected:true)).disabled(occupied)
+            CloudProfileButton(saves:saves,text:model.text){showCloudAccount.toggle()}.padding(.trailing,6).popover(isPresented:$showCloudAccount,arrowEdge:.bottom){CloudAccountPanel(saves:saves,repo:model.repo,text:model.text,configure:{showCloudAccount=false;showCloudWelcome=true})}
+        }.sharedBackgroundVisibility(.hidden)
     }
     private var shell:some View {
         VStack(spacing:0) {
-            GeometryReader {geometry in header(compact:geometry.size.width<1000)}.frame(height:60)
             ZStack {
                 RetainedPage(visible:page == .prepare && maintaining==nil) {
                     ContentView(updater:updater,sideload:sideload,model:model,visible:page == .prepare && maintaining==nil)
@@ -207,8 +216,11 @@ struct LibraryWorkspace:View {
         .onReceive(NotificationCenter.default.publisher(for:Notification.Name("nxnative.showBuildActivity"))){_ in showBuildActivity()}
     }
     var body:some View {
-        observingShell
+        observingShell.frame(minWidth:760,minHeight:530)
         .buttonStyle(EasySecondaryStyle()).tint(EasyDesign.accent).preferredColorScheme(.dark).allowsWindowActivationEvents()
+        .toolbar {launcherToolbar}
+        .toolbarBackground(EasyDesign.background,for:.windowToolbar)
+        .toolbarBackground(.visible,for:.windowToolbar)
         .alert(model.text("Ya tienes la versión más reciente."),isPresented:$updater.showNotice) {Button(model.text("Aceptar"),role:.cancel) {}}
         .sheet(isPresented:$model.showSaves) {SavesHelpView(folder:model.folder,isMac:model.isMac,text:model.text,language:model.language)}
         .sheet(isPresented:$model.showSideload) {SideloadView(model:sideload,text:model.text).buttonStyle(EasySecondaryStyle()).tint(EasyDesign.accent)}

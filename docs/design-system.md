@@ -7,10 +7,12 @@ grid-first workspace and global cloud/device connection strip.
 
 ## Structure and hierarchy
 
-- A 60-point header starts at a 16-point inset: the system already reserves its
-  titlebar controls. Do not add a second traffic-light gutter. Back exists only
-  when navigation history is non-empty or a maintenance review can be closed. Keep Library, Compatibility and Add game
-  labels readable at the 760-point minimum; use the entire visible button bounds.
+- Use the native unified compact macOS toolbar, aligned with the traffic lights.
+  Do not stack a custom navigation header beneath a reserved blank titlebar.
+  Brand mark, conditional Back and adjacent Library/Compatibility controls form
+  the leading group. One flexible native toolbar spacer separates engine, Add
+  game and the profile. Engine/Add labels stay visible with `titleAndIcon`.
+  Back exists only with navigation history or a maintenance review to close.
 - The header's engine chip shows the integrated engine's dotted version, such as
   1.0.1, independently of the Easy app version. A game compares its own engine
   version with the current one. Hashes stay in technical help/links. Never show
@@ -19,7 +21,7 @@ grid-first workspace and global cloud/device connection strip.
   from the first-parent integration history. `desktop/engine-versioning.json`
   defines the baseline and explicit major/minor overrides. Each later runtime
   integration advances the patch; cosmetic Easy releases keep the engine version.
-- A 44-point profile button stays at the right edge. Its initials belong to the
+- A 36-point profile button stays at the right edge. Its initials belong to the
   local Mac user and are explicitly labeled as this Mac's profile, never as a
   verified iCloud identity. Its cloud badge opens connection status, last successful
   scan, the selected folder, and the system account settings shortcut. At narrow
@@ -28,8 +30,12 @@ grid-first workspace and global cloud/device connection strip.
   Settings sits at the bottom. There is no second global navigation sidebar.
 - Keep the selected game when returning from another page and remember it across
   launches. A game selection never launches, signs or installs anything.
-- The selected game uses a 300-point gameplay image, a clear title, one primary
-  play/install/maintenance action and a destination menu. Show installation
+- The selected game uses a 224-point gameplay image, a clear title, one primary
+  play/install/maintenance action with its version and reason grouped beneath it.
+  Device destinations form one compact panel. Do not add another destination
+  dropdown or a duplicate Review button beside the same maintenance explanation.
+  Keep manual save exports/imports in the game’s save panel, not repeated on each
+  device row. Show installation
   evidence, cloud revisions and screenshots within that game.
 - Show only repository-provided screenshots. When there is only one, use it as
   the hero and omit a redundant one-image gallery. Never invent more screenshots.
@@ -56,20 +62,23 @@ grid-first workspace and global cloud/device connection strip.
 | Keyboard focus | #9ACBFF, 2-point outer ring |
 | Spacing | 8 / 12 / 16 / 20 / 24 / 28 |
 | Type | System font; game title 36 bold; body 13–14; metadata 12; compact uppercase eyebrows 10–11 |
-| Primary action | At least 44 points; orange fill, dark label |
+| Primary action | 40 points; orange fill, dark label |
 | Supporting actions | Quiet padded actions or filled, clearly outlined buttons |
 
 Use native focus, disabled semantics, keyboard actions and accessibility labels.
 All interactive styles explicitly accept window activation events. Native navigation buttons accept the first mouse click in an inactive window and
 use the entire control bounds, not only the text. Avoid full-page status bars,
-large dashboard counts and promotional text competing with Play.
+large dashboard counts and promotional text competing with Play. Use one
+selection treatment; do not stack both a large selected pill and an underline.
 
 ## Interaction contract
 
 `EasyPrimaryStyle`, `EasySecondaryStyle`, `EasyLinkStyle`, `EasyIconStyle` and
 `EasySelectionStyle` own the complete padded interaction rectangle. Do not put
 padding outside a button and expect it to be clickable. Icon controls and back
-have a 44 × 44 point target. `EasyMenuStyle` uses button-backed native menus with the same control styles
+use 36-point desktop targets; the native toolbar uses 32-point controls.
+Do not impose a touch-sized 44-point painted surface on every desktop action.
+Primary actions use 40 points. `EasyMenuStyle` uses button-backed native menus with the same control styles
 and minimum geometry. A borderless native menu flattens its SwiftUI label and
 discards custom label backgrounds; do not style only that label. Decorative overlays cannot intercept input. Use hover/pressed feedback
 without scaling the hit region; respect Reduced Motion. Keep system keyboard

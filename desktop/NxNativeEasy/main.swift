@@ -956,6 +956,7 @@ struct GameCatalogView:View {
             }
         }
             .windowStyle(.hiddenTitleBar)
+            .windowToolbarStyle(.unifiedCompact)
             .windowBackgroundDragBehavior(.disabled)
             .defaultSize(width:1120,height:760)
             .commands {
