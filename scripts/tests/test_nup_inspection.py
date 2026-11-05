@@ -5,10 +5,10 @@ import sys
 import tempfile
 import unittest
 from unittest.mock import patch
-import build_mac
 
 ROOT=Path(__file__).resolve().parents[2]
 sys.path.insert(0,str(ROOT/'scripts'))
+import build_mac
 import inspect_nup
 spec=importlib.util.spec_from_file_location('nup_fixture',ROOT/'dm/tools/tests/test_nsp_nup.py')
 assert spec is not None and spec.loader is not None
