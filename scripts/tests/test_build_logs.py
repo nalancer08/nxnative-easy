@@ -17,12 +17,15 @@ class BuildLogs(unittest.TestCase):
     def test_console_stream_and_private_retained_log(self):
         with tempfile.TemporaryDirectory() as temporary:
             root=Path(temporary);script=root/'worker.sh';log=root/'logs/session.log'
-            script.write_text("printf 'first\\n'\nsleep 0.15\nprintf 'last ✓'\nexit 7\n")
-            env=dict(os.environ,NXE_BUILD_LOG=str(log))
+            script.write_text("printf 'first\\n'\nwhile [ ! -f \"$NXE_TEST_LOG_RELEASE\" ]; do sleep 0.01; done\nprintf 'last ✓'\nexit 7\n")
+            release=root/'release';env=dict(os.environ,NXE_BUILD_LOG=str(log),NXE_TEST_LOG_RELEASE=str(release))
             with subprocess.Popen([sys.executable,str(ROOT/'desktop/NxNativeEasy/build_session.py'),str(script)],env=env,stdout=subprocess.PIPE) as task:
                 assert task.stdout is not None
-                self.assertEqual(task.stdout.readline(),b'first\n')
-                self.assertEqual(log.read_text(),'first\n')
+                try:
+                    self.assertEqual(task.stdout.readline(),b'first\n')
+                    self.assertIsNone(task.poll(),'streamed output must arrive before completion')
+                    self.assertEqual(log.read_text(),'first\n')
+                finally:release.touch()
                 remaining=task.stdout.read().decode();self.assertEqual(task.wait(),7)
             self.assertEqual(remaining,'last ✓');self.assertEqual(log.read_text(),'first\nlast ✓')
             self.assertEqual(stat.S_IMODE(log.stat().st_mode),0o600)

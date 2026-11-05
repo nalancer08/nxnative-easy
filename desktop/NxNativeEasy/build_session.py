@@ -46,8 +46,9 @@ def run(arguments):
         path=Path(log_path);path.parent.mkdir(parents=True,exist_ok=True)
         log=os.fdopen(os.open(path,os.O_WRONLY|os.O_CREAT|os.O_EXCL,0o600),'w',encoding='utf-8')
     def emit(text):
-        sys.stdout.write(text);sys.stdout.flush()
+        # A visible line must already exist in the retained diagnostic log.
         if log:log.write(text);log.flush()
+        sys.stdout.write(text);sys.stdout.flush()
     started=time.time();watch=ToolLogs(game,started) if game else None
     command=([sys.executable] if arguments[0].endswith('.py') else ['/bin/bash'])+arguments
     decoder=codecs.getincrementaldecoder('utf-8')(errors='replace');pending=''
