@@ -16,6 +16,7 @@ class LocalSaveTests(unittest.TestCase):
             source = ROOT / 'desktop/NxNativeEasy'
             built = subprocess.run(['xcrun', 'swiftc', '-parse-as-library', '-swift-version', '5',
                                     str(source / 'LocalSaveMonitor.swift'), str(source / 'SavesHelp.swift'),
+                                    str(source / 'DesignSystem.swift'),
                                     str(source / 'Localization.swift'), str(source / 'tests/local_save_check.swift'),
                                     '-o', str(executable)], capture_output=True, text=True, timeout=120)
             self.assertEqual(built.returncode, 0, built.stdout + built.stderr)
