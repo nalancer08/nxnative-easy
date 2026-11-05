@@ -80,6 +80,16 @@ class GameCatalogSync(unittest.TestCase):
     def test_repository_catalog_is_current(self):
         self.assertEqual(sync.sync(ROOT),[])
 
+    def test_nested_program_uses_its_parent_application_in_all_galleries(self):
+        child='0100000000000002';folder=self.root/'dm/games'/child;folder.mkdir()
+        (folder/'game.tsv').write_text(f'name\tNested program\nprogram_of\t{ID}\n')
+        with (self.root/f'dm/games/{ID}/game.tsv').open('a') as out:out.write(f'programs\t1={child}\n')
+        sync.sync(self.root,write=True,upstream_html=self.source())
+        self.assertEqual([g['id'] for g in sync.inventory(self.root)],[ID])
+        self.assertNotIn(child,(self.root/'README.md').read_text())
+        (folder/'game.tsv').write_text(f'name\tNested program\nprogram_of\t{child}\n')
+        with self.assertRaises(ValueError):sync.inventory(self.root)
+
     def test_removed_profile_is_removed_from_every_generated_surface(self):
         other='0100000000000002';self.add_game(other,'Another Game')
         sync.sync(self.root,write=True,upstream_html=self.source()+self.source(other,'Another Game'))

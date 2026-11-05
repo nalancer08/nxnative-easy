@@ -1,5 +1,5 @@
 # Upstream review resolved
 
-The automatic proposal pinned to `bfda8c54a944` is superseded by the reviewed integration through `8e0916bf04f6fb8542c52ed01b166a8796158ca0`.
+The daily proposals in PRs #7, #14, #20 and #26 are superseded by the reviewed integration of original main through `865cc35fad7034d17c2190f8ce349f61f5bcaba1` on 2026-11-05. Their draft branches contained review notes, not an integrated engine.
 
-See [the integration review](upstream-reviews/2026-10-29.md) for changes, resolved conflicts, deferred iCloud synchronization and validation.
+See [the integration review](upstream-reviews/2026-11-05.md) for 193 commits, 13 new standalone applications, two nested All-Stars programs, Mario Kart World Mac evidence and the retained Easy save/identity/cleanup policies. Integration and publication checks are recorded there; no unrelated upstream PR is treated as merged code.

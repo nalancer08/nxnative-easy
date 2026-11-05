@@ -52,9 +52,18 @@ def inventory(root):
     for folder in sorted((root/'dm/games').iterdir()):
         if not re.fullmatch('[0-9A-Fa-f]{16}',folder.name) or not (folder/'game.tsv').is_file():continue
         title=folder.name.upper()
+        profile=(folder/'game.tsv').read_text()
+        parent=re.search(r'^program_of\t([0-9A-Fa-f]{16})\s*$',profile,re.M)
+        if parent:
+            owner=parent[1].upper();owner_file=root/'dm/games'/owner/'game.tsv'
+            if owner==title or not owner_file.is_file():raise ValueError('Invalid parent application: '+title)
+            linked=re.search(r'^programs\t(.*)$',owner_file.read_text(),re.M)
+            if not linked or title not in [word.split('=',1)[-1].upper() for word in linked[1].split()]:
+                raise ValueError('Parent application does not pack program: '+title)
+            continue  # Packed inside its parent application, not a separate library game.
         if title not in table_names or not (folder/'README.md').is_file():raise ValueError('Missing game table row or note: '+title)
         name=None;versions=[]
-        for line in (folder/'game.tsv').read_text().splitlines():
+        for line in profile.splitlines():
             if line.lstrip().startswith('#'):continue
             fields=[f.strip() for f in line.split('\t')]
             if len(fields)>1 and fields[0]=='name':name=fields[1]

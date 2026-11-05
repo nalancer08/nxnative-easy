@@ -10,7 +10,7 @@ struct LibraryDropOverlay:View {
         VStack(spacing:18) {
             LibraryDropMotion(playing:scenePhase == .active && !reduceMotion).frame(width:240,height:180).accessibilityHidden(true)
             Text(text("Suelta tu juego aquí")).font(.system(size:28,weight:.bold,design:.default))
-            Text(text("Una carpeta o sus archivos NSP, XCI, NSZ o XCZ. Los originales se quedan en su lugar.")).font(.callout).foregroundStyle(.secondary).multilineTextAlignment(.center).frame(maxWidth:460)
+            Text(text("Una carpeta o sus archivos NSP, XCI, NSZ, XCZ o NUP. Los originales se quedan en su lugar.")).font(.callout).foregroundStyle(.secondary).multilineTextAlignment(.center).frame(maxWidth:460)
         }.padding(40).frame(maxWidth:.infinity,maxHeight:.infinity)
             .overlay(RoundedRectangle(cornerRadius:20).strokeBorder(EasyDesign.accent.opacity(0.65),style:StrokeStyle(lineWidth:2,dash:[10,8])).padding(20))
     }

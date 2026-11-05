@@ -32,7 +32,7 @@ class Startup(unittest.TestCase):
                           '\nint main(int argc, char **argv) { @autoreleasepool { if (argc < 3) return 2;\n'
                           'fixture_doc = @(argv[1]); fixture_tmp = @(argv[2]); fixture_bundle = argc > 3 ? @(argv[3]) : @"/nonexistent-fixture";\n'
                           'if (argc > 4) { unsetenv("DM_AOC_DIR"); aoc_locate(); const char *p = getenv("DM_AOC_DIR"); if (!p) return 1; puts(p); return 0; }\n'
-                          'NSString *p = romfs_locate();\n'
+                          'NSString *p = romfs_locate(nil);\n'
                           'if (!p) return 1; puts(p.fileSystemRepresentation); return 0; }}\n')
         cls.locator = root / 'locator'
         subprocess.run(['clang', '-fobjc-arc', '-Wall', '-Werror', '-I', str(REPO / 'dm/host'),

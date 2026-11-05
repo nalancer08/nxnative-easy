@@ -21,6 +21,20 @@ const URL_BAG: &str = "https://gsa.apple.com/grandslam/GsService2/lookup";
 const URL_BAG_CLIENT_INFO: &str =
     "<Mac15,7> <macOS;27.0;26A5378j> <com.apple.AuthKit/1 (com.apple.akd/1.0)>";
 
+// Easy #19: legacy Mac providers advertise 10.12.6 while lookup already uses
+// this Mac AuthKit identity. Keep that known provider family consistent across
+// password, trusted-device and SMS requests, without changing other providers.
+fn client_identity(mut info: AnisetteClientInfo) -> AnisetteClientInfo {
+    let description = info.client_info.to_ascii_lowercase();
+    if description.contains("10.12.6")
+        && (description.contains("<mac") || description.contains("mac os x"))
+    {
+        info.client_info = URL_BAG_CLIENT_INFO.into();
+        info.user_agent = "akd/1.0 CFNetwork/808.1.4".into();
+    }
+    info
+}
+
 pub struct GrandSlam {
     pub client: reqwest_middleware::ClientWithMiddleware,
     pub client_info: AnisetteClientInfo,
@@ -37,6 +51,7 @@ impl GrandSlam {
         debug: bool,
         proxy_url: Option<String>,
     ) -> Result<Self, Report> {
+        let client_info = client_identity(client_info);
         let client =
             Self::build_reqwest_client(debug, proxy_url).context("Failed to build HTTP client")?;
         let base_headers = Self::base_headers(&client_info, false)?;
@@ -271,6 +286,37 @@ impl GrandSlam {
             builder
         };
         Ok(builder.build())
+    }
+}
+
+#[cfg(test)]
+mod identity_tests {
+    use super::*;
+
+    #[test]
+    fn legacy_mac_uses_one_identity_for_password_and_sms() {
+        let info = client_identity(AnisetteClientInfo {
+            client_info: "<MacBookPro11,3> <Mac OS X;10.12.6;16G29> <com.apple.AuthKit/1>".into(),
+            user_agent: "legacy-provider-agent".into(),
+        });
+        for sms in [false, true] {
+            let headers = GrandSlam::base_headers(&info, sms).unwrap();
+            assert_eq!(headers["X-Mme-Client-Info"], URL_BAG_CLIENT_INFO);
+            assert_eq!(headers["User-Agent"], "akd/1.0 CFNetwork/808.1.4");
+            assert_eq!(headers["Content-Type"], if sms {"application/json"} else {"text/x-xml-plist"});
+        }
+    }
+
+    #[test]
+    fn other_provider_identities_are_preserved() {
+        for description in ["<Mac15,7> <macOS;27.0;26A5378j>", "<android> <10.12.6>"] {
+            let info = client_identity(AnisetteClientInfo {
+                client_info: description.into(), user_agent: "provider-agent".into(),
+            });
+            let headers = GrandSlam::base_headers(&info, true).unwrap();
+            assert_eq!(headers["X-Mme-Client-Info"], description);
+            assert_eq!(headers["User-Agent"], "provider-agent");
+        }
     }
 }
 

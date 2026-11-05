@@ -12,9 +12,11 @@ on:
 permissions:
   contents: read
 
+# A new commit on a pull request replaces its older run. A push to main never cancels: main's pushes come faster than a run gets runners and finishes, so cancelling left main
+# with no finished run for 87 commits. The running one finishes and only the newest push waits behind it (GitHub replaces an older waiting run).
 concurrency:
   group: tests-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
   # The toolchain the project supports (README: Xcode 27.2; dm/gfx/tools/dmsh_chain.lock: its Metal compiler), on GitHub's xcode-27 image (macOS 27, a preview image),
@@ -312,5 +314,6 @@ jobs:
           export CARGO_TARGET_DIR="$RUNNER_TEMP/native-tools/target"
           export CARGO_BUILD_JOBS=2
           cargo test --locked --manifest-path native/sideload-helper/Cargo.toml
+          cargo test --locked --manifest-path native/sideload-helper/Cargo.toml -p isideload --lib identity_tests
           cargo build --locked --manifest-path native/sideload-helper/Cargo.toml
           NXE_SIDELOAD_TEST_HELPER="$CARGO_TARGET_DIR/debug/nxnative-sideload" python3 -m unittest scripts.tests.test_sideload_protocol

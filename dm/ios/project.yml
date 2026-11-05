@@ -36,13 +36,17 @@ targets:
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         CFBundleShortVersionString: $(MARKETING_VERSION)
         DMEasySaveContinuity: 2
-        UILaunchStoryboardName: ""
+        UILaunchScreen: {}
         UIFileSharingEnabled: true          # Documents (log.txt, saves) visible in the Files app
         LSSupportsOpeningDocumentsInPlace: true
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationLandscapeRight
           - UIInterfaceOrientationLandscapeLeft
-        UIRequiresFullScreen: true
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeRight
+          - UIInterfaceOrientationLandscapeLeft
         UIStatusBarHidden: true
         UIViewControllerBasedStatusBarAppearance: false
         LSApplicationCategoryType: ${DM_APP_CATEGORY}   # game profile app_category
@@ -84,6 +88,7 @@ targets:
       CLANG_ENABLE_OBJC_ARC: YES
       CLANG_ENABLE_OBJC_ARC_EXCEPTIONS: YES  # release buffers when recoverable save I/O throws
       SWIFT_VERSION: "5.0"                         # Launcher.swift (SwiftUI)
+      SWIFT_OBJC_BRIDGING_HEADER: Sources/DmIOS-Bridging-Header.h
       DEBUG_INFORMATION_FORMAT: dwarf
       GCC_WARN_INHIBIT_ALL_WARNINGS: YES
 schemes:

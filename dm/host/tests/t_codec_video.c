@@ -1,5 +1,6 @@
 // The Switch 2's video decoder API as the host serves it (hle_codec_video.c), without a guest: the buffer protocol, results, sync handles, sync point events and the
-// readback, on synthetic red key frames: 16x16 VP9 and VP8 (the ones t_movie_vpx.c decodes) and a 64x64 H.264 baseline frame (ffmpeg's libx264, SEI removed); no game data. The SystemEvent functions are stubs that record each event's state.
+// readback, on synthetic red key frames: 16x16 VP9 and VP8 (the ones t_movie_vpx.c decodes), a 64x64 H.264 baseline frame (ffmpeg's libx264, SEI removed) and a 64x64 AV1 frame
+// (SVT-AV1 through PyAV, preset 12, CRF 30); no game data. The SystemEvent functions are stubs that record each event's state.
 #include "../hle.h"
 #undef HLE_FORCE
 #define HLE_FORCE(mangled, why, ret, cname, ...) static ret cname(__VA_ARGS__)
@@ -19,12 +20,22 @@ void hle_clear_system_event(void *e) { g_ev[ev_slot(e)].set = 0; }
 static int ev_set(void *e) { return g_ev[ev_slot(e)].set; }
 static void destroy_ev(void *e) { g_ev[ev_slot(e)].bound = g_ev[ev_slot(e)].set = 0; }   // nn::os::DestroySystemEvent: closing the handle unbinds the event
 void *guest_sym(const char *n) { return !strcmp(n, "_ZN2nn2os18DestroySystemEventEPNS0_15SystemEventTypeE") ? (void *)destroy_ev : NULL; }
+static vpx_image_t *black_i420(unsigned w, unsigned h) {
+    vpx_image_t *c = vpx_img_alloc(NULL, VPX_IMG_FMT_I420, w, h, 1); if (!c) return NULL;
+    memset(c->planes[0], 16, (size_t)c->stride[0] * h);
+    memset(c->planes[1], 128, (size_t)c->stride[1] * ((h + 1) / 2)); memset(c->planes[2], 128, (size_t)c->stride[2] * ((h + 1) / 2));
+    return c;
+}
 
 static const uint8_t vp8[] = {
     0xf0,0x02,0x00,0x9d,0x01,0x2a,0x10,0x00,0x10,0x00,0x00,0x47,0x08,0x85,0x85,0x88,
     0x85,0x84,0x88,0x02,0x02,0x02,0x75,0xaa,0x03,0xf8,0x03,0xfa,0x02,0x0d,0x4d,0x18,
     0x00,0xfe,0xfd,0x6e,0xf3,0xff,0xe3,0x99,0x37,0x30,0xc4,0xff,0x8e,0x6d,0xff,0xf1,
     0x61,0x3c,0x0e,0x28,0xc8,0xff,0xf1,0x51,0x00,
+};
+static const uint8_t av1[] = {   // one temporal unit: temporal delimiter, sequence header (profile 0, 64x64), frame
+    0x12,0x00,0x0a,0x0b,0x02,0x00,0x00,0x04,0x95,0x7f,0xfc,0x0a,0xf9,0x00,0x40,0x32,0x15,0x10,0x00,0xbc,0x00,0x49,0x22,0x08,0x08,0x21,0x10,0x00,0xad,0x3b,0x67,0x00,
+    0x1e,0xb5,0xdb,0x79,0x52,0x90,
 };
 static const uint8_t h264[] = {   // Annex B: SPS, PPS, one IDR slice
     0x00,0x00,0x00,0x01,0x67,0x42,0xc0,0x0a,0xdc,0x42,0x6c,0x04,0x40,0x00,0x00,0x03,0x00,0x40,0x00,0x00,0x0c,0xa3,0xc4,0x89,
@@ -64,6 +75,8 @@ int main(void) {
     assert(!h_cv_vp9submit(&id, dec, vp9, sizeof vp9, 1000, false) && id == 1);
     assert(h_gs_trywait(&sync));
     assert(!h_cv_vp9props(&w, &h, &cw, &ch, &ts, &eos, dec, 0) && w == 16 && h == 16 && cw == 16 && ch == 16 && ts == 1000 && !eos);
+    uint32_t cs = 7; w = h = 0;   // SDK 19's form: the same properties, and colour space 0
+    assert(!h_cv_vp9props19(&w, &h, &cw, &ch, &cs, &ts, &eos, dec, 0) && w == 16 && h == 16 && ts == 1000 && !eos && cs == 0);
     uint8_t nv12[16 * 16 * 3 / 2], rgba[16 * 16 * 4];
     assert(!h_cv_nv12(pool[0], 0, 0, 0, 16, 16, nv12, 16, 256, nv12 + 256, 16, 128));
     for (int i = 0; i < 256; i++) assert(abs(nv12[i] - 81) <= 3);
@@ -73,14 +86,26 @@ int main(void) {
     assert(!h_cv_rgba(pool[0], 0, 0, 0, 16, 16, rgba, 64, sizeof rgba));
     for (int i = 0; i < 1024; i += 4) assert(rgba[i] >= 250 && rgba[i + 1] <= 5 && rgba[i + 2] <= 5 && rgba[i + 3] == 255);
 
-    // No released buffer: pictures wait (4), then packets are refused (3603) and the event is cleared; a release takes the oldest and signals again
-    for (int i = 0; i < CV_HOLD; i++) assert(!h_cv_vp9submit(&id, dec, vp9, sizeof vp9, 2000 + i, false));
+    // No released buffer: pictures wait; the event goes down at CV_READY, with room left for a client's signal in flight, and packets are refused (3603) at CV_HOLD
+    for (int i = 0; i < CV_READY; i++) assert(!h_cv_vp9submit(&id, dec, vp9, sizeof vp9, 2000 + i, false));
+    assert(d->nheld == CV_READY && !ev_set(ev));
+    for (int i = CV_READY; i < CV_HOLD; i++) assert(!h_cv_vp9submit(&id, dec, vp9, sizeof vp9, 2000 + i, false));
     assert(d->nheld == CV_HOLD && !ev_set(ev));
     assert(h_cv_vp9submit(&id, dec, vp9, sizeof vp9, 9999, false) == CV_BUSY);
+    // A release takes the oldest; the event comes back below CV_READY
+    for (int i = CV_HOLD; i > CV_READY; i--) { h_cv_vp9rel(dec, 1, sync); assert(d->nheld == i - 1 && !ev_set(ev)); assert(!h_cv_vp9acq(&idx, &sync, dec) && idx == 1); }
     h_cv_vp9rel(dec, 1, sync);
-    assert(d->nheld == CV_HOLD - 1 && ev_set(ev));
+    assert(d->nheld == CV_READY - 1 && ev_set(ev));
     assert(!h_cv_vp9acq(&idx, &sync, dec) && idx == 1 && h_gs_trywait(&sync));
-    assert(!h_cv_vp9props(&w, &h, &cw, &ch, &ts, &eos, dec, 1) && ts == 2000);
+    // Start signals it again: a client may drop the signal Initialize gave
+    hle_clear_system_event(ev); assert(!ev_set(ev));
+    assert(!h_cv_vp9start(dec) && ev_set(ev));
+    // A release below CV_READY with no packet taken signals nothing: a client counts each signal as one packet it may send. A packet taken does
+    hle_clear_system_event(ev);
+    h_cv_vp9rel(dec, 1, sync); assert(d->nheld == CV_READY - 2 && !ev_set(ev));
+    assert(!h_cv_vp9acq(&idx, &sync, dec) && idx == 1);
+    assert(!h_cv_vp9submit(&id, dec, vp9, sizeof vp9, 2000 + CV_HOLD, false) && d->nheld == CV_READY - 1 && ev_set(ev));
+    assert(!h_cv_vp9props(&w, &h, &cw, &ch, &ts, &eos, dec, 1) && ts == 2000 + CV_HOLD - CV_READY + 1);
 
     // Sync point event: armed on an unfilled buffer, signalled when the picture lands; one armed on a filled buffer is signalled at once
     assert(!h_spt_create(spt) && g_ev[ev_slot(spt)].bound);
@@ -143,18 +168,8 @@ int main(void) {
         uint8_t da[0x400]; memset(da, 0, sizeof da);
         assert(!h_cv_av1tm(da, NULL, 0, 0x10000, 0xabcd0080, 0xabcd0040, 1, 3, 2, 2) && cv_of(da) && cv_of(da)->codec == CV_AV1 && cv_of(da)->w == 0x80 && cv_of(da)->h == 0x40);
         assert(h_cv_av1ev22(da) == da + CV_EVENT_OFF && ev_set(da + CV_EVENT_OFF));
-        assert(cv_of(da)->av1_none == !mav1_supported());
-        // A delimiter cannot create a decoded picture. This path does not open
-        // VideoToolbox, so it can be checked on an M1/M2 without an AV1 decoder.
-        cv_of(da)->av1_none = 0;
         static const uint8_t delimiter[] = {0x12, 0x00};   // a temporal delimiter OBU alone
         uint64_t n; assert(!h_cv_av1submit(&n, da, delimiter, sizeof delimiter, 0, false) && !cv_of(da)->nheld);
-        // Independently exercise the documented unsupported-device fallback:
-        // one black placeholder per submitted packet, including metadata-only
-        // packets. This is not successful AV1 decoding or hardware validation.
-        cv_of(da)->av1_none = 1;
-        assert(!h_cv_av1submit(&n, da, delimiter, sizeof delimiter, 123, false) && cv_of(da)->nheld == 1);
-        assert(cv_of(da)->held_ts[0] == 123 && cv_of(da)->held[0]->planes[0][0] == 16 && cv_of(da)->held[0]->planes[1][0] == 128);
         assert(!h_cv_av1fin(da) && !cv_of(da));
         // The av1C record from a sequence header: profile 0, one operating point at level 12 (tier 0), 2560x1440, 8-bit 4:2:0 with chroma position 0, written field by field
         uint8_t obu[32] = {0x0a, 0}; size_t bit = 16;
@@ -176,6 +191,17 @@ int main(void) {
         assert(c[0] == 0x81 && c[1] == 12 && c[2] == 0x0c && c[3] == 0);
         size_t seqn = 0; assert(find_seq(obu, (bit + 7) / 8, &seqn) == obu && seqn == (bit + 7) / 8);
         assert(!mav1_av1c(delimiter, sizeof delimiter, c, &aw, &ah) && !find_seq(delimiter, sizeof delimiter, &seqn));
+        // The red frame on each backend this Mac has (VideoToolbox where the chip decodes AV1, and dav1d, which DM_AV1_DAV1D=1 picks), as NV12: Y 81, Cb 90, Cr 240 (BT.601, video range)
+        for (int soft = VTIsHardwareDecodeSupported(kCMVideoCodecType_AV1) ? 0 : 1; soft < 2; soft++) {
+            setenv("DM_AV1_DAV1D", soft ? "1" : "0", 1);
+            mav1 *a = mav1_new(); assert(!strcmp(mav1_backend(a), soft ? "dav1d" : "VideoToolbox"));
+            mav1_picture pic; assert(mav1_decode(a, av1, sizeof av1, &pic) == 1 && pic.w == 64 && pic.h == 64 && pic.matrix == 1 && !pic.full_range);   // no matrix in the stream: BT.601 at 64 lines
+            for (int y = 0; y < 64; y++) for (int x = 0; x < 64; x++) assert(abs(pic.y[(size_t)y * pic.ystride + x] - 81) <= 4);
+            for (int y = 0; y < 32; y++) for (int x = 0; x < 64; x += 2) { assert(abs(pic.uv[(size_t)y * pic.uvstride + x] - 90) <= 6); assert(abs(pic.uv[(size_t)y * pic.uvstride + x + 1] - 240) <= 6); }
+            mav1_reset(a); assert(mav1_decode(a, delimiter, sizeof delimiter, &pic) == 0);   // a new stream: nothing until its sequence header
+            mav1_free(a);
+        }
+        unsetenv("DM_AV1_DAV1D");
     }
     {   // A native image: SDK 22's preference and pool, the handle names the pool's memory, and a picture lands there as RGBA in NVN's linear layout
         cv_pref p = h_cv_pref22(0xffff0020, 0xffff0010, 2, 2); assert(p.w == 32 && p.h == 16);
@@ -188,6 +214,24 @@ int main(void) {
         pool_native_write(pool_of(pt), 1, im); vpx_img_free(im);
         assert(nm[0] == 0 && nm[3] == 255 && nm[ns * 15 + 31 * 4 + 3] == 255);
         h_cv_poolfin(pt); assert(!dm_native_image(ha, &nm, &nz, &nw, &nh, &ns)); free(m);
+    }
+    {   // SDK 19's Initialize by remote memory (two sizes before the picture size) and its preference: a VP9 decoder as the other forms make
+        _Alignas(16) static uint8_t d19[0x400];
+        cv_pref p19 = h_cv_pref19(0xffff0000u | 64, 32, 3, 1);   // the 16-bit sizes come unextended
+        assert(p19.w == 64 && p19.h == 32 && p19.fmt == 3 && p19.magic == CV_MAGIC);
+        assert(!h_cv_vp9rm19(d19, 0x10000, 0x200000, 0xabcd0000u | 16, 16, 1, 1, 3) && cv_of(d19) && cv_of(d19)->w == 16);
+        assert(!h_cv_vp9fin(d19));
+    }
+    {   // Blank native images (GameChat's camera pictures with no camera): zeroed storage with room for 16 bytes a pixel, apart from the decoder pools' handles, gone once freed
+        uint32_t a = dm_native_image_blank(384, 216), b = dm_native_image_blank(384, 216), nw, nh, ns; uint8_t *nm = NULL; uint64_t nz;
+        assert(a && b && a != b && a >> 31 && b >> 31);
+        assert(dm_native_image(a, &nm, &nz, &nw, &nh, &ns) && nw == 384 && nh == 216 && ns >= 384 * 16 && ns % 64 == 0 && nz >= (uint64_t)ns * 216);
+        for (uint64_t k = 0; k < nz; k++) assert(!nm[k]);
+        dm_native_image_blank_free(a); assert(!dm_native_image(a, &nm, &nz, &nw, &nh, &ns)); assert(dm_native_image(b, &nm, &nz, &nw, &nh, &ns));
+        dm_native_image_blank_free(b); dm_native_image_blank_free(b); dm_native_image_blank_free(0x100);   // twice, and a decoder pool's handle: nothing happens
+        uint32_t k[BLANK_MAX + 1]; for (int i = 0; i < BLANK_MAX; i++) assert((k[i] = dm_native_image_blank(32, 32)));
+        assert(!(k[BLANK_MAX] = dm_native_image_blank(32, 32)));   // full
+        for (int i = 0; i < BLANK_MAX; i++) dm_native_image_blank_free(k[i]);
     }
     printf("t_codec_video: all passed\n");
     return 0;

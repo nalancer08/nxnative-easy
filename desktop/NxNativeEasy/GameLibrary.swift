@@ -6,6 +6,9 @@ enum GameInputShape {
         return FileManager.default.fileExists(atPath:folder.appendingPathComponent("base/exefs/main.npdm").path)
             && FileManager.default.fileExists(atPath:folder.appendingPathComponent("base/romfs").path,isDirectory:&directory) && directory.boolValue
     }
+    static func isKeyless(_ folder:URL)->Bool {
+        isDump(folder) || ((try? FileManager.default.contentsOfDirectory(at:folder,includingPropertiesForKeys:nil)) ?? []).contains{$0.pathExtension.lowercased()=="nup"}
+    }
     static func hasMacContent(_ bundle:URL)->Bool {
         let resources=bundle.appendingPathComponent("Contents/Resources")
         let folder=resources.appendingPathComponent("romfs"),image=resources.appendingPathComponent("romfs.img")
@@ -131,7 +134,7 @@ struct OwnedGameOutput:Identifiable {
         if let known=items.first(where:{$0.folder==path}) {refresh();return known.id}
         let url=URL(fileURLWithPath:path)
         let files=try FileManager.default.contentsOfDirectory(at:url,includingPropertiesForKeys:nil)
-        guard GameInputShape.isDump(url) || files.contains(where:{["nsp","xci","nsz","xcz"].contains($0.pathExtension.lowercased()) || ["nxnative-mac.json","nxnative-ios.json"].contains($0.lastPathComponent)}) else {throw CocoaError(.fileReadUnknown)}
+        guard GameInputShape.isDump(url) || files.contains(where:{["nsp","xci","nsz","xcz","nup"].contains($0.pathExtension.lowercased()) || ["nxnative-mac.json","nxnative-ios.json"].contains($0.lastPathComponent)}) else {throw CocoaError(.fileReadUnknown)}
         let item=OwnedGame(id:UUID().uuidString,folder:path,added:Date())
         try persist(items+[item]);return item.id
     }

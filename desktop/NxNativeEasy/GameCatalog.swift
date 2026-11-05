@@ -36,16 +36,18 @@ struct GameCatalog {
             let profile=child.appendingPathComponent("game.tsv")
             guard FileManager.default.fileExists(atPath:profile.path) else {continue}
             let source=try String(contentsOf:profile,encoding:.utf8)
-            var name: String?;var versions: [String]=[]
+            var name: String?;var versions: [String]=[];var parent:String?
             for line in source.components(separatedBy:.newlines) {
                 guard !line.trimmingCharacters(in:.whitespaces).hasPrefix("#") else {continue}
                 let fields=line.components(separatedBy:"\t")
                 if fields.count>1 && fields[0]=="name" {name=fields[1].trimmingCharacters(in:.whitespaces)}
+                if fields.count>1 && fields[0]=="program_of" {parent=fields[1].trimmingCharacters(in:.whitespaces)}
                 if fields.count>2 && fields[0]=="build" {
                     let version=fields[2].trimmingCharacters(in:.whitespaces)
                     if !version.isEmpty && !versions.contains(version) {versions.append(version)}
                 }
             }
+            if parent != nil {continue} // The parent game packs and describes its programs.
             var image: URL?
             if let path=artwork[id],path.hasPrefix("docs/images/"),!path.contains("..") {
                 let candidate=repo.appendingPathComponent(path).resolvingSymlinksInPath()

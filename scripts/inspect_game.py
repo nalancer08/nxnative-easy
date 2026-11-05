@@ -41,10 +41,13 @@ def summarize(value) -> dict[str, Any]:
 
 
 def inspect(folder, keys, cache, setup_tools=False):
-    from inspect_dump import inspect_dump
+    from inspect_nup import inspect_keyless
+    from pack_nup import Error as NupError
     folder = folder.resolve()
     try:
-        dump = inspect_dump(folder)
+        dump = inspect_keyless(folder)
+    except NupError:
+        return dict(schema=1, status='nup_invalid', input_kind='nup')
     except (OSError, ValueError):
         return dict(schema=1, status='dump_invalid', input_kind='dump')
     if dump is not None:

@@ -7,6 +7,7 @@
 #   svc #n, mrs cntpct_el0 → host gate (gate address taken from thread slot KGATE; once in C, gates.tsv is looked up by return point)
 #   sub sp, sp, xN      → xN rounded up to 16 first (Apple's kernel faults on a misaligned sp, Horizon does not; site_sp_align)
 #   ldxr rt,[rn]; cbnz rt,<it>; stxr ws,rk,[rn]; cbnz ws,<it> with no dmb after it (a test-and-set lock acquire with no acquire ordering) → ldaxr (acquire_lock_sites; the games ran on the Switch's Cortex-A57 without the ordering, Apple cores need it)
+#   the completer of Trinity's per-frame rendezvous: dmb ish between its flag store and its load of the state word (trinity_completer_sites; exactly one such function in a module, or no change)
 #   spin wait loops     → a copy whose back-edges pass a spin gate (the host yields there; a busy poll costs nothing on the Switch, see "Spin waits")
 #   Registered cuts (CUTS of the patch files, restricted by NSO build ID, see "Registered patches"): before rewriting, the original bytes are asserted one by one and any mismatch aborts; results are listed in <name>.cuts.tsv
 #   Function-matched cuts (MATCH_CUTS of the selected game's patches.py): unknown builds only, unique complete-function and direct-callee fingerprints, then original-byte assertions
@@ -46,11 +47,17 @@ BIG_TEXT = FAR and MOD.text_end + FRONT > 0x8000000 - 0x10000
 # A text segment longer than the reach itself (EA SPORTS FC 27: 185.6 MB of text in main) leaves no gap before the base from which a B reaches its end, so the patch area is split in
 # two (TWO): the front area before the base takes the sites below SPLIT, the back area right after the image (after bss, the key page and the frame step page, at BACK_OFF) takes
 # the others. A site's stubs, and their branches back to it, stay in the area it belongs to; SPLIT keeps 1 MB of margin for a stub's exits past its site (a window's targets, a
-# switch's cases). The front area starts at 16 MB; when its sites need more, the rewriter runs again with exactly that size (DM_PATCH_FRONT), and B() checks every branch
+# switch's cases). The front area starts at 16 MB; when its sites need more, the rewriter runs again with exactly that size (DM_PATCH_FRONT), and B() checks every branch.
+# SPLIT is also no lower than the lowest site the back area reaches with the same margin (BACK_MIN): when ro, data and bss after the text are large (Hello Kitty Party Land: 151.8 MB
+# of text, 98 MB more before BACK_OFF), a 16 MB front area would hand the back area sites more than 128 MB below it, so the front area's first pass takes the gap up to BACK_MIN instead
 TWO = BIG_TEXT and MOD.text_end > 0x8000000 - 0x10000
-if TWO: FRONT = int(os.environ.get('DM_PATCH_FRONT', '0'), 0) or 0x1000000
+BACK_MIN = 0   # TWO: BACK_OFF (set below) less the reach, plus the margin
+if TWO:
+    BACK_MIN = ((((len(MOD.image) + bss + 0x3FFF) & ~0x3FFF) + 0x8000 + 0xFFFF) & ~0xFFFF) - 0x8000000 + 0x100000
+    assert BACK_MIN < 0x8000000 - 0x200000, f'no split reaches: the back patch area reaches no site below {BACK_MIN:#x}, too close to the front area\'s reach'
+    FRONT = int(os.environ.get('DM_PATCH_FRONT', '0'), 0) or min(0x1000000, (0x8000000 - 0x100000 - BACK_MIN) & ~0xFFFF)
 elif BIG_TEXT: FRONT = int(os.environ.get('DM_PATCH_FRONT', '0'), 0) or (0x8000000 - 0x10000 - MOD.text_end) & ~0xFFFF
-SPLIT = 0x8000000 - FRONT - 0x100000 if TWO else None
+SPLIT = max(0x8000000 - FRONT - 0x100000, BACK_MIN) if TWO else None
 IMG = MOD.image
 ORIG_TEXT = bytes(IMG[:MOD.text_end])   # the text as the file has it, before any cut or site: <name>.changed.tsv compares against it
 if not FAR: IMG.extend(bytes(bss))
@@ -61,6 +68,7 @@ if FAR:
     KEY_PAGE_OFF = (len(IMG) + bss + 0x3FFF) & ~0x3FFF
     IMAGE_SIZE, PATCH_OFF = KEY_PAGE_OFF + 0x4000, -FRONT
     BACK_OFF = (KEY_PAGE_OFF + 0x8000 + 0xFFFF) & ~0xFFFF if TWO else 0   # after the key page and the frame step page FRAME_STEP may take
+    assert not TWO or BACK_OFF - 0x8000000 + 0x100000 == BACK_MIN, 'BACK_MIN and BACK_OFF disagree'
 else:
     KEY_PAGE_OFF = (len(IMG) + 0x3FFF) & ~0x3FFF
     IMG.extend(bytes(0x4000))
@@ -154,6 +162,13 @@ if UE_CVARS: print(f'{NAME}: Unreal console variables (ue_cvar.py): ' + ', '.joi
 for w in ue_cvar_why:
     if w.startswith('[RED] '): print(f'[RED] {NAME}: Unreal console variable {w[6:]}: the host cannot write it')
 
+# ---- A target frame rate the game steps by (main: dm/tools/fps_target.py finds it by the code that reads and sets it, without a build ID) ----
+# The fixups table names the global pointer and the field (FPS_TARGET_PTR, FPS_TARGET_FIELD); the host writes the profile's fps_target there (hle_fpslock.c)
+import fps_target
+FPS_TARGET_PTR, FPS_TARGET_FIELD, fps_target_why = fps_target.find(bytes(IMG), TEXT_END, RO_OFF, DATA_OFF) if NAME == 'main' else (None, None, '')
+if FPS_TARGET_PTR is not None: print(f'{NAME}: {fps_target_why} (fps_target.py)')
+elif fps_target_why.startswith('[RED] '): print(f'[RED] {NAME}: {fps_target_why[6:]}: the host cannot write it')
+
 # ---- Unreal's FMallocBinned3 (any module: dm/tools/ue_malloc.py finds it by the engine's own name string, getter and vtable, without a build ID) ----
 # Its constructor reserves 37 GB of address space for its pools. Its one call is cut, and observation gate OBS_UE_MALLOC goes on it (below), where x0 holds the object: the host gives
 # the object its own allocator's vtable there (dm/host/hle_uemalloc.c), whose place and slot layout the fixups table names (UE_MALLOC_VT, UE_MALLOC_SLOT)
@@ -165,6 +180,18 @@ if UE_CALL is not None:
     print(f'{NAME}: {ue_why}')
 elif ue_why.startswith('[RED] '): print(f'[RED] {NAME}: {ue_why[6:]}: Unreal\'s own allocator runs')
 
+# ---- Snowdrop's three-pool page allocator (main: dm/tools/snowdrop_pools.py finds its constructor by its structure, without a build ID) ----
+# Its 12 GB of address ranges become the sizes the profile decides on (snowdrop_pools, measured against the game's regions)
+import snowdrop_pools
+sd_sites, sd_why = snowdrop_pools.find(bytes(IMG), TEXT_END) if NAME == 'main' else (None, '')
+if sd_sites is not None:
+    sd_sizes, sd_from = snowdrop_pools.profile_sizes()
+    for off, ob, nb, why in snowdrop_pools.cuts(IMG, sd_sites, sd_sizes):
+        cuts.append((off, ob, nb, why))
+        IMG[off:off + 4] = bytes.fromhex(nb)
+    print(f'{NAME}: {sd_why}: large {sd_sizes[0]} MB, 512 KB pages {sd_sizes[1]} MB, 64 KB pages {sd_sizes[2]} MB ({sd_from})')
+elif sd_why.startswith('[RED] '): print(f'[RED] {NAME}: {sd_why[6:]}: its 12 GB reservation stays and fails on an iPhone')
+
 # ---- Unreal's engine address region (main: dm/tools/ue_region.py finds the store of its size right before nninitStartup reserves it, without a build ID) ----
 # Observation gate OBS_UE_REGION goes on that store (below), the size register in the gate number's upper bits: the host gives the region what the alias region has room for there
 # (dm/host/hle_svc.c "Unreal's engine region"), where the engine would ask for 62 GB (16 GB in Unreal Engine 4.18)
@@ -172,6 +199,16 @@ import ue_region
 UE_REGION, UE_REGION_REG, UE_REGION_X1, ue_region_why = ue_region.find(bytes(IMG), TEXT_END, RO_OFF, DATA_OFF) if NAME == 'main' else (None, None, None, '')
 if UE_REGION is not None: print(f'{NAME}: {ue_region_why}')
 elif ue_region_why.startswith('[RED] '): print(f'[RED] {NAME}: {ue_region_why[6:]}: the engine asks for its whole default region')
+
+# ---- Unreal's NVN dynamic buffers (main: dm/tools/ue_ring.py finds the load of their copy count, without a build ID) ----
+# Each write lock moves to the next copy with no fence, and a ring of 3 can come round to a copy that queued draws still read: one more copy widens the margin (a workaround: GitHub issue #1040)
+import ue_ring
+UE_RING, UE_RING_OLD, UE_RING_NEW, ue_ring_why = ue_ring.find(bytes(IMG), TEXT_END, RO_OFF, DATA_OFF) if NAME == 'main' else (None, None, None, '')
+if UE_RING is not None:
+    cuts.append((UE_RING, struct.pack('<I', UE_RING_OLD).hex(), struct.pack('<I', UE_RING_NEW).hex(), f'{ue_ring_why} (ue_ring.py)'))
+    struct.pack_into('<I', IMG, UE_RING, UE_RING_NEW)
+    print(f'{NAME}: {ue_ring_why}')
+elif ue_ring_why.startswith('[RED] '): print(f'[RED] {NAME}: {ue_ring_why[6:]}: its dynamic buffers keep 3 copies')
 
 md = Cs(CS_ARCH_ARM64, CS_MODE_ARM); md.detail = True
 patch = bytearray(); fix = []; gates = []; stats = {}
@@ -574,6 +611,34 @@ def acquire_lock_sites(img, ranges):
 for o in acquire_lock_sites(IMG, CODE_RANGES):
     struct.pack_into('<I', IMG, o, struct.unpack_from('<I', IMG, o)[0] | 0x8000)   # ldxr → ldaxr
     stat('acquire_lock')
+def trinity_completer_sites(img, ranges):
+    """Offsets of the completer of Trinity's per-frame rendezvous (Game Freak; Pokémon Scarlet 1.0.0 main+0x28f872c, 4.0.0 main+0x2d0010c):
+      stp x29,x30,[sp,#-0x20]!; stp x20,x19,[sp,#0x10]; mov x29,sp; ldr x8,[x0,#imm]; mov w9,#1; strb w9,[x8,#A]; ldrb w9,[x8,#A+1]; cbz w9,..;
+      ldr x20,[x8,#B]; add x9,x20,#C; ldar w8,[x9]; cmp w8,#2; b.ne ..
+    It sets the release flag with the plain strb and returns without a wake if the state word (ldar) is 2. A load-acquire does not order an earlier plain store, so the flag can stay
+    invisible while main resets the state to 0, reads the flag as 0 and parks for good (GitHub issue #1250, docs/reference/threads.md). The frame holds only the saved registers, so nothing
+    in the function reads x29"""
+    out, needle = [], struct.pack('<II', 0x88DFFD28, 0x7100091F)   # ldar w8,[x9]; cmp w8,#2
+    for s, e in ranges:
+        o = img.find(needle, s, e)
+        while o >= 0:
+            f = o - 40
+            if o % 4 == 0 and f >= s and o + 12 <= e:
+                w = struct.unpack_from('<13I', img, f)
+                if w[:3] == (0xA9BE7BFD, 0xA9014FF4, 0x910003FD) and w[3] & 0xFFC003FF == 0xF9400008 and w[4] == 0x52800029 and w[5] & 0xFFC003FF == 0x39000109 and \
+                        w[6] & 0xFFC003FF == 0x39400109 and w[6] >> 10 & 0xFFF == (w[5] >> 10 & 0xFFF) + 1 and w[7] & 0xFF00001F == 0x34000009 and w[8] & 0xFFC003FF == 0xF9400114 and \
+                        w[9] & 0xFFC003FF == 0x91000289 and w[12] & 0xFF00001F == 0x54000001:
+                    out.append(f)
+            o = img.find(needle, o + 4, e)
+    return out
+def trinity_completer_barrier(img, f):
+    """The frame pointer's mov gives up its word: the ldr, the mov and the strb move up one and dmb ish follows the strb. Backtraces skip this frame, and nothing in it reads x29"""
+    struct.pack_into('<4I', img, f + 8, *struct.unpack_from('<3I', img, f + 12), 0xD5033BBF)
+trinity = trinity_completer_sites(IMG, CODE_RANGES)
+if len(trinity) > 1: print(f'[RED] {NAME}: {len(trinity)} functions have the shape of Trinity\'s rendezvous completer, so none gets its barrier: ' + ', '.join(hex(o) for o in trinity))
+elif trinity:
+    trinity_completer_barrier(IMG, trinity[0])
+    stat('trinity_completer')
 md_lite = Cs(CS_ARCH_ARM64, CS_MODE_ARM)   # no details: the x18 scan reads only the operand text
 R18 = re.compile(r'\b[xw]18\b')
 def x18_words(lo, hi):
@@ -1006,13 +1071,25 @@ def tail_call_at_end(insl, j):
         if 'x18' not in [p.reg_name(r) for r in p.regs_access()[1]]: continue
         return p.mnemonic == 'ldr' and bool(re.fullmatch(r'x18, \[(x\d+|sp)(, #(0x[0-9a-f]+|\d+))?\]', p.op_str))
     return False
+def tail_call_padded(insl, j):
+    """An unframed, straight-line pointer thunk ending in br x18 and zero trap padding."""
+    if j + 1 >= len(insl) or any(p.mnemonic != 'udf' or p.op_str != '#0' for p in insl[j + 1:]): return False
+    if any(b.address != a.address + 4 for a, b in zip(insl, insl[1:])): return False
+    for p in insl[:j]:
+        if p.mnemonic not in ('mov', 'ldr', 'ldrh', 'ldp', 'add', 'str', 'stp'): return False
+        if {p.reg_name(r) for r in p.regs_access()[1]} & {'sp', 'wsp', 'fp', 'lr', 'x29', 'w29', 'x30', 'w30'}: return False
+    for p in reversed(insl[:j]):
+        if not {'x18', 'w18'} & {p.reg_name(r) for r in p.regs_access()[1]}: continue
+        return p.mnemonic in ('ldr', 'ldp') and bool(re.fullmatch(r'x18, (x\d+, )?\[(x\d+|sp)(, #(0x[0-9a-f]+|\d+))?\]', p.op_str))
+    return False
 def tail_call(insl, j):
-    """Keep the terminal rule, which proves no frame. A br x18 with code after it is a tail call only when the frame is provably gone: a jump inside a function needs that function's frame.
+    """After terminal or padded unframed tails, a br x18 with other code after it is a tail call only when the frame is provably gone: a jump inside a function needs that function's frame.
     A wrong accept is silent, where a rejection stops at `jump table <addr>`, so anything not proven here is rejected. Two forms (Warm Snow and Ori and the Blind Forest, Unity IL2CPP):
     a 16-byte thunk, stp x29,x30,[sp,#-0x10]!; mov x29,sp, only guards and argument moves, its error blocks after the br; or an ordinary function, sub sp,sp,#N first and add sp,sp,#N right
     before the br, the pair saved to and restored from one slot, whose body may branch and call (lazy init, loops) and whose other paths may follow the br. Either way nothing writes sp, x29
     or x30 on the way, no stack store touches the pair, and from the restore to the br every path runs straight"""
     if j + 1 == len(insl): return tail_call_at_end(insl, j)
+    if tail_call_padded(insl, j): return True
     if j < 4 or any(b.address != a.address + 4 for a, b in zip(insl, insl[1:])): return False
     writes = lambda p: {p.reg_name(r) for r in p.regs_access()[1]}
     cond = lambda p: p.mnemonic in ('cbz', 'cbnz', 'tbz', 'tbnz') or p.mnemonic.startswith('b.')
@@ -1695,7 +1772,7 @@ else:
     open(P('patched.bin'), 'wb').write(IMG + bytearray(PATCH_OFF - len(IMG)) + patch)
 import hashlib
 with open(os.path.join(outdir, 'build_src.sha256'), 'w') as f:   # the same for every module: the rewriter and every patch file, by path from dm/tools
-    for src_ in (os.path.abspath(__file__), nso.__file__, nso_code.__file__, nso_asm.__file__, ue_cvar.__file__, ue_malloc.__file__, ue_region.__file__, os.path.join(os.path.dirname(ue_malloc.__file__), 'loader_census.py'), *PATCH_FILES): f.write(hashlib.sha256(open(src_, 'rb').read()).hexdigest() + f'  {os.path.relpath(os.path.abspath(src_), os.path.dirname(os.path.abspath(__file__)))}\n')
+    for src_ in (os.path.abspath(__file__), nso.__file__, nso_code.__file__, nso_asm.__file__, ue_cvar.__file__, ue_malloc.__file__, fps_target.__file__, ue_region.__file__, ue_ring.__file__, snowdrop_pools.__file__, os.path.join(os.path.dirname(ue_malloc.__file__), 'loader_census.py'), *PATCH_FILES): f.write(hashlib.sha256(open(src_, 'rb').read()).hexdigest() + f'  {os.path.relpath(os.path.abspath(src_), os.path.dirname(os.path.abspath(__file__)))}\n')
 with open(P('fixups.tsv'), 'w') as f:
     f.write(f'# PATCH_OFF\t{PATCH_OFF:#x}\n# KEY_PAGE_OFF\t{KEY_PAGE_OFF:#x}\n# KEY_PAGE_SIZE\t0x4000\n# TEXT_END\t{TEXT_END:#x}\n# RO_OFF\t{RO_OFF:#x}\n# DATA_OFF\t{DATA_OFF:#x}\n')
     if FAR: f.write(f'# IMAGE_SIZE\t{IMAGE_SIZE:#x}\n# FILE_IMAGE_LEN\t{FILE_IMAGE_LEN:#x}\n')   # patch area before the base (negative PATCH_OFF): whole image size, length of the image part of the file
@@ -1703,6 +1780,7 @@ with open(P('fixups.tsv'), 'w') as f:
     for k in KEY_INDEX: f.write(f'# KEY_{k}_IDX\t{KEY_INDEX[k]}\n')
     if FS_STATE_OFF: f.write(f'# FPS_STATE_OFF\t{FS_STATE_OFF:#x}\n')   # frame step state page (FRAME_STEP): the loader writes the target fps there
     if UE_CALL is not None: f.write(f'# UE_MALLOC_VT\t{UE_VT:#x}\n# UE_MALLOC_SLOT\t{UE_SLOT:#x}\n')   # Unreal's FMallocBinned3 (ue_malloc.py): its vtable and the slot of its name getter, which names the slot layout
+    if FPS_TARGET_PTR is not None: f.write(f'# FPS_TARGET_PTR\t{FPS_TARGET_PTR:#x}\n# FPS_TARGET_FIELD\t{FPS_TARGET_FIELD:#x}\n')   # a target frame rate the game steps by (fps_target.py)
     for n, o in UE_CVARS.items(): f.write(f'# UE_CVAR:{n}\t{o:#x}\n')   # Unreal console variables (ue_cvar.py): the TAutoConsoleVariable registered under each name
     if RENDER_SCALE: f.write('# RENDER_SCALE\t1\n')   # a render-scale stub reads state +0x10 (the loader ignores the key; dm/games/settings.py offers the setting by it)
     if NAME == 'main':

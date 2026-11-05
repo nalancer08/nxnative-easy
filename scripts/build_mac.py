@@ -9,7 +9,7 @@ from pathlib import Path
 import platform
 import sys
 from build_ios import REPO, build_lock, load_builder, select_keys, preparation_stamp
-from inspect_dump import inspect_dump, validate_dump
+from inspect_nup import inspect_keyless, validate_keyless
 
 
 def main(argv=None):
@@ -23,12 +23,12 @@ def main(argv=None):
     if not game.is_dir() or game==REPO or REPO in game.parents:
         raise ValueError('Keep game folders outside the source repository.')
     packages=[p for p in game.iterdir() if p.is_file() and p.suffix.lower() in {'.nsp','.xci','.nsz','.xcz'}]
-    dump=inspect_dump(game)
+    dump=inspect_keyless(game)
     if dump is not None and dump.get('status') != 'ready':
-        raise ValueError('Extracted game has no supported profile or is ambiguous; no files were modified.')
-    if not packages and dump is None: raise ValueError('No game packages or extracted base/exefs and base/romfs folders.')
+        raise ValueError('Decrypted game input has no supported profile or is ambiguous; no files were modified.')
+    if not packages and dump is None: raise ValueError('No game packages, NUP or extracted base/exefs and base/romfs folders.')
     if dump is not None and args.package_metadata:
-        validate_dump(game,json.loads(args.package_metadata.read_text()))
+        validate_keyless(game,json.loads(args.package_metadata.read_text()))
     state=game/'nxnative-mac.json'
     previous=json.loads(state.read_text()) if state.exists() else {}
     if not isinstance(previous,dict) or previous.get('schema',1)!=1:raise ValueError('Unsupported nxnative-mac.json; previous record was preserved.')
@@ -57,7 +57,7 @@ def main(argv=None):
             subprocess.run([sys.executable,'-m','pip','install','nsz'],check=True)
         builder=load_builder(args.package_metadata if dump is None else None)
         if dump is not None:
-            validate_dump(game,dump)
+            validate_keyless(game,dump)
         code=builder.cli(command+(['-k',str(keys)] if keys is not None else []))
         if code: return code
         romfs=output/'Contents/Resources/romfs'

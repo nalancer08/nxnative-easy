@@ -17,6 +17,7 @@ import sys
 import tempfile
 from types import SimpleNamespace
 import unittest
+from typing import Any
 from unittest.mock import patch
 
 TOOLS = Path(__file__).resolve().parents[1]
@@ -69,7 +70,7 @@ def imported(name, plt=0x1800, slot=0x2500):
 class Matching(unittest.TestCase):
     def setUp(self):
         self.original = image({0x100: caller(0x100, 0x500), 0x500: [0xd2800020, RET]})
-        self.rule = Image(self.original, 0x2000).recipe(0x108, 'e00317aa', 'e0124091', 'heap')
+        self.rule: dict[str, Any] = Image(self.original, 0x2000).recipe(0x108, 'e00317aa', 'e0124091', 'heap')
 
     def test_relocated_function_callee_and_data_addresses(self):
         new = image({0x800: caller(0x800, 0x1200, 0x2980), 0x1200: [0xd2800020, RET]})
@@ -135,9 +136,27 @@ class Matching(unittest.TestCase):
         with self.assertRaisesRegex(MatchError, 'original bytes differ'): Image(self.original, 0x2000).match(rule)
 
     def test_relocations_in_replacement_are_rejected(self):
-        for w in (B(0, 4), ADRP(0, 0, 0x1000), 0x58000020):
+        for w in (B(0, 0x1000), ADRP(0, 0, 0x1000), 0x58000020):
             rule = copy.deepcopy(self.rule); rule['cuts'][0] = (8, 'e00317aa', struct.pack('<I', w).hex(), 'heap')
             with self.assertRaisesRegex(ValueError, 'PC-relative'): validate(rule)
+
+    def test_replacement_branches_must_stay_inside_the_function(self):
+        def cut(w): return (8, 'e00317aa', struct.pack('<I', w).hex(), 'heap')
+        for target in (-8, 16):  # the function's first instruction and its last, from the cut at +8
+            rule = copy.deepcopy(self.rule); rule['cuts'][0] = cut(B(0, target)); validate(rule)
+        for target in (-12, 20):  # before the function and just past it
+            rule = copy.deepcopy(self.rule); rule['cuts'][0] = cut(B(0, target))
+            with self.assertRaisesRegex(ValueError, 'PC-relative'): validate(rule)
+        # The second word of a replacement counts from its own place
+        rule = copy.deepcopy(self.rule); rule['cuts'][0] = (8, 'e00317aa' + '00000014', struct.pack('<II', NOP, B(0, 16)).hex(), 'heap')
+        with self.assertRaisesRegex(ValueError, 'PC-relative'): validate(rule)
+
+    def test_trap_word_is_read_and_fingerprinted(self):
+        words = caller(0x100, 0x500)
+        def fingerprint(callee): return Image(image({0x100: words, 0x500: callee}), 0x2000).fingerprint(0x100)
+        trapped = fingerprint([0xd2800020, RET, 0xe7ffdefe])
+        self.assertNotEqual(trapped, fingerprint([0xd2800020, RET, 0xd4200000]))   # the word itself counts, not the brk it is read as
+        with self.assertRaisesRegex(MatchError, 'undecodable'): fingerprint([0xd2800020, RET, 0xffffffff])  # any other undecodable word still refuses
 
     def test_no_boundaries_and_ambiguous_match_are_reported(self):
         for img in (bytearray(0x40), image({0x100: [RET]})):
@@ -293,7 +312,7 @@ class Patches(unittest.TestCase):
     """A patch of several functions: one constant whose uses lie in different functions applies whole or not at all"""
     def setUp(self):
         self.original = image({0x100: caller(0x100, 0x500), 0x500: [0xd2800020, RET], 0x800: [MOV, NOP, RET]})
-        self.rule = Image(self.original, 0x2000).patch_recipe([(0x108, 'e00317aa', 'e0124091', 'size'), (0x800, 'e00317aa', 'e0124091', 'bound')], 'region')
+        self.rule: dict[str, Any] = Image(self.original, 0x2000).patch_recipe([(0x108, 'e00317aa', 'e0124091', 'size'), (0x800, 'e00317aa', 'e0124091', 'bound')], 'region')
 
     def test_recipe_spans_functions(self):
         self.assertEqual(set(self.rule), {'name', 'functions'})

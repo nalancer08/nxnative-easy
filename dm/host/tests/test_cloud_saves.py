@@ -373,6 +373,23 @@ class CloudSaves(unittest.TestCase):
         (dlc / 'content.bin').write_bytes(b'add-on')
         self.assertNotEqual(first['identity'], save_compat.manifest('010015100B514000', '1.0', patched, root, dlc)['identity'])
 
+    def test_multi_program_identity_is_shared_across_platforms_and_covers_child_content(self):
+        base=self.root/'application';base.mkdir();(base/'file').write_bytes(b'app')
+        child=self.root/'program';child.mkdir();(child/'file').write_bytes(b'child')
+        code=self.root/'modules';code.mkdir();(code/'main.fixups.tsv').write_text('# BUILD_ID\t'+'a'*32+'\n')
+        image=self.root/'program.img';romfs_image.pack(child,image)
+        title='010049900F546000'
+        mac=save_compat.manifest(title,'1.1.4',code,base,programs=[(1,code,child)])
+        table=self.root/'programs.tsv'
+        table.write_text(f'0\t{title}\t{code}\t{base}\tshaders\tnvn\n1\t010049900F546001\t{code}\t{image}\tshaders\tvulkan\n')
+        ios=save_compat.manifest(title,'1.1.4',code,base,programs=save_compat.program_inputs(table,title))
+        self.assertEqual(mac,ios)
+        self.assertEqual(mac['title'],title)
+        self.assertNotEqual(mac['identity'],save_compat.manifest(title,'1.1.4',code,base)['identity'])
+        (child/'file').write_bytes(b'changed child')
+        self.assertNotEqual(mac['identity'],save_compat.manifest(title,'1.1.4',code,base,programs=[(1,code,child)])['identity'])
+        with self.assertRaises(ValueError):save_compat.manifest(title,'1.1.4',code,base,programs=[(1,code,child),(1,code,child)])
+
     def test_directory_and_image_have_same_content_identity(self):
         root = self.root / 'romfs'
         root.mkdir()

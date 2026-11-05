@@ -40,7 +40,7 @@ def content_identity(root):
     return digest.hexdigest()
 
 
-def manifest(title, version, patched, romfs_root, aoc=None):
+def manifest(title, version, patched, romfs_root, aoc=None, programs=()):
     modules = {}
     for p in sorted(Path(patched).glob('*.fixups.tsv')):
         match = re.search(r'^# BUILD_ID\s+([0-9a-fA-F]{32,64})\s*$', p.read_text(), re.M)
@@ -52,8 +52,29 @@ def manifest(title, version, patched, romfs_root, aoc=None):
     content = {'format': 1, 'title': title.upper(), 'version': version,
                'modules': modules, 'romfs': content_identity(romfs_root),
                'dlc': content_identity(aoc) if aoc and Path(aoc).is_dir() and any(p.name != '.DS_Store' for p in Path(aoc).iterdir()) else None}
+    if programs:
+        children=[];seen=set()
+        for index, code, files in sorted(programs, key=lambda row:int(row[0])):
+            index=int(index)
+            if index in seen or not 1 <= index <= 15 or int(title,16) & 15:
+                raise ValueError('Invalid program index for save continuity')
+            seen.add(index)
+            children.append({'index':index,'content':manifest(f'{int(title,16)+index:016X}',version,code,files)})
+        content['programs']=children
     content['identity'] = hashlib.sha256(json.dumps(content, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
     return content
+
+
+def program_inputs(path, title):
+    programs=[]
+    for row in Path(path).read_text().splitlines():
+        if not row.strip() or row.startswith('#'):continue
+        fields=row.split('\t')
+        if len(fields)!=6:raise ValueError('Invalid multi-program input table')
+        index,profile,patched,files,_,_=fields
+        if int(profile,16)!=int(title,16)+int(index):raise ValueError('Mixed application programs')
+        if int(index):programs.append((int(index),patched,files))
+    return programs
 
 
 if __name__ == '__main__':
@@ -61,5 +82,7 @@ if __name__ == '__main__':
     for name in ('title', 'version', 'patched', 'romfs', 'output'):
         p.add_argument('--' + name, required=True)
     p.add_argument('--aoc')
+    p.add_argument('--programs', help='build_ipa.sh multi-program input table')
     a = p.parse_args()
-    Path(a.output).write_text(json.dumps(manifest(a.title, a.version, a.patched, a.romfs, a.aoc), sort_keys=True) + '\n')
+    programs=program_inputs(a.programs,a.title) if a.programs else ()
+    Path(a.output).write_text(json.dumps(manifest(a.title, a.version, a.patched, a.romfs, a.aoc, programs), sort_keys=True) + '\n')

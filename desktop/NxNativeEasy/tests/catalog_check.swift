@@ -27,11 +27,17 @@ import Foundation
         try profile("0100000000000003","name\tAnother game\nbuild\tv1\t2.0\n")
         entries=try GameCatalog.load(repo:base)
         assert(entries.count==3 && entries.first?.name=="Another game")
+        try profile("0100000000000004","name\tNested program\nprogram_of\t0100000000000003\nbuild\tv1\t2.0\n")
+        let withProgram=try GameCatalog.load(repo:base)
+        assert(withProgram.count==3,"A nested program is packed in its parent, not a separate game")
         let repo=URL(fileURLWithPath:CommandLine.arguments[1])
         let actual=try GameCatalog.load(repo:repo)
         let children=try FileManager.default.contentsOfDirectory(at:repo.appendingPathComponent("dm/games"),includingPropertiesForKeys:nil)
         let expected=children.filter {$0.lastPathComponent.range(of:"^[0-9A-Fa-f]{16}$",options:.regularExpression) != nil && FileManager.default.fileExists(atPath:$0.appendingPathComponent("game.tsv").path)}
-        assert(!actual.isEmpty && actual.count==expected.count)
+        let applications=try expected.filter {child in
+            !(try String(contentsOf:child.appendingPathComponent("game.tsv"),encoding:.utf8)).components(separatedBy:.newlines).contains{$0.hasPrefix("program_of\t")}
+        }
+        assert(!actual.isEmpty && actual.count==applications.count)
         assert(Set(actual.map {$0.id}).count==actual.count)
         assert(actual.allSatisfy {$0.artworkURL != nil},"Every current profile must have its existing repo screenshot")
         assert(actual.contains {$0.name=="Metroid Dread" && $0.versions.contains("2.1.0")})

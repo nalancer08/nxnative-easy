@@ -1,5 +1,7 @@
 # Mario Kart World review — 2026-11-03
 
+> Historical review: superseded by the [2026-11-05 integration](2026-11-05.md), which imports the now-merged Mario Kart World profile.
+
 This is a topic review, not an upstream merge or a gameplay claim. The fork
 remains integrated through `4a2a81a64f029d0a75ade9523c8ffc6c89465375`. Fetched upstream
 main was frozen at `bd688163afea8a7cf6d5e5f889e177ad1d589711`; it has no

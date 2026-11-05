@@ -2,7 +2,7 @@
   "schema": 1,
   "repository": "seedds/nxnative",
   "baseline": "ecbeae164c0b419d1ba1031248fe1402050a3eb0",
-  "reviewed_head": "4a2a81a64f029d0a75ade9523c8ffc6c89465375",
+  "reviewed_head": "865cc35fad7034d17c2190f8ce349f61f5bcaba1",
   "integrated": [
     {
       "upstream_sha": "4639c5114cbb8a8f250645941fa3a25c1ba08cc6",
@@ -21,47 +21,168 @@
       "title": "Make repeated IPA and Mac app builds incremental (#279)"
     }
   ],
-  "note": "Upstream history integrated through integrated_head, with explicitly deferred features listed separately. Preserve the Easy frontend, save/data policies and catalog gates; future comparisons start at integrated_head.",
-  "integrated_head": "4a2a81a64f029d0a75ade9523c8ffc6c89465375",
+  "note": "Original main integrated through 2026-11-05 with Easy runtime, identity, save-conflict and explicit cleanup policies preserved.",
+  "integrated_head": "865cc35fad7034d17c2190f8ce349f61f5bcaba1",
   "latest_full_integration": {
-    "from_fork": "f8f75ce9b2d7d84ceac7c6de723d25a71796c7c5",
-    "previous_integrated_head": "cd859c38a8f8890ddbb57a23d6f45e23ba9e6651",
-    "upstream_head": "4a2a81a64f029d0a75ade9523c8ffc6c89465375",
-    "commit_count": 33,
+    "from_fork": "c20bf0e05bdd7cbb462186793a3a6538e540b825",
+    "previous_integrated_head": "4a2a81a64f029d0a75ade9523c8ffc6c89465375",
+    "upstream_head": "865cc35fad7034d17c2190f8ce349f61f5bcaba1",
+    "commit_count": 193,
     "added_games": [
       {
-        "id": "010063301BD50000",
-        "name": "SUPER ROBOT WARS Y",
-        "versions": [
-          "1.4.1"
-        ]
-      },
-      {
-        "id": "0100BA4026E94000",
-        "name": "Castlevania: Belmont's Curse",
-        "versions": [
-          "1.1.0"
-        ]
-      },
-      {
-        "id": "0100BC0018138000",
-        "name": "Super Mario RPG",
+        "id": "01002DA013484000",
+        "name": "The Legend of Zelda: Skyward Sword HD",
         "versions": [
           "1.0.1"
         ]
       },
       {
-        "id": "0100CC80140F8000",
-        "name": "TRIANGLE STRATEGY",
+        "id": "010042000A986000",
+        "name": "DRAGON QUEST BUILDERS 2",
+        "versions": [
+          "1.7.3d"
+        ]
+      },
+      {
+        "id": "010049900F546000",
+        "name": "Super Mario 3D All-Stars",
+        "versions": [
+          "1.1.4"
+        ]
+      },
+      {
+        "id": "010049900F546001",
+        "name": "Super Mario 3D All-Stars: Super Mario 64",
+        "versions": [
+          "1.1.4"
+        ]
+      },
+      {
+        "id": "010049900F546002",
+        "name": "Super Mario 3D All-Stars: Super Mario Sunshine",
+        "versions": [
+          "1.1.4"
+        ]
+      },
+      {
+        "id": "01006D0017F7A000",
+        "name": "Mario & Luigi: Brothership",
+        "versions": [
+          "1.0.0"
+        ]
+      },
+      {
+        "id": "01007A3009184000",
+        "name": "Princess Peach: Showtime!",
+        "versions": [
+          "1.0.0"
+        ]
+      },
+      {
+        "id": "01007E3006DDA000",
+        "name": "Kirby Star Allies",
+        "versions": [
+          "4.0.0a"
+        ]
+      },
+      {
+        "id": "010097F018538000",
+        "name": "DAVE THE DIVER",
+        "versions": [
+          "v1.0.6.1267"
+        ]
+      },
+      {
+        "id": "0400245021D2C000",
+        "name": "Yoshi and the Mysterious Book",
+        "versions": [
+          "1.0.2"
+        ]
+      },
+      {
+        "id": "04003F40232DE000",
+        "name": "Hyrule Warriors: Age of Imprisonment",
+        "versions": [
+          "v196608"
+        ]
+      },
+      {
+        "id": "0400A3A01EE4C000",
+        "name": "Pokemon Pokopia",
+        "versions": [
+          "v655360"
+        ]
+      },
+      {
+        "id": "0400C3F00006E000",
+        "name": "Mario Kart World",
+        "versions": [
+          "v0"
+        ]
+      },
+      {
+        "id": "0400D4201C6EA000",
+        "name": "Mario Tennis Fever",
+        "versions": [
+          "v327680"
+        ]
+      },
+      {
+        "id": "0400E88025B1A000",
+        "name": "Star Fox",
+        "versions": [
+          "v131072"
+        ]
+      }
+    ],
+    "updated_games": [
+      {
+        "id": "0100317013770000",
+        "name": "Mario + Rabbids\u00ae Sparks of Hope",
+        "versions": [
+          "1.6.2225577"
+        ]
+      },
+      {
+        "id": "0100346017304000",
+        "name": "Taiko Risshiden V DX",
         "versions": [
           "1.1.1"
         ]
       },
       {
-        "id": "0400380020056000",
-        "name": "Splatoon Raiders",
+        "id": "010067300059A000",
+        "name": "Mario + Rabbids Kingdom Battle",
         "versions": [
-          "v65536"
+          "1.9.589692"
+        ]
+      },
+      {
+        "id": "01006F8002326000",
+        "name": "Animal Crossing: New Horizons",
+        "versions": [
+          "3.0.3"
+        ]
+      },
+      {
+        "id": "01007EF00011E000",
+        "name": "The Legend of Zelda: Breath of the Wild",
+        "versions": [
+          "1.9.0"
+        ]
+      },
+      {
+        "id": "0100CD801CE5E000",
+        "name": "Balatro",
+        "versions": [
+          "1.1.3"
+        ]
+      },
+      {
+        "id": "040074A01BF12000",
+        "name": "Donkey Kong Bananza",
+        "versions": [
+          "v458752"
         ]
       },
       {
@@ -72,40 +193,11 @@
         ]
       }
     ],
-    "updated_games": [
-      {
-        "id": "010040801A4C8000",
-        "name": "Blasphemous 2",
-        "versions": [
-          "1.0.8"
-        ]
-      },
-      {
-        "id": "0100A3900C3E2000",
-        "name": "Paper Mario: The Origami King",
-        "versions": [
-          "1.0.1"
-        ]
-      },
-      {
-        "id": "0100ACD0163D0000",
-        "name": "Batman: Arkham Knight",
-        "versions": [
-          "1.0.5"
-        ]
-      },
-      {
-        "id": "0100C49025D3E000",
-        "name": "EA SPORTS FC 27",
-        "versions": [
-          "1.8d.310c"
-        ]
-      }
-    ],
     "removed_games": [],
-    "translation_chain": "e047be1b6829",
-    "catalog_profiles": 130,
-    "review": "docs/upstream-reviews/2026-11-02.md",
+    "translation_chain": "223f10d34f97",
+    "catalog_profiles": 143,
+    "internal_program_profiles": 2,
+    "review": "docs/upstream-reviews/2026-11-05.md",
     "deferred_features": [
       {
         "upstream_sha": "123c7ff0ddcc188319da5bd035ac2cb2a86e1213",
@@ -713,6 +805,101 @@
       "deferred_features": [
         "123c7ff0ddcc188319da5bd035ac2cb2a86e1213"
       ]
+    },
+    {
+      "from_fork": "f8f75ce9b2d7d84ceac7c6de723d25a71796c7c5",
+      "previous_integrated_head": "cd859c38a8f8890ddbb57a23d6f45e23ba9e6651",
+      "upstream_head": "4a2a81a64f029d0a75ade9523c8ffc6c89465375",
+      "commit_count": 33,
+      "added_games": [
+        {
+          "id": "010063301BD50000",
+          "name": "SUPER ROBOT WARS Y",
+          "versions": [
+            "1.4.1"
+          ]
+        },
+        {
+          "id": "0100BA4026E94000",
+          "name": "Castlevania: Belmont's Curse",
+          "versions": [
+            "1.1.0"
+          ]
+        },
+        {
+          "id": "0100BC0018138000",
+          "name": "Super Mario RPG",
+          "versions": [
+            "1.0.1"
+          ]
+        },
+        {
+          "id": "0100CC80140F8000",
+          "name": "TRIANGLE STRATEGY",
+          "versions": [
+            "1.1.1"
+          ]
+        },
+        {
+          "id": "0400380020056000",
+          "name": "Splatoon Raiders",
+          "versions": [
+            "v65536"
+          ]
+        },
+        {
+          "id": "04007EF01F8AE000",
+          "name": "Fire Emblem Fortune's Weave",
+          "versions": [
+            "v131072"
+          ]
+        }
+      ],
+      "updated_games": [
+        {
+          "id": "010040801A4C8000",
+          "name": "Blasphemous 2",
+          "versions": [
+            "1.0.8"
+          ]
+        },
+        {
+          "id": "0100A3900C3E2000",
+          "name": "Paper Mario: The Origami King",
+          "versions": [
+            "1.0.1"
+          ]
+        },
+        {
+          "id": "0100ACD0163D0000",
+          "name": "Batman: Arkham Knight",
+          "versions": [
+            "1.0.5"
+          ]
+        },
+        {
+          "id": "0100C49025D3E000",
+          "name": "EA SPORTS FC 27",
+          "versions": [
+            "1.8d.310c"
+          ]
+        }
+      ],
+      "removed_games": [],
+      "translation_chain": "e047be1b6829",
+      "catalog_profiles": 130,
+      "review": "docs/upstream-reviews/2026-11-02.md",
+      "deferred_features": [
+        {
+          "upstream_sha": "123c7ff0ddcc188319da5bd035ac2cb2a86e1213",
+          "feature": "iCloud save synchronization",
+          "reason": "Original cloud policy remains excluded. Custom append-only revisions, explicit conflict resolution, two-folder recovery journal, verified backups and native launcher integration implemented on 2026-11-02. Synthetic native tests and unsigned builds do not establish real iCloud/device delivery.",
+          "status": "custom_runtime_implemented_pending_physical_validation",
+          "review": "docs/upstream-reviews/2026-10-29-ecosystem.md",
+          "latest_recheck": "2026-11-02",
+          "latest_review": "docs/icloud-saves.md"
+        }
+      ]
     }
   ],
   "deferred_features": [
@@ -763,10 +950,11 @@
     ]
   },
   "latest_topic_review": {
-    "date": "2026-11-03",
+    "date": "2026-11-05",
     "topic": "Mario Kart World",
-    "inspected_main": "bd688163afea8a7cf6d5e5f889e177ad1d589711",
-    "integrated": false,
-    "review": "docs/upstream-reviews/2026-11-03-mario-kart-world.md"
+    "inspected_main": "865cc35fad7034d17c2190f8ce349f61f5bcaba1",
+    "integrated": true,
+    "review": "docs/upstream-reviews/2026-11-05.md",
+    "local_evidence": "Base version 0; complete Mac package; rendered main menu with isolated scratch saves. No iOS claim."
   }
 }

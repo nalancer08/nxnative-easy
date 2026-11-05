@@ -1,5 +1,7 @@
 # Maintaining this fork against upstream
 
+When resuming maintenance, read [the compact handoff](current-state.md) first and refresh its active-work section before pausing.
+
 This is a standing repository-owner instruction for every future upstream update.
 The owner requested that code updates reach our main and that accepted new games
 appear everywhere without being forgotten. No recurring schedule is implied.
@@ -216,3 +218,5 @@ remain unknown. Preserve per-game scoped device backup requests and their fresh
 identity check, account-free export, committed-only Mac backups, new-file-only
 publication and manual cloud review. Never route save actions to an unrestricted
 device app inventory or write active iOS saves from the desktop.
+
+Preserve validated keyless NUP identification on Mac, including bounded container metadata reads and pre-build source revalidation. Internal `program_of` profiles belong to their parent application, not separate catalog cards. Multi-program save compatibility must include every child executable and RomFS while sharing the parent app identity. Keep the new portrait/live iOS game menu alongside Easy's four editable touch profiles; never replace one with the other.

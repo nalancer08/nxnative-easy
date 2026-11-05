@@ -21,7 +21,7 @@ struct PreparationFile:Identifiable {
         }
         let properties:Set<URLResourceKey>=[.isRegularFileKey,.isReadableKey,.fileSizeKey]
         return ((try? FileManager.default.contentsOfDirectory(at:folder,includingPropertiesForKeys:Array(properties),options:.skipsHiddenFiles)) ?? []).compactMap {url in
-            guard ["nsp","xci","nsz","xcz"].contains(url.pathExtension.lowercased()),
+            guard ["nsp","xci","nsz","xcz","nup"].contains(url.pathExtension.lowercased()),
                   let values=try? url.resourceValues(forKeys:properties),values.isRegularFile==true else {return nil}
             return PreparationFile(name:url.lastPathComponent,size:Int64(values.fileSize ?? 0),readable:values.isReadable==true && (values.fileSize ?? 0)>0)
         }.sorted {$0.name.localizedStandardCompare($1.name) == .orderedAscending}
@@ -48,7 +48,7 @@ struct PreparationInventory:View {
                 }
             }
             if files.count>8 {Text(text("Más archivos detectados")+": \(files.count-8)").font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted)}
-            if files.isEmpty {Text(text("Añade una carpeta con archivos NSP, XCI, NSZ o XCZ para verlos aquí.")).font(.callout).foregroundStyle(EasyDesign.muted)}
+            if files.isEmpty {Text(text("Añade una carpeta con archivos NSP, XCI, NSZ, XCZ o NUP para verlos aquí.")).font(.callout).foregroundStyle(EasyDesign.muted)}
         }.padding(18).background(.black.opacity(0.17),in:RoundedRectangle(cornerRadius:14))
     }
 }
@@ -158,6 +158,7 @@ struct PackageIdentityView:View {
     var proposal:PendingGameProposal?=nil
     private var message:String {
         switch inspection?.status {
+        case "nup_invalid":return "El contenedor NUP está incompleto o dañado. Conservamos el archivo original; no necesita llaves."
         case "dump_invalid":return "La carpeta extraída está incompleta o mezcla archivos incompatibles. Revisa base/exefs, base/romfs y sus updates; no necesita llaves."
         case "profile_missing":return "Identificamos la carpeta extraída, pero este juego aún no tiene un perfil compatible. No se compilará como si ya tuviera soporte."
         case "multiple_sources":return "Hay paquetes y una carpeta extraída en el mismo lugar. Elige una sola fuente para preparar el juego."
@@ -309,16 +310,16 @@ struct PackageIdentityView:View {
         if let task=inspectionProcess,task.isRunning {if kill(-task.processIdentifier,SIGTERM) != 0 {task.terminate()}}
         inspectionProcess=nil;inspecting=false
     }
-    var isDumpFolder:Bool {folder.map(GameInputShape.isDump) ?? false}
+    var isKeylessInput:Bool {folder.map(GameInputShape.isKeyless) ?? false}
     func identifyGame(setupTools:Bool=false) {
         cancelInspection();inspection=nil;inspectionData=nil
-        guard let folder,(readableKeys || isDumpFolder),!detectedFiles.isEmpty else {return}
+        guard let folder,(readableKeys || isKeylessInput),!detectedFiles.isEmpty else {return}
         let script=repo.appendingPathComponent("scripts/inspect_game.py")
         guard FileManager.default.fileExists(atPath:script.path) else {return}
         let generation=inspectionGeneration,task=Process(),pipe=Pipe()
         task.executableURL=PortableRuntime.python
         var arguments=[repo.appendingPathComponent("desktop/NxNativeEasy/build_session.py").path,script.path,folder.path]
-        if !isDumpFolder,let keysFolder {arguments += ["--keys",keysFolder.appendingPathComponent("prod.keys").path]}
+        if !isKeylessInput,let keysFolder {arguments += ["--keys",keysFolder.appendingPathComponent("prod.keys").path]}
         task.arguments=arguments+(setupTools ? ["--setup-tools"] : [])
         task.standardOutput=pipe;task.standardError=FileHandle.nullDevice
         var env=PortableRuntime.environment()
@@ -354,7 +355,7 @@ struct PackageIdentityView:View {
         let root=repo.resolvingSymlinksInPath().standardizedFileURL
         do {
             let files=try FileManager.default.contentsOfDirectory(at:url,includingPropertiesForKeys:nil)
-            guard GameInputShape.isDump(url) || files.contains(where:{["nsp","xci","nsz","xcz"].contains($0.pathExtension.lowercased())}) else {
+            guard GameInputShape.isDump(url) || files.contains(where:{["nsp","xci","nsz","xcz","nup"].contains($0.pathExtension.lowercased())}) else {
                 output=nil;assets=nil;phase="No encontramos el juego en esa carpeta."
                 detail="Elige la carpeta que contiene los archivos NSP o XCI directamente."
                 failed=true;return false
@@ -412,9 +413,9 @@ struct PackageIdentityView:View {
         guard FileManager.default.fileExists(atPath:script.path) else {
             phase="No encontramos el código de nxnative.";detail="Vuelve a crear la app desde el repositorio con Abrir-interfaz.command.";failed=true;return
         }
-        guard !isDumpFolder || target=="mac" else {failed=true;phase="Las carpetas extraídas de Switch 2 se preparan para Mac. iPhone/iPad aún no están probados.";return}
-        if !isDumpFolder && !readableKeys {chooseKeysFolder()}
-        guard isDumpFolder || readableKeys else {return}
+        guard !isKeylessInput || target=="mac" else {failed=true;phase="Los juegos extraídos o en NUP se preparan para Mac. iPhone/iPad aún no están probados.";return}
+        if !isKeylessInput && !readableKeys {chooseKeysFolder()}
+        guard isKeylessInput || readableKeys else {return}
         let task=Process();let pipe=Pipe()
         task.executableURL=PortableRuntime.python
         var arguments=[repo.appendingPathComponent("desktop/NxNativeEasy/build_session.py").path,script.path,"--target",target,folder.path]
@@ -423,7 +424,7 @@ struct PackageIdentityView:View {
         do {try inspectionData.write(to:manifest,options:.atomic);inspectionManifest=manifest}
         catch {failed=true;phase="No pudimos guardar la comprobación del juego.";return}
         arguments += ["--package-metadata",manifest.path]
-        if !isDumpFolder,let keysFolder {arguments += ["--keys-folder",keysFolder.path]}
+        if !isKeylessInput,let keysFolder {arguments += ["--keys-folder",keysFolder.path]}
         if target=="ios" && !splitIOS {arguments.append("--full-only")}
         task.arguments=arguments;task.currentDirectoryURL=repo
         task.standardOutput=pipe;task.standardError=pipe
@@ -512,7 +513,7 @@ struct PackageIdentityView:View {
             var directory:ObjCBool=false
             guard fm.fileExists(atPath:file.path,isDirectory:&directory) else {continue}
             if directory.boolValue {folders.insert(file.resolvingSymlinksInPath())}
-            else if ["nsp","xci","nsz","xcz"].contains(file.pathExtension.lowercased()) {folders.insert(file.deletingLastPathComponent().resolvingSymlinksInPath())}
+            else if ["nsp","xci","nsz","xcz","nup"].contains(file.pathExtension.lowercased()) {folders.insert(file.deletingLastPathComponent().resolvingSymlinksInPath())}
         }
         guard folders.count==1,let folder=folders.first else {failed=true;phase="Arrastra los archivos de un solo juego desde la misma carpeta.";return}
         if acceptFolder(folder) {if !target.isEmpty {preparationStep=1}}
@@ -715,16 +716,16 @@ struct ContentView: View {
                             Spacer()
                             Button(model.folder == nil ? model.text("Elegir") : model.text("Cambiar")) {model.chooseFolder()}.disabled(model.running || updater.busy || sideload.blocksGameWork).accessibilityLabel(model.text("Carpeta de tu juego"))
                         }
-                        PackageIdentityView(inspection:model.inspection,inspecting:model.inspecting,hasKeys:model.readableKeys || model.isDumpFolder,catalog:model.catalog,text:model.text,chooseKeys:{model.chooseKeysFolder()},retry:{model.identifyGame()},setup:{model.identifyGame(setupTools:true)},cancel:{model.cancelInspection()},proposal:PendingGameProposal.find(repo:model.repo,title:model.inspection?.title_id))
-                        if model.isDumpFolder && model.target != "mac" {
-                            Text(model.text("Las carpetas extraídas de Switch 2 se preparan para Mac. iPhone/iPad aún no están probados.")).foregroundStyle(.orange)
+                        PackageIdentityView(inspection:model.inspection,inspecting:model.inspecting,hasKeys:model.readableKeys || model.isKeylessInput,catalog:model.catalog,text:model.text,chooseKeys:{model.chooseKeysFolder()},retry:{model.identifyGame()},setup:{model.identifyGame(setupTools:true)},cancel:{model.cancelInspection()},proposal:PendingGameProposal.find(repo:model.repo,title:model.inspection?.title_id))
+                        if model.isKeylessInput && model.target != "mac" {
+                            Text(model.text("Los juegos extraídos o en NUP se preparan para Mac. iPhone/iPad aún no están probados.")).foregroundStyle(.orange)
                             Button(model.text("Preparar en Mac")){model.target="mac"}
                         }
                         if !model.matchesExpectedGame,model.inspection?.ready==true {Label(model.text("Elegiste otro juego. Selecciona los archivos del juego de tu biblioteca."),systemImage:"exclamationmark.triangle").font(.callout).foregroundStyle(.orange)}
                         if model.inspection?.ready==true {
                             DisclosureGroup(model.text("Ver archivos detectados")) {PreparationInventory(files:model.detectedFiles,text:model.text)}.font(.callout).foregroundStyle(EasyDesign.muted)
                         } else {PreparationInventory(files:model.detectedFiles,text:model.text)}
-                        Button(model.text("Continuar")){model.preparationStep=(model.readableKeys || model.isDumpFolder) ? 3 : 2}.buttonStyle(LibraryPrimaryButtonStyle()).disabled(model.inspecting || !model.matchesExpectedGame || model.inspection?.ready != true || (model.isDumpFolder && model.target != "mac") || model.failed || model.folder==nil || (model.detectedFiles.isEmpty || model.detectedFiles.contains(where:{!$0.readable})) || model.running || sideload.blocksGameWork || updater.busy)
+                        Button(model.text("Continuar")){model.preparationStep=(model.readableKeys || model.isKeylessInput) ? 3 : 2}.buttonStyle(LibraryPrimaryButtonStyle()).disabled(model.inspecting || !model.matchesExpectedGame || model.inspection?.ready != true || (model.isKeylessInput && model.target != "mac") || model.failed || model.folder==nil || (model.detectedFiles.isEmpty || model.detectedFiles.contains(where:{!$0.readable})) || model.running || sideload.blocksGameWork || updater.busy)
                         }
                         if model.preparationStep==2 {
                         HStack(spacing:12) {
@@ -738,14 +739,14 @@ struct ContentView: View {
                             Button(model.keysFolder == nil ? model.text("Elegir") : model.text("Cambiar")) {model.chooseKeysFolder()}.disabled(model.running || updater.busy || sideload.blocksGameWork).accessibilityLabel(model.text("Seleccionar prod.keys"))
                         }
                         Label(model.text(model.readableKeys ? "Recordamos su ubicación. La compatibilidad de las llaves se comprueba al preparar." : "Elige prod.keys o arrástralo aquí. No necesitas seleccionar una carpeta."),systemImage:model.readableKeys ? "checkmark.shield" : "hand.draw").font(.callout).foregroundStyle(EasyDesign.muted)
-                        if model.folder != nil {PackageIdentityView(inspection:model.inspection,inspecting:model.inspecting,hasKeys:model.readableKeys || model.isDumpFolder,catalog:model.catalog,text:model.text,chooseKeys:{model.chooseKeysFolder()},retry:{model.identifyGame()},setup:{model.identifyGame(setupTools:true)},cancel:{model.cancelInspection()},proposal:PendingGameProposal.find(repo:model.repo,title:model.inspection?.title_id))}
+                        if model.folder != nil {PackageIdentityView(inspection:model.inspection,inspecting:model.inspecting,hasKeys:model.readableKeys || model.isKeylessInput,catalog:model.catalog,text:model.text,chooseKeys:{model.chooseKeysFolder()},retry:{model.identifyGame()},setup:{model.identifyGame(setupTools:true)},cancel:{model.cancelInspection()},proposal:PendingGameProposal.find(repo:model.repo,title:model.inspection?.title_id))}
                         Button(model.text("Continuar")){model.preparationStep=3}.buttonStyle(LibraryPrimaryButtonStyle()).disabled(model.inspecting || !model.matchesExpectedGame || model.inspection?.ready != true || model.failed || !model.readableKeys || model.running || sideload.blocksGameWork || updater.busy)
                         }
                         if model.preparationStep==3 {
                             Label(model.isMac ? "Mac" : "iPhone / iPad",systemImage:model.isMac ? "desktopcomputer" : "ipad.and.iphone").font(.title2.bold())
                             Text(model.inspection?.name ?? model.gameName).font(.headline)
                             if let version=model.inspection?.display_version {Label(model.text("Versión a preparar")+": "+version,systemImage:"tag")}
-                            Label(model.text(model.isDumpFolder ? "No necesita prod.keys" : "Llaves seleccionadas"),systemImage: model.isDumpFolder ? "checkmark.shield" : "key.horizontal").foregroundStyle(EasyDesign.muted)
+                            Label(model.text(model.isKeylessInput ? "No necesita prod.keys" : "Llaves seleccionadas"),systemImage: model.isKeylessInput ? "checkmark.shield" : "key.horizontal").foregroundStyle(EasyDesign.muted)
                         }
                         if model.target=="ios" && model.preparationStep==3 {
                             Toggle(model.text("IPA ligera: separar los datos del juego"),isOn:$model.splitIOS).disabled(model.running || updater.busy || sideload.blocksGameWork)
