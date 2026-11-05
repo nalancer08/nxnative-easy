@@ -70,16 +70,23 @@ private func require(_ ok:Bool,_ message:String)throws {if !ok {throw Failure.ch
         try require(absent.cloud==nil && !fm.fileExists(atPath:missingDrive.path),"do not manufacture iCloud when unavailable")
         try fm.createDirectory(at:drive,withIntermediateDirectories:true)
         let managed=SaveCenterModel(defaults:managedDefaults,isCloudLocation:{_ in true},managedDrive:{drive})
+        try require(managed.connectionState == .disconnected,"no cloud evidence before setup")
         managed.ensureManagedCloud(repo:repo)
+        try require(managed.connectionState == .checking,"do not confirm while the first folder scan is pending")
         let expected=drive.appendingPathComponent("nxnative Easy/Saves")
         try require(managed.cloud==expected && managed.usesICloud,"managed folder requires no picker")
         try await until{!managed.scanning}
+        try require(managed.connectionState == .connected,"confirmed only after successful scan")
         let sentinel=expected.appendingPathComponent("keep-my-save.bin")
         try Data("existing progress".utf8).write(to:sentinel)
         managed.disconnectCloud();managed.ensureManagedCloud(repo:repo)
         try require(managed.cloud==nil,"automatic setup respects explicit opt-out")
         managed.enableManagedCloud(repo:repo);try await until{!managed.scanning}
         try require(managed.cloud==expected && (try Data(contentsOf:sentinel))==Data("existing progress".utf8),"re-enable preserves existing save files")
+        managed.systemCloudAccountChanged()
+        try require(managed.connectionState == .accountChanged && managed.revisions.isEmpty,"account change clears only cached evidence")
+        managed.ensureManagedCloud(repo:repo)
+        try require(managed.cloud==nil && (try Data(contentsOf:sentinel))==Data("existing progress".utf8),"account changes never reconnect or remove progress automatically")
         managed.connectCloud(folder:fast,repo:repo);try await until{!managed.scanning}
         managed.ensureManagedCloud(repo:repo)
         try require(managed.cloud==fast,"keep an existing custom folder choice")

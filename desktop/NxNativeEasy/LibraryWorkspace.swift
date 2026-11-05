@@ -17,6 +17,7 @@ struct LibraryWorkspace:View {
     @State private var importingSave=false
     @State private var reviewingUpdate=false
     @State private var showCloudWelcome=false
+    @State private var showCloudAccount=false
     @State private var engine:EngineHistory?
     @State private var optionsGame:OwnedGameOutput?
     @State private var changeReasons:[String:[String]]=[:]
@@ -112,7 +113,7 @@ struct LibraryWorkspace:View {
             return GameDeviceReport(observation:item,job:job,state:evidence.state(),verified:sideload.isVerified(item))
         }
         let changes=Set((changeReasons[game.id] ?? [])+reports.flatMap{report in report.job.flatMap{changeReasons["receipt:"+$0.id]} ?? []}).sorted()
-        return GameCareContext(reports:reports,changes:changes,prepared:EasyBuildStamp.prepared(folder:game.folder,target:game.iosIPA != nil ? "ios" : "mac"),current:EasyBuildStamp.current,localReady:game.macApp != nil,localRebuild:rebuildAdvice[game.id+"Mac"].flatMap{$0=="unknown" ? nil : $0=="rebuild"})
+        return GameCareContext(reports:reports,changes:changes,prepared:EasyBuildStamp.prepared(folder:game.folder,target:game.iosIPA != nil ? "ios" : "mac"),current:EasyBuildStamp.current,localReady:game.macApp != nil,localRebuild:rebuildAdvice[game.id+"Mac"].flatMap{$0=="unknown" ? nil : $0=="rebuild"},engine:engine)
     }
 
     private func selectAvailableGame() {
@@ -121,19 +122,23 @@ struct LibraryWorkspace:View {
         selectedEntryID=entries.first(where:{$0.id==remembered})?.id ?? entries.first?.id
     }
     private func showBuildActivity() {page = .prepare;model.installingInline=false;let unfinished=model.running || model.failed || model.output==nil;model.preparationStep=unfinished ? 4 : 5;model.showDetails=true}
-    private var shell:some View {
-        VStack(spacing:0) {
-            HStack(spacing:8) {
-                LauncherBrand()
+    private func header(compact:Bool)->some View {
+        HStack(spacing:8) {
+                if compact {Image(nsImage:AppArtwork.icon).resizable().frame(width:24,height:24).frame(width:32).accessibilityLabel("nxnative Easy")}else{LauncherBrand()}
                 if navigation.canGoBack {LauncherButton(title:"",symbol:"chevron.left"){navigation.back()}.frame(width:32,height:40).accessibilityLabel(model.text("Volver")).transition(.opacity.combined(with:.move(edge:.leading)))}
                 LauncherButton(title:model.text("Biblioteca"),selected:page == .library){page = .library;maintaining=nil}.frame(width:100,height:44)
                 LauncherButton(title:model.text("Compatibilidad"),selected:page == .compatibility){page = .compatibility}.frame(width:138,height:44)
                 Spacer(minLength:0)
-                Button {page = .engine}label:{VStack(alignment:.leading,spacing:2){Text(model.text("MOTOR")).font(.system(size:8,weight:.bold)).tracking(1);Text(String(engine?.revision.prefix(7) ?? "—")).font(.system(size:11,design:.monospaced))}.frame(width:62,height:38).padding(.horizontal,10).contentShape(Rectangle()).background(EasyDesign.panel,in:RoundedRectangle(cornerRadius:8))}.buttonStyle(.plain).help(model.text("Historial del motor"))
+                Button {page = .engine}label:{VStack(alignment:.leading,spacing:2){Text(model.text("MOTOR")).font(.system(size:8,weight:.bold)).tracking(1);Text(engine?.version ?? "—").font(.system(size:13,weight:.semibold))}.frame(width:62,height:38).padding(.horizontal,10).contentShape(Rectangle()).background(EasyDesign.panel,in:RoundedRectangle(cornerRadius:8))}.buttonStyle(.plain).help(model.text("Historial del motor"))
                 if model.running {Image(systemName:"hammer").font(.callout).foregroundStyle(EasyDesign.accent).help(model.text("Preparando tu juego…"))}
                 if updater.visible && !model.running {Button {reviewingUpdate=true}label:{Image(systemName:"arrow.down.circle.fill").font(.title3).frame(width:34,height:38).contentShape(Rectangle())}.buttonStyle(.plain).foregroundStyle(EasyDesign.accent).accessibilityLabel(model.text("Actualizar Easy")).help(model.text("Actualizar Easy"))}
-                LauncherButton(title:model.text("Añadir juego"),symbol:"plus",enabled:!occupied,action:add).frame(width:146,height:44)
+                LauncherButton(title:compact ? "" : model.text("Añadir juego"),symbol:"plus",enabled:!occupied,action:add).frame(width:compact ? 44 : 146,height:44).accessibilityLabel(model.text("Añadir juego"))
+                CloudProfileButton(saves:saves,text:model.text){showCloudAccount.toggle()}.popover(isPresented:$showCloudAccount,arrowEdge:.bottom){CloudAccountPanel(saves:saves,repo:model.repo,text:model.text,configure:{showCloudAccount=false;showCloudWelcome=true})}
             }.padding(.horizontal,16).frame(height:60).background(EasyDesign.background).overlay(alignment:.bottom){Divider()}.zIndex(100)
+    }
+    private var shell:some View {
+        VStack(spacing:0) {
+            GeometryReader {geometry in header(compact:geometry.size.width<900)}.frame(height:60)
             ZStack {
                 ContentView(updater:updater,sideload:sideload,model:model,visible:page == .prepare && maintaining==nil).opacity(page == .prepare ? 1 : 0).allowsHitTesting(page == .prepare).accessibilityHidden(page != .prepare)
                 if page == .settings {WorkspaceSettingsView(model:model,sideload:sideload,saves:saves,games:library.games,showEngine:{page = .engine},showCloud:{showCloudWelcome=true})}
@@ -143,7 +148,7 @@ struct LibraryWorkspace:View {
                     HStack(spacing:0) {
                         LauncherSidebar(entries:entries,catalog:model.catalog,text:model.text,selected:$selectedEntryID,query:$query,add:add,settings:{page = .settings})
                         if let entry=selected {
-                            ScrollView {GameContinuityDetail(entry:entry,title:entryTitle(entry),catalog:model.catalog.first{$0.id==entry.titleID},context:entry.ios.map{care($0)} ?? entry.local.map{care($0)},saves:saves,localSaves:localSaves,sideload:sideload,repo:model.repo,text:model.text,disabled:occupied,prepare:{prepare(entry,target:$0)},reviewSync:{if let game=entry.ios ?? entry.local {reviewingSyncUpdate=true;maintaining=game}else{addEntry(entry)}},chooseDestination:{addEntry(entry)},maintain:{if let game=entry.ios ?? entry.local {maintain(game)}else{addEntry(entry)}},maintainDevice:{report in if let game=entry.ios ?? entry.local {maintain(game,device:report.device)}else{addEntry(entry)}},install:{if let game=entry.ios {install(game)}else{prepare(entry,target:"ios")}},files:{optionsGame=entry.local},upload:{guard let game=entry.ios ?? entry.mac else{return};saves.gameID=game.id;saves.source=nil;saves.selectedRevision=nil;saves.completed=nil;saves.chooseSource(repo:model.repo);if saves.source != nil {importingSave=true}},reviewRevision:{revision in saves.inspect(repo:model.repo,url:URL(fileURLWithPath:revision.path),revision:revision);importingSave=true})}.id(entry.id).transition(.opacity.combined(with:.offset(y:8)))
+                            ScrollView {GameContinuityDetail(entry:entry,title:entryTitle(entry),catalog:model.catalog.first{$0.id==entry.titleID},context:entry.ios.map{care($0)} ?? entry.local.map{care($0)},saves:saves,localSaves:localSaves,sideload:sideload,repo:model.repo,text:model.text,disabled:occupied,prepare:{prepare(entry,target:$0)},reviewSync:{if let game=entry.ios ?? entry.local {reviewingSyncUpdate=true;maintaining=game}else{addEntry(entry)}},chooseDestination:{addEntry(entry)},maintain:{if let game=entry.ios ?? entry.local {maintain(game)}else{addEntry(entry)}},maintainDevice:{report in if let game=entry.ios ?? entry.local {maintain(game,device:report.device)}else{addEntry(entry)}},install:{if let game=entry.ios {install(game)}else{prepare(entry,target:"ios")}},files:{optionsGame=entry.local},upload:{guard let game=entry.ios ?? entry.mac else{return};saves.gameID=game.id;saves.source=nil;saves.selectedRevision=nil;saves.completed=nil;saves.chooseSource(repo:model.repo);if saves.source != nil {importingSave=true}},reviewRevision:{revision in saves.inspect(repo:model.repo,url:URL(fileURLWithPath:revision.path),revision:revision);importingSave=true},engineHistory:engine)}.id(entry.id).transition(.opacity.combined(with:.offset(y:8)))
                         } else {LauncherWelcome(text:model.text,add:add)}
                     }
                 }
@@ -179,6 +184,7 @@ struct LibraryWorkspace:View {
         .onReceive(library.$games){games in checkBuildAdvice(games);refreshScope(local:games)}
         .onChange(of:entries.map(\.id)){_,_ in selectAvailableGame()}
         .onChange(of:selectedEntryID){_,value in if let value {model.defaults.set(value,forKey:"launcher.selectedGame.v2")}}
+        .onReceive(NotificationCenter.default.publisher(for:.NSUbiquityIdentityDidChange)){_ in saves.systemCloudAccountChanged()}
         .onReceive(saves.$revisions){refreshScope(remote:$0)}
         .onReceive(saves.$knownCloudTitles){refreshScope(known:$0)}
         .onReceive(sideload.$jobs){checkBuildAdvice(jobsSnapshot:$0)}

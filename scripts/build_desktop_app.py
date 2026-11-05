@@ -48,6 +48,8 @@ def install_bundle(staged,output):
 
 
 def build_bundle(output,portable=False):
+    if (REPO/'.git').exists():
+        subprocess.run(['python3',str(REPO/'scripts/sync_engine_history.py'),'--check'],check=True)
     contents=output/'Contents';macos=contents/'MacOS';macos.mkdir(parents=True,exist_ok=True)
     subprocess.run(['xcrun','swiftc','-parse-as-library','-swift-version','5','-target','arm64-apple-macosx26.0',
         *(str(p) for p in sorted((REPO/'desktop/NxNativeEasy').glob('*.swift'))),'-o',str(macos/'NxNativeEasy'),

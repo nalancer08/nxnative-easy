@@ -176,6 +176,7 @@ struct GameContinuityDetail:View {
     let files:()->Void
     let upload:()->Void
     let reviewRevision:(SaveRevision)->Void
+    var engineHistory:EngineHistory?=nil
     @State private var backup:DeviceGameObservation?
     @State private var backupMac=false
     @State private var choosingDestination=false
@@ -242,7 +243,8 @@ struct GameContinuityDetail:View {
             VStack(alignment:.leading,spacing:10) {
                 ForEach(entry.sources.flatMap(\.preparations)) {build in
                     VStack(alignment:.leading,spacing:5) {
-                        HStack(spacing:8) {Image(systemName:"hammer").foregroundStyle(EasyDesign.accent);Text(build.platform).fontWeight(.semibold);Spacer();Text(text("Motor")+" · "+String((build.revision ?? "—").prefix(8))).font(.system(size:10,design:.monospaced))}
+                        HStack(spacing:8) {Image(systemName:"hammer").foregroundStyle(EasyDesign.accent);Text(build.platform).fontWeight(.semibold);Spacer()}
+                        EngineBuildComparison(history:engineHistory,revision:build.revision,text:text)
                         if let date=build.date {Text(text("Última compilación")+" · "+date.formatted(date:.abbreviated,time:.shortened))}
                         else {Text(text("Fecha de compilación no registrada"))}
                     }.font(.caption).foregroundStyle(.secondary)

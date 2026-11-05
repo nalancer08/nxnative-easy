@@ -84,6 +84,8 @@ appear everywhere without being forgotten. No recurring schedule is implied.
    python3 scripts/sync_game_catalog.py --check
    python3 scripts/sync_engine_history.py
    python3 scripts/sync_engine_history.py --check
+   # This keeps dotted engine versions and old source-build lookup current.
+   # Frontend-only commits do not advance the engine version.
    ```
 
    This generates `game-artwork.json`, `game-catalog.json` and the marked galleries

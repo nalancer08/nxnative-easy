@@ -11,11 +11,19 @@ grid-first workspace and global cloud/device connection strip.
   titlebar controls. Do not add a second traffic-light gutter. Back exists only
   when navigation history is non-empty. Keep Library, Compatibility and Add game
   labels readable at the 760-point minimum; use the entire visible button bounds.
-- The header's engine chip opens a full history screen. Its revision is the latest
-  integrated runtime commit, independent of cosmetic Easy releases. Regenerate
-  `desktop/engine-history.json` with `scripts/sync_engine_history.py` after engine
-  integration; retain upstream identity and exact dates/titles. Show prepared
-  per-platform revisions and preparation timestamps in each game detail.
+- The header's engine chip shows the integrated engine's dotted version, such as
+  1.0.1, independently of the Easy app version. A game compares its own engine
+  version with the current one. Hashes stay in technical help/links. Never show
+  ordinal build counters as the engine version or guess order from dates/hashes.
+  `scripts/sync_engine_history.py` creates stable offline source-to-version lookup
+  from the first-parent integration history. `desktop/engine-versioning.json`
+  defines the baseline and explicit major/minor overrides. Each later runtime
+  integration advances the patch; cosmetic Easy releases keep the engine version.
+- A 44-point profile button stays at the right edge. Its initials belong to the
+  local Mac user and are explicitly labeled as this Mac's profile, never as a
+  verified iCloud identity. Its cloud badge opens connection status, last successful
+  scan, the selected folder, and the system account settings shortcut. At narrow
+  widths, collapse branding/Add game to labeled icons before removing status.
 - Library has a 228-point game list with real artwork, search and selection.
   Settings sits at the bottom. There is no second global navigation sidebar.
 - Keep the selected game when returning from another page and remember it across
@@ -55,6 +63,13 @@ Easy prepares `iCloud Drive/nxnative Easy/Saves` when the real system iCloud Dri
 is available. It never creates a pretend iCloud root. Existing custom bookmarks
 stay in place; opt-out is respected. Advanced folder controls are in Settings.
 The system iCloud account and the Apple account used for signing are independent.
+macOS does not expose the iCloud account's email/photo through the supported
+Drive identity API. Do not scrape preferences, Contacts, private frameworks or
+Keychain to invent a profile. Provide “View account in macOS” for the actual
+account. Initial setup waits for a successful folder scan and shows a confirmation
+with the actual selected folder before entering the library; access is not proof
+that another device has received a save. On system identity change, drop cached
+account evidence and require reconnecting; never delete or move save files.
 On iOS, each separately signed game needs a one-time system folder permission.
 Do not imply that a free signing account grants a shared iCloud container.
 

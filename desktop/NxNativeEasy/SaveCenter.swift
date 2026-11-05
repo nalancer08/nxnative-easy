@@ -145,6 +145,11 @@ struct SavePreview:Decodable {
             done(payload)
         }
     }
+    func systemCloudAccountChanged() {
+        // Drop cached evidence and permission. Require reconnecting before new
+        // transfers; this does not delete or move any progress files.
+        disconnectCloud();cloudIssue="icloud_account_changed"
+    }
     func disconnectCloud() {
         defaults.set(true,forKey:"saveCenter.disabled.v1")
         listGeneration=UUID();access?.stopAccessingSecurityScopedResource();access=nil;cloud=nil

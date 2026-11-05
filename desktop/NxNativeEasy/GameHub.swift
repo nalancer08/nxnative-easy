@@ -15,6 +15,7 @@ struct GameCareContext {
     var current:EasyBuildStamp?
     var localReady=false
     var localRebuild:Bool?
+    var engine:EngineHistory?
     var attention:GameDeviceReport? {reports.min(by:{priority($0.state)<priority($1.state)})}
     var state:GameCareState {
         let remote=attention?.state
@@ -45,9 +46,11 @@ struct GameVersionComparison:View {
                 Image(systemName:"arrow.right").foregroundStyle(.tertiary).padding(.top,22)
                 value("Easy en este Mac",context.current.map{$0.version+" · "+String($0.build)})
             }
+            EngineBuildComparison(history:context.engine,revision:context.prepared?.revision,text:text)
             ForEach(context.reports) {item in
                 VStack(alignment:.leading,spacing:5) {
                     Text(item.observation.deviceName).font(.caption.weight(.semibold))
+                    EngineBuildComparison(history:context.engine,revision:item.job?.preparedWith?.revision,text:text)
                     Text(text("Última firma con")+" · "+(item.job?.signedWith.map{"Easy "+$0.version+" · "+String($0.build)} ?? text("Sin registro"))).font(.caption).foregroundStyle(.secondary)
                     if let expiry=item.job?.expires {Text(text("Vencimiento registrado")+" · "+expiry.formatted(date:.abbreviated,time:.shortened)).font(.caption).foregroundStyle(.secondary)}
                 }
