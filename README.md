@@ -16,7 +16,7 @@ Unzip → drag **nxnative Easy.app** to **Applications** → open it. **No Termi
 
 **Mario Kart World now has a Mac profile**, alongside Donkey Kong Bananza, Splatoon Raiders, Fire Emblem Fortune’s Weave and the other Switch 2 titles in Compatibility. Choose **Mac**, then select your own extracted game folder or NUP. Easy identifies the title and available updates before preparation; already decrypted content needs no `prod.keys`.
 
-Our Mario Kart World base-version dump matches the registered executable and now builds and reaches the rendered main menu on this Mac. This is Mac evidence, not iPhone/iPad validation or whole-game certification. Encrypted Switch 2 NSP/XCI extraction is not included. See [formats, tested versions and limits](docs/switch2.md). Existing games and saves stay where they are.
+Our Mario Kart World base-version dump matches the registered executable and now builds and reaches an interactive race on this Mac. This is Mac evidence, not iPhone/iPad validation or whole-game certification. Encrypted Switch 2 NSP/XCI extraction is not included. See [formats, tested versions and limits](docs/switch2.md). Existing games and saves stay where they are.
 
 ## Before you start
 

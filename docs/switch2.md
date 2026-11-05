@@ -33,7 +33,7 @@ A dump can lack control NACP/icon. The name then comes from its exact profile; d
 
 The registered base executable (`9e244438c3d8ef1c703a6a85ef99c4f0`, internal version 0) matches the owner's extracted copy. The earlier Easy release did not contain this profile: shared Switch 2 engine support alone could not prepare this game. This integration adds its profile and the required renderer/host/shader changes together.
 
-Local verification on 2026-11-05 translated all 11,561 Mac shaders, compiled and signed the self-contained Mac package, and reached its rendered main menu with a private test save. This does not establish a completed race, all courses or iPhone/iPad support. The upstream note reports Mac gameplay and remaining issues; later game updates need their own matching-build validation. See [the review](upstream-reviews/2026-11-05.md).
+Local verification on 2026-11-05 translated all 11,561 Mac shaders, compiled and signed the self-contained Mac package, and reached an interactive race with a private test save (seven-minute run; first lap rendered, controls responded). This does not establish a completed race, all courses or iPhone/iPad support. The upstream note reports Mac gameplay and remaining issues; later game updates need their own matching-build validation. See [the review](upstream-reviews/2026-11-05.md).
 
 ## Scope and preservation
 
