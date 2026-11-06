@@ -3,6 +3,7 @@ import contextlib
 import io
 import json
 import os
+import shlex
 from pathlib import Path
 import struct
 import sys
@@ -317,6 +318,8 @@ class OodleTables(unittest.TestCase):
     def setUp(self):
         self.tmp = Path(tempfile.mkdtemp()); self.addCleanup(__import__('shutil').rmtree, self.tmp)
         self.addCleanup(self.stop)
+        self.environ = patch.dict(os.environ)
+        self.environ.start(); self.addCleanup(self.environ.stop)
         self.host()
 
     def stop(self):
@@ -326,8 +329,9 @@ class OodleTables(unittest.TestCase):
 
     def host(self, say='', gone=False):
         self.stop()
-        p = self.tmp / 'host'; p.write_text(FAKE_HOST.format(python=sys.executable, say=say, gone=gone)); p.chmod(0o755)
-        env = patch.dict(os.environ, {'DM_OODLE_HOST': str(p), 'DM_OODLE_MODULES': 'unused'}); env.start(); self.addCleanup(env.stop)
+        script = self.tmp / 'host.py'; script.write_text(FAKE_HOST.format(python=sys.executable, say=say, gone=gone))
+        p = self.tmp / 'host'; p.write_text('#!/bin/sh\nexec ' + shlex.quote(sys.executable) + ' -I ' + shlex.quote(str(script)) + ' "$@"\n'); p.chmod(0o755)
+        os.environ.update(DM_OODLE_HOST=str(p), DM_OODLE_MODULES='unused')
 
     @staticmethod
     def record():

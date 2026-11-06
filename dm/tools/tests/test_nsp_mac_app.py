@@ -903,9 +903,16 @@ class SeenShaders(unittest.TestCase):   # --seen-shaders: the keys, the partial 
             self.build()
         self.assertFalse(any('--seen-shaders' in m for m in self.said))
 
-    def test_shader_watch_counts_the_list(self):
-        self.assertEqual(nsp.ShaderWatch(self.g, self.tmp, self.tmp).n, 4)
-        self.assertEqual(nsp.ShaderWatch(self.g, self.tmp, self.tmp, seen=self.keys('a', 'b')).n, 2)
+    def test_shader_watch_reads_reported_progress(self):
+        progress = self.tmp / 'progress.json'
+        watch = nsp.ShaderWatch(progress)
+        self.assertIsNone(watch())
+        progress.write_text('{')
+        self.assertIsNone(watch())
+        progress.write_text(json.dumps(dict(step='cache check', done=2, total=4, cached=1)))
+        self.assertEqual(watch(), dict(step='cache check', done=2, total=4, unit='shaders', note='1 cached'))
+        progress.write_text(json.dumps(dict(step='compiling', done=1, total=2, misses=2)))
+        self.assertEqual(watch(), dict(step='compiling', done=1, total=2, unit='shaders', note='2 not cached'))
 
     def run_cmd(self, **kw):
         game = self.tmp / 'ex'; game.mkdir(exist_ok=True); (game / 'RomFS').mkdir(exist_ok=True)

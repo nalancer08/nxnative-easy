@@ -22,7 +22,7 @@ import pso_offline
 
 def builder():
     # Use production functions without the CLI's translator/profile initialization.
-    names = {'load_pairs', 'vs_pad', 'vs_depth', 'shader_key', 'pair_keyed'}
+    names = {'load_pairs', 'vs_pad', 'vs_depth', 'shader_key', 'pair_keyed', 'output', 'label_dir'}
     tree = ast.parse((TOOLS / 'dmsh_build.py').read_text())
     ns = dict(collections=collections, os=os, re=re, sys=sys, hashlib=hashlib)
     exec(compile(ast.Module(body=[n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name in names],
@@ -74,7 +74,9 @@ class Pairing(unittest.TestCase):
         self.extra = self.package.parent / 'pso_pairs.tsv'
         self.extra.write_text('# BAHS\nv\tf1\nv\tf6\nv\tf1\n\n')
         self.ns = builder()
-        self.ns.update(out=str(self.root), PAIRS=self.ns['load_pairs'](self.g, self.package))
+        self.staged = {}
+        self.ns.update(out=str(self.root), IOSOUT=None, STORE=types.SimpleNamespace(get=self.staged.get),
+                       STAGE='stage/test', want=set(), PAIRS=self.ns['load_pairs'](self.g, self.package))
         for key, loc in [('f0', 0), ('f1', 1), ('f6', 6)]:
             src = pixel(loc)
             if not loc: src = src.replace('    float4 missing [[user(locn0)]];\n', '').replace('in.v0 + in.missing', 'in.v0')
@@ -89,6 +91,14 @@ class Pairing(unittest.TestCase):
             self.assertIn(f'out.dm_pad{loc} = float4(0.0, 0.0, 0.0, 1.0);', src)
         self.assertEqual(src.count('float4 v0 [[user(locn0)]];'), 1)
         self.assertEqual(self.ns['vs_pad']('v', src), (src, []))
+
+    def test_finished_pixel_outputs_are_read_from_staging(self):
+        before = self.ns['vs_pad']('v', VS)
+        for path in self.root.glob('*_b.metal'):
+            self.staged['stage/test/mac/' + path.name] = path.read_bytes()
+            path.unlink()
+        self.assertEqual(self.ns['vs_pad']('v', VS), before)
+        self.assertEqual(before[1], [1, 6])
 
     def test_profile_table_wins_and_optional_table(self):
         self.g.table('pso_pairs.tsv').write_text('v\tf6\n')

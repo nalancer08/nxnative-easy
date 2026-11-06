@@ -8,7 +8,7 @@ void svc_thread_dump(void) {}
 uint64_t now_ns(void) { return bp_now(); }
 
 static int production_clears(id<MTLTexture> attachment, id<MTLTexture> texture, const float *depth, int n) {
-    tex_t targets[2] = {0};
+    static tex_t targets[2]; // retained texture registry addresses stay valid through process exit
     id<MTLTexture> textures[2] = {attachment, texture};
     for (int k = 0; k < 2; k++) {
         targets[k].magic = MAGIC('T','E','X',0); targets[k].serial = 99501 + k;
@@ -22,7 +22,7 @@ static int production_clears(id<MTLTexture> attachment, id<MTLTexture> texture, 
         op_hdr tex_header; p_clear_tex tex;
     } clear_ops;
     clear_ops *ops = calloc(1, (size_t)n * sizeof(*ops) + sizeof(op_hdr));
-    if (!ops) return 1;
+    if (!ops) { for (int k = 0; k < 2; k++) mtl_tex_release(&targets[k]); return 1; }
     for (int i = 0; i < n; i++) {
         ops[i].rt_header = (op_hdr){OP_SET_RT, sizeof(op_hdr) + sizeof(p_set_rt)};
         ops[i].rt = (p_set_rt){.depth=&targets[0], .has_dview=1, .dview={.set_layers=1, .min_layer=i}};

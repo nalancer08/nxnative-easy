@@ -14,7 +14,7 @@ static int checks, failed;
 static tex_t texture(uint64_t serial, unsigned w, unsigned h, int format) {
     tex_t t = {.magic = MAGIC('T','E','X',0), .serial = serial, .off = serial << 24};
     t.d = (nvn_texdesc){.target = NVN_TEXTURE_TARGET_2D, .format = format, .width = w, .height = h, .depth = 1, .levels = 1, .samples = 1};
-    nvn_tex_layout(&t.d, &t.L); mtl_tex_init(&t); return t;
+    nvn_tex_layout(&t.d, &t.L); return t; // caller registers the stable texture address
 }
 static void fill(id<MTLTexture> t, MTLClearColor c) {
     id<MTLCommandBuffer> cb = q_cb(); MTLRenderPassDescriptor *rp = [MTLRenderPassDescriptor renderPassDescriptor];
@@ -68,6 +68,7 @@ int main(void) { @autoreleasepool {
     CHECK(up_mfx_color(rare, sizeof rare) == UP_COLOR_KEEP, "a constant used once is chance, not a curve");
     const char *up = getenv("DM_UPSCALER"); int on = up && !strcmp(up, "metalfx");
     tex_t in = texture(77, 960, 540, NVN_FORMAT_RGBA16F), out = texture(78, 1920, 1080, NVN_FORMAT_RGBA16F), same = texture(79, 960, 540, NVN_FORMAT_RGBA16F);
+    mtl_tex_init(&in); mtl_tex_init(&out); mtl_tex_init(&same);
     out.d.flags |= NVN_TEXTURE_FLAGS_IMAGE; same.d.flags |= NVN_TEXTURE_FLAGS_IMAGE;
     mtl_reg_tex(701, &in, NULL); mtl_reg_image(702, &out, NULL); mtl_reg_image(703, &same, NULL);
     const float colour[4] = {0.5f, 0.25f, 0.75f, 1.0f}, black[4] = {0, 0, 0, 1};
@@ -85,6 +86,7 @@ int main(void) { @autoreleasepool {
     CHECK(matches(written, on ? colour : black, MTLRegionMake2D(0, 0, 1920, 1080), black), on ? "MetalFX filled the whole 1920x1080 image with the texture's colour" : "without the switch the image is untouched");
     if (on) {
         tex_t packed = texture(80, 976, 548, NVN_FORMAT_R11G11B10F);
+        mtl_tex_init(&packed);
         mtl_reg_tex(704, &packed, NULL);
         const float hdr[4] = {2.0f, 0.5f, 0.25f, 1.0f};
         fill(tex_mtl(&packed), MTLClearColorMake(hdr[0], hdr[1], hdr[2], hdr[3]));
@@ -97,6 +99,7 @@ int main(void) { @autoreleasepool {
         CHECK(mtl_wait(mtl_sub_commit(), 5000000000ull) && !mtl_last_commit_error(), "the converted submission completes");
         CHECK(matches(written, hdr, MTLRegionMake2D(13, 9, 1900, 1060), black), "the HDR output fills only its destination rectangle");
         tex_t packed_out = texture(81, 1920, 1080, NVN_FORMAT_R11G11B10F);
+        mtl_tex_init(&packed_out);
         packed_out.d.flags |= NVN_TEXTURE_FLAGS_IMAGE;
         view_t view = {.set_swizzle = 1, .swz = {MTLTextureSwizzleRed, MTLTextureSwizzleGreen, MTLTextureSwizzleBlue, MTLTextureSwizzleOne}};
         mtl_reg_image(705, &packed_out, &view);
