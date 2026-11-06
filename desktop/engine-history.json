@@ -1,15 +1,23 @@
 {
   "schema": 2,
-  "number": 357,
-  "version": "1.0.2",
+  "number": 358,
+  "version": "1.0.3",
   "versions": {
     "355": "1.0.0",
     "356": "1.0.1",
-    "357": "1.0.2"
+    "357": "1.0.2",
+    "358": "1.0.3"
   },
-  "revision": "91dc6595748dba1eadc1f488dad2888fa27f9db3",
-  "upstream": "865cc35fad7034d17c2190f8ce349f61f5bcaba1",
+  "revision": "cb411ee8b8e919268dd59af8356fceb852ab78aa",
+  "upstream": "b2d46b86d03f4b03afe11ea61c67cdf00d7a5345",
   "entries": [
+    {
+      "number": 358,
+      "version": "1.0.3",
+      "revision": "cb411ee8b8e919268dd59af8356fceb852ab78aa",
+      "date": "2026-11-06T15:24:56-06:00",
+      "title": "Merge original main through b2d46b86 with five new game profiles"
+    },
     {
       "number": 357,
       "version": "1.0.2",
@@ -170,13 +178,6 @@
       "revision": "8d29a31d2b4391823e0348087054a43c5eb5a2ff",
       "date": "2026-10-26T11:10:48-06:00",
       "title": "Add persistent per-control iOS touch layout editor"
-    },
-    {
-      "number": 334,
-      "version": null,
-      "revision": "ecbeae164c0b419d1ba1031248fe1402050a3eb0",
-      "date": "2026-10-26T14:39:15+08:00",
-      "title": "Port Pokemon Brilliant Diamond 1.3.0 at 60 fps"
     }
   ],
   "sources": {
@@ -748,6 +749,9 @@
     "93163ff5f4097a3136dce377ed130590caef3f5d": 357,
     "4eb8bd1cc61b40930c70d34739151cdb61c60350": 357,
     "e05920ad9ee352c204fa74dff6da75ee16575c27": 357,
-    "137a33c9c7641e35d5c57060a6fe6b8cbac66d7b": 357
+    "137a33c9c7641e35d5c57060a6fe6b8cbac66d7b": 357,
+    "06112348f5ea8822768f4e698ca5482f182ef2e4": 357,
+    "277551191079dc54de3fbe328ae23efacef4965e": 357,
+    "cb411ee8b8e919268dd59af8356fceb852ab78aa": 358
   }
 }
