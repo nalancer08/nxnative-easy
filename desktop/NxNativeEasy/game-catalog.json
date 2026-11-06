@@ -593,6 +593,16 @@
       "caption": ""
     },
     {
+      "id": "040077201BE50000",
+      "name": "Kirby Air Riders",
+      "versions": [
+        "1.3.3"
+      ],
+      "notes": "dm/games/040077201BE50000/README.md",
+      "artwork": "docs/images/kirby-air-riders.jpg",
+      "caption": "Switch 2, Mac only, from a NUP"
+    },
+    {
       "id": "01004D300C5AE000",
       "name": "Kirby and the Forgotten Land",
       "versions": [
@@ -724,6 +734,16 @@
       "caption": ""
     },
     {
+      "id": "0100A7C01B792000",
+      "name": "Minecraft Dungeons II",
+      "versions": [
+        "1.1.3.0"
+      ],
+      "notes": "dm/games/0100A7C01B792000/README.md",
+      "artwork": "docs/images/minecraft-dungeons-ii.jpg",
+      "caption": ""
+    },
+    {
       "id": "0100B04011742000",
       "name": "Monster Hunter Rise",
       "versions": [
@@ -802,6 +822,16 @@
       "notes": "dm/games/0100A3501946E000/README.md",
       "artwork": "docs/images/octopath-traveler-ii.jpg",
       "caption": "60 fps with 1.1.1"
+    },
+    {
+      "id": "0100276009872000",
+      "name": "ŌKAMI HD",
+      "versions": [
+        "1.0.0"
+      ],
+      "notes": "dm/games/0100276009872000/README.md",
+      "artwork": "docs/images/okami-hd.jpg",
+      "caption": ""
     },
     {
       "id": "0100A3900C3E2000",
@@ -1041,6 +1071,16 @@
       ],
       "notes": "dm/games/0100D5B026844000/README.md",
       "artwork": "docs/images/silver-pines.jpg",
+      "caption": ""
+    },
+    {
+      "id": "01008F701C074000",
+      "name": "Sonic Superstars",
+      "versions": [
+        "1.1.8"
+      ],
+      "notes": "dm/games/01008F701C074000/README.md",
+      "artwork": "docs/images/sonic-superstars.jpg",
       "caption": ""
     },
     {
@@ -1324,6 +1364,16 @@
       "notes": "dm/games/01006BB00C6F0000/README.md",
       "artwork": "docs/images/zelda-links-awakening.jpg",
       "caption": ""
+    },
+    {
+      "id": "0400486024DEC000",
+      "name": "The Legend of Zelda: Ocarina of Time",
+      "versions": [
+        "v131072"
+      ],
+      "notes": "dm/games/0400486024DEC000/README.md",
+      "artwork": "docs/images/zelda-ocarina-of-time.jpg",
+      "caption": "Switch 2, Mac only, from a NUP"
     },
     {
       "id": "01002DA013484000",
