@@ -22,7 +22,7 @@ import pso_offline
 
 def builder():
     # Use production functions without the CLI's translator/profile initialization.
-    names = {'load_pairs', 'vs_pad', 'vs_depth', 'shader_key', 'pair_keyed', 'output', 'label_dir'}
+    names = {'load_pairs', 'partner_inputs', 'vs_pad', 'vs_depth', 'shader_key', 'pair_keyed', 'output', 'label_dir'}
     tree = ast.parse((TOOLS / 'dmsh_build.py').read_text())
     ns = dict(collections=collections, os=os, re=re, sys=sys, hashlib=hashlib)
     exec(compile(ast.Module(body=[n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name in names],
@@ -157,6 +157,17 @@ class Pairing(unittest.TestCase):
                            env=dict(os.environ, TMPDIR=str(self.root)), capture_output=True, text=True)
         self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
         self.assertTrue(archive.is_file())
+
+
+class VariationPairs(unittest.TestCase):
+    def test_mesh_pairs_with_its_pixel_shader(self):   # NVN2: Ocarina of Time's foliage variations hold a mesh and a pixel shader, no vertex shader
+        import shader_split as split
+        sh = lambda tag: (bytes([tag]) * 0x40, bytes([tag]) * 0x40)
+        found = [('a.bfsha#BNSH@0x10#var0', 'vs', *sh(1)), ('a.bfsha#BNSH@0x10#var0', 'ps', *sh(2)),
+                 ('a.bfsha#BNSH@0x10#var1', 'ms', *sh(3)), ('a.bfsha#BNSH@0x10#var1', 'ps', *sh(4)),
+                 ('a.bfsha#BNSH@0x10#var2', 'ms', *sh(5))]   # no pixel shader: no pair
+        k = lambda tag: split.skey(*sh(tag))
+        self.assertEqual(split.var_pairs(found), {(k(1), k(2)), (k(3), k(4))})
 
 
 if __name__ == '__main__': unittest.main()

@@ -133,7 +133,7 @@ if [ -n "${PROGRAMS_TSV:-}" ]; then
 else TD=Gen/dm; program_tables; LJ=Gen/dm/launcher.json; fi
 # One identity for the application and every program sharing its save container.
 python3 "$DM/tools/save_compat.py" --title "$GAME" --version "$DM_APP_VERSION" --patched "$PATCHED" --romfs "$ROMFS" --aoc "$AOC" ${PROGRAMS_TSV:+--programs "$PROGRAMS_TSV"} --output Gen/dm/save-compat.json || die "save continuity content identity"
-# The pipeline archive made offline (dm/gfx/tools/pso_offline.py): the base of every shader pair, compiled here by metal-tt for each GPU architecture in DM_PSO_GPUS (comma-separated:
+# The pipeline archive made offline (dm/gfx/tools/pso_offline.py): the base of every shader pair and a pipeline per compute shader of the shader map, compiled here by metal-tt for each GPU architecture in DM_PSO_GPUS (comma-separated:
 # g18p = A19 / A19 Pro; another family's device has its own architecture, applegpu_g19p = the family after the A19 (its archive compiles with the current toolchain); none = no archive), so the device
 # does not build them on its first start (Breath of the Wild: 15,767 bases, 7-8 minutes on an iPhone 17 Pro Max).
 # Only the Metal 4 path reads it, which iOS turns on for a game whose profile sets pso_mtl4 on: the default is what the profile's pso_gpu key names (whitespace-separated architectures, joined for
