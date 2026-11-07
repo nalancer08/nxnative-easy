@@ -50,7 +50,7 @@ class ShaderCache(unittest.TestCase):
                        STAMP_BEFORE=None, INPUTS='inputs')
         (root / 'out').mkdir()
         names = {'tool_fingerprint', 'shader_key', 'cache_path', 'cache_outputs', 'restore_cache', 'publish_cache', 'atomic_json', 'cache_meta_path',
-                 'bf_digest', 'bf_cache_root', 'bf_cache_restore', 'vs_pad', 'label_dir', 'output', 'commit', 'publish_library'}
+                 'bf_digest', 'bf_cache_root', 'bf_cache_restore', 'partner_inputs', 'vs_pad', 'label_dir', 'output', 'commit', 'publish_library'}
         tree = ast.parse((TOOLS / 'dmsh_build.py').read_text())
         self.tree = tree
         nodes: list[ast.stmt] = [n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name in names]
