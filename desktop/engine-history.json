@@ -1,17 +1,25 @@
 {
   "schema": 2,
-  "number": 359,
-  "version": "1.0.4",
+  "number": 360,
+  "version": "1.0.5",
   "versions": {
     "355": "1.0.0",
     "356": "1.0.1",
     "357": "1.0.2",
     "358": "1.0.3",
-    "359": "1.0.4"
+    "359": "1.0.4",
+    "360": "1.0.5"
   },
-  "revision": "556d9f1b1e280a7aeb759d0c56180b0b630c537b",
-  "upstream": "b2d46b86d03f4b03afe11ea61c67cdf00d7a5345",
+  "revision": "7b521eafad44d712060b08a7b061c3a4e4f4524c",
+  "upstream": "d777f0a340e87f3d87ebd8905f2a99b9ba497134",
   "entries": [
+    {
+      "number": 360,
+      "version": "1.0.5",
+      "revision": "7b521eafad44d712060b08a7b061c3a4e4f4524c",
+      "date": "2026-11-07T02:17:24-06:00",
+      "title": "Merge original main through d777f0a3 preserving Easy workflows"
+    },
     {
       "number": 359,
       "version": "1.0.4",
@@ -172,13 +180,6 @@
       "revision": "901aed28d7ea49a09602142256463f3af19a8a01",
       "date": "2026-10-26T23:42:28+08:00",
       "title": "Check translation chain changes on games their author does not own (#272)"
-    },
-    {
-      "number": 336,
-      "version": null,
-      "revision": "96d27b8d9ee3280c40ae6d83c0e4d7336abf462d",
-      "date": "2026-10-26T16:46:44+08:00",
-      "title": "Pack shader pairs and the offline pipeline archive into Mac apps (#241, #260)"
     }
   ],
   "sources": {
@@ -758,6 +759,9 @@
     "ee27058e14f3f0dd7cc777d8dff6513feab5b0ed": 358,
     "556d9f1b1e280a7aeb759d0c56180b0b630c537b": 359,
     "3e46c3087ed2c0edebe6a0cef630beeedf92b6e1": 359,
-    "1f1d87255b8e9e246209eec88ff958911d2ed4e4": 359
+    "1f1d87255b8e9e246209eec88ff958911d2ed4e4": 359,
+    "15ed1cae7b819d2e41173e427f9cc52949725bea": 359,
+    "b4f4a52560061ff1fe8da6b475c847e247a6f7ba": 359,
+    "7b521eafad44d712060b08a7b061c3a4e4f4524c": 360
   }
 }
