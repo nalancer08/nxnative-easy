@@ -1,18 +1,26 @@
 {
   "schema": 2,
-  "number": 360,
-  "version": "1.0.5",
+  "number": 361,
+  "version": "1.0.6",
   "versions": {
     "355": "1.0.0",
     "356": "1.0.1",
     "357": "1.0.2",
     "358": "1.0.3",
     "359": "1.0.4",
-    "360": "1.0.5"
+    "360": "1.0.5",
+    "361": "1.0.6"
   },
-  "revision": "7b521eafad44d712060b08a7b061c3a4e4f4524c",
+  "revision": "676246c8e62f82111ba795882af085b5818c81ed",
   "upstream": "d777f0a340e87f3d87ebd8905f2a99b9ba497134",
   "entries": [
+    {
+      "number": 361,
+      "version": "1.0.6",
+      "revision": "676246c8e62f82111ba795882af085b5818c81ed",
+      "date": "2026-11-07T02:30:45-06:00",
+      "title": "Reconcile shader cache fixtures and nullable GPU test resources"
+    },
     {
       "number": 360,
       "version": "1.0.5",
@@ -173,13 +181,6 @@
       "revision": "54647b08eae67005346b79305e7b40e0559ac2cb",
       "date": "2026-10-27T00:10:35+08:00",
       "title": "Make repeated IPA and Mac app builds incremental (#279)"
-    },
-    {
-      "number": 337,
-      "version": null,
-      "revision": "901aed28d7ea49a09602142256463f3af19a8a01",
-      "date": "2026-10-26T23:42:28+08:00",
-      "title": "Check translation chain changes on games their author does not own (#272)"
     }
   ],
   "sources": {
@@ -762,6 +763,8 @@
     "1f1d87255b8e9e246209eec88ff958911d2ed4e4": 359,
     "15ed1cae7b819d2e41173e427f9cc52949725bea": 359,
     "b4f4a52560061ff1fe8da6b475c847e247a6f7ba": 359,
-    "7b521eafad44d712060b08a7b061c3a4e4f4524c": 360
+    "7b521eafad44d712060b08a7b061c3a4e4f4524c": 360,
+    "7ce7cd1ccbf7845273e84c81496f648af800eea2": 360,
+    "676246c8e62f82111ba795882af085b5818c81ed": 361
   }
 }
