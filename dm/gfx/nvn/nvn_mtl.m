@@ -7805,7 +7805,7 @@ static void akb_fn(arch_kb *k, MTL4FunctionDescriptor *f) {
         // the line naming the object's address
         MTL4SpecializedFunctionDescriptor *s = (MTL4SpecializedFunctionDescriptor *)f; MTLFunctionConstantValues *cv = s.constantValues;
         NSString *desc = cv.description; NSRange nl = [desc rangeOfString:@"\n"];
-        akb_u(k, 2); akb_u(k, cv ? cv.hash : 0); akb_s(k, cv ? (nl.location != NSNotFound ? [desc substringFromIndex:nl.location] : @"?") : @"(none)");
+        akb_u(k, 2); akb_u(k, cv ? cv.hash : 0); akb_s(k, cv ? (nl.location != NSNotFound ? [desc substringFromIndex:nl.location] : @"(unspecified details)") : @"(none)");
         akb_s(k, s.specializedName); akb_fn(k, s.functionDescriptor); return;
     }
     if ([f isKindOfClass:MTL4LibraryFunctionDescriptor.class]) {

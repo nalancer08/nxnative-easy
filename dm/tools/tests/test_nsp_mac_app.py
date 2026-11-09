@@ -177,11 +177,12 @@ class PackReuse(unittest.TestCase):
         self.assertTrue(any('--sign' in c for c in self.commands))
         self.assertTrue(self.key.is_file())
 
-    def test_save_sync_choice_capability(self):
+    def test_easy_save_continuity_capability(self):
         self.args.settings = None
         info = pack_app.info_plist(self.args, '26.6', False)
-        self.assertIs(type(info['DMSaveSyncChoice']), int)
-        self.assertEqual(info['DMSaveSyncChoice'], 1)   # the host follows DM_SAVE_SYNC_CHOICE (docs/frontends.md, The cloud saves folder)
+        self.assertIs(type(info['DMEasySaveContinuity']), int)
+        self.assertEqual(info['DMEasySaveContinuity'], 2)
+        self.assertNotIn('DMSaveSyncChoice', info)   # the immutable Easy protocol replaces upstream's mutable newer-wins protocol
 
     def test_retargeted_input_symlink_repacks(self):
         msl = self.tmp / 'msl'
