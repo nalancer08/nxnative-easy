@@ -373,6 +373,16 @@
       "caption": ""
     },
     {
+      "id": "010035F022078000",
+      "name": "DRAGON BALL: Sparking! ZERO",
+      "versions": [
+        "2.0.76"
+      ],
+      "notes": "dm/games/010035F022078000/README.md",
+      "artwork": "docs/images/dragon-ball-sparking-zero.jpg",
+      "caption": ""
+    },
+    {
       "id": "010042000A986000",
       "name": "DRAGON QUEST BUILDERS 2",
       "versions": [
@@ -1044,6 +1054,16 @@
       "caption": "controller only"
     },
     {
+      "id": "0100ED7012DB2000",
+      "name": "ROMANCE OF THE THREE KINGDOMS XIV: Diplomacy and Strategy Expansion Pack",
+      "versions": [
+        "1.0.10"
+      ],
+      "notes": "dm/games/0100ED7012DB2000/README.md",
+      "artwork": "docs/images/romance-of-the-three-kingdoms-xiv.jpg",
+      "caption": ""
+    },
+    {
       "id": "01008C0016544000",
       "name": "Sea of Stars",
       "versions": [
@@ -1394,6 +1414,16 @@
       "notes": "dm/games/0100F2C0115B6000/README.md",
       "artwork": "docs/images/zelda-tears-of-the-kingdom.jpg",
       "caption": "60 fps with 1.4.3"
+    },
+    {
+      "id": "01008D9022462000",
+      "name": "The Rogue Prince of Persia",
+      "versions": [
+        "1.1.0"
+      ],
+      "notes": "dm/games/01008D9022462000/README.md",
+      "artwork": "docs/images/the-rogue-prince-of-persia.jpg",
+      "caption": ""
     },
     {
       "id": "0100CC80140F8000",

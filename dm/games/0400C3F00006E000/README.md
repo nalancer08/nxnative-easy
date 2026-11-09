@@ -60,6 +60,8 @@ On a 16 GB M1 Pro (2026-11-04) the same race kept its frame median at 25 to 28 m
 
 On the 16 GB M6 (2026-11-04, a host on the older chain `475a55e74858`, the Mac also swapping for another session's game for part of the run), the first race with those shared tiles: 4 heaps (1,024 MB) where the run above had 12 (3,072 MB), resident memory 11.3 GB where it had 12.8 GB, the frame median 16.7 ms and the 95th percentile 17 to 20 ms over 2,400 frames, no out-of-memory line. The run was minutes long, so it does not show that [issue #1193](https://github.com/seedds/nxnative/issues/1193)'s crash after 16 minutes is gone.
 
+Game speed: the framework picks each frame's interval, 1 or 2 vsyncs, which the game steps by (the function at `main+0x3a9e28` on v0, its mode at `[x19+0x210]`: 1 = 60 fps, 2 = the game's 30 fps mode, 0 = chosen from the frame's CPU time alone). Frames that waited on the GPU kept interval 1 and played in slow motion, as the user saw on a slower Mac. With `fps_target 60` the interval is the host's frame step, at most 2, and the game's own 30 fps mode stays its own ([A fixed frame step plays in slow motion on a slow Mac](../../../docs/reference/frame-rate.md#a-fixed-frame-step-plays-in-slow-motion-on-a-slow-mac)), a stub placed by its function's fingerprint ([`patches.py`](patches.py)). Mac runs on the 16 GB M6 (2026-11-08, a test host on the libraries of chain `1d619d0f520b`): the user's session held 60 fps (game time 0.977 in the one window with 3-vsync holds, where the game steps 2, else 0.999); at `DM_FPS_TARGET=30` every frame was held 2 vsyncs, game time 0.996 of real time, into a Grand Prix race. Those figures are the stub's own count; the Grand Prix shows no race clock, and a check against Time Trials' clock has not been run.
+
 ## Terrain and movies
 
 The flat ground with blocky seams behind the title and the menu was terrain tiles the CPU wrote with no flush, read as zeros: [Uncompressed storage the CPU wrote, in a pool the GPU has not written](../../../docs/reference/nvn-objects.md#uncompressed-storage-the-cpu-wrote-in-a-pool-the-gpu-has-not-written). The title now shows real terrain, with hills, lawns and road edges.
@@ -94,6 +96,9 @@ Update 1.8.0 (v917504, SDK 21.4.0) is not on this Mac. Pull request #1116 ported
 
 ## Found on this game
 
+- [A fixed frame step plays in slow motion on a slow Mac](../../../docs/reference/frame-rate.md#a-fixed-frame-step-plays-in-slow-motion-on-a-slow-mac): the interval chosen from CPU time.
+- [Frame-step stubs placed by their function](../../../docs/reference/rewriter.md#frame-step-stubs-placed-by-their-function)
+
 - [A NUP with complete standalone updates stops at "no base game"](../../../docs/reference/packing.md#a-nup-with-complete-standalone-updates-stops-at-no-base-game) (packing reproduced with the base dump; 1.8.0 gameplay remains untested)
 - [Large sparse textures as Metal placement sparse textures](../../../docs/reference/nvn-objects.md#large-sparse-textures-as-metal-placement-sparse-textures)
 - [Physical pages mapped at several places of a placement sparse texture](../../../docs/reference/nvn-objects.md#physical-pages-mapped-at-several-places-of-a-placement-sparse-texture)
@@ -104,6 +109,7 @@ Update 1.8.0 (v917504, SDK 21.4.0) is not on this Mac. Pull request #1116 ported
 - [Uncompressed storage the CPU wrote, in a pool the GPU has not written](../../../docs/reference/nvn-objects.md#uncompressed-storage-the-cpu-wrote-in-a-pool-the-gpu-has-not-written)
 - [Comparisons with .FTZ](../../../docs/reference/shaders.md#comparisons-with-ftz)
 - [Variable rate shading ignored](../../../docs/reference/rendering.md#variable-rate-shading-ignored)
+- [Image views of the type a shader declares](../../../docs/reference/rendering.md#image-views-of-the-type-a-shader-declares) (the dark box around each kart's shadow, issue #1648)
 - [A DualShock 4 that connects after the first stays on Core Haptics](../../../docs/reference/services.md#a-dualshock-4-that-connects-after-the-first-stays-on-core-haptics)
 - [Identical controllers that GameController lists as one](../../../docs/reference/services.md#identical-controllers-that-gamecontroller-lists-as-one) (two Pro Controllers over USB, split-screen races)
 - [Scaled shared memory addresses](../../../docs/reference/shaders.md#scaled-shared-memory-addresses)
@@ -113,4 +119,5 @@ Update 1.8.0 (v917504, SDK 21.4.0) is not on this Mac. Pull request #1116 ported
 - [A control section's words read as a BAHS entry](../../../docs/reference/shaders.md#a-control-sections-words-read-as-a-bahs-entry) (resolved, [issue #1592](https://github.com/seedds/nxnative/issues/1592)): `cs_lib.bin` 74, `797e77c2ec4341c5` at `agl_common.sharcb#BAHS@0x5c778`, was no shader. Dropping it and its fact moved the 69 `cs_lib.bin` rows after it (`agl_common`, `agl_ndsr`, `agl_technique_pfx`, gsys `common`) down one index, as the reporter's split of the base game has them; not split again here, as the game's files are not on this Mac.
 - [SDK 19's decoder forms](../../../docs/reference/movies.md#sdk-19s-decoder-forms)
 - [A version without one of the profile's modules stops the host at boot](../../../docs/reference/packing.md#a-version-without-one-of-the-profiles-modules-stops-the-host-at-boot)
+- [The controller applet waits for players](../../../docs/reference/services.md#the-controller-applet-waits-for-players) (1.8.0, pull request #1596; GitHub issue #1640: the player screen closed when the second controller had not pressed yet)
 - 1.8.0, by pull request #1116: [The camera through the graphics system](../../../docs/reference/services.md#the-camera-through-the-graphics-system), [Layer HDR metadata](../../../docs/reference/services.md#layer-hdr-metadata), the SDK 21 forms in [The Joy-Con mouse pointer](../../../docs/reference/services.md#the-joy-con-mouse-pointer) and [GameChat at boot](../../../docs/reference/services.md#gamechat-at-boot)

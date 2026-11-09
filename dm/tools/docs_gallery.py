@@ -56,7 +56,7 @@ def gallery():
 def readme():
     text = OUT.read_text(encoding='utf-8')
     if '<!-- BEGIN GENERATED GAME GALLERY -->' in text:
-        rows()   # retain upstream union-merge validation before regenerating
+        if TABLE.is_file(): rows()   # older checkouts had a union-merged table; current profiles/artwork are checked by the catalog
         import importlib.util
         spec = importlib.util.spec_from_file_location('fork_catalog', REPO / 'scripts/sync_game_catalog.py')
         assert spec is not None and spec.loader is not None
