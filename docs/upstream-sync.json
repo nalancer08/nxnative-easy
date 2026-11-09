@@ -1091,7 +1091,7 @@
       "latest_review": "docs/icloud-saves.md"
     },
     {
-      "upstream_sha": "b62b1c54d04e",
+      "upstream_sha": "b62b1c54d04e596366f5b497a24292fafb0442ed",
       "feature": "Original mutable cloud save choices",
       "status": "excluded_redundant_with_custom_runtime",
       "reason": "The optional frontend choice improves upstream, but its default newer-wins arbitration and ten-backup pruning remain incompatible with Easy immutable parented history, leases and two-folder recovery.",
