@@ -1,7 +1,7 @@
 {
   "schema": 2,
-  "number": 362,
-  "version": "1.0.7",
+  "number": 363,
+  "version": "1.0.8",
   "versions": {
     "355": "1.0.0",
     "356": "1.0.1",
@@ -10,11 +10,19 @@
     "359": "1.0.4",
     "360": "1.0.5",
     "361": "1.0.6",
-    "362": "1.0.7"
+    "362": "1.0.7",
+    "363": "1.0.8"
   },
-  "revision": "b18d42cca6a674d10c77c4ff3e085500ecc6180e",
+  "revision": "1aceba444558019bef1f6f15465b7647d110d147",
   "upstream": "7ffa63cca09f718d6c9deb830656291b608e4ddb",
   "entries": [
+    {
+      "number": 363,
+      "version": "1.0.8",
+      "revision": "1aceba444558019bef1f6f15465b7647d110d147",
+      "date": "2026-11-09T01:35:48-06:00",
+      "title": "Keep Mac-only Bluetooth links out of iOS and preserve save capabilities"
+    },
     {
       "number": 362,
       "version": "1.0.7",
@@ -175,13 +183,6 @@
       "revision": "61642c251dcc204af57e2f794cec29396f47fadb",
       "date": "2026-10-26T20:35:34-06:00",
       "title": "Add four named touch-control profiles and portable save API foundation"
-    },
-    {
-      "number": 339,
-      "version": null,
-      "revision": "cc2efc6da5333fa5e8662609b00b07a013a993fb",
-      "date": "2026-10-26T19:58:55-06:00",
-      "title": "Merge upstream main at 40e6bae while preserving nxnative Easy features"
     }
   ],
   "sources": {
@@ -769,6 +770,8 @@
     "676246c8e62f82111ba795882af085b5818c81ed": 361,
     "67d6bbaa1189f4a65d3ba15cba4066e74aa702d8": 361,
     "a6b43949fd30e8f63b0b2c45ed49b9528a6bcf87": 361,
-    "b18d42cca6a674d10c77c4ff3e085500ecc6180e": 362
+    "b18d42cca6a674d10c77c4ff3e085500ecc6180e": 362,
+    "456da5ada802b9a2253a9e1346309482c5f490ad": 362,
+    "1aceba444558019bef1f6f15465b7647d110d147": 363
   }
 }
