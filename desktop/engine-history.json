@@ -1,7 +1,7 @@
 {
   "schema": 2,
-  "number": 361,
-  "version": "1.0.6",
+  "number": 362,
+  "version": "1.0.7",
   "versions": {
     "355": "1.0.0",
     "356": "1.0.1",
@@ -9,11 +9,19 @@
     "358": "1.0.3",
     "359": "1.0.4",
     "360": "1.0.5",
-    "361": "1.0.6"
+    "361": "1.0.6",
+    "362": "1.0.7"
   },
-  "revision": "676246c8e62f82111ba795882af085b5818c81ed",
-  "upstream": "d777f0a340e87f3d87ebd8905f2a99b9ba497134",
+  "revision": "b18d42cca6a674d10c77c4ff3e085500ecc6180e",
+  "upstream": "7ffa63cca09f718d6c9deb830656291b608e4ddb",
   "entries": [
+    {
+      "number": 362,
+      "version": "1.0.7",
+      "revision": "b18d42cca6a674d10c77c4ff3e085500ecc6180e",
+      "date": "2026-11-09T01:28:50-06:00",
+      "title": "Merge commit '7ffa63cca09f718d6c9deb830656291b608e4ddb' into HEAD"
+    },
     {
       "number": 361,
       "version": "1.0.6",
@@ -174,13 +182,6 @@
       "revision": "cc2efc6da5333fa5e8662609b00b07a013a993fb",
       "date": "2026-10-26T19:58:55-06:00",
       "title": "Merge upstream main at 40e6bae while preserving nxnative Easy features"
-    },
-    {
-      "number": 338,
-      "version": null,
-      "revision": "54647b08eae67005346b79305e7b40e0559ac2cb",
-      "date": "2026-10-27T00:10:35+08:00",
-      "title": "Make repeated IPA and Mac app builds incremental (#279)"
     }
   ],
   "sources": {
@@ -765,6 +766,9 @@
     "b4f4a52560061ff1fe8da6b475c847e247a6f7ba": 359,
     "7b521eafad44d712060b08a7b061c3a4e4f4524c": 360,
     "7ce7cd1ccbf7845273e84c81496f648af800eea2": 360,
-    "676246c8e62f82111ba795882af085b5818c81ed": 361
+    "676246c8e62f82111ba795882af085b5818c81ed": 361,
+    "67d6bbaa1189f4a65d3ba15cba4066e74aa702d8": 361,
+    "a6b43949fd30e8f63b0b2c45ed49b9528a6bcf87": 361,
+    "b18d42cca6a674d10c77c4ff3e085500ecc6180e": 362
   }
 }
