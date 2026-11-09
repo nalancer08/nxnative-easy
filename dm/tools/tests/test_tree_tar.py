@@ -96,6 +96,8 @@ class PackQuiet(unittest.TestCase):
 
     def setUp(self):
         self.w = Path(tempfile.mkdtemp(prefix='tree_tar_work_')); self.addCleanup(shutil.rmtree, self.w, True); self.lines = []
+        usage = shutil.disk_usage(self.w)
+        self.enterContext(mock.patch.object(tree_tar.shutil, 'disk_usage', return_value=usage._replace(free=1 << 40)))  # tiny fixtures do not require the production 20 GiB reserve
 
     def folder(self, name, files=100):
         d = self.w / name / 'sub'; d.mkdir(parents=True)

@@ -368,6 +368,7 @@ static void depth_only(void) {
     MTLDepthStencilDescriptor *ds = [MTLDepthStencilDescriptor new]; ds.depthWriteEnabled = YES; ds.depthCompareFunction = MTLCompareFunctionAlways;
     float v[4] = {1, 1, 1, 1}; id<MTLBuffer> vb = [g_dev newBufferWithBytes:v length:sizeof v options:MTLResourceStorageModeShared];
     id<MTLBuffer> out = [g_dev newBufferWithLength:1024 options:MTLResourceStorageModeShared];
+    if (!vb || !out) abort();
     id<MTLCommandBuffer> cb = [g_q commandBuffer]; id<MTLRenderCommandEncoder> enc = [cb renderCommandEncoderWithDescriptor:rp];
     [enc setRenderPipelineState:ps]; [enc setDepthStencilState:[g_dev newDepthStencilStateWithDescriptor:ds]];
     [enc setVertexBuffer:vb offset:0 atIndex:16]; [enc drawPrimitives:MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:3]; [enc endEncoding];
@@ -536,6 +537,7 @@ int main(int argc, char **argv) { @autoreleasepool {
     } else g_lib = [g_dev newLibraryWithSource:src options:nil error:&err];
     if (!g_lib) { fprintf(stderr, "%s\n", err.localizedDescription.UTF8String); return 1; }
     g_lib2 = [g_dev newLibraryWithSource:[src stringByAppendingString:@"// another library: the same source would come back as the same library\n"] options:nil error:&err];
+    if (!g_lib2) return 1;
     lib_tag(g_lib, @"fixture.metallib"); lib_tag(g_lib2, @"fixture2.metallib");   // as lib_from_file names the game's: their pipelines have index keys
     if (argc == 3 && !strncmp(argv[1], "--cold-", 7)) {   // across fresh processes: a cold start's prewarm with a timer flush after each new base, then the next start
         g_arch_period_max = 4; int seed = !strcmp(argv[1], "--cold-seed"), cut = !strcmp(argv[1], "--cold-cut-seed"), after_cut = !strcmp(argv[1], "--cold-after-cut");
@@ -675,7 +677,9 @@ int main(int argc, char **argv) { @autoreleasepool {
     EXPECT("the flush began a new period", 1, g_ep != ep0);
     EXPECT("nothing left to write", 0, g_arch_new);
     {   // its index: the one base's key, complete; a key is the descriptor's, the same for the same pipeline and another for another, none without names
-        int complete = -1; NSData *keys = arch_keys_read(arch_keys_path(file), &complete);
+        NSString *keysPath = arch_keys_path(file);
+        if (!keysPath) abort();
+        int complete = -1; NSData *keys = arch_keys_read(keysPath, &complete);
         MTLRenderPipelineDescriptor *k1 = desc(MTLPixelFormatRGBA8Unorm, 1, MTLPixelFormatRGBA16Float, MTLColorWriteMaskAll, 1), *k2 = desc(MTLPixelFormatRGBA8Unorm, 1, MTLPixelFormatRGBA16Float, MTLColorWriteMaskAll, 1);
         uint64_t a = arch_key(pso_desc4(k1, 1)), b = arch_key(pso_desc4(k2, 1));
         EXPECT("index: written beside the file, one key", 1, keys.length == sizeof(uint64_t));
