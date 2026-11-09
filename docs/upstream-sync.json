@@ -2,7 +2,7 @@
   "schema": 1,
   "repository": "seedds/nxnative",
   "baseline": "ecbeae164c0b419d1ba1031248fe1402050a3eb0",
-  "reviewed_head": "7ffa63cca09f718d6c9deb830656291b608e4ddb",
+  "reviewed_head": "cfbdd93ca5cab4be6e7dfd106d72e6a3bdeed262",
   "integrated": [
     {
       "upstream_sha": "4639c5114cbb8a8f250645941fa3a25c1ba08cc6",
@@ -21,13 +21,13 @@
       "title": "Make repeated IPA and Mac app builds incremental (#279)"
     }
   ],
-  "note": "Original main integrated through 2026-11-07; Easy identities, immutable save history, touch profiles and opt-in cleanup preserved.",
-  "integrated_head": "7ffa63cca09f718d6c9deb830656291b608e4ddb",
+  "note": "Original main integrated through 2026-11-09; Easy identities, immutable save history, touch profiles and opt-in cleanup preserved.",
+  "integrated_head": "cfbdd93ca5cab4be6e7dfd106d72e6a3bdeed262",
   "latest_full_integration": {
     "from_fork": "a6b43949fd30e8f63b0b2c45ed49b9528a6bcf87",
     "previous_integrated_head": "d777f0a340e87f3d87ebd8905f2a99b9ba497134",
-    "upstream_head": "7ffa63cca09f718d6c9deb830656291b608e4ddb",
-    "commit_count": 88,
+    "upstream_head": "cfbdd93ca5cab4be6e7dfd106d72e6a3bdeed262",
+    "commit_count": 89,
     "added_games": [
       {
         "id": "010035F022078000",
