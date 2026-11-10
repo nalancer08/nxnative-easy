@@ -7,6 +7,7 @@ int hle_implements(const char *name);
 void *front_metal_layer(void) { return NULL; }
 module_t *module_of(const void *p) { (void)p; return NULL; }
 module_t *g_mod; int g_nmod;
+pthread_key_t g_key18; // The imported gate dispatcher references loader.c's x18 slot; this fixture never enters a guest gate.
 struct dm_flags g_flag;
 void svc_thread_dump(void) {}
 void dm_vi_layer_size(int *w, int *h) { *w = *h = 0; }

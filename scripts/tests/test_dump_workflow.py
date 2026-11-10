@@ -64,7 +64,9 @@ class DumpWorkflow(unittest.TestCase):
             self.assertEqual(result['title_id'], TITLE)
             self.assertEqual(result['platform'], 'switch2')
             self.assertEqual(result['selected_file'], 'updates/458752')
-            self.assertEqual(len(result['updates']), 1)
+            self.assertIsInstance(result['updates'], list)
+            updates = result['updates']; assert isinstance(updates, list)
+            self.assertEqual(len(updates), 1)
             self.assertIsNone(result['display_version'])
             self.assertFalse((root / 'unused-cache').exists())
 
