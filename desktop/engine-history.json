@@ -1,7 +1,7 @@
 {
   "schema": 2,
-  "number": 367,
-  "version": "1.0.12",
+  "number": 368,
+  "version": "1.0.13",
   "versions": {
     "355": "1.0.0",
     "356": "1.0.1",
@@ -15,11 +15,19 @@
     "364": "1.0.9",
     "365": "1.0.10",
     "366": "1.0.11",
-    "367": "1.0.12"
+    "367": "1.0.12",
+    "368": "1.0.13"
   },
-  "revision": "272364b75f2e5978533f546d339380154cfec0e9",
-  "upstream": "2f131edc1b4586f89dd20b0d3de8e4f92ac3f74b",
+  "revision": "ca066dd9819b39c6b5be44b0dccc5f8a21f7f91a",
+  "upstream": "4c574a6f055217ac0b6d5fbeccd1eb22b86dbe90",
   "entries": [
+    {
+      "number": 368,
+      "version": "1.0.13",
+      "revision": "ca066dd9819b39c6b5be44b0dccc5f8a21f7f91a",
+      "date": "2026-11-10T11:42:21-06:00",
+      "title": "Integrate GPU timestamp and exact report tracking fixes through 4c574a6f0552"
+    },
     {
       "number": 367,
       "version": "1.0.12",
@@ -180,13 +188,6 @@
       "revision": "ddadc721cfc98f3bc949821797813db6631b3857",
       "date": "2026-10-29T21:58:26-06:00",
       "title": "Merge pull request #1 from nalancer08/maintenance/upstream-bfda8c54a944"
-    },
-    {
-      "number": 344,
-      "version": null,
-      "revision": "202ebddbe12c1210448615fd461eab989d8d310f",
-      "date": "2026-10-28T13:29:03-06:00",
-      "title": "Merge reviewed nxnative main through beea17c while preserving Easy workflows"
     }
   ],
   "sources": {
@@ -785,6 +786,9 @@
     "a93445ed359a9c4a927df5bd75d1272309e5a85f": 365,
     "5a88466b0910e864691d82d63847f28e61f9b532": 365,
     "b8b04fcd5393171bb48e97866226eaa18170c2f9": 366,
-    "272364b75f2e5978533f546d339380154cfec0e9": 367
+    "272364b75f2e5978533f546d339380154cfec0e9": 367,
+    "84c647b2ffbc1ff7b4ef0bce2be0ed400161f2b3": 367,
+    "b02498c046ca1d90de3dd400cc917224a98be8f9": 367,
+    "ca066dd9819b39c6b5be44b0dccc5f8a21f7f91a": 368
   }
 }

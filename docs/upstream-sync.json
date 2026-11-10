@@ -2,7 +2,7 @@
   "schema": 1,
   "repository": "seedds/nxnative",
   "baseline": "ecbeae164c0b419d1ba1031248fe1402050a3eb0",
-  "reviewed_head": "2f131edc1b4586f89dd20b0d3de8e4f92ac3f74b",
+  "reviewed_head": "4c574a6f055217ac0b6d5fbeccd1eb22b86dbe90",
   "integrated": [
     {
       "upstream_sha": "4639c5114cbb8a8f250645941fa3a25c1ba08cc6",
@@ -22,12 +22,12 @@
     }
   ],
   "note": "Original main integrated through 2026-11-10; Easy identities, immutable save history, touch profiles and opt-in cleanup preserved.",
-  "integrated_head": "2f131edc1b4586f89dd20b0d3de8e4f92ac3f74b",
+  "integrated_head": "4c574a6f055217ac0b6d5fbeccd1eb22b86dbe90",
   "latest_full_integration": {
     "from_fork": "5a88466b0910e864691d82d63847f28e61f9b532",
     "previous_integrated_head": "cfbdd93ca5cab4be6e7dfd106d72e6a3bdeed262",
-    "upstream_head": "2f131edc1b4586f89dd20b0d3de8e4f92ac3f74b",
-    "commit_count": 62,
+    "upstream_head": "4c574a6f055217ac0b6d5fbeccd1eb22b86dbe90",
+    "commit_count": 64,
     "added_games": [
       {
         "id": "010061D00DB74000",
@@ -79,7 +79,8 @@
     "removed_games": [],
     "translation_chain": "fed5ea909ee7",
     "catalog_profiles": 155,
-    "internal_program_profiles": 2
+    "internal_program_profiles": 2,
+    "additional_review": "Two later timestamp/exact-report fixes imported after local validation uncovered an independent Metal prebuild-cache crash. Shader chain unchanged."
   },
   "latest_incremental_integration": {
     "upstream_head": "8334fdfb50a9900d8a5fc950d099fde46d85135f",
