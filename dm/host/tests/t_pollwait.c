@@ -1,7 +1,9 @@
 // Short timed waits as polls, through real thread SVCs on one guest thread.
 // Drive the run/gap clock explicitly: a CI deschedule longer than SPIN_GAP_NS
 // legitimately resets the run, so 20 ms of wall time need not include a backoff.
-// Host wait deadlines still use the real clock and pthread timed waits.
+// Host condition waits still use the real clock and pthread timed waits.
+// SleepThread uses a synthetic clock, so its nanosleeps must be synthetic too:
+// otherwise sleep_precise repeats a real timer 16 times without clock progress.
 #include "../dm.h"
 #include <assert.h>
 #include <stdatomic.h>
@@ -16,6 +18,10 @@ static int test_clock_gettime(clockid_t clock, struct timespec *ts) {
     if (!r && clock == CLOCK_REALTIME) wait_start = *ts;
     return r;
 }
+static int test_nanosleep(const struct timespec *request, struct timespec *remaining) {
+    assert(request->tv_sec == 0 && request->tv_nsec > 0 && request->tv_nsec <= 500000);
+    (void)remaining; return 0;   // record duration through the assertions, without a real timer on the frozen clock
+}
 static int signal_wait, waiter_ready;   // signal_wait is set before starting the signaller; waiter_ready is protected by G
 static pthread_cond_t ready_cv = PTHREAD_COND_INITIALIZER;
 static int test_timedwait(pthread_cond_t *cv, pthread_mutex_t *mutex, const struct timespec *deadline) {
@@ -28,10 +34,12 @@ static int test_timedwait(pthread_cond_t *cv, pthread_mutex_t *mutex, const stru
     // The real condition wait and SignalProcessWideKey still perform the wake.
     return pthread_cond_wait(cv, mutex);
 }
+#define nanosleep test_nanosleep
 #define now_ns test_now_ns
 #define clock_gettime test_clock_gettime
 #define pthread_cond_timedwait test_timedwait
 #include "../hle_thread.c"
+#undef nanosleep
 #undef now_ns
 #undef clock_gettime
 #undef pthread_cond_timedwait
