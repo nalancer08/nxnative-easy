@@ -16,6 +16,8 @@ class Page(HTMLParser):
         self.links = []
         self.ids = set()
         self.profiles = []
+        self.profile_consoles = {}
+        self.console_filters = set()
         self.lang = None
 
     def handle_starttag(self, tag, attrs):
@@ -29,19 +31,26 @@ class Page(HTMLParser):
             self.ids.add(element_id)
         if 'data-title-id' in values:
             self.profiles.append(values['data-title-id'])
+            self.profile_consoles[values['data-title-id']] = values.get('data-console')
+        if 'data-console-filter' in values:
+            self.console_filters.add(values['data-console-filter'])
         for key in ['src', 'href']:
             if key in values:
                 self.links.append(values[key])
 
 
 def check():
-    expected = {game['id'] for game in json.loads((ROOT / 'desktop/NxNativeEasy/game-catalog.json').read_text())['games']}
+    games = json.loads((ROOT / 'desktop/NxNativeEasy/game-catalog.json').read_text())['games']
+    expected = {game['id'] for game in games}
+    consoles = {game['id']:game['console'] for game in games}
     for lang, name in [('en', 'index.html'), ('es', 'es/index.html')]:
         page = Page()
         source = (DIST / name).read_text()
         page.feed(source)
         assert page.lang == lang
         assert len(page.profiles) == len(expected) and set(page.profiles) == expected
+        assert page.profile_consoles == consoles
+        assert page.console_filters == {'all', 'switch1', 'switch2'}
         assert '@@' not in source
         for link in page.links:
             if link.startswith('#'):

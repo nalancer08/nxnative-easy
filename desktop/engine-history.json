@@ -1,7 +1,7 @@
 {
   "schema": 2,
-  "number": 365,
-  "version": "1.0.10",
+  "number": 367,
+  "version": "1.0.12",
   "versions": {
     "355": "1.0.0",
     "356": "1.0.1",
@@ -13,11 +13,27 @@
     "362": "1.0.7",
     "363": "1.0.8",
     "364": "1.0.9",
-    "365": "1.0.10"
+    "365": "1.0.10",
+    "366": "1.0.11",
+    "367": "1.0.12"
   },
-  "revision": "d3f5b1f3666700b40c18476e1b1fc67434cfaeea",
-  "upstream": "cfbdd93ca5cab4be6e7dfd106d72e6a3bdeed262",
+  "revision": "272364b75f2e5978533f546d339380154cfec0e9",
+  "upstream": "2f131edc1b4586f89dd20b0d3de8e4f92ac3f74b",
   "entries": [
+    {
+      "number": 367,
+      "version": "1.0.12",
+      "revision": "272364b75f2e5978533f546d339380154cfec0e9",
+      "date": "2026-11-10T10:51:27-06:00",
+      "title": "Align native regression fixtures and remove unused shader dependency"
+    },
+    {
+      "number": 366,
+      "version": "1.0.11",
+      "revision": "b8b04fcd5393171bb48e97866226eaa18170c2f9",
+      "date": "2026-11-10T10:20:56-06:00",
+      "title": "Merge engine 2f131edc1b45 preserving Easy metadata, saves and native tools"
+    },
     {
       "number": 365,
       "version": "1.0.10",
@@ -171,20 +187,6 @@
       "revision": "202ebddbe12c1210448615fd461eab989d8d310f",
       "date": "2026-10-28T13:29:03-06:00",
       "title": "Merge reviewed nxnative main through beea17c while preserving Easy workflows"
-    },
-    {
-      "number": 343,
-      "version": null,
-      "revision": "26a25773a8a1d85537672ad5cd645b15f1da8d4d",
-      "date": "2026-10-27T16:48:18-06:00",
-      "title": "Identify internal game versions and updates before preparation"
-    },
-    {
-      "number": 342,
-      "version": null,
-      "revision": "7e3fc97a18d80e234ce19085dd031fe039b7878a",
-      "date": "2026-10-27T10:51:18-06:00",
-      "title": "Guide device installation with app discovery, account inventory, logs and full IPA mode"
     }
   ],
   "sources": {
@@ -779,6 +781,10 @@
     "5d09c8feaf8582c97cce862166878b48344a67d2": 364,
     "6c71c43b9e2e2bdedbf44b29d4cef769ef27567f": 364,
     "b9506f648fe5810781a0bf5a8c5a519b8227c374": 364,
-    "d3f5b1f3666700b40c18476e1b1fc67434cfaeea": 365
+    "d3f5b1f3666700b40c18476e1b1fc67434cfaeea": 365,
+    "a93445ed359a9c4a927df5bd75d1272309e5a85f": 365,
+    "5a88466b0910e864691d82d63847f28e61f9b532": 365,
+    "b8b04fcd5393171bb48e97866226eaa18170c2f9": 366,
+    "272364b75f2e5978533f546d339380154cfec0e9": 367
   }
 }

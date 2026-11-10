@@ -3,9 +3,14 @@ import copy
 import importlib.util
 from pathlib import Path
 import tempfile
+import json
+import sys
+import subprocess
+from unittest.mock import patch
 import unittest
 
 ROOT=Path(__file__).resolve().parents[2]
+sys.path.insert(0,str(ROOT/'scripts'))
 spec=importlib.util.spec_from_file_location('inspection',ROOT/'scripts/inspect_game.py')
 assert spec is not None and spec.loader is not None
 inspection=importlib.util.module_from_spec(spec);spec.loader.exec_module(inspection)
@@ -16,6 +21,22 @@ def package(file,kind,version,display=None,title='010093801237C000'):
 
 
 class GameInspection(unittest.TestCase):
+    def test_native_reader_needs_no_sdk_and_rejects_stale_binary(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            folder=Path(temporary);(folder/'base.nsp').write_bytes(b'synthetic')
+            source=inspection.REPO/'dm/tools/nx_extract'
+            digest=inspection.hashlib.sha256(b''.join((source/n).read_bytes() for n in ('Program.cs','nx_extract.csproj'))).hexdigest()[:16]
+            response=json.dumps(dict(schema=1,packages=[package('base.nsp','base',0,'1.0')],errors=[])).encode()
+            replies=[subprocess.CompletedProcess([],0,digest+'\n'),subprocess.CompletedProcess([],0,response)]
+            with patch.object(inspection.subprocess,'run',side_effect=replies) as calls:
+                result=inspection.inspect(folder,folder/'keys',folder/'cache',setup_tools=True)
+            self.assertEqual(result['status'],'ready')
+            self.assertEqual([c.args[0][1] for c in calls.call_args_list],['--source-sha','--inspect'])
+            self.assertFalse((folder/'cache').exists())
+            with patch.object(inspection.subprocess,'run',return_value=subprocess.CompletedProcess([],0,'stale')) as calls:
+                self.assertEqual(inspection.inspect(folder,folder/'keys',folder/'cache')['status'],'tools_unavailable')
+            self.assertEqual(calls.call_count,1)
+
     def test_internal_version_beats_filename(self):
         value=inspection.summarize(dict(schema=1,packages=[package('base.xci','base',0,'1.0'),package('update-v999999.nsp','update',65536,'1.1'),package('no tags.nsp','update',131072,'1.2')],errors=[]))
         self.assertEqual((value['status'],value['display_version'],value['selected_file']),('ready','1.2','no tags.nsp'))

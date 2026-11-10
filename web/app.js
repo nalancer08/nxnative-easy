@@ -67,21 +67,35 @@
   const all = document.querySelector('#view-all');
   const count = document.querySelector('#game-count');
   let expanded = false;
+  const consoleFilters = [...document.querySelectorAll('[data-console-filter]')];
+  const requestedConsole = new URL(location.href).searchParams.get('console');
+  let consoleChoice = ['switch1', 'switch2'].includes(requestedConsole) ? requestedConsole : 'all';
   const normalize = value => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
   function filter() {
     const query = normalize(search.value.trim()); let matches = 0;
-    cards.forEach((card, index) => {
-      const match = normalize(card.dataset.search).includes(query);
+    cards.forEach(card => {
+      const match = (consoleChoice === 'all' || card.dataset.console === consoleChoice) && normalize(card.dataset.search).includes(query);
+      const index = matches;
       if (match) matches++;
       card.hidden = !match || (!query && !expanded && index >= 12);
     });
+    consoleFilters.forEach(button => button.setAttribute('aria-pressed', String(button.dataset.consoleFilter === consoleChoice)));
     count.textContent = `${matches} ${matches === 1 ? (lang === 'es' ? 'juego' : 'game') : count.dataset.label}`;
     document.querySelector('#empty-games').hidden = matches !== 0;
-    all.hidden = Boolean(query);
+    all.hidden = Boolean(query) || matches <= 12;
     all.setAttribute('aria-expanded', String(expanded));
-    all.replaceChildren(document.createTextNode(expanded ? all.dataset.less : all.dataset.all));
+    all.replaceChildren(document.createTextNode(expanded ? all.dataset.less : (all.dataset.template || all.dataset.all).replace('{count}', String(matches))));
     const icon = document.createElement('span'); icon.textContent = expanded ? '−' : '＋'; all.appendChild(icon);
   }
+  consoleFilters.forEach(button => button.addEventListener('click', () => {
+    consoleChoice = button.dataset.consoleFilter;
+    expanded = false;
+    const url = new URL(location.href);
+    if (consoleChoice === 'all') url.searchParams.delete('console');
+    else url.searchParams.set('console', consoleChoice);
+    history.replaceState(null, '', url);
+    filter();
+  }));
   search.addEventListener('input', filter);
   all.addEventListener('click', () => { expanded = !expanded; filter(); });
   filter();

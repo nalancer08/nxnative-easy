@@ -220,3 +220,7 @@ Update discovery runs from the visible workspace and on foreground, throttled
 for automatic checks. Follow the latest published release and verify its tag
 and metadata rather than treating unreleased main as a distributable version.
 Manual checks show their result and time in the engine screen.
+
+## Compatibility console filters
+
+Show All, Nintendo Switch 1 and Nintendo Switch 2 as counted, mutually exclusive controls above search results. Counts come from live application profiles, excluding internal child programs. Keep padding inside each button label so its complete visible surface responds to clicks. Expose selection to accessibility, honor Reduce Motion, and combine the console choice with text search. An empty result offers one reset for both filters. Persist the desktop console choice; website choices use a validated `console` URL parameter. Console labels describe the game edition, never proof of iPhone support.

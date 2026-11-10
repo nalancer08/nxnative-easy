@@ -45,6 +45,21 @@ class GameCatalogSync(unittest.TestCase):
     def source(self,title=ID,name='Example'):
         return f'<table><td><img src="docs/images/{title}.png" alt="{name}"><br>{name}<sub>~1 GB</sub></td></table>'
 
+    def test_console_groups_are_disjoint_counted_and_linked_in_both_languages(self):
+        second='0400000000000001';self.add_game(second,'Switch 2 Example')
+        sync.sync(self.root,write=True,upstream_html=self.source()+self.source(second,'Switch 2 Example'))
+        games=json.loads((self.root/sync.CATALOG).read_text())['games']
+        self.assertEqual({g['id']:g['console'] for g in games},{ID:'switch1',second:'switch2'})
+        for name in ['README.md','README-es.md']:
+            text=(self.root/name).read_text()
+            self.assertIn('[Nintendo Switch 1 · 1](#nintendo-switch-1)',text)
+            self.assertIn('[Nintendo Switch 2 · 1](#nintendo-switch-2)',text)
+            first=text.split('### Nintendo Switch 1',1)[1]
+            second_text=text.split('### Nintendo Switch 2',1)[1].split('### Nintendo Switch 1',1)[0]
+            self.assertIn(ID,first);self.assertNotIn(second,first)
+            self.assertIn(second,second_text);self.assertNotIn(ID,second_text)
+        self.assertEqual(sync.sync(self.root),[])
+
     def test_addition_and_version_change_propagate_everywhere_and_are_idempotent(self):
         sync.sync(self.root,write=True,upstream_html=self.source())
         other='0100000000000002';self.add_game(other,'Another Game')

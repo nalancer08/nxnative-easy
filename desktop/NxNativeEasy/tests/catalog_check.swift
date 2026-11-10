@@ -30,6 +30,14 @@ import Foundation
         try profile("0100000000000004","name\tNested program\nprogram_of\t0100000000000003\nbuild\tv1\t2.0\n")
         let withProgram=try GameCatalog.load(repo:base)
         assert(withProgram.count==3,"A nested program is packed in its parent, not a separate game")
+        try profile("0400000000000001","name\tFuture Kart\nbuild\tv0\tv0\n")
+        let consoles=try GameCatalog.load(repo:base)
+        assert(GameCatalog.search(consoles,query:"",console:.switch1).count==3)
+        assert(GameCatalog.search(consoles,query:"",console:.switch2).map { $0.name }==["Future Kart"])
+        assert(GameCatalog.search(consoles,query:"Switch 2").map { $0.name }==["Future Kart"],"A Switch 1 version containing 2 must not match the console query")
+        assert(GameCatalog.search(consoles,query:"Nintendo Switch 1").count==3)
+        assert(GameCatalog.search(consoles,query:"future",console:.switch1).isEmpty)
+        assert(GameCatalog.search(consoles,query:"ns2 future",console:.switch2).count==1)
         let repo=URL(fileURLWithPath:CommandLine.arguments[1])
         let actual=try GameCatalog.load(repo:repo)
         let children=try FileManager.default.contentsOfDirectory(at:repo.appendingPathComponent("dm/games"),includingPropertiesForKeys:nil)
@@ -47,6 +55,7 @@ import Foundation
         assert(Set(rows.map {$0["id"] as! String})==Set(actual.map {$0.id}))
         for game in actual {
             let row=rows.first {$0["id"] as? String == game.id}!
+            assert(row["console"] as? String == (game.isSwitch2 ? "switch2" : "switch1"))
             assert(row["name"] as? String == game.name)
             assert(row["versions"] as? [String] == game.versions)
             assert(repo.appendingPathComponent(row["artwork"] as! String).path == game.artworkURL?.path)

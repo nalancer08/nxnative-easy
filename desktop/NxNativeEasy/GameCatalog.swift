@@ -22,7 +22,7 @@ struct CatalogGame: Identifiable, Equatable {
         let normalize: (String) -> String = {
             $0.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: Locale(identifier:"en_US_POSIX"))
         }
-        let haystack=normalize(([name,id,consoleTitle,isSwitch2 ? "switch2 ns2 Mac dump NUP" : "switch1 ns1"]+versions).joined(separator:" "))
+        let haystack=normalize(([name,id,"Nintendo",consoleTitle,isSwitch2 ? "switch2 ns2 Mac dump NUP" : "switch1 ns1"]+versions).joined(separator:" "))
         return normalize(query).split(whereSeparator: {$0.isWhitespace}).allSatisfy {haystack.contains($0)}
     }
     var notesURL: URL {
@@ -69,6 +69,8 @@ struct GameCatalog {
         }
     }
     static func search(_ games: [CatalogGame], query: String, console:CatalogConsoleFilter = .all) -> [CatalogGame] {
-        games.filter {console.includes($0) && $0.matches(query)}
+        let one=query.range(of:#"\b(?:switch\s*1|ns1)\b"#,options:[.regularExpression,.caseInsensitive]) != nil
+        let two=query.range(of:#"\b(?:switch\s*2|ns2)\b"#,options:[.regularExpression,.caseInsensitive]) != nil
+        return games.filter {console.includes($0) && (!one || !$0.isSwitch2) && (!two || $0.isSwitch2) && $0.matches(query)}
     }
 }

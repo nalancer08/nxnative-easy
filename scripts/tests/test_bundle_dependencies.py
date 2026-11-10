@@ -15,6 +15,16 @@ bundle=importlib.util.module_from_spec(spec);spec.loader.exec_module(bundle)
 
 
 class PortableDependencies(unittest.TestCase):
+    def test_retiring_staged_sdk_preserves_installed_and_symlink_targets(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root=Path(temp);staged=root/'staged';staged.mkdir();installed=root/'installed';installed.mkdir()
+            (installed/'sdk').write_text('keep');(staged/'dotnet').symlink_to(installed,target_is_directory=True)
+            (staged/'nuget').mkdir();(staged/'nuget/cache').write_text('staged cache')
+            (staged/'python').mkdir();bundle.retire_managed_runtime(staged)
+            self.assertEqual((installed/'sdk').read_text(),'keep')
+            self.assertFalse((staged/'dotnet').exists());self.assertFalse((staged/'nuget').exists())
+            self.assertTrue((staged/'python').is_dir())
+
     def test_old_cached_bundle_installs_current_requirements_in_staged_copy(self):
         with tempfile.TemporaryDirectory() as temp:
             root=Path(temp);staged=root/'StagedTools';staged.mkdir()

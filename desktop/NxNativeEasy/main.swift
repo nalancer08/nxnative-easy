@@ -878,34 +878,56 @@ struct ContentView: View {
 struct GameCatalogView:View {
     @ObservedObject var model:BuildModel
     @State private var query=""
+    @AppStorage("catalogConsoleFilter") private var consoleRaw="all"
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @FocusState private var searchFocused:Bool
-    private var results:[CatalogGame] {GameCatalog.search(model.catalog,query:query)}
+    private var console:CatalogConsoleFilter {CatalogConsoleFilter(rawValue:consoleRaw) ?? .all}
+    private var results:[CatalogGame] {GameCatalog.search(model.catalog,query:query,console:console)}
+    private func select(_ choice:CatalogConsoleFilter) {
+        withAnimation(reduceMotion ? nil : .easeOut(duration:0.18)) {consoleRaw=choice.rawValue}
+    }
     var body:some View {
-        VStack(alignment:.leading,spacing:22) {
-            HStack(alignment:.bottom) {
-                VStack(alignment:.leading,spacing:12) {
-                    EasyEyebrow(title:model.text("DESCUBRE EL SOPORTE"))
-                    Text(model.text("Compatibilidad")).font(.system(size:38,weight:.bold)).tracking(-1.2)
-                    Text(model.text("Juegos del repositorio. Consulta cada ficha para ver dispositivos probados y versiones.")).font(.callout).foregroundStyle(EasyDesign.muted)
-                }
-                Spacer()
-                Text(String(results.count)+" / "+String(model.catalog.count)).font(.system(size:12,design:.monospaced)).foregroundStyle(EasyDesign.muted)
+        VStack(alignment:.leading,spacing:20) {
+            VStack(alignment:.leading,spacing:10) {
+                EasyEyebrow(title:model.text("DESCUBRE EL SOPORTE"))
+                Text(model.text("Compatibilidad")).font(.system(size:38,weight:.bold)).tracking(-1.2)
+                Text(model.text("Explora los juegos por consola. Abre una ficha para ver versiones y dispositivos probados.")).font(.callout).foregroundStyle(EasyDesign.muted)
             }
+            HStack(spacing:8) {
+                ForEach(CatalogConsoleFilter.allCases) {choice in
+                    Button {select(choice)} label:{
+                        HStack(spacing:8) {
+                            Image(systemName:"checkmark").font(.system(size:10,weight:.bold)).frame(width:11).opacity(console == choice ? 1 : 0).accessibilityHidden(true)
+                            Text(model.text(choice.title))
+                            Text(String(GameCatalog.search(model.catalog,query:"",console:choice).count)).font(.system(size:12,weight:.semibold,design:.monospaced))
+                        }.padding(.horizontal,12).padding(.vertical,9)
+                    }.buttonStyle(EasySelectionStyle(selected:console == choice))
+                        .accessibilityIdentifier("catalog-console-"+choice.rawValue)
+                        .accessibilityValue(console == choice ? model.text("Seleccionado") : "")
+                }
+                Spacer(minLength:0)
+                if !query.isEmpty {Text(String(results.count)+" "+model.text("resultados")).font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted)}
+            }.accessibilityElement(children:.contain).accessibilityLabel(model.text("Consola"))
             HStack(spacing:12) {Image(systemName:"magnifyingglass").foregroundStyle(EasyDesign.accent);TextField(model.text("Buscar un juego"),text:$query).textFieldStyle(.plain).focused($searchFocused).accessibilityIdentifier("game-search");if !query.isEmpty {Button {query=""} label:{Image(systemName:"xmark.circle.fill")}.buttonStyle(EasyIconStyle()).accessibilityLabel(model.text("Limpiar búsqueda"))}}.padding(14).background(EasyDesign.panel,in:RoundedRectangle(cornerRadius:10))
             if model.catalogFailed {Text(model.text("No pudimos leer los perfiles. Comprueba que el repositorio siga en su ubicación original.")).foregroundStyle(.orange).frame(maxWidth:.infinity,maxHeight:.infinity)}
-            else if results.isEmpty {ContentUnavailableView(model.text("No encontramos juegos con esa búsqueda."),systemImage:"magnifyingglass").frame(maxWidth:.infinity,maxHeight:.infinity)}
-            else {
+            else if results.isEmpty {
+                VStack(spacing:12) {
+                    ContentUnavailableView(model.text("No encontramos juegos con esa búsqueda."),systemImage:"magnifyingglass")
+                    Button(model.text("Restablecer filtros")) {query="";select(.all)}.buttonStyle(EasySecondaryStyle())
+                }.frame(maxWidth:.infinity,maxHeight:.infinity)
+            } else {
                 ScrollView {
                     LazyVGrid(columns:[GridItem(.adaptive(minimum:240,maximum:380),spacing:18)],spacing:22) {
                         ForEach(results) {game in
                             Link(destination:game.notesURL) {
-                                VStack(alignment:.leading,spacing:12) {
+                                VStack(alignment:.leading,spacing:10) {
                                     ZStack(alignment:.bottomTrailing) {GameArtworkView(game:game);Image(systemName:"arrow.up.right").font(.system(size:12,weight:.semibold)).padding(8).background(.black.opacity(0.65),in:Circle()).padding(10)}.frame(height:144).clipped().clipShape(RoundedRectangle(cornerRadius:10))
+                                    Text(game.consoleTitle).font(.system(size:11,weight:.semibold)).foregroundStyle(EasyDesign.muted)
                                     Text(game.name).font(.system(size:14,weight:.semibold)).foregroundStyle(EasyDesign.ink).lineLimit(2).frame(height:36,alignment:.topLeading)
-                                    if game.isSwitch2 {Label(model.text("Switch 2 · Sólo Mac · Carpeta extraída"),systemImage:"desktopcomputer").font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted)}
+                                    if game.isSwitch2 {Label(model.text("Sólo Mac · Archivos extraídos o NUP"),systemImage:"desktopcomputer").font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted)}
                                     else {Text(model.text("Versiones")+": "+game.versions.joined(separator:", ")).font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted).lineLimit(1)}
                                 }.padding(.bottom,6).frame(maxWidth:.infinity,alignment:.leading)
-                            }.buttonStyle(EasySelectionStyle())
+                            }.buttonStyle(EasySelectionStyle()).accessibilityLabel(game.name+", "+game.consoleTitle+(game.isSwitch2 ? ", "+model.text("Sólo Mac") : ", "+game.versions.joined(separator:", ")))
                         }
                     }
                 }

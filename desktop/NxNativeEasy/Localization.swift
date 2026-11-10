@@ -1125,6 +1125,13 @@ struct EasyStrings {
         "Abre cada juego y elige la misma carpeta de iCloud Drive. Usa la misma versión y contenido del juego en ambos dispositivos.": "Open each game and choose the same iCloud Drive folder. Use the same game version and content on both devices.",
         "Guarda y cierra antes de cambiar de dispositivo. Si hay dos progresos distintos, eliges con cuál seguir y se conservan ambos.": "Save and close before switching devices. If progress differs, choose which save to continue; both are kept.",
         "No requiere iniciar sesión con tu cuenta de firma. iCloud usa la cuenta del propio dispositivo.": "No signing-account login is needed. iCloud uses the device’s own account.",
+        "Explora los juegos por consola. Abre una ficha para ver versiones y dispositivos probados.": "Browse games by console. Open a game note for tested versions and devices.",
+        "Seleccionado": "Selected",
+        "resultados": "results",
+        "Consola": "Console",
+        "Restablecer filtros": "Reset filters",
+        "Sólo Mac": "Mac only",
+        "Sólo Mac · Archivos extraídos o NUP": "Mac only · Extracted files or NUP",
     ]
     static func text(_ source:String, language:EasyLanguage) -> String {
         language == .spanish ? source : (english[source] ?? source)
