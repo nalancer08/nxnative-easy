@@ -16,6 +16,46 @@ uint64_t now_ns(void) { return bp_now(); }
 static int checks, failed;
 #define EXPECT(name, want, ...) do { uint64_t w = (want), g = (__VA_ARGS__); checks++; if (w != g) { fprintf(stderr, "%s: expected %llu, got %llu\n", name, (unsigned long long)w, (unsigned long long)g); failed++; } } while (0)
 
+// The serializer consumes captured data after the compiler call and caller's autorelease pool have finished. Neither mock keeps the result alive for it.
+@interface LifetimeCompiler : NSObject
+@property(nonatomic,weak) id result;
+@end
+@implementation LifetimeCompiler
+- (id<MTLRenderPipelineState>)newRenderPipelineStateWithDescriptor:(MTL4PipelineDescriptor *)d compilerTaskOptions:(MTL4CompilerTaskOptions *)o error:(NSError **)e {
+    (void)d;(void)o;(void)e;id p=[NSObject new];self.result=p;return (id)p;
+}
+- (id<MTLComputePipelineState>)newComputePipelineStateWithDescriptor:(MTL4ComputePipelineDescriptor *)d compilerTaskOptions:(MTL4CompilerTaskOptions *)o error:(NSError **)e {
+    (void)d;(void)o;(void)e;id p=[NSObject new];self.result=p;return (id)p;
+}
+@end
+@interface LifetimeSerializer : NSObject
+@property(nonatomic,weak) id result;
+@property(nonatomic) BOOL saw_live, fail;
+@end
+@implementation LifetimeSerializer
+- (BOOL)serializeAsArchiveAndFlushToURL:(NSURL *)url error:(NSError **)error {
+    self.saw_live=self.result!=nil;
+    if(self.fail){if(error)*error=[NSError errorWithDomain:@"fixture" code:1 userInfo:nil];return NO;}
+    return [[@"fixture archive" dataUsingEncoding:NSUTF8StringEncoding] writeToURL:url options:0 error:error];
+}
+@end
+static void captured_lifetime(NSString *root) {
+    ArchEpoch *previous=g_ep;NSString *dir=g_arch_dir;int enabled=g_arch_cap;g_arch_cap=1;
+    g_arch_dir=[root stringByAppendingPathComponent:@"lifetime"];
+    for(int compute=0;compute<2;compute++)for(int fails=0;fails<2;fails++){
+        LifetimeCompiler *c=[LifetimeCompiler new];LifetimeSerializer *ser=[LifetimeSerializer new];ser.fail=fails;
+        ArchEpoch *ep=[ArchEpoch new];ep->comp=(id)c;ep->ser=(id)ser;ep->busy=dispatch_group_create();g_ep=ep;
+        @autoreleasepool {
+            id result=compute?(id)arch_capture_cs([MTL4ComputePipelineDescriptor new],nil,NULL):(id)arch_capture([MTL4RenderPipelineDescriptor new],nil,0,NULL);
+            ser.result=result;
+        }
+        @autoreleasepool {arch_write(ep);}
+        EXPECT("captured result survives until serializer consumes it",1,ser.saw_live);
+        EXPECT("captured result released after success or failure",1,c.result==nil);
+    }
+    g_ep=previous;g_arch_dir=dir;g_arch_cap=enabled;
+}
+
 // Holds the compile whose pixel function is named "hold" until released, and fails the one named "bad" (bad: how many times it was asked)
 @interface HoldCompiler : NSObject { @public id<MTL4Compiler> compiler; dispatch_semaphore_t entered, release; _Atomic int bad; } @end
 @implementation HoldCompiler
@@ -227,6 +267,7 @@ int main(void) { @autoreleasepool {
     EXPECT("image + folder: the others from the archive", 2, g_pre_archived);
     EXPECT("image + folder: none counted", 0, g_pre_nolib);
     EXPECT("image + folder: the stamp says all", 1, [slurp(stamp4) hasSuffix:@"libs\tall\n"]);
+    captured_lifetime(root);
     [NSFileManager.defaultManager removeItemAtPath:root error:nil];
     printf("t_pso_stall: %d checks, %d failed\n", checks, failed);
     return failed != 0;

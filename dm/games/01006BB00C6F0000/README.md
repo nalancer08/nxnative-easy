@@ -83,3 +83,7 @@ General host changes first needed here; each applies to every game:
 - **Two pixel shaders do not translate** (`9d8f6b8543355374`, `9338e3f1b597fe7c`: variants 0 and 1 of one program in `postprocess.bfsha` @0x252000; SPIRV-Cross throws on a null pointer). No run so far has loaded either.
 - development.md calls SDK 8.2.0 "the oldest so far"; Mario Kart 8 Deluxe (SDK 4.4.0) is older now.
 - `game.tsv` still says "In bring-up" and its memory values "until measured".
+
+### Captured pipeline ownership
+
+Resolved on the local reproducer (2026-11-10): update 1.1.0's 17,742-pair cold prebuild intermittently crashed in Metal's private AIR cache on an M2 Max, macOS 27.2. See [captured pipeline lifetime](../../../docs/reference/shaders.md#captured-pipelines-released-before-archive-serialization) for the mechanism and fix. Before the fix, plain runs failed at different points (about 7k and 10k pairs); a diagnostic zombie-enabled run completed. With per-period pipeline owners, two fresh plain prebuilds completed every pair in 202.5 and 252.9 seconds; the latter measured 444.7 MB peak host resident memory. Tests used isolated archives and fresh scratch saves, never player progress. Physical iOS validation remains separate.

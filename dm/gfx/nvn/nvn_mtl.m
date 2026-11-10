@@ -8092,7 +8092,7 @@ static dispatch_queue_t g_arch_q; static _Atomic int g_arch_new, g_arch_new_vd, 
 // with the front end at -O2: 33.7 minutes until Metal gave up, GitHub issue #294) held the flush, and the flush every compile and draw that came after it. Now such a compile
 // holds back the file of its own period and nothing else
 @interface ArchEpoch : NSObject { @public id<MTL4Compiler> comp; id<MTL4PipelineDataSetSerializer> ser; dispatch_group_t busy; _Atomic int active, n, vd, cs, ms, failed; int compacting;
-    NSMutableData *keys; os_unfair_lock klock; _Atomic int unkeyed; } @end
+    NSMutableData *keys; NSMutableArray *pipelines; os_unfair_lock klock; _Atomic int unkeyed; } @end
 // n: pipelines captured; vd, cs, ms: those of them that are bases with a vertex layout, compute pipelines, native mesh pipelines; failed: a capture in it failed (arch_cap_failed); compacting: it may hold
 // recaptured bases (arch_flush); keys: the index keys of what it captured (arch_key, under klock), unkeyed: it captured a pipeline with no key, so its index is not complete
 @implementation ArchEpoch @end
@@ -8391,6 +8391,11 @@ static void ep_key(ArchEpoch *ep, MTL4PipelineDescriptor *d) {   // a capture's 
     if (!k) { atomic_store(&ep->unkeyed, 1); return; }
     os_unfair_lock_lock(&ep->klock); if (!ep->keys) ep->keys = [NSMutableData data]; [ep->keys appendBytes:&k length:sizeof k]; os_unfair_lock_unlock(&ep->klock);
 }
+// Keep each captured result through its period's serialization. The prebuild otherwise drops it at the per-pair pool boundary while other workers still use the AIR cache.
+// A retired period releases these references after its serializer returns, rather than keeping every pipeline for the whole prebuild.
+static void ep_hold_pipeline(ArchEpoch *ep, id ps) {
+    os_unfair_lock_lock(&ep->klock); if (!ep->pipelines) ep->pipelines = [NSMutableArray array]; [ep->pipelines addObject:ps]; os_unfair_lock_unlock(&ep->klock);
+}
 static void arch_cap_failed(ArchEpoch *ep, NSError *ce, const char *what) {
     const char *why = ce ? ce.localizedDescription.UTF8String : "no error given";
     int n = atomic_load(&ep->n);
@@ -8408,7 +8413,7 @@ static id<MTLRenderPipelineState> arch_capture(MTL4PipelineDescriptor *d, NSErro
     ArchEpoch *ep = ep_enter(); NSError *ce = nil;
     id<MTLRenderPipelineState> ps = [ep->comp newRenderPipelineStateWithDescriptor:d compilerTaskOptions:nil error:&ce];
     int full = 0;
-    if (ps) { ep_key(ep, d); atomic_fetch_add(&g_arch_new, 1); if (vd) { atomic_fetch_add(&ep->vd, 1); atomic_fetch_add(&g_arch_new_vd, 1); }
+    if (ps) { ep_key(ep, d); ep_hold_pipeline(ep, ps); atomic_fetch_add(&g_arch_new, 1); if (vd) { atomic_fetch_add(&ep->vd, 1); atomic_fetch_add(&g_arch_new_vd, 1); }
               if ([d isKindOfClass:MTL4MeshRenderPipelineDescriptor.class]) atomic_fetch_add(&ep->ms, 1);
               full = atomic_fetch_add(&ep->n, 1) + 1 == g_arch_period_max; }
     ep_leave(ep);
@@ -8424,7 +8429,7 @@ static id<MTLComputePipelineState> arch_capture_cs(MTL4ComputePipelineDescriptor
     ArchEpoch *ep = ep_enter(); NSError *ce = nil;
     id<MTLComputePipelineState> ps = [ep->comp newComputePipelineStateWithDescriptor:d compilerTaskOptions:nil error:&ce];
     int full = 0;
-    if (ps) { ep_key(ep, d); atomic_fetch_add(&g_arch_new, 1); atomic_fetch_add(&ep->cs, 1); full = atomic_fetch_add(&ep->n, 1) + 1 == g_arch_period_max; }
+    if (ps) { ep_key(ep, d); ep_hold_pipeline(ep, ps); atomic_fetch_add(&g_arch_new, 1); atomic_fetch_add(&ep->cs, 1); full = atomic_fetch_add(&ep->n, 1) + 1 == g_arch_period_max; }
     ep_leave(ep);
     if (ps) { if (captured) *captured = 1; if (full) arch_flush_from(ep); return ps; }
     ps = [g_comp4 newComputePipelineStateWithDescriptor:d compilerTaskOptions:nil error:e];
@@ -8575,6 +8580,7 @@ static void arch_compact_finish(void);
 static void arch_write_file(ArchEpoch *ep);
 static void arch_write(ArchEpoch *ep) {
     arch_write_file(ep);
+    ep->pipelines = nil;   // its compiles and serialization are complete, including a failed write
     if (ep->compacting && atomic_fetch_sub(&g_compact_periods, 1) == 1 && atomic_load(&g_compact_closed)) arch_compact_finish();   // the compaction's last period to be written
 }
 static void arch_write_file(ArchEpoch *ep) {
