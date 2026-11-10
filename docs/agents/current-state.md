@@ -122,3 +122,6 @@ Runtime a4aa8959d591 supersedesca066dd9; engine1.0.14, still Easy1.36.1/build63 
 
 
 CI fixture lesson: t_pollwait's frozen polling clock must not drive real nanosleeps in sleep_precise (up to16 real waits per call,20s alarm on loaded CI). Test-only duration-checked synthetic nanosleep fixes that clock mismatch; real condition waits/signals remain. Three focused runs pass. Preserve the failed CI292 log and require final full host CI; do not lengthen the alarm or change production backoff to satisfy a fixture.
+
+
+MKW follow-up: rawregress-report-latest retains a cold headlessREGRESSION (30.9→15.3fps,p99 101.68→413.63ms). Screenshots show different world locations, and199 layout builds remain pending versus28. A headless run skips the production window's prewarm wait. run-regress-mkw-prepared.py compares prepare=1 on both, identical5,496 observed descriptors, complete per-chain archives, frame900 input and300s measured240–298s; no frame-step override or threshold change. Outcome isregress-report-mkw-prepared/report.json andfinal-game-gate.json. Do not erase raw failures or claim cold performance improved. Final nativeGPU134 andunsignediOS pass; static/docs and the prepared game gate remain required. Publication evidence is the external COMPLETE.json, not this prepackaged handoff.
