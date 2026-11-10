@@ -1,7 +1,7 @@
 {
   "schema": 2,
-  "number": 368,
-  "version": "1.0.13",
+  "number": 369,
+  "version": "1.0.14",
   "versions": {
     "355": "1.0.0",
     "356": "1.0.1",
@@ -16,11 +16,19 @@
     "365": "1.0.10",
     "366": "1.0.11",
     "367": "1.0.12",
-    "368": "1.0.13"
+    "368": "1.0.13",
+    "369": "1.0.14"
   },
-  "revision": "ca066dd9819b39c6b5be44b0dccc5f8a21f7f91a",
+  "revision": "a4aa8959d59197fb9b5ba5f0e792839d31d269f1",
   "upstream": "4c574a6f055217ac0b6d5fbeccd1eb22b86dbe90",
   "entries": [
+    {
+      "number": 369,
+      "version": "1.0.14",
+      "revision": "a4aa8959d59197fb9b5ba5f0e792839d31d269f1",
+      "date": "2026-11-10T12:23:40-06:00",
+      "title": "Keep captured pipelines alive until their archive period is serialized"
+    },
     {
       "number": 368,
       "version": "1.0.13",
@@ -181,13 +189,6 @@
       "revision": "2253ae9c87666bf629d066d1365e4ae84db6f9ed",
       "date": "2026-11-01T16:21:42-06:00",
       "title": "Integrate upstream Switch 2 core and preserve Easy preparation workflows"
-    },
-    {
-      "number": 345,
-      "version": null,
-      "revision": "ddadc721cfc98f3bc949821797813db6631b3857",
-      "date": "2026-10-29T21:58:26-06:00",
-      "title": "Merge pull request #1 from nalancer08/maintenance/upstream-bfda8c54a944"
     }
   ],
   "sources": {
@@ -789,6 +790,8 @@
     "272364b75f2e5978533f546d339380154cfec0e9": 367,
     "84c647b2ffbc1ff7b4ef0bce2be0ed400161f2b3": 367,
     "b02498c046ca1d90de3dd400cc917224a98be8f9": 367,
-    "ca066dd9819b39c6b5be44b0dccc5f8a21f7f91a": 368
+    "ca066dd9819b39c6b5be44b0dccc5f8a21f7f91a": 368,
+    "2927583d6744151189a566a04ec49fe290c63247": 368,
+    "a4aa8959d59197fb9b5ba5f0e792839d31d269f1": 369
   }
 }
