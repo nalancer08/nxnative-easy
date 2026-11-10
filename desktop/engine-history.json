@@ -1,7 +1,7 @@
 {
   "schema": 2,
-  "number": 369,
-  "version": "1.0.14",
+  "number": 370,
+  "version": "1.0.15",
   "versions": {
     "355": "1.0.0",
     "356": "1.0.1",
@@ -17,11 +17,19 @@
     "366": "1.0.11",
     "367": "1.0.12",
     "368": "1.0.13",
-    "369": "1.0.14"
+    "369": "1.0.14",
+    "370": "1.0.15"
   },
-  "revision": "a4aa8959d59197fb9b5ba5f0e792839d31d269f1",
+  "revision": "f12ef86cc7febde13c8429121e5d4988bd3eba8e",
   "upstream": "4c574a6f055217ac0b6d5fbeccd1eb22b86dbe90",
   "entries": [
+    {
+      "number": 370,
+      "version": "1.0.15",
+      "revision": "f12ef86cc7febde13c8429121e5d4988bd3eba8e",
+      "date": "2026-11-10T13:14:52-06:00",
+      "title": "Seed Mario Kart World pipeline preparation from recorded Mac routes"
+    },
     {
       "number": 369,
       "version": "1.0.14",
@@ -182,13 +190,6 @@
       "revision": "f8f75ce9b2d7d84ceac7c6de723d25a71796c7c5",
       "date": "2026-11-01T16:48:05-06:00",
       "title": "Shrink C lint baseline for the excluded cloud fixture"
-    },
-    {
-      "number": 346,
-      "version": null,
-      "revision": "2253ae9c87666bf629d066d1365e4ae84db6f9ed",
-      "date": "2026-11-01T16:21:42-06:00",
-      "title": "Integrate upstream Switch 2 core and preserve Easy preparation workflows"
     }
   ],
   "sources": {
@@ -792,6 +793,11 @@
     "b02498c046ca1d90de3dd400cc917224a98be8f9": 367,
     "ca066dd9819b39c6b5be44b0dccc5f8a21f7f91a": 368,
     "2927583d6744151189a566a04ec49fe290c63247": 368,
-    "a4aa8959d59197fb9b5ba5f0e792839d31d269f1": 369
+    "a4aa8959d59197fb9b5ba5f0e792839d31d269f1": 369,
+    "637adcc0111bcec12034acd25fbe84e8152bb589": 369,
+    "65a743d28f988f27825b6bad2494bad596e3c20e": 369,
+    "ad4d96650ad59cc1095cffdbebf9bfbbbe3bd18f": 369,
+    "d1228ad5b331fb3464700adee2d180b670f0971e": 369,
+    "f12ef86cc7febde13c8429121e5d4988bd3eba8e": 370
   }
 }
