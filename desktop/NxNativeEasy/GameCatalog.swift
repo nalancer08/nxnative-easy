@@ -1,11 +1,19 @@
 import Foundation
 
+enum CatalogConsoleFilter:String,CaseIterable,Identifiable {
+    case all,switch1,switch2
+    var id:String {rawValue}
+    var title:String {self == .all ? "Todos los juegos" : self == .switch1 ? "Switch 1" : "Switch 2"}
+    func includes(_ game:CatalogGame)->Bool {self == .all || (self == .switch2) == game.isSwitch2}
+}
+
 struct CatalogGame: Identifiable, Equatable {
     let id: String
     let name: String
     let versions: [String]
     let artworkURL: URL?
     var isSwitch2:Bool {id.hasPrefix("04")}
+    var consoleTitle:String {isSwitch2 ? "Switch 2" : "Switch 1"}
     init(id:String,name:String,versions:[String],artworkURL:URL? = nil) {
         self.id=id;self.name=name;self.versions=versions;self.artworkURL=artworkURL
     }
@@ -14,7 +22,7 @@ struct CatalogGame: Identifiable, Equatable {
         let normalize: (String) -> String = {
             $0.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: Locale(identifier:"en_US_POSIX"))
         }
-        let haystack=normalize(([name,id]+versions+(isSwitch2 ? ["Switch 2 Mac dump"] : [])).joined(separator:" "))
+        let haystack=normalize(([name,id,consoleTitle,isSwitch2 ? "switch2 ns2 Mac dump NUP" : "switch1 ns1"]+versions).joined(separator:" "))
         return normalize(query).split(whereSeparator: {$0.isWhitespace}).allSatisfy {haystack.contains($0)}
     }
     var notesURL: URL {
@@ -60,7 +68,7 @@ struct GameCatalog {
             return comparison == .orderedSame ? $0.id < $1.id : comparison == .orderedAscending
         }
     }
-    static func search(_ games: [CatalogGame], query: String) -> [CatalogGame] {
-        games.filter {$0.matches(query)}
+    static func search(_ games: [CatalogGame], query: String, console:CatalogConsoleFilter = .all) -> [CatalogGame] {
+        games.filter {console.includes($0) && $0.matches(query)}
     }
 }

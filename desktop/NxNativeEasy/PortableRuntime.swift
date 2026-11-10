@@ -14,8 +14,7 @@ enum PortableRuntime {
         env["DOTNET_CLI_WORKLOAD_UPDATE_NOTIFY_DISABLE"]="1"
         if let tools {
             env["NXE_BUNDLED_TOOLS"]=tools.path
-            env["DOTNET_ROOT"]=tools.appendingPathComponent("dotnet").path
-            env["PATH"]=[tools.appendingPathComponent("bin").path,tools.appendingPathComponent("python/bin").path,tools.appendingPathComponent("dotnet").path,env["PATH"] ?? "/usr/bin:/bin"].joined(separator:":")
+            env["PATH"]=[tools.appendingPathComponent("bin").path,tools.appendingPathComponent("python/bin").path,env["PATH"] ?? "/usr/bin:/bin"].joined(separator:":")
         }
         return env
     }

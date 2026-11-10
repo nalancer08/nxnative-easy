@@ -66,7 +66,7 @@ def load_builder(package_metadata=None):
     builder.TOOL_PATHS.insert(0, str(Path(sys.executable).parent))
     if os.environ.get('NXE_BUNDLED_TOOLS'):
         tools=Path(os.environ['NXE_BUNDLED_TOOLS'])
-        builder.TOOL_PATHS[:0]=[str(tools/'bin'),str(tools/'dotnet')]
+        builder.TOOL_PATHS[:0]=[str(tools/'bin')]
     if package_metadata is not None:
         metadata_spec = importlib.util.spec_from_file_location('nxnative_inspection', REPO/'scripts/inspect_game.py')
         assert metadata_spec is not None and metadata_spec.loader is not None

@@ -8,6 +8,7 @@
         "1.10"
       ],
       "notes": "dm/games/01003FC01670C000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/13-sentinels.jpg",
       "caption": ""
     },
@@ -18,6 +19,7 @@
         "1.00"
       ],
       "notes": "dm/games/01008D7016438000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/13-sentinels.jpg",
       "caption": "~5 GB"
     },
@@ -28,6 +30,7 @@
         "1.00"
       ],
       "notes": "dm/games/010045C014650000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/13-sentinels.jpg",
       "caption": "13 Sentinels: Aegis Rim~5 GB"
     },
@@ -39,6 +42,7 @@
         "1.1.2"
       ],
       "notes": "dm/games/0100A83022A22000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/absolum.jpg",
       "caption": ""
     },
@@ -49,6 +53,7 @@
         "1.0.0.2"
       ],
       "notes": "dm/games/010005501E68C000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/ace-attorney-investigations.jpg",
       "caption": ""
     },
@@ -59,6 +64,7 @@
         "1.0.0"
       ],
       "notes": "dm/games/0100300012F2A000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/advance-wars-1-2-re-boot-camp.jpg",
       "caption": ""
     },
@@ -69,6 +75,7 @@
         "1.0.1"
       ],
       "notes": "dm/games/010089B00D09C000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/ai-the-somnium-files.jpg",
       "caption": ""
     },
@@ -79,6 +86,7 @@
         "1.0.2"
       ],
       "notes": "dm/games/0100713016CCC000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/ai-the-somnium-files-nirvana-initiative.jpg",
       "caption": ""
     },
@@ -89,6 +97,7 @@
         "3.0.3"
       ],
       "notes": "dm/games/01006F8002326000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/animal-crossing-new-horizons.jpg",
       "caption": ""
     },
@@ -99,6 +108,7 @@
         "1.0.10"
       ],
       "notes": "dm/games/010020D01AD24000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/animal-well.png",
       "caption": ""
     },
@@ -109,6 +119,7 @@
         "1.0.1"
       ],
       "notes": "dm/games/01007300020FA000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/astral-chain.png",
       "caption": "60 fps target with 1.0.1"
     },
@@ -119,6 +130,7 @@
         "1.2.0"
       ],
       "notes": "dm/games/0100199023B2E000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/atelier-ryza-dx.jpg",
       "caption": ""
     },
@@ -129,6 +141,7 @@
         "1.0.12"
       ],
       "notes": "dm/games/01002CD00A51C000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/baba-is-you.jpg",
       "caption": ""
     },
@@ -139,6 +152,7 @@
         "1.1.3"
       ],
       "notes": "dm/games/0100CD801CE5E000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/balatro.jpg",
       "caption": "played by touch"
     },
@@ -149,6 +163,7 @@
         "1.293"
       ],
       "notes": "dm/games/010086A022444000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/ball-x-pit.jpg",
       "caption": ""
     },
@@ -159,6 +174,7 @@
         "1.0.0"
       ],
       "notes": "dm/games/010038600B27E000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/bastion.jpg",
       "caption": ""
     },
@@ -169,6 +185,7 @@
         "1.0.5"
       ],
       "notes": "dm/games/0100ACD0163D0000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/batman-arkham-knight.jpg",
       "caption": ""
     },
@@ -179,6 +196,7 @@
         "1.1"
       ],
       "notes": "dm/games/010076F0049A2000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/bayonetta.jpg",
       "caption": ""
     },
@@ -189,6 +207,7 @@
         "1.2"
       ],
       "notes": "dm/games/01007960049A0000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/bayonetta-2.jpg",
       "caption": ""
     },
@@ -199,6 +218,7 @@
         "1.2.0"
       ],
       "notes": "dm/games/01004A4010FEA000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/bayonetta-3.jpg",
       "caption": ""
     },
@@ -209,6 +229,7 @@
         "1.2.0"
       ],
       "notes": "dm/games/0100620012D6E000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/big-brain-academy-brain-vs-brain.jpg",
       "caption": ""
     },
@@ -219,6 +240,7 @@
         "1.0.8"
       ],
       "notes": "dm/games/0100698009C6E000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/blasphemous.jpg",
       "caption": ""
     },
@@ -229,6 +251,7 @@
         "1.0.8"
       ],
       "notes": "dm/games/010040801A4C8000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/blasphemous-2.png",
       "caption": ""
     },
@@ -239,6 +262,7 @@
         "1.0.0"
       ],
       "notes": "dm/games/0100F5D01DA3A000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/brain-memory-training-academy.jpg",
       "caption": ""
     },
@@ -249,6 +273,7 @@
         "1.4.2"
       ],
       "notes": "dm/games/01009BF0072D4000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/captain-toad-treasure-tracker.jpg",
       "caption": ""
     },
@@ -259,6 +284,7 @@
         "1.1.0"
       ],
       "notes": "dm/games/0100BA4026E94000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/castlevania-belmonts-curse.jpg",
       "caption": ""
     },
@@ -269,6 +295,7 @@
         "1.0.1a"
       ],
       "notes": "dm/games/0100BF00112C0000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/catherine-full-body.jpg",
       "caption": ""
     },
@@ -279,6 +306,7 @@
         "1.4.1.1"
       ],
       "notes": "dm/games/01002B30028F6000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/celeste.jpg",
       "caption": ""
     },
@@ -289,6 +317,7 @@
         "1.5.28"
       ],
       "notes": "dm/games/01002E7016C46000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/cult-of-the-lamb.jpg",
       "caption": ""
     },
@@ -299,6 +328,7 @@
         "1.3.7"
       ],
       "notes": "dm/games/0100A5C00D162000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/cuphead.jpg",
       "caption": ""
     },
@@ -309,6 +339,7 @@
         "1.0.3"
       ],
       "notes": "dm/games/01004AB00A260000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/dark-souls-remastered-creation.jpg",
       "caption": "60 fps with 1.0.3"
     },
@@ -319,6 +350,7 @@
         "v1.0.6.1267"
       ],
       "notes": "dm/games/010097F018538000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/dave-the-diver.jpg",
       "caption": ""
     },
@@ -329,6 +361,7 @@
         "1.25.0"
       ],
       "notes": "dm/games/0100646009FBE000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/dead-cells.jpg",
       "caption": ""
     },
@@ -339,6 +372,7 @@
         "1.0.3"
       ],
       "notes": "dm/games/010014E00DB56000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/digimon-story-cyber-sleuth.jpg",
       "caption": ""
     },
@@ -349,6 +383,7 @@
         "v458752"
       ],
       "notes": "dm/games/040074A01BF12000/README.md",
+      "console": "switch2",
       "artwork": "docs/images/donkey-kong-bananza.jpg",
       "caption": "Switch 2, Mac only, from a dump"
     },
@@ -359,6 +394,7 @@
         "1.1.0"
       ],
       "notes": "dm/games/01009D901BC56000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/donkey-kong-country-returns-hd.png",
       "caption": ""
     },
@@ -369,6 +405,7 @@
         "1.0.2"
       ],
       "notes": "dm/games/0100C1F0051B6000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/donkey-kong-country-tropical-freeze.jpg",
       "caption": ""
     },
@@ -379,6 +416,7 @@
         "2.0.76"
       ],
       "notes": "dm/games/010035F022078000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/dragon-ball-sparking-zero.jpg",
       "caption": ""
     },
@@ -389,6 +427,7 @@
         "1.7.3d"
       ],
       "notes": "dm/games/010042000A986000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/dragon-quest-builders-2.jpg",
       "caption": ""
     },
@@ -399,6 +438,7 @@
         "1.1.2"
       ],
       "notes": "dm/games/01003E601E324000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/dragon-quest-i-ii-hd-2d-remake.jpg",
       "caption": ""
     },
@@ -409,6 +449,7 @@
         "1.0.2"
       ],
       "notes": "dm/games/0100D7C01F254000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/dragon-quest-i-ii-hd-2d-remake.jpg",
       "caption": ""
     },
@@ -419,6 +460,7 @@
         "1.2.0"
       ],
       "notes": "dm/games/0100A9D01C446000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/dragon-quest-vii-reimagined.jpg",
       "caption": "60 fps with 1.2.0"
     },
@@ -429,6 +471,7 @@
         "1.0.4"
       ],
       "notes": "dm/games/01006C300E9F0000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/dragon-quest-xi-s.jpg",
       "caption": "60 fps with 1.0.4"
     },
@@ -439,6 +482,7 @@
         "1.8d.310c"
       ],
       "notes": "dm/games/0100C49025D3E000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/ea-sports-fc-27.jpg",
       "caption": "60 fps with 1.8d.310c"
     },
@@ -449,6 +493,7 @@
         "1.0.3"
       ],
       "notes": "dm/games/0100CE4010AAC000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/final-fantasy-crystal-chronicles.jpg",
       "caption": ""
     },
@@ -459,6 +504,7 @@
         "1.0.1"
       ],
       "notes": "dm/games/0100606026F12000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/final-fantasy-resonance.jpg",
       "caption": "60 fps with 1.0.1"
     },
@@ -469,6 +515,7 @@
         "1.0.1"
       ],
       "notes": "dm/games/0100B8A026F14000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/final-fantasy-resonance.jpg",
       "caption": "FINAL FANTASY RESONANCE~10 GB · 60 fps with 1.0.1"
     },
@@ -479,6 +526,7 @@
         "1.4.0"
       ],
       "notes": "dm/games/010038B015560000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/final-fantasy-tactics.jpg",
       "caption": ""
     },
@@ -489,6 +537,7 @@
         "1.0.0"
       ],
       "notes": "dm/games/0100BC300CB48000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/final-fantasy-x-x2-hd-remaster.jpg",
       "caption": ""
     },
@@ -499,6 +548,7 @@
         "2.0.0"
       ],
       "notes": "dm/games/0100A6301214E000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/fire-emblem-engage.jpg",
       "caption": "60 fps with 2.0.0"
     },
@@ -509,6 +559,7 @@
         "v131072"
       ],
       "notes": "dm/games/04007EF01F8AE000/README.md",
+      "console": "switch2",
       "artwork": "docs/images/fire-emblem-fortunes-weave.jpg",
       "caption": "Switch 2, Mac only, from a dump, up to 120 fps"
     },
@@ -519,6 +570,7 @@
         "1.2.0"
       ],
       "notes": "dm/games/010055D009F78000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/fire-emblem-three-houses.jpg",
       "caption": "60 fps with 1.2.0"
     },
@@ -529,6 +581,7 @@
         "1.0.0"
       ],
       "notes": "dm/games/010029B018432000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/ghost-trick-phantom-detective.jpg",
       "caption": ""
     },
@@ -539,6 +592,7 @@
         "1.0.38233"
       ],
       "notes": "dm/games/0100535012974000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/hades.jpg",
       "caption": ""
     },
@@ -546,9 +600,11 @@
       "id": "0100A00019DE0000",
       "name": "Hades II",
       "versions": [
-        "0.0.126424"
+        "0.0.126424",
+        "1.0.141667"
       ],
       "notes": "dm/games/0100A00019DE0000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/hades-ii.jpg",
       "caption": ""
     },
@@ -559,6 +615,7 @@
         "1.5.12620"
       ],
       "notes": "dm/games/0100633007D48000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/hollow-knight.jpg",
       "caption": ""
     },
@@ -569,6 +626,7 @@
         "1.0.30000"
       ],
       "notes": "dm/games/010013C00E930000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/hollow-knight-silksong.jpg",
       "caption": ""
     },
@@ -579,6 +637,7 @@
         "1.3.0"
       ],
       "notes": "dm/games/01002B00111A2000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/hyrule-warriors-age-of-calamity.jpg",
       "caption": "60 fps with 1.3.0"
     },
@@ -589,6 +648,7 @@
         "v196608"
       ],
       "notes": "dm/games/04003F40232DE000/README.md",
+      "console": "switch2",
       "artwork": "docs/images/hyrule-warriors-age-of-imprisonment.jpg",
       "caption": "Switch 2, Mac only, from a NUP"
     },
@@ -599,6 +659,7 @@
         "1.0.1"
       ],
       "notes": "dm/games/0100AE00096EA000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/hyrule-warriors-definitive-edition.jpg",
       "caption": ""
     },
@@ -609,6 +670,7 @@
         "1.3.3"
       ],
       "notes": "dm/games/040077201BE50000/README.md",
+      "console": "switch2",
       "artwork": "docs/images/kirby-air-riders.jpg",
       "caption": "Switch 2, Mac only, from a NUP"
     },
@@ -619,6 +681,7 @@
         "1.1.0"
       ],
       "notes": "dm/games/01004D300C5AE000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/kirby-and-the-forgotten-land.jpg",
       "caption": ""
     },
@@ -629,6 +692,7 @@
         "4.0.0a"
       ],
       "notes": "dm/games/01007E3006DDA000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/kirby-star-allies.jpg",
       "caption": ""
     },
@@ -639,6 +703,7 @@
         "1.4.0"
       ],
       "notes": "dm/games/0100DCA0064A6000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/luigis-mansion-3.jpg",
       "caption": "60 fps with 1.4.0"
     },
@@ -650,6 +715,7 @@
         "4.0.1"
       ],
       "notes": "dm/games/0100152000022000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/mario-kart-8-deluxe.jpg",
       "caption": "no Mii heads"
     },
@@ -660,6 +726,7 @@
         "v0"
       ],
       "notes": "dm/games/0400C3F00006E000/README.md",
+      "console": "switch2",
       "artwork": "docs/images/mario-kart-world.jpg",
       "caption": "Switch 2, Mac only, from a dump"
     },
@@ -670,6 +737,7 @@
         "1.0.0"
       ],
       "notes": "dm/games/01006D0017F7A000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/mario-luigi-brothership.jpg",
       "caption": "up to 120 fps"
     },
@@ -680,6 +748,7 @@
         "1.1.1"
       ],
       "notes": "dm/games/01006FE013472000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/mario-party-superstars.jpg",
       "caption": ""
     },
@@ -690,6 +759,7 @@
         "1.9.589692"
       ],
       "notes": "dm/games/010067300059A000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/mario-rabbids-kingdom-battle.jpg",
       "caption": ""
     },
@@ -700,6 +770,7 @@
         "1.6.2225577"
       ],
       "notes": "dm/games/0100317013770000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/mario-rabbids-sparks-of-hope.jpg",
       "caption": ""
     },
@@ -710,6 +781,7 @@
         "v327680"
       ],
       "notes": "dm/games/0400D4201C6EA000/README.md",
+      "console": "switch2",
       "artwork": "docs/images/mario-tennis-fever.jpg",
       "caption": "Switch 2, Mac only, from a dump"
     },
@@ -720,6 +792,7 @@
         "1.0.1"
       ],
       "notes": "dm/games/0100B99019412000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/mario-vs-donkey-kong.jpg",
       "caption": ""
     },
@@ -730,6 +803,7 @@
         "2.1.0"
       ],
       "notes": "dm/games/010093801237C000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/metroid-dread.jpg",
       "caption": ""
     },
@@ -740,6 +814,7 @@
         "1.0.0"
       ],
       "notes": "dm/games/010012101468C000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/metroid-prime-remastered.jpg",
       "caption": ""
     },
@@ -750,6 +825,7 @@
         "1.1.3.0"
       ],
       "notes": "dm/games/0100A7C01B792000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/minecraft-dungeons-ii.jpg",
       "caption": ""
     },
@@ -760,6 +836,7 @@
         "16.0.2"
       ],
       "notes": "dm/games/0100B04011742000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/monster-hunter-rise.jpg",
       "caption": "60 fps with 16.0.2"
     },
@@ -770,6 +847,7 @@
         "1.1.1"
       ],
       "notes": "dm/games/010051701FB46000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/monster-train-2.jpg",
       "caption": "60 fps with 1.1.1"
     },
@@ -780,6 +858,7 @@
         "1.0.3"
       ],
       "notes": "dm/games/010029B0118E8000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/need-for-speed-hot-pursuit-remastered.jpg",
       "caption": ""
     },
@@ -790,6 +869,7 @@
         "1.0.3"
       ],
       "notes": "dm/games/010056B015FE8000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/nier-automata.png",
       "caption": "60 fps with 1.0.3"
     },
@@ -800,6 +880,7 @@
         "1.0.3"
       ],
       "notes": "dm/games/0100B8E016F76000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/nier-automata.png",
       "caption": "60 fps with 1.0.3"
     },
@@ -810,6 +891,7 @@
         "1.0.5"
       ],
       "notes": "dm/games/010057D006492000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/octopath-traveler.jpg",
       "caption": ""
     },
@@ -820,6 +902,7 @@
         "1.0.5"
       ],
       "notes": "dm/games/01005270232F2000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/octopath-traveler-0.jpg",
       "caption": "60 fps with 1.0.5"
     },
@@ -830,6 +913,7 @@
         "1.1.1"
       ],
       "notes": "dm/games/0100A3501946E000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/octopath-traveler-ii.jpg",
       "caption": "60 fps with 1.1.1"
     },
@@ -840,8 +924,31 @@
         "1.0.0"
       ],
       "notes": "dm/games/0100276009872000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/okami-hd.jpg",
       "caption": ""
+    },
+    {
+      "id": "010061D00DB74000",
+      "name": "Ori and the Blind Forest: Definitive Edition",
+      "versions": [
+        "1.0.2"
+      ],
+      "notes": "dm/games/010061D00DB74000/README.md",
+      "console": "switch1",
+      "artwork": "docs/images/ori-and-the-blind-forest.jpg",
+      "caption": "Official artwork · Mac testing in game notes"
+    },
+    {
+      "id": "01008DD013200000",
+      "name": "Ori and the Will of the Wisps",
+      "versions": [
+        "1.2.1"
+      ],
+      "notes": "dm/games/01008DD013200000/README.md",
+      "console": "switch1",
+      "artwork": "docs/images/ori-and-the-will-of-the-wisps.jpg",
+      "caption": "Official artwork · Mac testing in game notes"
     },
     {
       "id": "0100A3900C3E2000",
@@ -850,6 +957,7 @@
         "1.0.1"
       ],
       "notes": "dm/games/0100A3900C3E2000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/paper-mario-the-origami-king.jpg",
       "caption": ""
     },
@@ -860,6 +968,7 @@
         "1.0.1"
       ],
       "notes": "dm/games/0100ECD018EBE000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/paper-mario-the-thousand-year-door.jpg",
       "caption": "60 fps with 1.0.1"
     },
@@ -870,6 +979,7 @@
         "1.0.1"
       ],
       "notes": "dm/games/0100E44016C22000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/patricks-parabox.jpg",
       "caption": ""
     },
@@ -880,6 +990,7 @@
         "1.0.2"
       ],
       "notes": "dm/games/010062B01525C000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/persona-4-golden.jpg",
       "caption": ""
     },
@@ -890,6 +1001,7 @@
         "1.0.2"
       ],
       "notes": "dm/games/01005CA01580E000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/persona-5-royal.jpg",
       "caption": ""
     },
@@ -900,6 +1012,7 @@
         "1.1.1"
       ],
       "notes": "dm/games/0100B7C00933A000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/pikmin-4.jpg",
       "caption": ""
     },
@@ -910,6 +1023,7 @@
         "1.3.0"
       ],
       "notes": "dm/games/0100000011D90000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/pokemon-brilliant-diamond.jpg",
       "caption": "60 fps with 1.3.0"
     },
@@ -920,6 +1034,7 @@
         "1.1.1"
       ],
       "notes": "dm/games/01001F5010DFA000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/pokemon-legends-arceus.jpg",
       "caption": ""
     },
@@ -930,6 +1045,7 @@
         "2.0.2"
       ],
       "notes": "dm/games/0100F43008C44000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/pokemon-legends-z-a.jpg",
       "caption": ""
     },
@@ -940,6 +1056,7 @@
         "v655360"
       ],
       "notes": "dm/games/0400A3A01EE4C000/README.md",
+      "console": "switch2",
       "artwork": "docs/images/pokemon-pokopia.jpg",
       "caption": "Switch 2, Mac only, from a dump"
     },
@@ -950,6 +1067,7 @@
         "1.0.0"
       ],
       "notes": "dm/games/0100A3D008C5C000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/pokemon-scarlet.png",
       "caption": ""
     },
@@ -960,6 +1078,7 @@
         "1.3.2"
       ],
       "notes": "dm/games/01008DB008C2C000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/pokemon-shield.jpg",
       "caption": ""
     },
@@ -970,6 +1089,7 @@
         "1.3.2"
       ],
       "notes": "dm/games/0100ABF008968000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/pokemon-sword.jpg",
       "caption": ""
     },
@@ -980,6 +1100,7 @@
         "1.0.0"
       ],
       "notes": "dm/games/01008F6008C5E000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/pokemon-violet.jpg",
       "caption": ""
     },
@@ -990,6 +1111,7 @@
         "1.0.3"
       ],
       "notes": "dm/games/01007BB017812000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/portal.jpg",
       "caption": ""
     },
@@ -1000,6 +1122,7 @@
         "1.0.3"
       ],
       "notes": "dm/games/0100ABD01785C000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/portal-2.jpg",
       "caption": ""
     },
@@ -1010,6 +1133,7 @@
         "1.0.0"
       ],
       "notes": "dm/games/01007A3009184000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/princess-peach-showtime.jpg",
       "caption": "60 fps with 1.0.0"
     },
@@ -1020,8 +1144,22 @@
         "1.0.0"
       ],
       "notes": "dm/games/010020400E1C2000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/raging-loop.jpg",
       "caption": ""
+    },
+    {
+      "id": "01007820196A6000",
+      "name": "Red Dead Redemption",
+      "versions": [
+        "1.0.0",
+        "1.0.4",
+        "1.0.7"
+      ],
+      "notes": "dm/games/01007820196A6000/README.md",
+      "console": "switch1",
+      "artwork": "docs/images/red-dead-redemption.jpg",
+      "caption": "Official artwork · Mac testing in game notes"
     },
     {
       "id": "010032E00E6E2000",
@@ -1030,6 +1168,7 @@
         "1.0.1"
       ],
       "notes": "dm/games/010032E00E6E2000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/return-of-the-obra-dinn.png",
       "caption": ""
     },
@@ -1040,6 +1179,7 @@
         "1.0.0"
       ],
       "notes": "dm/games/0100D9F01D474000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/rhythm-heaven-groove.jpg",
       "caption": ""
     },
@@ -1050,6 +1190,7 @@
         "1.1.3"
       ],
       "notes": "dm/games/0100C2A01A730000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/romance-of-the-three-kingdoms-8-remake.jpg",
       "caption": "controller only"
     },
@@ -1060,6 +1201,7 @@
         "1.0.10"
       ],
       "notes": "dm/games/0100ED7012DB2000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/romance-of-the-three-kingdoms-xiv.jpg",
       "caption": ""
     },
@@ -1070,6 +1212,7 @@
         "2.0.59001"
       ],
       "notes": "dm/games/01008C0016544000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/sea-of-stars.jpg",
       "caption": ""
     },
@@ -1080,6 +1223,7 @@
         "1.0.3"
       ],
       "notes": "dm/games/010069C01AB82000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/shin-megami-tensei-v-vengeance.jpg",
       "caption": "60 fps with 1.0.3"
     },
@@ -1090,6 +1234,7 @@
         "1.0.0"
       ],
       "notes": "dm/games/0100D5B026844000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/silver-pines.jpg",
       "caption": ""
     },
@@ -1100,6 +1245,7 @@
         "1.1.8"
       ],
       "notes": "dm/games/01008F701C074000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/sonic-superstars.jpg",
       "caption": ""
     },
@@ -1110,6 +1256,7 @@
         "v65536"
       ],
       "notes": "dm/games/0400380020056000/README.md",
+      "console": "switch2",
       "artwork": "docs/images/splatoon-raiders.jpg",
       "caption": "Switch 2, Mac only, from a dump"
     },
@@ -1120,6 +1267,7 @@
         "1.6.15.13"
       ],
       "notes": "dm/games/0100E65002BB8000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/stardew-valley.jpg",
       "caption": ""
     },
@@ -1130,6 +1278,7 @@
         "v131072"
       ],
       "notes": "dm/games/0400E88025B1A000/README.md",
+      "console": "switch2",
       "artwork": "docs/images/star-fox.jpg",
       "caption": "Switch 2, Mac only, from a NUP"
     },
@@ -1140,6 +1289,7 @@
         "1.12.0"
       ],
       "notes": "dm/games/01009320084A4000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/steamworld-dig.jpg",
       "caption": ""
     },
@@ -1150,6 +1300,7 @@
         "4.1.1"
       ],
       "notes": "dm/games/0100CA9002322000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/steamworld-dig-2.jpg",
       "caption": ""
     },
@@ -1160,6 +1311,7 @@
         "1.5.1"
       ],
       "notes": "dm/games/010089C01E9CA000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/steamworld-heist-ii.jpg",
       "caption": ""
     },
@@ -1170,6 +1322,7 @@
         "2.2.1"
       ],
       "notes": "dm/games/010016100A186000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/steamworld-heist.jpg",
       "caption": ""
     },
@@ -1180,6 +1333,7 @@
         "1.0.3"
       ],
       "notes": "dm/games/01008BC024FDE000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/steins-gate-reboot.jpg",
       "caption": ""
     },
@@ -1190,6 +1344,7 @@
         "1.0.9"
       ],
       "notes": "dm/games/0100EC9010258000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/streets-of-rage-4.jpg",
       "caption": ""
     },
@@ -1200,6 +1355,7 @@
         "1.23.83358"
       ],
       "notes": "dm/games/0100429011144000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/subnautica.jpg",
       "caption": ""
     },
@@ -1210,6 +1366,7 @@
         "1.23.55063"
       ],
       "notes": "dm/games/010014C011146000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/subnautica-below-zero.jpg",
       "caption": ""
     },
@@ -1220,6 +1377,7 @@
         "1.1.4"
       ],
       "notes": "dm/games/010049900F546000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/super-mario-3d-all-stars.jpg",
       "caption": "Super Mario 64 and Sunshine; Galaxy is 32-bit ARM, which Apple silicon cannot run"
     },
@@ -1230,6 +1388,7 @@
         "1.2.2"
       ],
       "notes": "dm/games/010028600EBDA000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/super-mario-3d-world.jpg",
       "caption": ""
     },
@@ -1242,6 +1401,7 @@
         "1.2.1"
       ],
       "notes": "dm/games/010015100B514000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/super-mario-bros-wonder.jpg",
       "caption": ""
     },
@@ -1252,6 +1412,7 @@
         "1.3.1"
       ],
       "notes": "dm/games/010099C022B96000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/super-mario-galaxy.jpg",
       "caption": ""
     },
@@ -1262,6 +1423,7 @@
         "1.4.0"
       ],
       "notes": "dm/games/0100FD8022DAA000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/super-mario-galaxy-2.jpg",
       "caption": ""
     },
@@ -1272,6 +1434,7 @@
         "1.4.1"
       ],
       "notes": "dm/games/0100000000010000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/super-mario-odyssey.jpg",
       "caption": ""
     },
@@ -1282,6 +1445,7 @@
         "2.3.0"
       ],
       "notes": "dm/games/0100965017338000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/super-mario-party-jamboree.jpg",
       "caption": ""
     },
@@ -1292,6 +1456,7 @@
         "1.0.1"
       ],
       "notes": "dm/games/0100BC0018138000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/super-mario-rpg.jpg",
       "caption": ""
     },
@@ -1302,6 +1467,7 @@
         "2.20"
       ],
       "notes": "dm/games/010031F019294000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/super-monkey-ball-banana-rumble.jpg",
       "caption": ""
     },
@@ -1312,6 +1478,7 @@
         "1.4.1"
       ],
       "notes": "dm/games/010063301BD50000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/super-robot-wars-y.jpg",
       "caption": ""
     },
@@ -1322,6 +1489,7 @@
         "13.0.5"
       ],
       "notes": "dm/games/01006A800016E000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/super-smash-bros-ultimate.jpg",
       "caption": "offline"
     },
@@ -1332,6 +1500,7 @@
         "1.1.1"
       ],
       "notes": "dm/games/0100346017304000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/taiko-risshiden-v-dx.jpg",
       "caption": "Japanese · played by touch"
     },
@@ -1342,6 +1511,7 @@
         "1.0.3"
       ],
       "notes": "dm/games/010092B0091D0000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/team-sonic-racing.jpg",
       "caption": ""
     },
@@ -1352,6 +1522,7 @@
         "1.0.0"
       ],
       "notes": "dm/games/010036E00FB20000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/the-great-ace-attorney-chronicles.jpg",
       "caption": ""
     },
@@ -1362,6 +1533,7 @@
         "1.9.0"
       ],
       "notes": "dm/games/01007EF00011E000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/zelda-breath-of-the-wild.jpg",
       "caption": "60 fps with 1.9.0"
     },
@@ -1372,6 +1544,7 @@
         "1.1.0"
       ],
       "notes": "dm/games/01008CF01BAAC000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/zelda-echoes-of-wisdom.jpg",
       "caption": ""
     },
@@ -1382,6 +1555,7 @@
         "1.1.0"
       ],
       "notes": "dm/games/01006BB00C6F0000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/zelda-links-awakening.jpg",
       "caption": ""
     },
@@ -1392,6 +1566,7 @@
         "v131072"
       ],
       "notes": "dm/games/0400486024DEC000/README.md",
+      "console": "switch2",
       "artwork": "docs/images/zelda-ocarina-of-time.jpg",
       "caption": "Switch 2, Mac only, from a NUP"
     },
@@ -1402,6 +1577,7 @@
         "1.0.1"
       ],
       "notes": "dm/games/01002DA013484000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/zelda-skyward-sword-hd.jpg",
       "caption": ""
     },
@@ -1412,6 +1588,7 @@
         "1.4.3"
       ],
       "notes": "dm/games/0100F2C0115B6000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/zelda-tears-of-the-kingdom.jpg",
       "caption": "60 fps with 1.4.3"
     },
@@ -1422,6 +1599,7 @@
         "1.1.0"
       ],
       "notes": "dm/games/01008D9022462000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/the-rogue-prince-of-persia.jpg",
       "caption": ""
     },
@@ -1432,8 +1610,20 @@
         "1.1.1"
       ],
       "notes": "dm/games/0100CC80140F8000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/triangle-strategy.jpg",
       "caption": "60 fps with 1.1.1"
+    },
+    {
+      "id": "0100DA801624E000",
+      "name": "TUNIC",
+      "versions": [
+        "1.0.3"
+      ],
+      "notes": "dm/games/0100DA801624E000/README.md",
+      "console": "switch1",
+      "artwork": "docs/images/tunic.jpg",
+      "caption": "Official artwork · Mac testing in game notes"
     },
     {
       "id": "010069401ADB8000",
@@ -1442,6 +1632,7 @@
         "1.05"
       ],
       "notes": "dm/games/010069401ADB8000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/unicorn-overlord.jpg",
       "caption": ""
     },
@@ -1452,6 +1643,7 @@
         "1.05"
       ],
       "notes": "dm/games/010054B01AD92000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/unicorn-overlord.jpg",
       "caption": "Unicorn Overlord~4 GB"
     },
@@ -1462,6 +1654,7 @@
         "1.0.0"
       ],
       "notes": "dm/games/0100217023F6C000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/well-dweller.jpg",
       "caption": ""
     },
@@ -1472,6 +1665,7 @@
         "2.1.0"
       ],
       "notes": "dm/games/0100E95004038000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/xenoblade-chronicles-2.jpg",
       "caption": ""
     },
@@ -1482,6 +1676,7 @@
         "2.2.1"
       ],
       "notes": "dm/games/010074F013262000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/xenoblade-chronicles-3.jpg",
       "caption": ""
     },
@@ -1492,6 +1687,7 @@
         "1.1.2"
       ],
       "notes": "dm/games/0100FF500E34A000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/xenoblade-chronicles-definitive-edition.jpg",
       "caption": ""
     },
@@ -1502,6 +1698,7 @@
         "1.0.2"
       ],
       "notes": "dm/games/0400245021D2C000/README.md",
+      "console": "switch2",
       "artwork": "docs/images/yoshi-and-the-mysterious-book.jpg",
       "caption": "Switch 2, Mac only"
     },
@@ -1512,6 +1709,7 @@
         "1.0.1"
       ],
       "notes": "dm/games/01006000040C2000/README.md",
+      "console": "switch1",
       "artwork": "docs/images/yoshis-crafted-world.jpg",
       "caption": ""
     }

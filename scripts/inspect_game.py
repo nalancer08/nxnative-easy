@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Read CNMT/NACP metadata without extracting or compiling a game.
 
-Builds only the metadata tool in the user's external tool cache when necessary.
+Uses the source-matched native metadata reader; no SDK installation or extraction.
 Package/key contents and tool diagnostics are never forwarded to the UI.
 """
 import argparse
@@ -10,9 +10,7 @@ import json
 import os
 from pathlib import Path
 from typing import Any
-import shutil
 import subprocess
-import tempfile
 
 REPO = Path(__file__).resolve().parents[1]
 EXTENSIONS = {'.nsp', '.xci', '.nsz', '.xcz'}
@@ -63,46 +61,19 @@ def inspect(folder, keys, cache, setup_tools=False):
     if any(p.resolve() == REPO or REPO in p.resolve().parents for p in files):
         return dict(schema=1, status='invalid_location')
     env = dict(os.environ)
-    if not env.get('NXE_BUNDLED_TOOLS'):env['PATH'] = '/opt/homebrew/bin:/usr/local/bin:/usr/local/share/dotnet:' + env.get('PATH', '')
-    env.update(DOTNET_CLI_TELEMETRY_OPTOUT='1', DOTNET_NOLOGO='1')
-    dotnet = shutil.which('dotnet', path=env['PATH'])
-    if setup_tools:
-        brew = shutil.which('brew', path=env['PATH'])
-        if not brew:
-            return dict(schema=1, status='tools_missing')
-        command = 'upgrade' if subprocess.run([brew, 'list', '--cask', '--versions', 'dotnet-sdk'], env=env, capture_output=True).returncode == 0 else 'install'
-        result = subprocess.run([brew, command, '--cask', 'dotnet-sdk'], env=env, capture_output=True, timeout=900)
-        if result.returncode:
-            return dict(schema=1, status='tools_unavailable')
-        dotnet = shutil.which('dotnet', path=env['PATH'])
-    if not dotnet:
+    tool = REPO / 'dm/tools/nx_extract_bin/nx_extract'
+    if not tool.is_file():
         return dict(schema=1, status='tools_missing')
     source = REPO / 'dm/tools/nx_extract'
-    digest = hashlib.sha256(b''.join(p.read_bytes() for p in (source/'Program.cs', source/'nx_extract.csproj'))).hexdigest()
-    tool = cache / digest / 'nx_extract.dll'
-    if env.get('NXE_BUNDLED_TOOLS'):
-        bundled=Path(env['NXE_BUNDLED_TOOLS'])
-        metadata=json.loads((bundled/'manifest.json').read_text())
-        if metadata.get('reader_source_sha256')==digest:tool=bundled/'nx_extract/nx_extract.dll'
-    if not tool.is_file():
-        cache.mkdir(parents=True, exist_ok=True)
-        # Both the build output and MSBuild's intermediate files stay outside the checkout.
-        with tempfile.TemporaryDirectory(prefix='metadata-', dir=cache) as temporary:
-            work = Path(temporary)
-            project = work/'source'
-            project.mkdir()
-            for name in ('Program.cs', 'nx_extract.csproj'):
-                shutil.copy2(source/name, project/name)
-            result = subprocess.run([dotnet, 'build', str(project), '-c', 'Release', '-o', str(work/'tool'), '-v', 'quiet', '-nologo'],
-                                    env=env, capture_output=True, timeout=240)
-            if result.returncode:
-                return dict(schema=1, status='tools_unavailable')
-            try:
-                (work/'tool').rename(tool.parent)
-            except FileExistsError:
-                pass  # another read-only inspection populated the same tool cache
+    digest = hashlib.sha256(b''.join((source/name).read_bytes() for name in ('Program.cs', 'nx_extract.csproj'))).hexdigest()[:16]
+    try:
+        verified = subprocess.run([str(tool), '--source-sha'], env=env, capture_output=True, text=True, timeout=60)
+    except (OSError, subprocess.SubprocessError):
+        return dict(schema=1, status='tools_unavailable')
+    if verified.returncode or verified.stdout.strip() != digest:
+        return dict(schema=1, status='tools_unavailable')
     signatures = {p.name: [p.stat().st_size, p.stat().st_mtime_ns] for p in files}
-    result = subprocess.run([dotnet, str(tool), '--inspect', str(keys), *(str(p) for p in files)],
+    result = subprocess.run([str(tool), '--inspect', str(keys), *(str(p) for p in files)],
                             env=env, capture_output=True, timeout=180)
     if len(result.stdout) > 1048576:
         return dict(schema=1, status='metadata_unreadable')

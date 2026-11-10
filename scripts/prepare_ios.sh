@@ -58,8 +58,7 @@ if ! /usr/bin/xcrun --sdk "$nxi_sdk_name" metal --version; then
   /usr/bin/xcrun --sdk "$nxi_sdk_name" metal --version
 fi
 if [ -n "${NXE_BUNDLED_TOOLS:-}" ] && [ -x "$NXE_BUNDLED_TOOLS/python/bin/python3" ]; then
-  export DOTNET_ROOT="$NXE_BUNDLED_TOOLS/dotnet"
-  export PATH="$NXE_BUNDLED_TOOLS/bin:$NXE_BUNDLED_TOOLS/python/bin:$DOTNET_ROOT:$PATH"
+  export PATH="$NXE_BUNDLED_TOOLS/bin:$NXE_BUNDLED_TOOLS/python/bin:$PATH"
   nxi_venv="$NXE_BUNDLED_TOOLS/python"
 else
 nxi_brew=$(command -v brew || true)
@@ -67,16 +66,11 @@ if [ -z "$nxi_brew" ] && [ -x /opt/homebrew/bin/brew ]; then nxi_brew=/opt/homeb
 if [ -z "$nxi_brew" ] && [ -x /usr/local/bin/brew ]; then nxi_brew=/usr/local/bin/brew; fi
 [ -n "$nxi_brew" ] || { echo 'Install Homebrew from https://brew.sh first.' >&2; exit 1; }
 nxi_prefix=$("$nxi_brew" --prefix)
-export PATH="$nxi_prefix/bin:$nxi_prefix/sbin:/usr/local/share/dotnet:$PATH"
+export PATH="$nxi_prefix/bin:$nxi_prefix/sbin:$PATH"
 for nxi_formula in python@3.13 xcodegen zstd spirv-cross glslang; do
   if ! "$nxi_brew" list --versions "$nxi_formula" >/dev/null 2>&1; then "$nxi_brew" install "$nxi_formula"; fi
 done
-if ! command -v dotnet >/dev/null 2>&1 || ! dotnet --list-sdks | /usr/bin/grep -Eq '^10\.'; then
-  if "$nxi_brew" list --cask --versions dotnet-sdk >/dev/null 2>&1; then "$nxi_brew" upgrade --cask dotnet-sdk
-  else "$nxi_brew" install --cask dotnet-sdk; fi
-fi
 hash -r
-dotnet --list-sdks | /usr/bin/grep -Eq '^10\.'
 nxi_python_prefix=$("$nxi_brew" --prefix python@3.13)
 nxi_venv="$nxi_game/nxnative-tools/venv"
 if [ ! -e "$nxi_venv" ]; then "$nxi_python_prefix/bin/python3.13" -m venv "$nxi_venv"; fi

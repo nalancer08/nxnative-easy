@@ -6,7 +6,6 @@ from pathlib import Path
 import re
 import shutil
 import subprocess
-import tempfile
 import tarfile
 import urllib.request
 
@@ -48,11 +47,21 @@ def build_reader(destination,cache):
     repo=Path(__file__).resolve().parents[1]
     reader=repo/'dm/tools/nx_extract'
     reader_hash=hashlib.sha256(b''.join((reader/name).read_bytes() for name in ('Program.cs','nx_extract.csproj'))).hexdigest()
-    with tempfile.TemporaryDirectory(prefix='portable-reader-',dir=cache) as temp:
-        project=Path(temp)/'source';project.mkdir()
-        for name in ('Program.cs','nx_extract.csproj'):shutil.copy2(reader/name,project/name)
-        subprocess.run([str(destination/'dotnet/dotnet'),'build',str(project),'-c','Release','-o',str(destination/'nx_extract'),'--packages',str(destination/'nuget'),'-p:NuGetAudit=false'],check=True)
+    native=repo/'dm/tools/nx_extract_bin/nx_extract'
+    if run(str(native),'--source-sha')!=reader_hash[:16]:raise ValueError('Native metadata reader source mismatch')
+    target=destination/'nx_extract'
+    if target.is_symlink():target.unlink()
+    elif target.exists():shutil.rmtree(target)
+    target.mkdir();shutil.copy2(native,target/'nx_extract')
     return reader_hash
+
+
+def retire_managed_runtime(destination):
+    # Only the staged portable copy: preserve installed tools and their rollback.
+    for name in ('dotnet','nuget'):
+        target=destination/name
+        if target.is_symlink():target.unlink()
+        elif target.is_dir():shutil.rmtree(target)
 
 
 def copy_notices(destination):
@@ -73,7 +82,9 @@ def bundle(destination,cache):
         manifest['reader_source_sha256']=build_reader(destination,cache)
         copy_notices(destination)
         manifest['dependency_sources']=dependency_sources(destination,cache)
-        manifest['dotnet_sdks']=[line.split(' [')[0] for line in run(str(destination/'dotnet/dotnet'),'--list-sdks').splitlines()]
+        retire_managed_runtime(destination)
+        manifest.pop('dotnet_sdks',None)
+        manifest['reader_format']='native-aot'
         (destination/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
         return
     destination.mkdir(parents=True)
@@ -115,16 +126,13 @@ def bundle(destination,cache):
         if (prefix/'sbom.spdx.json').is_file():shutil.copy2(prefix/'sbom.spdx.json',licenses/(formula+'-sbom.spdx.json'))
         for file in prefix.glob('*'):
             if file.is_file() and file.name.upper().startswith(('LICENSE','COPYING','NOTICE')):shutil.copy2(file,licenses/(formula+'-'+file.name))
-    dotnet=Path(run('which','dotnet')).resolve().parent
-    shutil.copytree(dotnet,destination/'dotnet',symlinks=True)
-    subprocess.run([str(destination/'dotnet/dotnet'),'--list-sdks'],check=True)
     for source in (Path('/opt/homebrew/opt/xz'),Path('/opt/homebrew/opt/lz4'),Path('/opt/homebrew/opt/spirv-tools')):
         if (source/'sbom.spdx.json').is_file():shutil.copy2(source/'sbom.spdx.json',licenses/(source.name+'-sbom.spdx.json'))
         for file in source.glob('*'):
             if file.is_file() and file.name.upper().startswith(('LICENSE','COPYING','NOTICE')):shutil.copy2(file,licenses/(source.name+'-'+file.name))
     reader_hash=build_reader(destination,cache)
     copy_notices(destination)
-    manifest={'reader_source_sha256':reader_hash,'schema':1,'architecture':'arm64','python':{'source':PYTHON_URL,'sha256':PYTHON_SHA},'tools':sources,'dotnet_sdks':[line.split(' [')[0] for line in run(str(destination/'dotnet/dotnet'),'--list-sdks').splitlines()]}
+    manifest={'reader_source_sha256':reader_hash,'schema':1,'architecture':'arm64','python':{'source':PYTHON_URL,'sha256':PYTHON_SHA},'tools':sources,'reader_format':'native-aot'}
     manifest['python_requirements_sha256']=requirements_hash
     manifest['dependency_sources']=dependency_sources(destination,cache)
     (destination/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')

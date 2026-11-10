@@ -1,4 +1,4 @@
-// NSP extraction: nx_extract <prod.keys> <base NSP> <update NSP or -> <output dir> [base RomFS dir to compare against] [--manifest] [--romfs-image]
+// NSP extraction (a native executable, dm/tools/nx_extract_bin/nx_extract, built by dm/tools/native_tools.sh): nx_extract <prod.keys> <base NSP> <update NSP or -> <output dir> [base RomFS dir to compare against] [--manifest] [--romfs-image]
 // --romfs-image streams the merged RomFS directly to <output dir>/RomFS.img (the packing script's default); only ExeFS is expanded. Without it, legacy folder extraction remains available.
 // With a base RomFS dir in legacy mode, files whose content matches it become APFS clones (no new space).
 // --manifest: the RomFS is not written, only a list <output dir>/romfs_manifest.tsv (path, size, first 32 bytes), for surveying a new game (a large game's RomFS is well over 10 GB),
@@ -42,6 +42,12 @@ static class P {
     [DllImport("libc", SetLastError = true)] static extern int clonefile(string src, string dst, uint flags);
 
     static int Main(string[] a) {
+        if (a.Length == 1 && a[0] == "--source-sha") {   // first 16 digits of the sha256 of the embedded Program.cs + csproj (the NSP script's nx_extract_source_sha)
+            var asm = typeof(P).Assembly; var ms = new MemoryStream();
+            foreach (var n in new[] { "src0", "src1" }) asm.GetManifestResourceStream(n).CopyTo(ms);
+            Console.WriteLine(Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(ms.ToArray()))[..16].ToLowerInvariant());
+            return 0;
+        }
         try { return Run(a); }
         catch (KeysMissing e) { Console.WriteLine($"[RED] {e.Message}"); return 6; }
         // The tables a filesystem opens from fail the hash check (Mario & Luigi: Brothership's update: its Program NCA does not match its content ID): no file can be listed, so no file can be
@@ -154,11 +160,15 @@ static class P {
 
     // Metadata-only path: no ExeFS, RomFS, icon or game output is written.
     // CNMT supplies package identity/type/numeric version; NACP supplies the display name/version.
+    static void PrintInspection(List<InspectionPackage> packages, List<InspectionError> errors) {
+        Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(new InspectionResult(1, packages, errors), InspectionJsonContext.Default.InspectionResult));
+    }
+
     static int Inspect(string[] args) {
-        var packages = new List<object>(); var errors = new List<object>();
+        var packages = new List<InspectionPackage>(); var errors = new List<InspectionError>();
         KeySet keys;
         try { keys = ExternalKeyReader.ReadKeyFile(args[1]); }
-        catch { Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(new { schema = 1, packages, errors = new[] { new { file = "prod.keys", code = "keys_unreadable" } } })); return 1; }
+        catch { PrintInspection(packages, new List<InspectionError> { new("prod.keys", "keys_unreadable") }); return 1; }
         foreach (string path in args[2..]) {
             string file = Path.GetFileName(path);
             try {
@@ -191,14 +201,14 @@ static class P {
                             name = TitleName(nacp);
                             display = System.Text.Encoding.UTF8.GetString(nacp, 0x3060, 0x10).TrimEnd('\0');
                         }
-                        packages.Add(new { file, title_id = application.ToString("X16"), content_id = id.ToString("X16"), kind, version, name, display_version = display });
+                        packages.Add(new InspectionPackage(file, application.ToString("X16"), id.ToString("X16"), kind, version, name, display));
                         found++;
                     }
                 }
-                if (found == 0) errors.Add(new { file, code = "metadata_missing" });
-            } catch { errors.Add(new { file, code = "metadata_unreadable" }); }
+                if (found == 0) errors.Add(new InspectionError(file, "metadata_missing"));
+            } catch { errors.Add(new InspectionError(file, "metadata_unreadable")); }
         }
-        Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(new { schema = 1, packages, errors }));
+        PrintInspection(packages, errors);
         return errors.Count == 0 ? 0 : 1;
     }
 
@@ -591,3 +601,10 @@ static class P {
         return true;
     }
 }
+
+// Source-generated metadata serialization: NativeAOT cannot reflect anonymous package/error records.
+internal sealed record InspectionPackage(string file, string title_id, string content_id, string kind, uint version, string name, string display_version);
+internal sealed record InspectionError(string file, string code);
+internal sealed record InspectionResult(int schema, List<InspectionPackage> packages, List<InspectionError> errors);
+[System.Text.Json.Serialization.JsonSerializable(typeof(InspectionResult))]
+internal partial class InspectionJsonContext : System.Text.Json.Serialization.JsonSerializerContext { }

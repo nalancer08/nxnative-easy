@@ -1,0 +1,30 @@
+{
+  "010061D00DB74000": {
+    "path": "docs/images/ori-and-the-blind-forest.jpg",
+    "source": "https://www.nintendo.com/us/store/products/ori-and-the-blind-forest-definitive-edition-switch/",
+    "asset": "https://assets.nintendo.com/image/upload/c_fill,w_1200/q_auto/f_jpg/dpr_1.0/store/software/switch/70010000018710/89e1f45e5012962fcdbc47b297dbb99472d04fdae7c60213bce6fb44713d2068",
+    "kind": "official_promotional_artwork",
+    "sha256": "08a26636c7df633cf93beb16172cc77df25a9153dbe231a0e5561c20c506e427"
+  },
+  "01008DD013200000": {
+    "path": "docs/images/ori-and-the-will-of-the-wisps.jpg",
+    "source": "https://www.nintendo.com/us/store/products/ori-and-the-will-of-the-wisps-switch/",
+    "asset": "https://assets.nintendo.com/image/upload/c_fill,w_1200/q_auto/f_jpg/dpr_1.0/store/software/switch/70010000034725/cf74916275780188fd850512efe6c678318d7317bf987599205d2a3fc76dbd79",
+    "kind": "official_promotional_artwork",
+    "sha256": "70caff8af2a3254def4664453ce926ff61d6c07d51c41523343f318160450708"
+  },
+  "01007820196A6000": {
+    "path": "docs/images/red-dead-redemption.jpg",
+    "source": "https://www.nintendo.com/us/store/products/red-dead-redemption-switch/",
+    "asset": "https://assets.nintendo.com/image/upload/c_fill,w_1200/q_auto/f_jpg/dpr_1.0/store/software/switch/70010000058660/8f663ba4549d921ab476215a340f37fd0abbb5b1fdda24d06b1e1970f97dc8f8",
+    "kind": "official_promotional_artwork",
+    "sha256": "f58a084599d17895ad3adfeb307c4cca3b06200a408c238dc25755d83a031720"
+  },
+  "0100DA801624E000": {
+    "path": "docs/images/tunic.jpg",
+    "source": "https://www.nintendo.com/us/store/products/tunic-switch/",
+    "asset": "https://assets.nintendo.com/image/upload/c_fill,w_1200/q_auto/f_jpg/dpr_1.0/store/software/switch/70010000045589/acb37bc0c52cf0efc43615d0bd5d927034e95a9409fe4a63c88bda465e5bd4ca",
+    "kind": "official_promotional_artwork",
+    "sha256": "6fef81975bc74fdda091aaaac14bae2094f54d35f5353cec2c5a248dd5987057"
+  }
+}

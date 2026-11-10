@@ -24,6 +24,7 @@ CAPTIONS_ES = {
     'Switch 2, Mac only, from a dump': 'Switch 2, sólo Mac, carpeta extraída',
     'Switch 2, Mac only, from a NUP': 'Switch 2, sólo Mac, archivo NUP',
     'Switch 2, Mac only': 'Switch 2, sólo Mac',
+    'Official artwork · Mac testing in game notes': 'Arte oficial · pruebas en Mac en la ficha',
     'up to 120 fps': 'hasta 120 fps',
     '60 fps with 1.0.0': '60 fps con 1.0.0',
     'Super Mario 64 and Sunshine; Galaxy is 32-bit ARM, which Apple silicon cannot run': 'Super Mario 64 y Sunshine; Galaxy usa ARM de 32 bits, que Apple silicon no puede ejecutar',
@@ -78,7 +79,7 @@ def inventory(root):
             if len(fields)>1 and fields[0]=='name':name=fields[1]
             if len(fields)>2 and fields[0]=='build' and fields[2] and fields[2] not in versions:versions.append(fields[2])
         if not name:raise ValueError('Missing profile name: '+title)
-        games.append(dict(id=title,name=name,table_name=table_names[title],versions=versions,notes=f'dm/games/{title}/README.md'))
+        games.append(dict(id=title,name=name,table_name=table_names[title],versions=versions,notes=f'dm/games/{title}/README.md',console='switch2' if title.startswith('04') else 'switch1'))
     ids={g['id'] for g in games}
     if len(ids)!=len(games):raise ValueError('Duplicate profile title ID.')
     if ids!=set(table_names):raise ValueError('The game table and profile directories disagree.')
@@ -95,18 +96,27 @@ def safe_image(root,image):
         raise ValueError('Missing or external artwork: '+image)
 
 
-def render(games,spanish):
-    count=f"{len(games)} perfiles. Consulta la ficha de cada juego para ver versiones y dispositivos probados." if spanish else f"{len(games)} profiles. See each game's notes for tested versions and devices."
-    lines=[START,count,'','<table>']
+def render_table(games,spanish):
+    lines=['<table>']
     for i,game in enumerate(games):
         if i%3==0:lines.append('<tr>')
         name=html.escape(game['name'],quote=True);image=html.escape(game['artwork'],quote=True);notes=game['notes']
         detail=game['caption']
         if spanish:detail=CAPTIONS_ES.get(detail,detail)
         caption=html.escape(detail or ('Ver ficha del juego' if spanish else 'See game notes'))
-        lines.append(f'<td align="center" valign="top" width="33%" data-title-id="{game["id"]}"><a href="{notes}"><img src="{image}" width="256" alt="{name}"></a><br><a href="{notes}">{name}</a><br><sub>{caption}</sub></td>')
+        lines.append(f'<td align="center" valign="top" width="33%" data-title-id="{game["id"]}" data-console="{game["console"]}"><a href="{notes}"><img src="{image}" width="256" alt="{name}"></a><br><a href="{notes}">{name}</a><br><sub>{caption}</sub></td>')
         if i%3==2 or i==len(games)-1:lines.append('</tr>')
-    return '\n'.join(lines+['</table>',END])
+    return lines+['</table>']
+
+
+def render(games,spanish):
+    first=[g for g in games if g['console']=='switch1'];second=[g for g in games if g['console']=='switch2']
+    intro=f"{len(games)} perfiles. La consola indica la edición del juego; consulta su ficha para ver versiones y dispositivos Apple probados." if spanish else f"{len(games)} profiles. Console groups identify the game's edition; see each note for tested versions and Apple devices."
+    lines=[START,intro,'',f'[Nintendo Switch 1 · {len(first)}](#nintendo-switch-1) · [Nintendo Switch 2 · {len(second)}](#nintendo-switch-2)','', '### Nintendo Switch 2','',f'{len(second)} '+('juegos. Preparación en Mac con archivos extraídos o NUP. La compatibilidad con iPhone/iPad se documenta por separado en cada ficha.' if spanish else 'games. Prepare on Mac from extracted files or NUPs. iPhone/iPad evidence is documented separately in each game note.'),'']
+    for game in second:lines.append(f'- [{game["name"]}]({game["notes"]})')
+    lines+=['','### Nintendo Switch 1','',f'{len(first)} '+('juegos. Abre una ficha para consultar versiones, pruebas y límites.' if spanish else 'games. Open a note for tested builds, platforms and limitations.'),'']
+    if first:lines+=render_table(first,spanish)
+    return '\n'.join(lines+['',END])
 
 
 def replace_gallery(source,block):
@@ -122,6 +132,7 @@ def replace_gallery(source,block):
 def outputs(root,upstream_html=''):
     games=inventory(root)
     images=read_json(root,ART,{})
+    credits=read_json(root,'desktop/NxNativeEasy/game-artwork-sources.json',{})
     previous={g['id']:g for g in read_json(root,CATALOG,{'games':[]})['games']}
     sources=[]
     for name in ['README.md','README-es.md']:sources+=gallery_rows((root/name).read_text())
@@ -136,6 +147,8 @@ def outputs(root,upstream_html=''):
         game['artwork']=image
         row=match if match and match['image']==image else by_image.get(image)
         game['caption']=row['caption'] if row else previous.get(game['id'],{}).get('caption','')
+        if not game['caption'] and credits.get(game['id'],{}).get('kind')=='official_promotional_artwork':
+            game['caption']='Official artwork · Mac testing in game notes'
     result={ART:json.dumps({g['id']:g['artwork'] for g in sorted(games,key=lambda g:g['id'])},indent=2,ensure_ascii=False)+'\n',
             CATALOG:json.dumps({'schema':1,'games':games},indent=2,ensure_ascii=False)+'\n'}
     for name in ['README.md','README-es.md']:
