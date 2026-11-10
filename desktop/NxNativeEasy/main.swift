@@ -906,7 +906,7 @@ struct GameCatalogView:View {
                         .accessibilityValue(console == choice ? model.text("Seleccionado") : "")
                 }
                 Spacer(minLength:0)
-                if !query.isEmpty {Text(String(results.count)+" "+model.text("resultados")).font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted)}
+                if !query.isEmpty {Text(String(results.count)+" "+model.text(results.count == 1 ? "resultado" : "resultados")).font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted)}
             }.accessibilityElement(children:.contain).accessibilityLabel(model.text("Consola"))
             HStack(spacing:12) {Image(systemName:"magnifyingglass").foregroundStyle(EasyDesign.accent);TextField(model.text("Buscar un juego"),text:$query).textFieldStyle(.plain).focused($searchFocused).accessibilityIdentifier("game-search");if !query.isEmpty {Button {query=""} label:{Image(systemName:"xmark.circle.fill")}.buttonStyle(EasyIconStyle()).accessibilityLabel(model.text("Limpiar búsqueda"))}}.padding(14).background(EasyDesign.panel,in:RoundedRectangle(cornerRadius:10))
             if model.catalogFailed {Text(model.text("No pudimos leer los perfiles. Comprueba que el repositorio siga en su ubicación original.")).foregroundStyle(.orange).frame(maxWidth:.infinity,maxHeight:.infinity)}

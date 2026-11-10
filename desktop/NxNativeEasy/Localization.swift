@@ -1128,6 +1128,7 @@ struct EasyStrings {
         "Explora los juegos por consola. Abre una ficha para ver versiones y dispositivos probados.": "Browse games by console. Open a game note for tested versions and devices.",
         "Seleccionado": "Selected",
         "resultados": "results",
+        "resultado": "result",
         "Consola": "Console",
         "Restablecer filtros": "Reset filters",
         "Sólo Mac": "Mac only",
