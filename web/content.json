@@ -22,20 +22,19 @@
     "float": "Made for your next adventure",
     "strip": [
       "Native Metal graphics",
-      "Xbox & PlayStation controllers",
+      "Controller support",
       "Editable touch controls",
       "Your saves stay yours"
     ],
     "experienceTag": "LESS SETUP. MORE PLAY.",
     "experienceTitle": "A home for<br>every adventure.",
     "experienceCopy": "Your games, their versions and where you play them. A proper library that keeps the whole picture in view.",
-    "screenCaption": "The nxnative Easy library · English and Spanish built in",
     "featureOne": "Know what’s ready.",
     "featureOneCopy": "See your Mac apps, prepared IPAs and verified installations on your connected devices.",
     "featureTwo": "Make it feel like you.",
-    "featureTwoCopy": "Move, resize and fade touch buttons. Keep four named layouts per game, or connect your Xbox, PS5 or PS4 controller.",
+    "featureTwoCopy": "Move, resize and fade touch buttons. Keep four named layouts per game or play with a compatible controller.",
     "featureThree": "Keep your progress.",
-    "featureThreeCopy": "Your saves stay on your device. Export them for a backup or share them manually. No Apple sign-in needed to export.",
+    "featureThreeCopy": "Continue a compatible save between Mac, iPhone and iPad with iCloud Drive, or export a local backup.",
     "catalogTag": "FIND YOUR NEXT PLAYTHROUGH",
     "catalogTitle": "Familiar worlds.<br>Fresh possibilities.",
     "catalogCopy": "Explore {count} game profiles from the engine’s compatibility catalog. Open a game’s notes for supported versions and tested hardware.",
@@ -79,7 +78,23 @@
         "Use your Apple account and follow the installation steps. The app guides signing and data transfer."
       ]
     ],
-    "progressCaption": "Build stages and live logs. Stay in the loop.",
+    "screenCaption": "Example library with fictional games",
+    "progressCaption": "Example preparation with live build stages",
+    "macPreparation": "Mac preparation",
+    "preview": {
+      "library": "Library",
+      "play": "Play",
+      "saved": "Save synced",
+      "ready": "Ready to play",
+      "installed": "Installed",
+      "preparing": "Preparing for Mac",
+      "stages": [
+        "Read game files",
+        "Prepare graphics",
+        "Build Mac app",
+        "Verify export"
+      ]
+    },
     "faqTitle": "Good to know.",
     "faqs": [
       [
@@ -113,7 +128,7 @@
     "requirements": "Check the requirements",
     "source": "View on GitHub",
     "credits": "Powered by seedds/nxnative. Crafted into nxnative Easy.",
-    "footer": "An independent project. Not affiliated with Nintendo or Apple. Game images illustrate supported profiles; game files and keys are not distributed.",
+    "footer": "Independent of Nintendo and Apple. Website illustrations depict a fictional game. Bring your own game files and keys.",
     "saves": "Save guide",
     "readme": "Getting started",
     "upstream": "Original engine",
@@ -143,20 +158,19 @@
     "float": "Tu próxima aventura te espera",
     "strip": [
       "Gráficos nativos con Metal",
-      "Controles Xbox y PlayStation",
+      "Soporte para controles",
       "Controles táctiles editables",
       "Tus partidas siguen contigo"
     ],
     "experienceTag": "MENOS PREPARATIVOS. MÁS JUEGO.",
     "experienceTitle": "Un hogar para<br>cada aventura.",
     "experienceCopy": "Tus juegos, sus versiones y dónde los juegas. Una biblioteca que te ayuda a entender qué está listo y qué sigue.",
-    "screenCaption": "La biblioteca de nxnative Easy · En inglés y español",
     "featureOne": "Sabe qué está listo.",
     "featureOneCopy": "Consulta tus apps de Mac, IPAs preparadas e instalaciones verificadas en tus dispositivos conectados.",
     "featureTwo": "Hazlo a tu manera.",
-    "featureTwoCopy": "Mueve los botones táctiles y ajusta tamaño y opacidad. Guarda cuatro perfiles por juego o conecta tu control de Xbox, PS5 o PS4.",
+    "featureTwoCopy": "Mueve los botones táctiles y ajusta su tamaño y opacidad. Guarda cuatro perfiles por juego o juega con un control compatible.",
     "featureThree": "Conserva tu avance.",
-    "featureThreeCopy": "Tus partidas se quedan en tu dispositivo. Expórtalas para respaldarlas o compartirlas a mano. Sin iniciar sesión con Apple para exportar.",
+    "featureThreeCopy": "Continúa una partida compatible entre Mac, iPhone y iPad con iCloud Drive o exporta un respaldo local.",
     "catalogTag": "ENCUENTRA TU PRÓXIMA AVENTURA",
     "catalogTitle": "Mundos conocidos.<br>Nuevas posibilidades.",
     "catalogCopy": "Explora {count} perfiles del catálogo de compatibilidad del motor. Abre la ficha de cada juego para consultar versiones y dispositivos probados.",
@@ -200,7 +214,23 @@
         "Usa tu cuenta Apple y sigue los pasos de instalación. La app te guía con la firma y la transferencia de datos."
       ]
     ],
-    "progressCaption": "Etapas de compilación y registros en vivo. Siempre sabes qué pasa.",
+    "screenCaption": "Vista de ejemplo de la biblioteca con juegos ficticios",
+    "progressCaption": "Ejemplo de preparación con etapas en vivo",
+    "macPreparation": "Preparación en Mac",
+    "preview": {
+      "library": "Biblioteca",
+      "play": "Jugar",
+      "saved": "Partida sincronizada",
+      "ready": "Listo para jugar",
+      "installed": "Instalado",
+      "preparing": "Preparando para Mac",
+      "stages": [
+        "Leer archivos del juego",
+        "Preparar gráficos",
+        "Compilar app para Mac",
+        "Verificar exportación"
+      ]
+    },
     "faqTitle": "Lo que debes saber.",
     "faqs": [
       [
@@ -234,7 +264,7 @@
     "requirements": "Consulta los requisitos",
     "source": "Ver en GitHub",
     "credits": "Con el motor de seedds/nxnative. Con la experiencia de nxnative Easy.",
-    "footer": "Proyecto independiente, sin afiliación con Nintendo o Apple. Las imágenes ilustran perfiles con soporte; no se distribuyen archivos de juegos ni llaves.",
+    "footer": "Proyecto independiente de Nintendo y Apple. Las ilustraciones de la web muestran un juego ficticio. Usa tus propios archivos de juego y llaves.",
     "saves": "Guía de partidas",
     "readme": "Primeros pasos",
     "upstream": "Motor original",

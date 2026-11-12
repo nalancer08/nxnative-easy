@@ -18,8 +18,8 @@ The app download always targets the latest published portable ZIP.
 - `content.json`: paired English/Spanish copy.
 - `src/components/Site.astro`: shared page composition; routes use the same component.
 - `style.css` and `app.js`: visual system, progressive motion and interactions.
-- `assets/`: public optimized product screenshots, app icon, social preview and licensed Outfit font.
-- `scripts/build_website.py`: copies only reviewed public assets, including all game artwork from the generated desktop catalog. No personal folders, games, keys, accounts or saves.
+- `assets/`: original Signal Ridge illustration and social preview, app icon and licensed Outfit font.
+- `scripts/build_website.py`: publishes the explicit list of web assets. The catalog uses names, versions and game-note links from the desktop catalog. The website's library and build previews use fictional game data.
 - The catalog count and cards derive from `desktop/NxNativeEasy/game-catalog.json`; no separate website game inventory to maintain.
 
 Follow the app's lime/dark palette. The landing page adds editorial typography,
@@ -41,4 +41,4 @@ Research informed motion/composition, not copied layouts or code:
 - [Reduced motion](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-reduced-motion).
 
 The Outfit font retains its SIL Open Font License in `assets/OFL-Outfit.txt`.
-Game artwork and engine credits retain their existing upstream provenance.
+Signal Ridge was generated for the website. Engine credits link to the original project.

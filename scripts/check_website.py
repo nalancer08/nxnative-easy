@@ -4,6 +4,7 @@ from html.parser import HTMLParser
 import json
 from pathlib import Path
 from urllib.parse import urlsplit, unquote
+from build_website import PUBLIC_ASSETS
 
 ROOT = Path(__file__).resolve().parents[1]
 DIST = ROOT / 'web/dist'
@@ -63,7 +64,7 @@ def check():
         assert not path.is_symlink()
         assert path.name not in ('prod.keys', 'title.keys')
         assert path.suffix.lower() not in ('.ipa', '.nsp', '.xci', '.nsz', '.xcz', '.p12', '.mobileprovision')
-    assert (DIST / 'assets/social.jpg').is_file()
+    assert {path.name for path in (DIST / 'assets').iterdir()} == set(PUBLIC_ASSETS)
     print(f'English/Spanish routes, local links, all {len(expected)} profiles and public asset boundary verified.')
 
 

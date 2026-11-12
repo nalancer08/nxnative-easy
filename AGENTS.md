@@ -1,7 +1,7 @@
 # Notes for agents
 
 - nxnative runs rewritten ARM64 game code on Apple hardware. The rewriter is `dm/tools/patch_nso.py`; `dm/host` implements Horizon services; `dm/gfx` maps NVN, Vulkan and OpenGL to Metal. The [games table](dm/games/README.md#games) records profiles, builds, engines and per-game notes. [README.md](README.md) covers players; [docs/development.md](docs/development.md) covers internals and builds. A Mac gameplay test is sufficient for gallery inclusion; retain tested platforms and limitations in the game note.
-- For every upstream update, follow [07-upstream-maintenance.md](docs/agents/07-upstream-maintenance.md). Preserve our frontend, controls, saves and identities. Synchronize every accepted profile, artwork mapping and both README galleries; run the catalog gate before merging to main and publishing.
+- For every upstream update, follow [07-upstream-maintenance.md](docs/agents/07-upstream-maintenance.md). Preserve our frontend, controls, saves and identities. Synchronize the catalog and bilingual compatibility links before publishing.
 - Where to start:
 
   | Task | Read first |

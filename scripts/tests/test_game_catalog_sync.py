@@ -1,4 +1,4 @@
-"""New profiles must reach artwork, live catalog inventory and both README galleries."""
+"""New profiles reach the live catalog and both compatibility links."""
 import importlib.util
 import json
 import shutil
@@ -21,7 +21,6 @@ class GameCatalogSync(unittest.TestCase):
     def test_nup_and_nested_program_limits_stay_bilingual_and_idempotent(self):
         source=self.source().replace('~1 GB','Switch 2, Mac only, from a NUP')
         sync.sync(self.root,write=True,upstream_html=source)
-        self.assertIn('Switch 2, sólo Mac, archivo NUP',(self.root/'README-es.md').read_text())
         self.assertEqual(sync.sync(self.root),[])
         self.assertEqual(json.loads((self.root/sync.CATALOG).read_text())['games'][0]['caption'],'Switch 2, Mac only, from a NUP')
 
@@ -31,7 +30,8 @@ class GameCatalogSync(unittest.TestCase):
         (self.root/'dm/games').mkdir(parents=True)
         (self.root/'docs/images').mkdir(parents=True)
         (self.root/'desktop/NxNativeEasy').mkdir(parents=True)
-        for name in ['README.md','README-es.md']:(self.root/name).write_text('Personal intro\n<table>\n</table>\nPersonal footer\n')
+        for name in ['README.md','README-es.md']:
+            (self.root/name).write_text(f'Personal intro\n{sync.START}\n{sync.END}\nPersonal footer\n')
         self.add_game(ID,'Example',image=True)
 
     def add_game(self,title,name,image=True):
@@ -46,18 +46,17 @@ class GameCatalogSync(unittest.TestCase):
         return f'<table><td><img src="docs/images/{title}.png" alt="{name}"><br>{name}<sub>~1 GB</sub></td></table>'
 
     def test_console_groups_are_disjoint_counted_and_linked_in_both_languages(self):
-        second='0400000000000001';self.add_game(second,'Switch 2 Example')
-        sync.sync(self.root,write=True,upstream_html=self.source()+self.source(second,'Switch 2 Example'))
+        second='0400000000000001';self.add_game(second,'Switch 2 Example',image=False)
+        sync.sync(self.root,write=True,upstream_html=self.source())
         games=json.loads((self.root/sync.CATALOG).read_text())['games']
         self.assertEqual({g['id']:g['console'] for g in games},{ID:'switch1',second:'switch2'})
+        self.assertIsNone(next(g['artwork'] for g in games if g['id']==second))
         for name in ['README.md','README-es.md']:
             text=(self.root/name).read_text()
-            self.assertIn('[Nintendo Switch 1 · 1](#nintendo-switch-1)',text)
-            self.assertIn('[Nintendo Switch 2 · 1](#nintendo-switch-2)',text)
-            first=text.split('### Nintendo Switch 1',1)[1]
-            second_text=text.split('### Nintendo Switch 2',1)[1].split('### Nintendo Switch 1',1)[0]
-            self.assertIn(ID,first);self.assertNotIn(second,first)
-            self.assertIn(second,second_text);self.assertNotIn(ID,second_text)
+            site=sync.SITE+('es/' if name=='README-es.md' else '')
+            self.assertIn(f'[Nintendo Switch 1 · 1]({site}?console=switch1#games)',text)
+            self.assertIn(f'[Nintendo Switch 2 · 1]({site}?console=switch2#games)',text)
+            self.assertIn('(dm/games/README.md#games)',text)
         self.assertEqual(sync.sync(self.root),[])
 
     def test_addition_and_version_change_propagate_everywhere_and_are_idempotent(self):
@@ -75,7 +74,7 @@ class GameCatalogSync(unittest.TestCase):
         for name in ['README.md','README-es.md']:
             text=(self.root/name).read_text()
             self.assertIn('Personal intro',text);self.assertIn('Personal footer',text)
-            self.assertIn(other,text);self.assertIn(ID,text)
+            self.assertIn('[Nintendo Switch 1 · 2]',text)
         self.assertEqual(sync.sync(self.root),[])
 
     def test_upstream_bold_title_is_not_repeated_in_caption_and_blank_notes_are_stable(self):
@@ -87,8 +86,10 @@ class GameCatalogSync(unittest.TestCase):
         self.assertEqual(json.loads((self.root/sync.CATALOG).read_text())['games'][0]['caption'], '')
         self.assertEqual(sync.sync(self.root), [])
 
-    def test_missing_image_or_game_note_stops_before_writing(self):
+    def test_missing_mapped_image_or_game_note_stops_before_writing(self):
+        sync.sync(self.root,write=True,upstream_html=self.source())
         original=(self.root/'README.md').read_text()
+        (self.root/f'docs/images/{ID}.png').unlink()
         with self.assertRaises(ValueError):sync.sync(self.root,write=True)
         self.assertEqual((self.root/'README.md').read_text(),original)
         (self.root/f'dm/games/{ID}/README.md').unlink()
@@ -101,8 +102,10 @@ class GameCatalogSync(unittest.TestCase):
 
     def test_repository_catalog_is_current(self):
         self.assertEqual(sync.sync(ROOT),[])
+        for name in ['README.md','README-es.md']:
+            self.assertNotRegex((ROOT/name).read_text(),r'!\[|<img\b|<picture\b')
 
-    def test_nested_program_uses_its_parent_application_in_all_galleries(self):
+    def test_nested_program_uses_its_parent_application_in_the_catalog(self):
         child='0100000000000002';folder=self.root/'dm/games'/child;folder.mkdir()
         (folder/'game.tsv').write_text(f'name\tNested program\nprogram_of\t{ID}\n')
         with (self.root/f'dm/games/{ID}/game.tsv').open('a') as out:out.write(f'programs\t1={child}\n')
@@ -120,4 +123,5 @@ class GameCatalogSync(unittest.TestCase):
         sync.sync(self.root,write=True)
         self.assertNotIn(ID,json.loads((self.root/sync.ART).read_text()))
         self.assertEqual([g['id'] for g in json.loads((self.root/sync.CATALOG).read_text())['games']],[other])
-        for name in ['README.md','README-es.md']:self.assertNotIn(ID,(self.root/name).read_text())
+        for name in ['README.md','README-es.md']:
+            self.assertIn('[Nintendo Switch 1 · 1]',(self.root/name).read_text())

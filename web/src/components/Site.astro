@@ -2,6 +2,7 @@
 import content from '../../content.json';
 import catalog from '../../../desktop/NxNativeEasy/game-catalog.json';
 import release from '../../../desktop/release.json';
+import LibraryPreview from './LibraryPreview.astro';
 const { lang = 'en' } = Astro.props;
 const t = content[lang];
 const base = import.meta.env.BASE_URL;
@@ -43,24 +44,43 @@ const data = {
 <section class="hero wrap">
 <div class="hero-copy"><div class="eyebrow hero-in"><span class="live-dot"></span> {data.eyebrow}</div><h1 class="hero-in"><Fragment set:html={data.headline} /></h1><p class="hero-intro hero-in">{data.intro}</p><div class="hero-in"><a class="button" href={`${data.downloadURL}`}>{data.download} <svg><use href="#icon-download"/></svg></a><p class="download-note">{data.downloadNote}</p></div><a class="text-link hero-in" href="#experience">{data.secondary} <span>↓</span></a></div>
 <div class="hero-stage" role="img" aria-label={`${data.stageLabel}`} data-tilt>
-<div class="orbital orbital-one"></div><div class="orbital orbital-two"></div><div class="orbit-word">PLAY / ANYWHERE / EASY /</div>
-<div class="mini-window"><div class="window-bar"><span></span><span></span><span></span><b>{data.libraryLabel}</b></div><img src={`${data.base}assets/library-${data.lang}.jpg`} width="1600" height="1103" alt="" fetchpriority="high"></div>
-<div class="handheld"><div class="grip grip-left"><div class="stick"></div><div class="cross"></div><i></i></div><div class="handheld-screen"><div class="phone-camera"></div><img src={`${data.base}assets/zelda-links-awakening.jpg`} alt="" width="768" height="432"><span class="play-triangle"></span></div><div class="grip grip-right"><div class="face-buttons"><i></i><i></i><i></i><i></i></div><div class="stick"></div><i></i></div></div>
-<div class="stage-ticket"><span class="live-dot"></span> {data.float} <span class="ticket-spark">✳</span></div><div class="stage-platforms"><span>Mac</span><span>iPhone</span><span>iPad</span></div><span class="stage-index">01 / ∞</span>
+<div class="orbital orbital-one"></div><div class="orbital orbital-two"></div>
+<div class="mini-window"><div class="window-bar"><span></span><span></span><span></span><b>{data.libraryLabel}</b></div><LibraryPreview base={data.base} labels={t.preview} compact /></div>
+<div class="handheld"><div class="grip grip-left"><div class="stick"></div><div class="cross"></div><i></i></div><div class="handheld-screen"><div class="phone-camera"></div><img src={`${data.base}assets/signal-ridge.webp`} alt="" width="1536" height="1024"><span class="play-triangle"></span></div><div class="grip grip-right"><div class="face-buttons"><i></i><i></i><i></i><i></i></div><div class="stick"></div><i></i></div></div>
+<div class="stage-ticket"><span class="live-dot"></span> {data.float} <span class="ticket-spark">✳</span></div><div class="stage-platforms"><span>Mac</span><span>iPhone</span><span>iPad</span></div>
 </div>
 <div class="hero-bottom"><span>{data.own}</span><span>{data.stageTag} <span aria-hidden="true">↘</span></span></div>
 </section>
 <div class="benefit-strip"><div class="wrap">{t.strip.map(label => <span>{label}</span>)}</div></div>
 <section id="experience" class="experience section wrap"><div class="section-top reveal"><div><p class="eyebrow">{data.experienceTag}</p><h2><Fragment set:html={data.experienceTitle} /></h2></div><p class="section-copy">{data.experienceCopy}</p></div>
-<div class="showcase reveal" data-tilt><div class="showcase-top"><span class="live-dot"></span> nxnative Easy <span>● ● ●</span></div><img src={`${data.base}assets/library-${data.lang}.jpg`} width="1600" height="1103" alt={`${data.screenCaption}`} loading="lazy"><div class="showcase-caption">{data.screenCaption} <span>↗</span></div></div>
-<div class="features"><article class="reveal"><span class="feature-icon"><svg><use href="#screen"/></svg></span><span class="feature-index">01 /</span><h3>{data.featureOne}</h3><p>{data.featureOneCopy}</p></article><article class="reveal"><span class="feature-icon"><svg><use href="#pad"/></svg></span><span class="feature-index">02 /</span><h3>{data.featureTwo}</h3><p>{data.featureTwoCopy}</p></article><article class="reveal"><span class="feature-icon"><svg><use href="#save"/></svg></span><span class="feature-index">03 /</span><h3>{data.featureThree}</h3><p>{data.featureThreeCopy}</p></article></div></section>
+<div class="showcase reveal" data-tilt><div class="showcase-top"><span class="live-dot"></span> nxnative Easy <span>● ● ●</span></div><LibraryPreview base={data.base} labels={t.preview} /><div class="showcase-caption">{data.screenCaption}</div></div>
+<div class="features"><article class="reveal"><span class="feature-icon"><svg><use href="#screen"/></svg></span><h3>{data.featureOne}</h3><p>{data.featureOneCopy}</p></article><article class="reveal"><span class="feature-icon"><svg><use href="#pad"/></svg></span><h3>{data.featureTwo}</h3><p>{data.featureTwoCopy}</p></article><article class="reveal"><span class="feature-icon"><svg><use href="#save"/></svg></span><h3>{data.featureThree}</h3><p>{data.featureThreeCopy}</p></article></div></section>
 <section id="games" class="games-section section"><div class="wrap"><div class="section-top reveal"><div><p class="eyebrow">{data.catalogTag}</p><h2><Fragment set:html={data.catalogTitle} /></h2></div><p class="section-copy">{data.catalogCopy}</p></div>
 <div class="console-filters" role="group" aria-label={t.consoleLabel}>{['all','switch1','switch2'].map(console => <button type="button" class="console-filter" data-console-filter={console} aria-pressed={console === 'all'}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6" /></svg><span>{console === 'all' ? t.allConsoles : console === 'switch1' ? 'Switch 1' : 'Switch 2'}</span><b>{console === 'all' ? games.length : games.filter(game => game.console === console).length}</b></button>)}</div>
 <div class="catalog-tools"><label class="search"><svg><use href="#search"/></svg><span class="sr-only">{data.searchLabel}</span><input type="search" id="game-search" placeholder={`${data.search}`} autocomplete="off"></label><span id="game-count" role="status" aria-live="polite" data-label={`${data.result}`}>{data.count} {data.result}</span></div>
-<div class="game-grid" id="game-grid">{games.map((game, i) => <a class="game-card" data-title-id={game.id} data-console={game.console} data-search={[game.name, game.id, ...game.versions, game.console === 'switch2' ? 'Nintendo Switch 2 switch2 ns2 Mac extracted NUP' : 'Nintendo Switch 1 switch1 ns1'].join(' ')} href={`${repo}/blob/main/${game.notes}`} hidden={i >= 12}><div class="game-art"><img src={`${base}assets/${game.artwork.split('/').pop()}`} alt="" width="480" height="300" loading="lazy" /><span aria-hidden="true">↗</span></div><span class="game-console">{game.console === 'switch2' ? 'Switch 2' : 'Switch 1'}</span><h3>{game.name}</h3><p>{game.versions.join(' · ') || t.notes}{game.id.startsWith('04') && <><br />{lang === 'es' ? 'Sólo Mac' : 'Mac only'}</>}</p></a>)}</div><p id="empty-games" hidden>{data.empty}</p><div class="catalog-footer"><button type="button" class="button outline" id="view-all" data-template={t.all} data-all={`${data.all}`} data-less={`${data.less}`} aria-expanded="false" aria-controls="game-grid">{data.all} <span>＋</span></button><p>{data.catalogFoot}</p></div><noscript><a href="https://github.com/nalancer08/nxnative-easy/blob/main/dm/games/README.md">{data.all} ↗</a></noscript>
+<div class="game-grid" id="game-grid">
+  {games.map((game, i) => (
+    <a class="game-card" data-title-id={game.id} data-console={game.console}
+       data-search={[game.name, game.id, ...game.versions, game.console === 'switch2' ? 'Nintendo Switch 2 switch2 ns2 Mac extracted NUP' : 'Nintendo Switch 1 switch1 ns1'].join(' ')}
+       href={`${repo}/blob/main/${game.notes}`} hidden={i >= 12}>
+      <span class="game-mark" aria-hidden="true"><i></i><i></i></span>
+      <div class="game-info">
+        <span class="game-console">{game.console === 'switch2' ? 'Switch 2' : 'Switch 1'}</span>
+        <h3>{game.name}</h3>
+        <p>{game.versions.join(' · ') || t.notes}{game.console === 'switch2' && <span class="game-mac">{t.macPreparation}</span>}</p>
+      </div>
+      <span class="game-arrow" aria-hidden="true">↗</span>
+    </a>
+  ))}
+</div><p id="empty-games" hidden>{data.empty}</p><div class="catalog-footer"><button type="button" class="button outline" id="view-all" data-template={t.all} data-all={`${data.all}`} data-less={`${data.less}`} aria-expanded="false" aria-controls="game-grid">{data.all} <span>＋</span></button><p>{data.catalogFoot}</p></div><noscript><a href="https://github.com/nalancer08/nxnative-easy/blob/main/dm/games/README.md">{data.all} ↗</a></noscript>
 </div></section>
 <section id="how" class="section wrap how"><div class="section-top reveal"><div><p class="eyebrow">{data.flowTag}</p><h2><Fragment set:html={data.flowTitle} /></h2></div><div class="platform-tabs" role="tablist" aria-label={`${data.platformLabel}`}><button id="mac-tab" role="tab" aria-selected="true" aria-controls="mac-flow" tabindex="0">{data.mac}</button><button id="ios-tab" role="tab" aria-selected="false" aria-controls="ios-flow" tabindex="-1">{data.ios}</button></div></div>
-<div class="flow-layout"><div class="steps reveal"><div id="mac-flow" role="tabpanel" aria-labelledby="mac-tab">{t.macSteps.map(([title, copy], i) => <article class="step"><span>0{i + 1}</span><div><h3>{title}</h3><p>{copy}</p></div></article>)}</div><div id="ios-flow" role="tabpanel" aria-labelledby="ios-tab" hidden>{t.iosSteps.map(([title, copy], i) => <article class="step"><span>0{i + 1}</span><div><h3>{title}</h3><p>{copy}</p></div></article>)}</div></div><figure class="progress-shot reveal"><img src={`${data.base}assets/progress-${data.lang}.jpg`} width="1600" height="1103" alt={`${data.progressCaption}`} loading="lazy"><figcaption><span class="live-dot"></span> {data.progressCaption}</figcaption></figure></div>
+<div class="flow-layout"><div class="steps reveal"><div id="mac-flow" role="tabpanel" aria-labelledby="mac-tab">{t.macSteps.map(([title, copy], i) => <article class="step"><span>0{i + 1}</span><div><h3>{title}</h3><p>{copy}</p></div></article>)}</div><div id="ios-flow" role="tabpanel" aria-labelledby="ios-tab" hidden>{t.iosSteps.map(([title, copy], i) => <article class="step"><span>0{i + 1}</span><div><h3>{title}</h3><p>{copy}</p></div></article>)}</div></div><figure class="progress-shot reveal"><div class="build-preview" aria-hidden="true">
+  <p>{t.preview.preparing}</p>
+  <strong>Signal Ridge</strong>
+  <div class="build-meter"><span></span></div>
+  <ul>{t.preview.stages.map((stage, i) => <li class:list={{ 'build-current': i === 2 }}><span>{i < 2 ? '✓' : i === 2 ? '●' : '○'}</span>{stage}</li>)}</ul>
+</div><figcaption><span class="live-dot"></span> {data.progressCaption}</figcaption></figure></div>
 </section>
 <section id="requirements" class="faq-section wrap"><h2 class="reveal">{data.faqTitle}</h2><div class="faq-list reveal">{t.faqs.map(([question, answer]) => <details><summary>{question}</summary><p>{answer}</p></details>)}</div></section>
 <section class="download-section" id="download"><div class="download-orbit" aria-hidden="true"></div><div class="wrap reveal"><p class="eyebrow">{data.ctaTag}</p><h2><Fragment set:html={data.ctaTitle} /></h2><p class="cta-copy">{data.ctaCopy}</p><a class="button dark" href={`${data.downloadURL}`}>{data.download} <svg><use href="#icon-download"/></svg></a><p class="cta-note">{data.downloadNote}</p><a class="requirements-link" href="#requirements">{data.requirements} ↗</a></div></section>

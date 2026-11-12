@@ -1,0 +1,26 @@
+---
+const { base, labels, compact = false } = Astro.props;
+---
+
+<div class:list={['library-preview', { 'library-preview-compact': compact }]} aria-hidden="true">
+  <div class="preview-sidebar">
+    <strong>{labels.library}</strong>
+    <div class="preview-selected"><i></i><span>Signal Ridge</span></div>
+    <div><i></i><span>Dust Meridian</span></div>
+    <div><i></i><span>Glass Harbor</span></div>
+  </div>
+  <div class="preview-detail">
+    <div class="preview-cover">
+      <img src={base + 'assets/signal-ridge.webp'} width="1536" height="1024" alt="" loading={compact ? 'eager' : 'lazy'} fetchpriority={compact ? 'high' : 'auto'}>
+      <span class="preview-title">Signal Ridge</span>
+    </div>
+    <div class="preview-actions">
+      <span class="preview-play">▶ {labels.play}</span>
+      <span><i></i>{labels.saved}</span>
+    </div>
+    {!compact && <div class="preview-devices">
+      <div><strong>Mac</strong><span>{labels.ready}</span></div>
+      <div><strong>iPhone / iPad</strong><span>{labels.installed}</span></div>
+    </div>}
+  </div>
+</div>

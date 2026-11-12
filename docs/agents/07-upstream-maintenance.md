@@ -79,7 +79,7 @@ appear everywhere without being forgotten. No recurring schedule is implied.
    renderer/service/translator changes. Removed profiles must disappear from
    generated inventories too. Never announce a game merely because it is in an
    unmerged PR or builds successfully.
-5. Import existing upstream screenshots, then run:
+5. Synchronize the catalog and compatibility links:
 
    ```sh
    python3 scripts/sync_game_catalog.py --write --upstream-ref PINNED_SHA
@@ -90,14 +90,10 @@ appear everywhere without being forgotten. No recurring schedule is implied.
    # Frontend-only commits do not advance the engine version.
    ```
 
-   This generates `game-artwork.json`, `game-catalog.json` and the marked galleries
-   in README.md/README-es.md from the installed profiles. The desktop carousel,
-   View all, search and notes already discover live profiles; ensure all mapped
-   images exist. Missing/ambiguous images stop the release; resolve the mapping
-   using the title ID, never substitute a different game's art or silently hide it.
-   Do not hand-edit generated galleries or hard-code a profile count in Swift.
-   Refresh app screenshots when visible labels or counts change.
-   The Astro website derives every card/count from the same generated catalog.
+   This updates `game-catalog.json`, optional desktop artwork mappings and the
+   marked links in README.md/README-es.md. Each mapped image must exist and match
+   its title ID. A profile can ship without artwork. The Astro website derives
+   its cards and counts from this catalog and publishes its own illustrations.
    Build `web` with `npm ci && npm run build` and run
    `python3 scripts/check_website.py`; Pages deploys on catalog/artwork changes.
    Preserve both language routes, reduced motion and download links.
@@ -137,9 +133,8 @@ sets `ROMFS_IMAGE=False`) until its splitter, prepared records and native transf
 capability support images together. Do not enable image-only extraction in that
 flow in isolation. Keep the CLI's image path available and test both boot formats,
 full-bundle priority and unchanged legacy content/saves. Do not import automatic
-legacy RomFS deletion into the iOS locator. The upstream gallery-table validator
-delegates fork README generation to `sync_game_catalog.py`; there must be only
-one writer of each bilingual gallery. Keep Xcode prerequisites and the supported
+legacy RomFS deletion into the iOS locator. `sync_game_catalog.py` maintains
+the bilingual compatibility links. Keep Xcode prerequisites and the supported
 Metal compiler lock aligned in bootstrap scripts, README and CI.
 
 Preserve portable source/runtime separation, digest-matched prebuilt extraction,

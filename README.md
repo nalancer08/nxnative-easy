@@ -1,376 +1,39 @@
 # nxnative Easy
 
-**English** · [Español](README-es.md) · **[Visit the website](https://nalancer08.github.io/nxnative-easy/)**
+**English** · [Español](README-es.md) · [Website](https://nalancer08.github.io/nxnative-easy/)
 
-**Your Switch games. On your Mac, iPhone and iPad.**
+A Mac game library built on [nxnative](https://github.com/seedds/nxnative). Add your own Switch game files, prepare them with a guided build, then play on Mac or install on iPhone and iPad.
 
-A game library that takes you from your own game files to a ready-to-play app, with guided setup, live build progress, controller support and touch controls you can make your own.
+**[Download nxnative Easy for Mac](https://github.com/nalancer08/nxnative-easy/releases/latest/download/nxnative-Easy-macOS-arm64.zip)**
 
-### [↓ Download nxnative Easy for Mac](https://github.com/nalancer08/nxnative-easy/releases/latest/download/nxnative-Easy-macOS-arm64.zip)
-
-Unzip → drag **nxnative Easy.app** to **Applications** → open it. **No Terminal or launcher compilation needed.** The app includes its supporting tools.
-
-![Your personal game library](docs/images/nxnative-library-en-v1.30.jpg)
-
-## Switch 2 on Mac
-
-**Mario Kart World now has a Mac profile**, alongside Donkey Kong Bananza, Splatoon Raiders, Fire Emblem Fortune’s Weave and the other Switch 2 titles in Compatibility. Choose **Mac**, then select your own extracted game folder or NUP. Easy identifies the title and available updates before preparation; already decrypted content needs no `prod.keys`.
-
-Our Mario Kart World base-version dump matches the registered executable and now builds and reaches an interactive race on this Mac. This is Mac evidence, not iPhone/iPad validation or whole-game certification. Encrypted Switch 2 NSP/XCI extraction is not included. See [formats, tested versions and limits](docs/switch2.md). Existing games and saves stay where they are.
-
-![Mario Kart World race check on Mac with an isolated test save](docs/images/mario-kart-world-easy-mac-first-lap.png)
+Unzip, move **nxnative Easy.app** to **Applications**, and open it. The launcher is ready to run. If macOS blocks the first launch, see [installation help](docs/personal-ios.md).
 
 ## Before you start
 
-- **A Mac with Apple silicon** (M1 or newer), **macOS 26.6+**, and **[Xcode](https://apps.apple.com/app/xcode/id497799835) 27.2** installed and opened once. Xcode builds your games; you do not need to build nxnative Easy itself.
-- **Your own game files and, for encrypted Switch packages, `prod.keys`.** No games or keys are included or downloaded.
-- For iPhone/iPad: **iOS/iPadOS 26+**, an **A17 Pro or newer iPhone**, or an **M1 or newer iPad**. You use your own Apple account to sign and install.
+1. Use an Apple silicon Mac with macOS 26.6+ and Xcode 27.2. Open Xcode once before preparing a game.
+2. Choose **Add game**, select Mac or iPhone/iPad, and add your own game files. Easy identifies the title, version and updates before you build. Encrypted Switch 1 packages also need your own `prod.keys`.
+3. Choose where to save the export and click **Prepare game**. Open the result from your library, or follow the installation steps for iPhone/iPad.
 
-If macOS blocks the first opening, open **System Settings → Privacy & Security → Open Anyway** for this download. The app is ad-hoc signed; it is not notarized with a paid Developer ID.
+For mobile play, use an iPhone with A17 Pro or newer or an iPad with M1 or newer, running iOS or iPadOS 26+. Installing uses your Apple account for signing. [Installation and signature renewal](docs/game-maintenance.md)
 
-## Add your game. Follow the steps. Play.
+## Compatibility
 
-1. Open **My library → Add game** and choose **Mac** or **iPhone / iPad**.
-2. Choose your game folder, or drag in your files. For encrypted packages, select your **`prod.keys` file**; extracted folders and Mac NUP files skip this step. The app identifies the game, its version and available updates **before you compile**.
-3. Review **Save the game to**, choose a destination if you want, and click **Prepare game**. Easy creates a named game folder with your Mac app or IPA and its game data. Follow the build stages and live log while it works.
-4. **Mac:** click **Play on Mac**. **iPhone / iPad:** continue through **device → Apple account → review → install**. The app guides signing, installation and game-data transfer.
+<!-- BEGIN GENERATED COMPATIBILITY LINKS -->
+[Nintendo Switch 1 · 144](https://nalancer08.github.io/nxnative-easy/?console=switch1#games) · [Nintendo Switch 2 · 11](https://nalancer08.github.io/nxnative-easy/?console=switch2#games) · [Full tested games table](dm/games/README.md#games)
+<!-- END GENERATED COMPATIBILITY LINKS -->
 
-<img src="docs/images/nxnative-prepare-en-v1.30.jpg" width="49%" alt="Guided game preparation"> <img src="docs/images/nxnative-portal-en-v1.30.jpg" width="49%" alt="Original 3D launcher scene">
+The catalog filters by console and searches by title or version. Each game note lists tested builds, devices and known limitations. Switch 2 preparation is available on Mac from a NUP or extracted game folder. [Switch 2 formats and requirements](docs/switch2.md)
 
-| Play on… | What you get |
-|---|---|
-| **Mac** | A complete game `.app`, including its game data. Open it from your library. |
-| **iPhone / iPad** | An IPA to install on your device. Choose a lightweight build with separate game data, or include the data in the IPA. Sideloadly is also available as an alternative. |
+## Keep playing
 
-**Already installed?** Open **Update or renew**. Choose an expired iPhone/iPad signature to reuse the registered IPA, or improvements/a game update to review your files and prepare again. The installer retains the existing account/team and app identity; keep the game installed to preserve its data. [Step-by-step maintenance](docs/game-maintenance.md).
+- Keep track of where each game is installed, when its signature expires, and when you need to prepare it again. [Game maintenance](docs/game-maintenance.md)
+- Test your controller on Mac and adjust the touch layout on iPhone or iPad. [Game options](docs/game-options-and-cleanup.md)
+- Continue a save between compatible Mac and iPhone/iPad builds using iCloud Drive. Easy keeps both copies when progress conflicts. [Set up iCloud saves](docs/icloud-saves.md)
 
-**A tidy export:** each platform keeps one current export. Lightweight iPhone/iPad builds contain one named IPA and `Datos/romfs`; the intermediate full IPA is removed after verification. Updates replace only an unchanged export created by Easy. Original game files and saves remain in place. Use **Move to another folder…** on a finished preparation to reorganize it without recompiling. A previous IPA still needed for automatic signing renewal is retained privately with the same checksum and account identity.
+Easy uses files you provide. Bring your own games and keys.
 
-## Everything in one place
+## Credits and resources
 
-- **Your library:** a searchable game list with icons, including titles found in your iCloud saves. Open it to play on Mac, add missing files, or see current and last-known iPhone/iPad installations.
-- **Your controls:** Xbox, PS5 and PS4 controllers, plus an input tester in **Settings**. On iPhone/iPad, move and resize touch buttons and save **four named profiles** per game.
-- **Your settings:** per-game Mac launch options and cache cleanup with a preview of exactly what will be removed.
-- **Your saves:** Easy manages its folder in iCloud Drive. Open your game to see received revisions by device, version and date. Bring a compatible backup into a new revision or prepare a new console backup without replacing existing progress. Enable [iCloud continuity](docs/icloud-saves.md) in matching rebuilt games; conflicts keep both versions. No signing-account login is needed. [Transfer guide and console requirements](docs/save-transfer.md). Games stay in your library before their first save; committed Mac progress appears in the game detail even without iCloud.
-- **Your Apple account:** shared across the app, with a remembered Keychain session, device review and optional background signature renewal. [Renewal requirements](docs/background-renewal.md).
-- **App updates:** click **Update now** when a release appears. After the new app opens, Easy keeps one verified rollback and clears obsolete backups and unchanged cached source copies. To use a new engine in an existing game, prepare that game again.
+[seedds/nxnative](https://github.com/seedds/nxnative) provides the engine and game profiles. Easy adds the library, guided preparation and device installation. [Original credits](README-original.md#acknowledgements) · [MIT license](LICENSE)
 
-<img src="docs/images/nxnative-details-en-v1.30.jpg" width="49%" alt="Game details and where to play"> <img src="docs/images/nxnative-account-en-v1.30.jpg" width="49%" alt="Your shared Apple account in Settings">
-
-
-**Switch backups:** an unmodified Switch 1 or 2 cannot import saves just by copying them to its SD card. Easy prepares checked files; restoring them requires a separately configured compatible console tool. It does not access Nintendo's cloud. [What is possible](docs/save-transfer.md).
-
-**Open your game to see what comes next.** Home shows where it is installed and whether its recorded signature is expiring. Its detail explains recommendations and compares the Easy release used for preparation/signing with the current release. Legacy installations without that history say **Not recorded**. The same page lets you back up iPhone progress locally, copy this Mac’s committed saves or review received iCloud versions, without signing-account login.
-
-The interface starts in **English**; switch to **Español** in **Settings → General**.
-
-**Continue on another screen:** Easy prepares **iCloud Drive → nxnative Easy → Saves**.
-Grant that folder once inside each rebuilt iPhone/iPad game. New Mac builds receive Easy’s folder
-when you click **Play**. Compatible continuations are received before playing;
-saving queues upload automatically. Conflicting branches are both kept and you
-choose which to continue. Old game apps need a safe update over the existing
-installation. The system iCloud account can differ from your signing account.
-[Setup and delivery limits](docs/icloud-saves.md).
-
-Native UI previews use synthetic devices and save metadata; they are not proof of iCloud delivery.
-
-## Find your game
-
-Browse **Compatibility** in the app, or open a game below for supported versions, tested devices and any game-specific notes. Support varies by game, version and device. The current runtime supports offline play; Nintendo online services and LAN/netplay are not available.
-
-The images below show supported game profiles. **Bring your own game files.**
-
-<!-- BEGIN GENERATED GAME GALLERY -->
-155 profiles. Console groups identify the game's edition; see each note for tested versions and Apple devices.
-
-[Nintendo Switch 1 · 144](#nintendo-switch-1) · [Nintendo Switch 2 · 11](#nintendo-switch-2)
-
-### Nintendo Switch 2
-
-11 games. Prepare on Mac from extracted files or NUPs. iPhone/iPad evidence is documented separately in each game note.
-
-- [Donkey Kong Bananza](dm/games/040074A01BF12000/README.md)
-- [Fire Emblem Fortune's Weave](dm/games/04007EF01F8AE000/README.md)
-- [Hyrule Warriors: Age of Imprisonment](dm/games/04003F40232DE000/README.md)
-- [Kirby Air Riders](dm/games/040077201BE50000/README.md)
-- [Mario Kart World](dm/games/0400C3F00006E000/README.md)
-- [Mario Tennis Fever](dm/games/0400D4201C6EA000/README.md)
-- [Pokemon Pokopia](dm/games/0400A3A01EE4C000/README.md)
-- [Splatoon Raiders](dm/games/0400380020056000/README.md)
-- [Star Fox](dm/games/0400E88025B1A000/README.md)
-- [The Legend of Zelda: Ocarina of Time](dm/games/0400486024DEC000/README.md)
-- [Yoshi and the Mysterious Book](dm/games/0400245021D2C000/README.md)
-
-### Nintendo Switch 1
-
-144 games. Open a note for tested builds, platforms and limitations.
-
-<table>
-<tr>
-<td align="center" valign="top" width="33%" data-title-id="01003FC01670C000" data-console="switch1"><a href="dm/games/01003FC01670C000/README.md"><img src="docs/images/13-sentinels.jpg" width="256" alt="13 Sentinels: Aegis Rim"></a><br><a href="dm/games/01003FC01670C000/README.md">13 Sentinels: Aegis Rim</a><br><sub>See game notes</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="01008D7016438000" data-console="switch1"><a href="dm/games/01008D7016438000/README.md"><img src="docs/images/13-sentinels.jpg" width="256" alt="13 Sentinels: Aegis Rim (Asia)"></a><br><a href="dm/games/01008D7016438000/README.md">13 Sentinels: Aegis Rim (Asia)</a><br><sub>~5 GB</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="010045C014650000" data-console="switch1"><a href="dm/games/010045C014650000/README.md"><img src="docs/images/13-sentinels.jpg" width="256" alt="13 Sentinels: Aegis Rim (Japan)"></a><br><a href="dm/games/010045C014650000/README.md">13 Sentinels: Aegis Rim (Japan)</a><br><sub>13 Sentinels: Aegis Rim~5 GB</sub></td>
-</tr>
-<tr>
-<td align="center" valign="top" width="33%" data-title-id="0100A83022A22000" data-console="switch1"><a href="dm/games/0100A83022A22000/README.md"><img src="docs/images/absolum.jpg" width="256" alt="Absolum"></a><br><a href="dm/games/0100A83022A22000/README.md">Absolum</a><br><sub>See game notes</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="010005501E68C000" data-console="switch1"><a href="dm/games/010005501E68C000/README.md"><img src="docs/images/ace-attorney-investigations.jpg" width="256" alt="Ace Attorney Investigations Collection"></a><br><a href="dm/games/010005501E68C000/README.md">Ace Attorney Investigations Collection</a><br><sub>See game notes</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="0100300012F2A000" data-console="switch1"><a href="dm/games/0100300012F2A000/README.md"><img src="docs/images/advance-wars-1-2-re-boot-camp.jpg" width="256" alt="Advance Wars 1+2: Re-Boot Camp"></a><br><a href="dm/games/0100300012F2A000/README.md">Advance Wars 1+2: Re-Boot Camp</a><br><sub>See game notes</sub></td>
-</tr>
-<tr>
-<td align="center" valign="top" width="33%" data-title-id="010089B00D09C000" data-console="switch1"><a href="dm/games/010089B00D09C000/README.md"><img src="docs/images/ai-the-somnium-files.jpg" width="256" alt="AI: THE SOMNIUM FILES"></a><br><a href="dm/games/010089B00D09C000/README.md">AI: THE SOMNIUM FILES</a><br><sub>See game notes</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="0100713016CCC000" data-console="switch1"><a href="dm/games/0100713016CCC000/README.md"><img src="docs/images/ai-the-somnium-files-nirvana-initiative.jpg" width="256" alt="AI: THE SOMNIUM FILES - nirvanA Initiative"></a><br><a href="dm/games/0100713016CCC000/README.md">AI: THE SOMNIUM FILES - nirvanA Initiative</a><br><sub>See game notes</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="01006F8002326000" data-console="switch1"><a href="dm/games/01006F8002326000/README.md"><img src="docs/images/animal-crossing-new-horizons.jpg" width="256" alt="Animal Crossing: New Horizons"></a><br><a href="dm/games/01006F8002326000/README.md">Animal Crossing: New Horizons</a><br><sub>See game notes</sub></td>
-</tr>
-<tr>
-<td align="center" valign="top" width="33%" data-title-id="010020D01AD24000" data-console="switch1"><a href="dm/games/010020D01AD24000/README.md"><img src="docs/images/animal-well.png" width="256" alt="ANIMAL WELL"></a><br><a href="dm/games/010020D01AD24000/README.md">ANIMAL WELL</a><br><sub>See game notes</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="01007300020FA000" data-console="switch1"><a href="dm/games/01007300020FA000/README.md"><img src="docs/images/astral-chain.png" width="256" alt="ASTRAL CHAIN"></a><br><a href="dm/games/01007300020FA000/README.md">ASTRAL CHAIN</a><br><sub>60 fps target with 1.0.1</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="0100199023B2E000" data-console="switch1"><a href="dm/games/0100199023B2E000/README.md"><img src="docs/images/atelier-ryza-dx.jpg" width="256" alt="Atelier Ryza: Ever Darkness &amp; the Secret Hideout DX"></a><br><a href="dm/games/0100199023B2E000/README.md">Atelier Ryza: Ever Darkness &amp; the Secret Hideout DX</a><br><sub>See game notes</sub></td>
-</tr>
-<tr>
-<td align="center" valign="top" width="33%" data-title-id="01002CD00A51C000" data-console="switch1"><a href="dm/games/01002CD00A51C000/README.md"><img src="docs/images/baba-is-you.jpg" width="256" alt="Baba Is You"></a><br><a href="dm/games/01002CD00A51C000/README.md">Baba Is You</a><br><sub>See game notes</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="0100CD801CE5E000" data-console="switch1"><a href="dm/games/0100CD801CE5E000/README.md"><img src="docs/images/balatro.jpg" width="256" alt="Balatro"></a><br><a href="dm/games/0100CD801CE5E000/README.md">Balatro</a><br><sub>played by touch</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="010086A022444000" data-console="switch1"><a href="dm/games/010086A022444000/README.md"><img src="docs/images/ball-x-pit.jpg" width="256" alt="BALL x PIT"></a><br><a href="dm/games/010086A022444000/README.md">BALL x PIT</a><br><sub>See game notes</sub></td>
-</tr>
-<tr>
-<td align="center" valign="top" width="33%" data-title-id="010038600B27E000" data-console="switch1"><a href="dm/games/010038600B27E000/README.md"><img src="docs/images/bastion.jpg" width="256" alt="Bastion"></a><br><a href="dm/games/010038600B27E000/README.md">Bastion</a><br><sub>See game notes</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="0100ACD0163D0000" data-console="switch1"><a href="dm/games/0100ACD0163D0000/README.md"><img src="docs/images/batman-arkham-knight.jpg" width="256" alt="Batman: Arkham Knight"></a><br><a href="dm/games/0100ACD0163D0000/README.md">Batman: Arkham Knight</a><br><sub>See game notes</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="010076F0049A2000" data-console="switch1"><a href="dm/games/010076F0049A2000/README.md"><img src="docs/images/bayonetta.jpg" width="256" alt="Bayonetta"></a><br><a href="dm/games/010076F0049A2000/README.md">Bayonetta</a><br><sub>See game notes</sub></td>
-</tr>
-<tr>
-<td align="center" valign="top" width="33%" data-title-id="01007960049A0000" data-console="switch1"><a href="dm/games/01007960049A0000/README.md"><img src="docs/images/bayonetta-2.jpg" width="256" alt="Bayonetta 2"></a><br><a href="dm/games/01007960049A0000/README.md">Bayonetta 2</a><br><sub>See game notes</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="01004A4010FEA000" data-console="switch1"><a href="dm/games/01004A4010FEA000/README.md"><img src="docs/images/bayonetta-3.jpg" width="256" alt="Bayonetta 3"></a><br><a href="dm/games/01004A4010FEA000/README.md">Bayonetta 3</a><br><sub>See game notes</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="0100620012D6E000" data-console="switch1"><a href="dm/games/0100620012D6E000/README.md"><img src="docs/images/big-brain-academy-brain-vs-brain.jpg" width="256" alt="Big Brain Academy: Brain vs. Brain"></a><br><a href="dm/games/0100620012D6E000/README.md">Big Brain Academy: Brain vs. Brain</a><br><sub>See game notes</sub></td>
-</tr>
-<tr>
-<td align="center" valign="top" width="33%" data-title-id="0100698009C6E000" data-console="switch1"><a href="dm/games/0100698009C6E000/README.md"><img src="docs/images/blasphemous.jpg" width="256" alt="Blasphemous"></a><br><a href="dm/games/0100698009C6E000/README.md">Blasphemous</a><br><sub>See game notes</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="010040801A4C8000" data-console="switch1"><a href="dm/games/010040801A4C8000/README.md"><img src="docs/images/blasphemous-2.png" width="256" alt="Blasphemous 2"></a><br><a href="dm/games/010040801A4C8000/README.md">Blasphemous 2</a><br><sub>See game notes</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="0100F5D01DA3A000" data-console="switch1"><a href="dm/games/0100F5D01DA3A000/README.md"><img src="docs/images/brain-memory-training-academy.jpg" width="256" alt="Brain Memory Training Academy"></a><br><a href="dm/games/0100F5D01DA3A000/README.md">Brain Memory Training Academy</a><br><sub>See game notes</sub></td>
-</tr>
-<tr>
-<td align="center" valign="top" width="33%" data-title-id="01009BF0072D4000" data-console="switch1"><a href="dm/games/01009BF0072D4000/README.md"><img src="docs/images/captain-toad-treasure-tracker.jpg" width="256" alt="Captain Toad: Treasure Tracker"></a><br><a href="dm/games/01009BF0072D4000/README.md">Captain Toad: Treasure Tracker</a><br><sub>See game notes</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="0100BA4026E94000" data-console="switch1"><a href="dm/games/0100BA4026E94000/README.md"><img src="docs/images/castlevania-belmonts-curse.jpg" width="256" alt="Castlevania: Belmont&#x27;s Curse"></a><br><a href="dm/games/0100BA4026E94000/README.md">Castlevania: Belmont&#x27;s Curse</a><br><sub>See game notes</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="0100BF00112C0000" data-console="switch1"><a href="dm/games/0100BF00112C0000/README.md"><img src="docs/images/catherine-full-body.jpg" width="256" alt="Catherine: Full Body"></a><br><a href="dm/games/0100BF00112C0000/README.md">Catherine: Full Body</a><br><sub>See game notes</sub></td>
-</tr>
-<tr>
-<td align="center" valign="top" width="33%" data-title-id="01002B30028F6000" data-console="switch1"><a href="dm/games/01002B30028F6000/README.md"><img src="docs/images/celeste.jpg" width="256" alt="Celeste"></a><br><a href="dm/games/01002B30028F6000/README.md">Celeste</a><br><sub>See game notes</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="01002E7016C46000" data-console="switch1"><a href="dm/games/01002E7016C46000/README.md"><img src="docs/images/cult-of-the-lamb.jpg" width="256" alt="Cult of the Lamb"></a><br><a href="dm/games/01002E7016C46000/README.md">Cult of the Lamb</a><br><sub>See game notes</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="0100A5C00D162000" data-console="switch1"><a href="dm/games/0100A5C00D162000/README.md"><img src="docs/images/cuphead.jpg" width="256" alt="Cuphead"></a><br><a href="dm/games/0100A5C00D162000/README.md">Cuphead</a><br><sub>See game notes</sub></td>
-</tr>
-<tr>
-<td align="center" valign="top" width="33%" data-title-id="01004AB00A260000" data-console="switch1"><a href="dm/games/01004AB00A260000/README.md"><img src="docs/images/dark-souls-remastered-creation.jpg" width="256" alt="DARK SOULS: REMASTERED"></a><br><a href="dm/games/01004AB00A260000/README.md">DARK SOULS: REMASTERED</a><br><sub>60 fps with 1.0.3</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="010097F018538000" data-console="switch1"><a href="dm/games/010097F018538000/README.md"><img src="docs/images/dave-the-diver.jpg" width="256" alt="DAVE THE DIVER"></a><br><a href="dm/games/010097F018538000/README.md">DAVE THE DIVER</a><br><sub>See game notes</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="0100646009FBE000" data-console="switch1"><a href="dm/games/0100646009FBE000/README.md"><img src="docs/images/dead-cells.jpg" width="256" alt="Dead Cells"></a><br><a href="dm/games/0100646009FBE000/README.md">Dead Cells</a><br><sub>See game notes</sub></td>
-</tr>
-<tr>
-<td align="center" valign="top" width="33%" data-title-id="010014E00DB56000" data-console="switch1"><a href="dm/games/010014E00DB56000/README.md"><img src="docs/images/digimon-story-cyber-sleuth.jpg" width="256" alt="Digimon Story Cyber Sleuth: Complete Edition"></a><br><a href="dm/games/010014E00DB56000/README.md">Digimon Story Cyber Sleuth: Complete Edition</a><br><sub>See game notes</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="01009D901BC56000" data-console="switch1"><a href="dm/games/01009D901BC56000/README.md"><img src="docs/images/donkey-kong-country-returns-hd.png" width="256" alt="Donkey Kong Country Returns HD"></a><br><a href="dm/games/01009D901BC56000/README.md">Donkey Kong Country Returns HD</a><br><sub>See game notes</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="0100C1F0051B6000" data-console="switch1"><a href="dm/games/0100C1F0051B6000/README.md"><img src="docs/images/donkey-kong-country-tropical-freeze.jpg" width="256" alt="Donkey Kong Country: Tropical Freeze"></a><br><a href="dm/games/0100C1F0051B6000/README.md">Donkey Kong Country: Tropical Freeze</a><br><sub>See game notes</sub></td>
-</tr>
-<tr>
-<td align="center" valign="top" width="33%" data-title-id="010035F022078000" data-console="switch1"><a href="dm/games/010035F022078000/README.md"><img src="docs/images/dragon-ball-sparking-zero.jpg" width="256" alt="DRAGON BALL: Sparking! ZERO"></a><br><a href="dm/games/010035F022078000/README.md">DRAGON BALL: Sparking! ZERO</a><br><sub>See game notes</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="010042000A986000" data-console="switch1"><a href="dm/games/010042000A986000/README.md"><img src="docs/images/dragon-quest-builders-2.jpg" width="256" alt="DRAGON QUEST BUILDERS 2"></a><br><a href="dm/games/010042000A986000/README.md">DRAGON QUEST BUILDERS 2</a><br><sub>See game notes</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="01003E601E324000" data-console="switch1"><a href="dm/games/01003E601E324000/README.md"><img src="docs/images/dragon-quest-i-ii-hd-2d-remake.jpg" width="256" alt="DRAGON QUEST III HD-2D Remake"></a><br><a href="dm/games/01003E601E324000/README.md">DRAGON QUEST III HD-2D Remake</a><br><sub>See game notes</sub></td>
-</tr>
-<tr>
-<td align="center" valign="top" width="33%" data-title-id="0100D7C01F254000" data-console="switch1"><a href="dm/games/0100D7C01F254000/README.md"><img src="docs/images/dragon-quest-i-ii-hd-2d-remake.jpg" width="256" alt="DRAGON QUEST I &amp; II HD-2D Remake"></a><br><a href="dm/games/0100D7C01F254000/README.md">DRAGON QUEST I &amp; II HD-2D Remake</a><br><sub>See game notes</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="0100A9D01C446000" data-console="switch1"><a href="dm/games/0100A9D01C446000/README.md"><img src="docs/images/dragon-quest-vii-reimagined.jpg" width="256" alt="DRAGON QUEST VII Reimagined"></a><br><a href="dm/games/0100A9D01C446000/README.md">DRAGON QUEST VII Reimagined</a><br><sub>60 fps with 1.2.0</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="01006C300E9F0000" data-console="switch1"><a href="dm/games/01006C300E9F0000/README.md"><img src="docs/images/dragon-quest-xi-s.jpg" width="256" alt="DRAGON QUEST XI S: Echoes of an Elusive Age – Definitive Edition"></a><br><a href="dm/games/01006C300E9F0000/README.md">DRAGON QUEST XI S: Echoes of an Elusive Age – Definitive Edition</a><br><sub>60 fps with 1.0.4</sub></td>
-</tr>
-<tr>
-<td align="center" valign="top" width="33%" data-title-id="0100C49025D3E000" data-console="switch1"><a href="dm/games/0100C49025D3E000/README.md"><img src="docs/images/ea-sports-fc-27.jpg" width="256" alt="EA SPORTS FC 27"></a><br><a href="dm/games/0100C49025D3E000/README.md">EA SPORTS FC 27</a><br><sub>60 fps with 1.8d.310c</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="0100CE4010AAC000" data-console="switch1"><a href="dm/games/0100CE4010AAC000/README.md"><img src="docs/images/final-fantasy-crystal-chronicles.jpg" width="256" alt="FINAL FANTASY CRYSTAL CHRONICLES Remastered Edition"></a><br><a href="dm/games/0100CE4010AAC000/README.md">FINAL FANTASY CRYSTAL CHRONICLES Remastered Edition</a><br><sub>See game notes</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="0100606026F12000" data-console="switch1"><a href="dm/games/0100606026F12000/README.md"><img src="docs/images/final-fantasy-resonance.jpg" width="256" alt="FINAL FANTASY RESONANCE"></a><br><a href="dm/games/0100606026F12000/README.md">FINAL FANTASY RESONANCE</a><br><sub>60 fps with 1.0.1</sub></td>
-</tr>
-<tr>
-<td align="center" valign="top" width="33%" data-title-id="0100B8A026F14000" data-console="switch1"><a href="dm/games/0100B8A026F14000/README.md"><img src="docs/images/final-fantasy-resonance.jpg" width="256" alt="FINAL FANTASY RESONANCE (Asian release)"></a><br><a href="dm/games/0100B8A026F14000/README.md">FINAL FANTASY RESONANCE (Asian release)</a><br><sub>FINAL FANTASY RESONANCE~10 GB · 60 fps with 1.0.1</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="010038B015560000" data-console="switch1"><a href="dm/games/010038B015560000/README.md"><img src="docs/images/final-fantasy-tactics.jpg" width="256" alt="FINAL FANTASY TACTICS - The Ivalice Chronicles"></a><br><a href="dm/games/010038B015560000/README.md">FINAL FANTASY TACTICS - The Ivalice Chronicles</a><br><sub>See game notes</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="0100BC300CB48000" data-console="switch1"><a href="dm/games/0100BC300CB48000/README.md"><img src="docs/images/final-fantasy-x-x2-hd-remaster.jpg" width="256" alt="FINAL FANTASY X/X-2 HD Remaster"></a><br><a href="dm/games/0100BC300CB48000/README.md">FINAL FANTASY X/X-2 HD Remaster</a><br><sub>See game notes</sub></td>
-</tr>
-<tr>
-<td align="center" valign="top" width="33%" data-title-id="0100A6301214E000" data-console="switch1"><a href="dm/games/0100A6301214E000/README.md"><img src="docs/images/fire-emblem-engage.jpg" width="256" alt="Fire Emblem Engage"></a><br><a href="dm/games/0100A6301214E000/README.md">Fire Emblem Engage</a><br><sub>60 fps with 2.0.0</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="010055D009F78000" data-console="switch1"><a href="dm/games/010055D009F78000/README.md"><img src="docs/images/fire-emblem-three-houses.jpg" width="256" alt="Fire Emblem: Three Houses"></a><br><a href="dm/games/010055D009F78000/README.md">Fire Emblem: Three Houses</a><br><sub>60 fps with 1.2.0</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="010029B018432000" data-console="switch1"><a href="dm/games/010029B018432000/README.md"><img src="docs/images/ghost-trick-phantom-detective.jpg" width="256" alt="Ghost Trick: Phantom Detective"></a><br><a href="dm/games/010029B018432000/README.md">Ghost Trick: Phantom Detective</a><br><sub>See game notes</sub></td>
-</tr>
-<tr>
-<td align="center" valign="top" width="33%" data-title-id="0100535012974000" data-console="switch1"><a href="dm/games/0100535012974000/README.md"><img src="docs/images/hades.jpg" width="256" alt="Hades"></a><br><a href="dm/games/0100535012974000/README.md">Hades</a><br><sub>See game notes</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="0100A00019DE0000" data-console="switch1"><a href="dm/games/0100A00019DE0000/README.md"><img src="docs/images/hades-ii.jpg" width="256" alt="Hades II"></a><br><a href="dm/games/0100A00019DE0000/README.md">Hades II</a><br><sub>See game notes</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="0100633007D48000" data-console="switch1"><a href="dm/games/0100633007D48000/README.md"><img src="docs/images/hollow-knight.jpg" width="256" alt="Hollow Knight"></a><br><a href="dm/games/0100633007D48000/README.md">Hollow Knight</a><br><sub>See game notes</sub></td>
-</tr>
-<tr>
-<td align="center" valign="top" width="33%" data-title-id="010013C00E930000" data-console="switch1"><a href="dm/games/010013C00E930000/README.md"><img src="docs/images/hollow-knight-silksong.jpg" width="256" alt="Hollow Knight: Silksong"></a><br><a href="dm/games/010013C00E930000/README.md">Hollow Knight: Silksong</a><br><sub>See game notes</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="01002B00111A2000" data-console="switch1"><a href="dm/games/01002B00111A2000/README.md"><img src="docs/images/hyrule-warriors-age-of-calamity.jpg" width="256" alt="Hyrule Warriors: Age of Calamity"></a><br><a href="dm/games/01002B00111A2000/README.md">Hyrule Warriors: Age of Calamity</a><br><sub>60 fps with 1.3.0</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="0100AE00096EA000" data-console="switch1"><a href="dm/games/0100AE00096EA000/README.md"><img src="docs/images/hyrule-warriors-definitive-edition.jpg" width="256" alt="Hyrule Warriors: Definitive Edition"></a><br><a href="dm/games/0100AE00096EA000/README.md">Hyrule Warriors: Definitive Edition</a><br><sub>See game notes</sub></td>
-</tr>
-<tr>
-<td align="center" valign="top" width="33%" data-title-id="01004D300C5AE000" data-console="switch1"><a href="dm/games/01004D300C5AE000/README.md"><img src="docs/images/kirby-and-the-forgotten-land.jpg" width="256" alt="Kirby and the Forgotten Land"></a><br><a href="dm/games/01004D300C5AE000/README.md">Kirby and the Forgotten Land</a><br><sub>See game notes</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="01007E3006DDA000" data-console="switch1"><a href="dm/games/01007E3006DDA000/README.md"><img src="docs/images/kirby-star-allies.jpg" width="256" alt="Kirby Star Allies"></a><br><a href="dm/games/01007E3006DDA000/README.md">Kirby Star Allies</a><br><sub>See game notes</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="0100DCA0064A6000" data-console="switch1"><a href="dm/games/0100DCA0064A6000/README.md"><img src="docs/images/luigis-mansion-3.jpg" width="256" alt="Luigi&#x27;s Mansion 3"></a><br><a href="dm/games/0100DCA0064A6000/README.md">Luigi&#x27;s Mansion 3</a><br><sub>60 fps with 1.4.0</sub></td>
-</tr>
-<tr>
-<td align="center" valign="top" width="33%" data-title-id="0100152000022000" data-console="switch1"><a href="dm/games/0100152000022000/README.md"><img src="docs/images/mario-kart-8-deluxe.jpg" width="256" alt="Mario Kart 8 Deluxe"></a><br><a href="dm/games/0100152000022000/README.md">Mario Kart 8 Deluxe</a><br><sub>no Mii heads</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="01006D0017F7A000" data-console="switch1"><a href="dm/games/01006D0017F7A000/README.md"><img src="docs/images/mario-luigi-brothership.jpg" width="256" alt="Mario &amp; Luigi: Brothership"></a><br><a href="dm/games/01006D0017F7A000/README.md">Mario &amp; Luigi: Brothership</a><br><sub>up to 120 fps</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="01006FE013472000" data-console="switch1"><a href="dm/games/01006FE013472000/README.md"><img src="docs/images/mario-party-superstars.jpg" width="256" alt="Mario Party Superstars"></a><br><a href="dm/games/01006FE013472000/README.md">Mario Party Superstars</a><br><sub>See game notes</sub></td>
-</tr>
-<tr>
-<td align="center" valign="top" width="33%" data-title-id="010067300059A000" data-console="switch1"><a href="dm/games/010067300059A000/README.md"><img src="docs/images/mario-rabbids-kingdom-battle.jpg" width="256" alt="Mario + Rabbids Kingdom Battle"></a><br><a href="dm/games/010067300059A000/README.md">Mario + Rabbids Kingdom Battle</a><br><sub>See game notes</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="0100317013770000" data-console="switch1"><a href="dm/games/0100317013770000/README.md"><img src="docs/images/mario-rabbids-sparks-of-hope.jpg" width="256" alt="Mario + Rabbids® Sparks of Hope"></a><br><a href="dm/games/0100317013770000/README.md">Mario + Rabbids® Sparks of Hope</a><br><sub>See game notes</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="0100B99019412000" data-console="switch1"><a href="dm/games/0100B99019412000/README.md"><img src="docs/images/mario-vs-donkey-kong.jpg" width="256" alt="Mario vs. Donkey Kong"></a><br><a href="dm/games/0100B99019412000/README.md">Mario vs. Donkey Kong</a><br><sub>See game notes</sub></td>
-</tr>
-<tr>
-<td align="center" valign="top" width="33%" data-title-id="010093801237C000" data-console="switch1"><a href="dm/games/010093801237C000/README.md"><img src="docs/images/metroid-dread.jpg" width="256" alt="Metroid Dread"></a><br><a href="dm/games/010093801237C000/README.md">Metroid Dread</a><br><sub>See game notes</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="010012101468C000" data-console="switch1"><a href="dm/games/010012101468C000/README.md"><img src="docs/images/metroid-prime-remastered.jpg" width="256" alt="Metroid Prime Remastered"></a><br><a href="dm/games/010012101468C000/README.md">Metroid Prime Remastered</a><br><sub>See game notes</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="0100A7C01B792000" data-console="switch1"><a href="dm/games/0100A7C01B792000/README.md"><img src="docs/images/minecraft-dungeons-ii.jpg" width="256" alt="Minecraft Dungeons II"></a><br><a href="dm/games/0100A7C01B792000/README.md">Minecraft Dungeons II</a><br><sub>See game notes</sub></td>
-</tr>
-<tr>
-<td align="center" valign="top" width="33%" data-title-id="0100B04011742000" data-console="switch1"><a href="dm/games/0100B04011742000/README.md"><img src="docs/images/monster-hunter-rise.jpg" width="256" alt="Monster Hunter Rise"></a><br><a href="dm/games/0100B04011742000/README.md">Monster Hunter Rise</a><br><sub>60 fps with 16.0.2</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="010051701FB46000" data-console="switch1"><a href="dm/games/010051701FB46000/README.md"><img src="docs/images/monster-train-2.jpg" width="256" alt="Monster Train 2"></a><br><a href="dm/games/010051701FB46000/README.md">Monster Train 2</a><br><sub>60 fps with 1.1.1</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="010029B0118E8000" data-console="switch1"><a href="dm/games/010029B0118E8000/README.md"><img src="docs/images/need-for-speed-hot-pursuit-remastered.jpg" width="256" alt="Need For Speed™ Hot Pursuit Remastered"></a><br><a href="dm/games/010029B0118E8000/README.md">Need For Speed™ Hot Pursuit Remastered</a><br><sub>See game notes</sub></td>
-</tr>
-<tr>
-<td align="center" valign="top" width="33%" data-title-id="010056B015FE8000" data-console="switch1"><a href="dm/games/010056B015FE8000/README.md"><img src="docs/images/nier-automata.png" width="256" alt="NieR:Automata The End of YoRHa Edition"></a><br><a href="dm/games/010056B015FE8000/README.md">NieR:Automata The End of YoRHa Edition</a><br><sub>60 fps with 1.0.3</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="0100B8E016F76000" data-console="switch1"><a href="dm/games/0100B8E016F76000/README.md"><img src="docs/images/nier-automata.png" width="256" alt="NieR:Automata The End of YoRHa Edition"></a><br><a href="dm/games/0100B8E016F76000/README.md">NieR:Automata The End of YoRHa Edition</a><br><sub>60 fps with 1.0.3</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="010057D006492000" data-console="switch1"><a href="dm/games/010057D006492000/README.md"><img src="docs/images/octopath-traveler.jpg" width="256" alt="OCTOPATH TRAVELER"></a><br><a href="dm/games/010057D006492000/README.md">OCTOPATH TRAVELER</a><br><sub>See game notes</sub></td>
-</tr>
-<tr>
-<td align="center" valign="top" width="33%" data-title-id="01005270232F2000" data-console="switch1"><a href="dm/games/01005270232F2000/README.md"><img src="docs/images/octopath-traveler-0.jpg" width="256" alt="OCTOPATH TRAVELER 0"></a><br><a href="dm/games/01005270232F2000/README.md">OCTOPATH TRAVELER 0</a><br><sub>60 fps with 1.0.5</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="0100A3501946E000" data-console="switch1"><a href="dm/games/0100A3501946E000/README.md"><img src="docs/images/octopath-traveler-ii.jpg" width="256" alt="OCTOPATH TRAVELER II"></a><br><a href="dm/games/0100A3501946E000/README.md">OCTOPATH TRAVELER II</a><br><sub>60 fps with 1.1.1</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="0100276009872000" data-console="switch1"><a href="dm/games/0100276009872000/README.md"><img src="docs/images/okami-hd.jpg" width="256" alt="ŌKAMI HD"></a><br><a href="dm/games/0100276009872000/README.md">ŌKAMI HD</a><br><sub>See game notes</sub></td>
-</tr>
-<tr>
-<td align="center" valign="top" width="33%" data-title-id="010061D00DB74000" data-console="switch1"><a href="dm/games/010061D00DB74000/README.md"><img src="docs/images/ori-and-the-blind-forest.jpg" width="256" alt="Ori and the Blind Forest: Definitive Edition"></a><br><a href="dm/games/010061D00DB74000/README.md">Ori and the Blind Forest: Definitive Edition</a><br><sub>Official artwork · Mac testing in game notes</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="01008DD013200000" data-console="switch1"><a href="dm/games/01008DD013200000/README.md"><img src="docs/images/ori-and-the-will-of-the-wisps.jpg" width="256" alt="Ori and the Will of the Wisps"></a><br><a href="dm/games/01008DD013200000/README.md">Ori and the Will of the Wisps</a><br><sub>Official artwork · Mac testing in game notes</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="0100A3900C3E2000" data-console="switch1"><a href="dm/games/0100A3900C3E2000/README.md"><img src="docs/images/paper-mario-the-origami-king.jpg" width="256" alt="Paper Mario: The Origami King"></a><br><a href="dm/games/0100A3900C3E2000/README.md">Paper Mario: The Origami King</a><br><sub>See game notes</sub></td>
-</tr>
-<tr>
-<td align="center" valign="top" width="33%" data-title-id="0100ECD018EBE000" data-console="switch1"><a href="dm/games/0100ECD018EBE000/README.md"><img src="docs/images/paper-mario-the-thousand-year-door.jpg" width="256" alt="Paper Mario: The Thousand-Year Door"></a><br><a href="dm/games/0100ECD018EBE000/README.md">Paper Mario: The Thousand-Year Door</a><br><sub>60 fps with 1.0.1</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="0100E44016C22000" data-console="switch1"><a href="dm/games/0100E44016C22000/README.md"><img src="docs/images/patricks-parabox.jpg" width="256" alt="Patrick&#x27;s Parabox"></a><br><a href="dm/games/0100E44016C22000/README.md">Patrick&#x27;s Parabox</a><br><sub>See game notes</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="010062B01525C000" data-console="switch1"><a href="dm/games/010062B01525C000/README.md"><img src="docs/images/persona-4-golden.jpg" width="256" alt="Persona 4 Golden"></a><br><a href="dm/games/010062B01525C000/README.md">Persona 4 Golden</a><br><sub>See game notes</sub></td>
-</tr>
-<tr>
-<td align="center" valign="top" width="33%" data-title-id="01005CA01580E000" data-console="switch1"><a href="dm/games/01005CA01580E000/README.md"><img src="docs/images/persona-5-royal.jpg" width="256" alt="Persona 5 Royal"></a><br><a href="dm/games/01005CA01580E000/README.md">Persona 5 Royal</a><br><sub>See game notes</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="0100B7C00933A000" data-console="switch1"><a href="dm/games/0100B7C00933A000/README.md"><img src="docs/images/pikmin-4.jpg" width="256" alt="Pikmin 4"></a><br><a href="dm/games/0100B7C00933A000/README.md">Pikmin 4</a><br><sub>See game notes</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="0100000011D90000" data-console="switch1"><a href="dm/games/0100000011D90000/README.md"><img src="docs/images/pokemon-brilliant-diamond.jpg" width="256" alt="Pokémon Brilliant Diamond"></a><br><a href="dm/games/0100000011D90000/README.md">Pokémon Brilliant Diamond</a><br><sub>60 fps with 1.3.0</sub></td>
-</tr>
-<tr>
-<td align="center" valign="top" width="33%" data-title-id="01001F5010DFA000" data-console="switch1"><a href="dm/games/01001F5010DFA000/README.md"><img src="docs/images/pokemon-legends-arceus.jpg" width="256" alt="Pokémon Legends: Arceus"></a><br><a href="dm/games/01001F5010DFA000/README.md">Pokémon Legends: Arceus</a><br><sub>See game notes</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="0100F43008C44000" data-console="switch1"><a href="dm/games/0100F43008C44000/README.md"><img src="docs/images/pokemon-legends-z-a.jpg" width="256" alt="Pokémon Legends: Z-A"></a><br><a href="dm/games/0100F43008C44000/README.md">Pokémon Legends: Z-A</a><br><sub>See game notes</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="0100A3D008C5C000" data-console="switch1"><a href="dm/games/0100A3D008C5C000/README.md"><img src="docs/images/pokemon-scarlet.png" width="256" alt="Pokémon Scarlet"></a><br><a href="dm/games/0100A3D008C5C000/README.md">Pokémon Scarlet</a><br><sub>See game notes</sub></td>
-</tr>
-<tr>
-<td align="center" valign="top" width="33%" data-title-id="01008DB008C2C000" data-console="switch1"><a href="dm/games/01008DB008C2C000/README.md"><img src="docs/images/pokemon-shield.jpg" width="256" alt="Pokémon Shield"></a><br><a href="dm/games/01008DB008C2C000/README.md">Pokémon Shield</a><br><sub>See game notes</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="0100ABF008968000" data-console="switch1"><a href="dm/games/0100ABF008968000/README.md"><img src="docs/images/pokemon-sword.jpg" width="256" alt="Pokémon Sword"></a><br><a href="dm/games/0100ABF008968000/README.md">Pokémon Sword</a><br><sub>See game notes</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="01008F6008C5E000" data-console="switch1"><a href="dm/games/01008F6008C5E000/README.md"><img src="docs/images/pokemon-violet.jpg" width="256" alt="Pokémon Violet"></a><br><a href="dm/games/01008F6008C5E000/README.md">Pokémon Violet</a><br><sub>See game notes</sub></td>
-</tr>
-<tr>
-<td align="center" valign="top" width="33%" data-title-id="01007BB017812000" data-console="switch1"><a href="dm/games/01007BB017812000/README.md"><img src="docs/images/portal.jpg" width="256" alt="Portal"></a><br><a href="dm/games/01007BB017812000/README.md">Portal</a><br><sub>See game notes</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="0100ABD01785C000" data-console="switch1"><a href="dm/games/0100ABD01785C000/README.md"><img src="docs/images/portal-2.jpg" width="256" alt="Portal 2"></a><br><a href="dm/games/0100ABD01785C000/README.md">Portal 2</a><br><sub>See game notes</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="01007A3009184000" data-console="switch1"><a href="dm/games/01007A3009184000/README.md"><img src="docs/images/princess-peach-showtime.jpg" width="256" alt="Princess Peach: Showtime!"></a><br><a href="dm/games/01007A3009184000/README.md">Princess Peach: Showtime!</a><br><sub>60 fps with 1.0.0</sub></td>
-</tr>
-<tr>
-<td align="center" valign="top" width="33%" data-title-id="010020400E1C2000" data-console="switch1"><a href="dm/games/010020400E1C2000/README.md"><img src="docs/images/raging-loop.jpg" width="256" alt="Raging Loop"></a><br><a href="dm/games/010020400E1C2000/README.md">Raging Loop</a><br><sub>See game notes</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="01007820196A6000" data-console="switch1"><a href="dm/games/01007820196A6000/README.md"><img src="docs/images/red-dead-redemption.jpg" width="256" alt="Red Dead Redemption"></a><br><a href="dm/games/01007820196A6000/README.md">Red Dead Redemption</a><br><sub>Official artwork · Mac testing in game notes</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="010032E00E6E2000" data-console="switch1"><a href="dm/games/010032E00E6E2000/README.md"><img src="docs/images/return-of-the-obra-dinn.png" width="256" alt="Return of the Obra Dinn"></a><br><a href="dm/games/010032E00E6E2000/README.md">Return of the Obra Dinn</a><br><sub>See game notes</sub></td>
-</tr>
-<tr>
-<td align="center" valign="top" width="33%" data-title-id="0100D9F01D474000" data-console="switch1"><a href="dm/games/0100D9F01D474000/README.md"><img src="docs/images/rhythm-heaven-groove.jpg" width="256" alt="Rhythm Heaven Groove"></a><br><a href="dm/games/0100D9F01D474000/README.md">Rhythm Heaven Groove</a><br><sub>See game notes</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="0100C2A01A730000" data-console="switch1"><a href="dm/games/0100C2A01A730000/README.md"><img src="docs/images/romance-of-the-three-kingdoms-8-remake.jpg" width="256" alt="ROMANCE OF THE THREE KINGDOMS 8 REMAKE"></a><br><a href="dm/games/0100C2A01A730000/README.md">ROMANCE OF THE THREE KINGDOMS 8 REMAKE</a><br><sub>controller only</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="0100ED7012DB2000" data-console="switch1"><a href="dm/games/0100ED7012DB2000/README.md"><img src="docs/images/romance-of-the-three-kingdoms-xiv.jpg" width="256" alt="ROMANCE OF THE THREE KINGDOMS XIV: Diplomacy and Strategy Expansion Pack"></a><br><a href="dm/games/0100ED7012DB2000/README.md">ROMANCE OF THE THREE KINGDOMS XIV: Diplomacy and Strategy Expansion Pack</a><br><sub>See game notes</sub></td>
-</tr>
-<tr>
-<td align="center" valign="top" width="33%" data-title-id="01008C0016544000" data-console="switch1"><a href="dm/games/01008C0016544000/README.md"><img src="docs/images/sea-of-stars.jpg" width="256" alt="Sea of Stars"></a><br><a href="dm/games/01008C0016544000/README.md">Sea of Stars</a><br><sub>See game notes</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="010069C01AB82000" data-console="switch1"><a href="dm/games/010069C01AB82000/README.md"><img src="docs/images/shin-megami-tensei-v-vengeance.jpg" width="256" alt="SHIN MEGAMI TENSEI V: Vengeance"></a><br><a href="dm/games/010069C01AB82000/README.md">SHIN MEGAMI TENSEI V: Vengeance</a><br><sub>60 fps with 1.0.3</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="0100D5B026844000" data-console="switch1"><a href="dm/games/0100D5B026844000/README.md"><img src="docs/images/silver-pines.jpg" width="256" alt="Silver Pines"></a><br><a href="dm/games/0100D5B026844000/README.md">Silver Pines</a><br><sub>See game notes</sub></td>
-</tr>
-<tr>
-<td align="center" valign="top" width="33%" data-title-id="01008F701C074000" data-console="switch1"><a href="dm/games/01008F701C074000/README.md"><img src="docs/images/sonic-superstars.jpg" width="256" alt="Sonic Superstars"></a><br><a href="dm/games/01008F701C074000/README.md">Sonic Superstars</a><br><sub>See game notes</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="0100E65002BB8000" data-console="switch1"><a href="dm/games/0100E65002BB8000/README.md"><img src="docs/images/stardew-valley.jpg" width="256" alt="Stardew Valley"></a><br><a href="dm/games/0100E65002BB8000/README.md">Stardew Valley</a><br><sub>See game notes</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="01009320084A4000" data-console="switch1"><a href="dm/games/01009320084A4000/README.md"><img src="docs/images/steamworld-dig.jpg" width="256" alt="SteamWorld Dig"></a><br><a href="dm/games/01009320084A4000/README.md">SteamWorld Dig</a><br><sub>See game notes</sub></td>
-</tr>
-<tr>
-<td align="center" valign="top" width="33%" data-title-id="0100CA9002322000" data-console="switch1"><a href="dm/games/0100CA9002322000/README.md"><img src="docs/images/steamworld-dig-2.jpg" width="256" alt="SteamWorld Dig 2"></a><br><a href="dm/games/0100CA9002322000/README.md">SteamWorld Dig 2</a><br><sub>See game notes</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="010089C01E9CA000" data-console="switch1"><a href="dm/games/010089C01E9CA000/README.md"><img src="docs/images/steamworld-heist-ii.jpg" width="256" alt="SteamWorld Heist II"></a><br><a href="dm/games/010089C01E9CA000/README.md">SteamWorld Heist II</a><br><sub>See game notes</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="010016100A186000" data-console="switch1"><a href="dm/games/010016100A186000/README.md"><img src="docs/images/steamworld-heist.jpg" width="256" alt="SteamWorld Heist: Ultimate Edition"></a><br><a href="dm/games/010016100A186000/README.md">SteamWorld Heist: Ultimate Edition</a><br><sub>See game notes</sub></td>
-</tr>
-<tr>
-<td align="center" valign="top" width="33%" data-title-id="01008BC024FDE000" data-console="switch1"><a href="dm/games/01008BC024FDE000/README.md"><img src="docs/images/steins-gate-reboot.jpg" width="256" alt="STEINS;GATE RE:BOOT"></a><br><a href="dm/games/01008BC024FDE000/README.md">STEINS;GATE RE:BOOT</a><br><sub>See game notes</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="0100EC9010258000" data-console="switch1"><a href="dm/games/0100EC9010258000/README.md"><img src="docs/images/streets-of-rage-4.jpg" width="256" alt="Streets of Rage 4"></a><br><a href="dm/games/0100EC9010258000/README.md">Streets of Rage 4</a><br><sub>See game notes</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="0100429011144000" data-console="switch1"><a href="dm/games/0100429011144000/README.md"><img src="docs/images/subnautica.jpg" width="256" alt="Subnautica"></a><br><a href="dm/games/0100429011144000/README.md">Subnautica</a><br><sub>See game notes</sub></td>
-</tr>
-<tr>
-<td align="center" valign="top" width="33%" data-title-id="010014C011146000" data-console="switch1"><a href="dm/games/010014C011146000/README.md"><img src="docs/images/subnautica-below-zero.jpg" width="256" alt="Subnautica: Below Zero"></a><br><a href="dm/games/010014C011146000/README.md">Subnautica: Below Zero</a><br><sub>See game notes</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="010049900F546000" data-console="switch1"><a href="dm/games/010049900F546000/README.md"><img src="docs/images/super-mario-3d-all-stars.jpg" width="256" alt="Super Mario 3D All-Stars"></a><br><a href="dm/games/010049900F546000/README.md">Super Mario 3D All-Stars</a><br><sub>Super Mario 64 and Sunshine; Galaxy is 32-bit ARM, which Apple silicon cannot run</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="010028600EBDA000" data-console="switch1"><a href="dm/games/010028600EBDA000/README.md"><img src="docs/images/super-mario-3d-world.jpg" width="256" alt="Super Mario 3D World + Bowser&#x27;s Fury"></a><br><a href="dm/games/010028600EBDA000/README.md">Super Mario 3D World + Bowser&#x27;s Fury</a><br><sub>See game notes</sub></td>
-</tr>
-<tr>
-<td align="center" valign="top" width="33%" data-title-id="010015100B514000" data-console="switch1"><a href="dm/games/010015100B514000/README.md"><img src="docs/images/super-mario-bros-wonder.jpg" width="256" alt="Super Mario Bros. Wonder"></a><br><a href="dm/games/010015100B514000/README.md">Super Mario Bros. Wonder</a><br><sub>See game notes</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="010099C022B96000" data-console="switch1"><a href="dm/games/010099C022B96000/README.md"><img src="docs/images/super-mario-galaxy.jpg" width="256" alt="Super Mario Galaxy"></a><br><a href="dm/games/010099C022B96000/README.md">Super Mario Galaxy</a><br><sub>See game notes</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="0100FD8022DAA000" data-console="switch1"><a href="dm/games/0100FD8022DAA000/README.md"><img src="docs/images/super-mario-galaxy-2.jpg" width="256" alt="Super Mario Galaxy 2"></a><br><a href="dm/games/0100FD8022DAA000/README.md">Super Mario Galaxy 2</a><br><sub>See game notes</sub></td>
-</tr>
-<tr>
-<td align="center" valign="top" width="33%" data-title-id="0100000000010000" data-console="switch1"><a href="dm/games/0100000000010000/README.md"><img src="docs/images/super-mario-odyssey.jpg" width="256" alt="Super Mario Odyssey"></a><br><a href="dm/games/0100000000010000/README.md">Super Mario Odyssey</a><br><sub>See game notes</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="0100965017338000" data-console="switch1"><a href="dm/games/0100965017338000/README.md"><img src="docs/images/super-mario-party-jamboree.jpg" width="256" alt="Super Mario Party Jamboree"></a><br><a href="dm/games/0100965017338000/README.md">Super Mario Party Jamboree</a><br><sub>See game notes</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="0100BC0018138000" data-console="switch1"><a href="dm/games/0100BC0018138000/README.md"><img src="docs/images/super-mario-rpg.jpg" width="256" alt="Super Mario RPG"></a><br><a href="dm/games/0100BC0018138000/README.md">Super Mario RPG</a><br><sub>See game notes</sub></td>
-</tr>
-<tr>
-<td align="center" valign="top" width="33%" data-title-id="010031F019294000" data-console="switch1"><a href="dm/games/010031F019294000/README.md"><img src="docs/images/super-monkey-ball-banana-rumble.jpg" width="256" alt="Super Monkey Ball Banana Rumble"></a><br><a href="dm/games/010031F019294000/README.md">Super Monkey Ball Banana Rumble</a><br><sub>See game notes</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="010063301BD50000" data-console="switch1"><a href="dm/games/010063301BD50000/README.md"><img src="docs/images/super-robot-wars-y.jpg" width="256" alt="SUPER ROBOT WARS Y"></a><br><a href="dm/games/010063301BD50000/README.md">SUPER ROBOT WARS Y</a><br><sub>See game notes</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="01006A800016E000" data-console="switch1"><a href="dm/games/01006A800016E000/README.md"><img src="docs/images/super-smash-bros-ultimate.jpg" width="256" alt="Super Smash Bros. Ultimate"></a><br><a href="dm/games/01006A800016E000/README.md">Super Smash Bros. Ultimate</a><br><sub>offline</sub></td>
-</tr>
-<tr>
-<td align="center" valign="top" width="33%" data-title-id="0100346017304000" data-console="switch1"><a href="dm/games/0100346017304000/README.md"><img src="docs/images/taiko-risshiden-v-dx.jpg" width="256" alt="Taiko Risshiden V DX"></a><br><a href="dm/games/0100346017304000/README.md">Taiko Risshiden V DX</a><br><sub>Japanese · played by touch</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="010092B0091D0000" data-console="switch1"><a href="dm/games/010092B0091D0000/README.md"><img src="docs/images/team-sonic-racing.jpg" width="256" alt="Team Sonic Racing"></a><br><a href="dm/games/010092B0091D0000/README.md">Team Sonic Racing</a><br><sub>See game notes</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="010036E00FB20000" data-console="switch1"><a href="dm/games/010036E00FB20000/README.md"><img src="docs/images/the-great-ace-attorney-chronicles.jpg" width="256" alt="The Great Ace Attorney Chronicles"></a><br><a href="dm/games/010036E00FB20000/README.md">The Great Ace Attorney Chronicles</a><br><sub>See game notes</sub></td>
-</tr>
-<tr>
-<td align="center" valign="top" width="33%" data-title-id="01007EF00011E000" data-console="switch1"><a href="dm/games/01007EF00011E000/README.md"><img src="docs/images/zelda-breath-of-the-wild.jpg" width="256" alt="The Legend of Zelda: Breath of the Wild"></a><br><a href="dm/games/01007EF00011E000/README.md">The Legend of Zelda: Breath of the Wild</a><br><sub>60 fps with 1.9.0</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="01008CF01BAAC000" data-console="switch1"><a href="dm/games/01008CF01BAAC000/README.md"><img src="docs/images/zelda-echoes-of-wisdom.jpg" width="256" alt="The Legend of Zelda: Echoes of Wisdom"></a><br><a href="dm/games/01008CF01BAAC000/README.md">The Legend of Zelda: Echoes of Wisdom</a><br><sub>See game notes</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="01006BB00C6F0000" data-console="switch1"><a href="dm/games/01006BB00C6F0000/README.md"><img src="docs/images/zelda-links-awakening.jpg" width="256" alt="The Legend of Zelda: Link&#x27;s Awakening"></a><br><a href="dm/games/01006BB00C6F0000/README.md">The Legend of Zelda: Link&#x27;s Awakening</a><br><sub>See game notes</sub></td>
-</tr>
-<tr>
-<td align="center" valign="top" width="33%" data-title-id="01002DA013484000" data-console="switch1"><a href="dm/games/01002DA013484000/README.md"><img src="docs/images/zelda-skyward-sword-hd.jpg" width="256" alt="The Legend of Zelda: Skyward Sword HD"></a><br><a href="dm/games/01002DA013484000/README.md">The Legend of Zelda: Skyward Sword HD</a><br><sub>See game notes</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="0100F2C0115B6000" data-console="switch1"><a href="dm/games/0100F2C0115B6000/README.md"><img src="docs/images/zelda-tears-of-the-kingdom.jpg" width="256" alt="The Legend of Zelda: Tears of the Kingdom"></a><br><a href="dm/games/0100F2C0115B6000/README.md">The Legend of Zelda: Tears of the Kingdom</a><br><sub>60 fps with 1.4.3</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="01008D9022462000" data-console="switch1"><a href="dm/games/01008D9022462000/README.md"><img src="docs/images/the-rogue-prince-of-persia.jpg" width="256" alt="The Rogue Prince of Persia"></a><br><a href="dm/games/01008D9022462000/README.md">The Rogue Prince of Persia</a><br><sub>See game notes</sub></td>
-</tr>
-<tr>
-<td align="center" valign="top" width="33%" data-title-id="0100CC80140F8000" data-console="switch1"><a href="dm/games/0100CC80140F8000/README.md"><img src="docs/images/triangle-strategy.jpg" width="256" alt="TRIANGLE STRATEGY"></a><br><a href="dm/games/0100CC80140F8000/README.md">TRIANGLE STRATEGY</a><br><sub>60 fps with 1.1.1</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="0100DA801624E000" data-console="switch1"><a href="dm/games/0100DA801624E000/README.md"><img src="docs/images/tunic.jpg" width="256" alt="TUNIC"></a><br><a href="dm/games/0100DA801624E000/README.md">TUNIC</a><br><sub>Official artwork · Mac testing in game notes</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="010069401ADB8000" data-console="switch1"><a href="dm/games/010069401ADB8000/README.md"><img src="docs/images/unicorn-overlord.jpg" width="256" alt="Unicorn Overlord"></a><br><a href="dm/games/010069401ADB8000/README.md">Unicorn Overlord</a><br><sub>See game notes</sub></td>
-</tr>
-<tr>
-<td align="center" valign="top" width="33%" data-title-id="010054B01AD92000" data-console="switch1"><a href="dm/games/010054B01AD92000/README.md"><img src="docs/images/unicorn-overlord.jpg" width="256" alt="Unicorn Overlord (Asia)"></a><br><a href="dm/games/010054B01AD92000/README.md">Unicorn Overlord (Asia)</a><br><sub>Unicorn Overlord~4 GB</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="0100217023F6C000" data-console="switch1"><a href="dm/games/0100217023F6C000/README.md"><img src="docs/images/well-dweller.jpg" width="256" alt="Well Dweller"></a><br><a href="dm/games/0100217023F6C000/README.md">Well Dweller</a><br><sub>See game notes</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="0100E95004038000" data-console="switch1"><a href="dm/games/0100E95004038000/README.md"><img src="docs/images/xenoblade-chronicles-2.jpg" width="256" alt="Xenoblade Chronicles 2"></a><br><a href="dm/games/0100E95004038000/README.md">Xenoblade Chronicles 2</a><br><sub>See game notes</sub></td>
-</tr>
-<tr>
-<td align="center" valign="top" width="33%" data-title-id="010074F013262000" data-console="switch1"><a href="dm/games/010074F013262000/README.md"><img src="docs/images/xenoblade-chronicles-3.jpg" width="256" alt="Xenoblade Chronicles 3"></a><br><a href="dm/games/010074F013262000/README.md">Xenoblade Chronicles 3</a><br><sub>See game notes</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="0100FF500E34A000" data-console="switch1"><a href="dm/games/0100FF500E34A000/README.md"><img src="docs/images/xenoblade-chronicles-definitive-edition.jpg" width="256" alt="Xenoblade Chronicles: Definitive Edition"></a><br><a href="dm/games/0100FF500E34A000/README.md">Xenoblade Chronicles: Definitive Edition</a><br><sub>See game notes</sub></td>
-<td align="center" valign="top" width="33%" data-title-id="01006000040C2000" data-console="switch1"><a href="dm/games/01006000040C2000/README.md"><img src="docs/images/yoshis-crafted-world.jpg" width="256" alt="Yoshi&#x27;s Crafted World"></a><br><a href="dm/games/01006000040C2000/README.md">Yoshi&#x27;s Crafted World</a><br><sub>See game notes</sub></td>
-</tr>
-</table>
-
-<!-- END GENERATED GAME GALLERY -->
-
-## Credits and more
-
-Built on **[seedds/nxnative](https://github.com/seedds/nxnative)**, which provides the engine, game profiles and compatibility work. **nxnative Easy** adds the desktop library, guided preparation and installation, touch-control editor and automation. The [MIT license](LICENSE), [original credits](README-original.md#acknowledgements) and third-party notices are retained. Our additions are authored by **nalancer08**; upstream commits keep their original authors.
-
-<details>
-<summary>Source installation and technical guides</summary>
-
-The download above is the easiest way to start. To build the launcher from source instead, install and open Xcode 27.2, then run:
-
-```bash
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/nalancer08/nxnative-easy/main/install.sh)"
-```
-
-Already cloned the repository? Open **START-HERE.command**. This source route installs its missing tools and builds the launcher locally.
-
-- [Portable app and update details](docs/portable-desktop.md)
-- [Command guide, in Spanish](README-comandos.md)
-- [Troubleshooting and installation](docs/personal-ios.md)
-- [Game options and safe cache cleanup](docs/game-options-and-cleanup.md)
-- [Engine integration review](docs/personal-pr-review.md)
-- [Development](docs/development.md) · [Design system](docs/design-system.md)
-- [Original README](README-original.md)
-
-</details>
+[Portable app and updates](docs/portable-desktop.md) · [Source setup and commands](README-comandos.md) · [Development](docs/development.md)

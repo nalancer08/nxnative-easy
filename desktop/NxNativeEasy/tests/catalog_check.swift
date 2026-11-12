@@ -47,7 +47,6 @@ import Foundation
         }
         assert(!actual.isEmpty && actual.count==applications.count)
         assert(Set(actual.map {$0.id}).count==actual.count)
-        assert(actual.allSatisfy {$0.artworkURL != nil},"Every current profile must have its existing repo screenshot")
         assert(actual.contains {$0.name=="Metroid Dread" && $0.versions.contains("2.1.0")})
         let manifestData=try Data(contentsOf:repo.appendingPathComponent("desktop/NxNativeEasy/game-catalog.json"))
         let manifest=try JSONSerialization.jsonObject(with:manifestData) as! [String:Any]
@@ -58,7 +57,8 @@ import Foundation
             assert(row["console"] as? String == (game.isSwitch2 ? "switch2" : "switch1"))
             assert(row["name"] as? String == game.name)
             assert(row["versions"] as? [String] == game.versions)
-            assert(repo.appendingPathComponent(row["artwork"] as! String).path == game.artworkURL?.path)
+            let artworkPath = (row["artwork"] as? String).map { repo.appendingPathComponent($0).path }
+            assert(artworkPath == game.artworkURL?.path)
         }
         print("Catalog PASS: \(actual.count) repository profiles, live discovery, sorting, versions, accent-insensitive search and no-results state")
     }
