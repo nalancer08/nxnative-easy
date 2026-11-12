@@ -31,6 +31,6 @@
   The translator is the native `dm/gfx/tools/dmsh_xlate_bin/dmsh_xlate`, which matches `dmsh_chain.lock`; a rebuild (`dm/tools/native_tools.sh`) does not until the lock is updated.
 - A change to the chain, host or tools runs `scripts/regress.py check --games` on the five local games it is most likely to reach (`regress.py impact` helps): more only when truly needed, fewer when its reach is narrow and clear. Its report, naming the games and why, goes into the PR ([06-dev-loop.md](docs/agents/06-dev-loop.md)).
 - Build outputs remain unsigned IPAs. The user may sign/install through our native helper or Sideloadly. Agent tests never sign/install on user devices; diagnostics: the app's `Documents/log.txt`.
-- Commit only when requested or as part of an authorized repository upload. Personal commits use the repository owner: `Erick Sanchez <7268597+nalancer08@users.noreply.github.com>`. Never attribute personal changes to seedds; retain original upstream authors.
+- Push verified Easy changes and publish app releases without confirmation unless the owner requests local-only work. Verify updater discovery. Personal commits use `Erick Sanchez <7268597+nalancer08@users.noreply.github.com>`. Preserve upstream authorship.
 
 - Desktop functionality releases must increment `desktop/release.json` version/build. The updater offers newer builds only. Preserve existing checkouts and games; test updates with an external cache.

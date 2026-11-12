@@ -63,7 +63,7 @@ class Pipeline(unittest.TestCase):
                 def cli(self,args):
                     calls.append(args);fixture(Path(args[args.index('-o')+1]));return 0
             with patch.object(build_ios,'load_builder',return_value=Builder()):
-                self.assertEqual(build_ios.main([temp,"--keys-folder",temp]),0)
+                self.assertEqual(build_ios.main([temp,"--keys-folder",temp,'--export-dir',str(game/'exports')]),0)
                 state=json.loads((game/'nxnative-ios.json').read_text())
                 self.assertEqual(state['bundle_id'],'org.nxnative.test')
                 self.assertTrue(list(Path(state['light_dir']).glob('*.ipa')))

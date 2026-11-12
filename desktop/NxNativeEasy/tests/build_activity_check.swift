@@ -49,6 +49,16 @@ import Foundation
         assert(stream.shaderCacheReason=="chain" && stream.scheduledShaders==1010)
         stream.complete(exitCode:1);assert(stream.history[1].state == .failed)
         var cancelled=BuildActivity();cancelled.receive(Data("{\"ev\":\"stage\",\"k\":1,\"n\":2,\"name\":\"Compile\"}\n".utf8));cancelled.complete(exitCode:130,cancelled:true);assert(cancelled.history[0].state == .cancelled)
+        let export=folder.appendingPathComponent("Named Game/iPhone - iPad")
+        let data=export.appendingPathComponent("Datos/romfs")
+        try FileManager.default.createDirectory(at:data,withIntermediateDirectories:true)
+        let ipa=export.appendingPathComponent("Named Game.ipa");try Data("fixture".utf8).write(to:ipa)
+        let record:[String:Any]=["packaging":"split","light_dir":export.path,"light_ipa":ipa.path,"romfs_path":data.path]
+        assert(IOSPackageOutput.load(record:record,split:true)?.ipa==ipa)
+        assert(IOSPackageOutput.load(record:record,split:true)?.romfs?.path==data.path)
+        try Data("other".utf8).write(to:export.appendingPathComponent("other.ipa"))
+        assert(IOSPackageOutput.load(record:["light_dir":export.path],split:true)==nil)
+        assert(IOSPackageOutput.load(record:record,split:false)==nil)
         print("Build activity PASS: dynamic stage totals, real ETA, reset between steps, retained timeline after tail replay, failed/cancelled outcomes; split UTF-8/JSON, real fractions, bounded transcript, partial final line and target-specific previous preparation")
     }
 }

@@ -11,6 +11,8 @@ import Foundation
     @Published var showNotice=false
     private var revision: String?
     private var process: Process?
+    private var cleanupProcess: Process?
+    private var cleanupStarted = false
     private var buffered=""
     var visible: Bool {available != nil || busy || error != nil}
     var phaseText: String {
@@ -107,6 +109,31 @@ import Foundation
         }
         do {process=task;try task.run()}
         catch {busy=false;self.error="No pudimos iniciar la actualización."}
+    }
+    func cleanInstalledStorage() {
+        guard !cleanupStarted, !busy,
+              Bundle.main.bundleIdentifier == "com.nalancer08.nxnative.easy",
+              let helper = Bundle.main.url(forResource: "update_app", withExtension: "py") else { return }
+        cleanupStarted = true
+        let task = Process()
+        task.executableURL = PortableRuntime.python
+        var arguments = [helper.path, "--cleanup-only", "--target", Bundle.main.bundleURL.path]
+        if let cache = Bundle.main.object(forInfoDictionaryKey: "NxNativeUpdateCache") as? String {
+            arguments += ["--cache", cache]
+        }
+        task.arguments = arguments
+        task.environment = PortableRuntime.environment()
+        task.standardOutput = FileHandle.nullDevice
+        task.standardError = FileHandle.nullDevice
+        task.terminationHandler = { [weak self] _ in
+            Task { @MainActor in self?.cleanupProcess = nil }
+        }
+        do {
+            cleanupProcess = task
+            try task.run()
+        } catch {
+            cleanupProcess = nil
+        }
     }
     private func receive(_ chunk:String) {
         buffered+=chunk

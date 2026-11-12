@@ -87,7 +87,7 @@ def new_zip_info(source, executable_path):
     return result
 
 
-def split_ipa(ipa):
+def split_ipa(ipa, *, output_folder=None, ipa_name=None, data_folder='romfs', instructions=True):
     ipa = ipa.expanduser().resolve(strict=True)
     if not ipa.is_file() or ipa.suffix.casefold() != '.ipa':
         raise ValueError('Select an .ipa file.')
@@ -145,10 +145,21 @@ def split_ipa(ipa):
         info['LSSupportsOpeningDocumentsInPlace'] = True
         new_plist = plistlib.dumps(info, fmt=plistlib.FMT_BINARY, sort_keys=False)
         try:
-            output = Path(tempfile.mkdtemp(prefix=ipa.stem + '-light-', dir=str(ipa.parent)))
-            romfs = output / 'romfs'
-            romfs.mkdir()
-            result_ipa = output / (ipa.stem + '-light.ipa')
+            if output_folder is None:
+                output = Path(tempfile.mkdtemp(prefix=ipa.stem + '-light-', dir=str(ipa.parent)))
+            else:
+                requested = Path(output_folder)
+                if requested.exists() or requested.is_symlink():
+                    raise ValueError('Export staging already exists; nothing replaced.')
+                requested.mkdir()
+                output = requested
+            relative = PurePosixPath(data_folder)
+            name = ipa_name or (ipa.stem + '-light.ipa')
+            if relative.is_absolute() or any(x in {'.', '..'} for x in relative.parts) or Path(name).name != name or not name.endswith('.ipa'):
+                raise ValueError('Invalid export layout.')
+            romfs = output.joinpath(*relative.parts)
+            romfs.mkdir(parents=True)
+            result_ipa = output / name
             say('Preparing a separate output; original preserved: ' + str(output))
             last_progress = time.monotonic()
             completed = 0
@@ -192,14 +203,15 @@ def split_ipa(ipa):
                     raise ValueError('Output CRC verification failed.')
                 if any(entry.extract_version >= 45 for entry in verify.infolist()):
                     raise ValueError('Output still needs ZIP64 or an unsupported extension.')
-            instructions = (
+            install_help = (
                 'Install the lightweight IPA with Sideloadly using your personal Apple account.\n'
                 'First installation: copy the complete romfs folder to the app Documents via Finder.\n'
                 'Updates: install over the existing app with the same effective bundle ID and Apple account.\n'
                 'Do not uninstall: this deletes saves and Documents. Reuse existing romfs only for identical game data.\n'
                 'Unsigned package; signing and device testing are separate. Original IPA preserved.\n'
             )
-            (output / 'INSTALL.txt').write_text(instructions, encoding='utf-8')
+            if instructions:
+                (output / 'INSTALL.txt').write_text(install_help, encoding='utf-8')
             say('\nDONE')
             say('IPA for Sideloadly: ' + str(result_ipa))
             say('Lightweight IPA size: ' + size_text(result_ipa.stat().st_size))

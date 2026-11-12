@@ -32,7 +32,7 @@ If macOS blocks the first opening, open **System Settings → Privacy & Security
 
 1. Open **My library → Add game** and choose **Mac** or **iPhone / iPad**.
 2. Choose your game folder, or drag in your files. For encrypted packages, select your **`prod.keys` file**; extracted folders and Mac NUP files skip this step. The app identifies the game, its version and available updates **before you compile**.
-3. Review and click **Prepare game**. Follow the build stages, counters and live log while it works.
+3. Review **Save the game to**, choose a destination if you want, and click **Prepare game**. Easy creates a named game folder with your Mac app or IPA and its game data. Follow the build stages and live log while it works.
 4. **Mac:** click **Play on Mac**. **iPhone / iPad:** continue through **device → Apple account → review → install**. The app guides signing, installation and game-data transfer.
 
 <img src="docs/images/nxnative-prepare-en-v1.30.jpg" width="49%" alt="Guided game preparation"> <img src="docs/images/nxnative-portal-en-v1.30.jpg" width="49%" alt="Original 3D launcher scene">
@@ -44,6 +44,8 @@ If macOS blocks the first opening, open **System Settings → Privacy & Security
 
 **Already installed?** Open **Update or renew**. Choose an expired iPhone/iPad signature to reuse the registered IPA, or improvements/a game update to review your files and prepare again. The installer retains the existing account/team and app identity; keep the game installed to preserve its data. [Step-by-step maintenance](docs/game-maintenance.md).
 
+**A tidy export:** each platform keeps one current export. Lightweight iPhone/iPad builds contain one named IPA and `Datos/romfs`; the intermediate full IPA is removed after verification. Updates replace only an unchanged export created by Easy. Original game files and saves remain in place. Use **Move to another folder…** on a finished preparation to reorganize it without recompiling. A previous IPA still needed for automatic signing renewal is retained privately with the same checksum and account identity.
+
 ## Everything in one place
 
 - **Your library:** a searchable game list with icons, including titles found in your iCloud saves. Open it to play on Mac, add missing files, or see current and last-known iPhone/iPad installations.
@@ -51,7 +53,7 @@ If macOS blocks the first opening, open **System Settings → Privacy & Security
 - **Your settings:** per-game Mac launch options and cache cleanup with a preview of exactly what will be removed.
 - **Your saves:** Easy manages its folder in iCloud Drive. Open your game to see received revisions by device, version and date. Bring a compatible backup into a new revision or prepare a new console backup without replacing existing progress. Enable [iCloud continuity](docs/icloud-saves.md) in matching rebuilt games; conflicts keep both versions. No signing-account login is needed. [Transfer guide and console requirements](docs/save-transfer.md). Games stay in your library before their first save; committed Mac progress appears in the game detail even without iCloud.
 - **Your Apple account:** shared across the app, with a remembered Keychain session, device review and optional background signature renewal. [Renewal requirements](docs/background-renewal.md).
-- **App updates:** click **Update now** when a release appears. The app downloads and checks the new package, keeps the previous app as a backup and leaves your games and saves in place. To use a new engine in an existing game, prepare that game again.
+- **App updates:** click **Update now** when a release appears. After the new app opens, Easy keeps one verified rollback and clears obsolete backups and unchanged cached source copies. To use a new engine in an existing game, prepare that game again.
 
 <img src="docs/images/nxnative-details-en-v1.30.jpg" width="49%" alt="Game details and where to play"> <img src="docs/images/nxnative-account-en-v1.30.jpg" width="49%" alt="Your shared Apple account in Settings">
 

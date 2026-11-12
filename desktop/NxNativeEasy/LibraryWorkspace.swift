@@ -189,7 +189,7 @@ struct LibraryWorkspace:View {
     }
     private var observingShell:some View {
         shell
-        .task {library.refresh();selectAvailableGame();refreshScope();sideload.canRefresh={!model.running && !updater.busy};Task{await updater.check()};checkBuildAdvice();engine=EngineHistory.load(repo:model.repo);saves.ensureManagedCloud(repo:model.repo);if !model.defaults.bool(forKey:"launcher.cloudWelcome.v1") {showCloudWelcome=true}}
+        .task {library.refresh();selectAvailableGame();refreshScope();sideload.canRefresh={!model.running && !updater.busy};updater.cleanInstalledStorage();Task{await updater.check()};checkBuildAdvice();engine=EngineHistory.load(repo:model.repo);saves.ensureManagedCloud(repo:model.repo);if !model.defaults.bool(forKey:"launcher.cloudWelcome.v1") {showCloudWelcome=true}}
         .task(id:scenePhase){if scenePhase == .active {await updater.check();await sideload.watchConnections()}}
         .task(id:String(scenePhase == .active)+":"+(saves.cloud?.path ?? "")){if scenePhase == .active {await saves.watchCloud(repo:model.repo)}}
         .task(id:String(scenePhase == .active)+":"+entries.compactMap(\.titleID).sorted().joined(separator:",")){if scenePhase == .active {await localSaves.watch(titles:entries.compactMap(\.titleID))}}
@@ -203,7 +203,7 @@ struct LibraryWorkspace:View {
         .onReceive(sideload.$jobs){checkBuildAdvice(jobsSnapshot:$0)}
         .onChange(of:model.folder){_,_ in if model.folder != nil && model.expectedLibraryTitleID==nil {remember()}}
         .onChange(of:model.inspection?.title_id){_,_ in if model.expectedLibraryTitleID != nil && model.matchesExpectedGame {remember()}}
-        .onChange(of:model.running){old,new in if old && !new {if !model.failed,model.output != nil,let folder=model.folder,let revision=model.buildRevision {library.recordBuild(folder:folder,target:model.target,revision:revision)};library.refresh();checkBuildAdvice()}}
+        .onChange(of:model.running){old,new in if old && !new {if !model.failed,model.output != nil,let folder=model.folder,let revision=model.buildRevision {library.recordBuild(folder:folder,target:model.target,revision:revision)};sideload.reloadExportedPackages();library.refresh();checkBuildAdvice()}}
         .onChange(of:model.installingInline){_,inline in if inline {page = .prepare}}
         .onChange(of:model.showCatalog){_,show in if show {page = .compatibility;model.showCatalog=false}}
         .onChange(of:model.showDeviceLibrary){_,show in if show {page = .library;model.showDeviceLibrary=false}}
@@ -236,7 +236,19 @@ struct LibraryWorkspace:View {
                 ScrollView {VStack(alignment:.leading,spacing:20) {
                     if let app=game.macApp {GameLaunchOptionsView(app:app,text:model.text).disabled(occupied)}
                     CacheCleanupView(folder:game.folder,repo:model.repo,text:model.text,disabled:occupied)
-                    Button(model.text("Mostrar carpeta")){NSWorkspace.shared.activateFileViewerSelecting([game.folder])}.buttonStyle(EasySecondaryStyle())
+                    if let app=game.macApp {
+                        Button(model.text(game.iosIPA == nil ? "Mostrar carpeta del juego" : "Exportación de Mac")) {
+                            NSWorkspace.shared.open(app.deletingLastPathComponent())
+                        }.buttonStyle(EasySecondaryStyle())
+                    }
+                    if let ipa=game.iosIPA {
+                        Button(model.text(game.macApp == nil ? "Mostrar carpeta del juego" : "Exportación de iPhone / iPad")) {
+                            NSWorkspace.shared.open(ipa.deletingLastPathComponent())
+                        }.buttonStyle(EasySecondaryStyle())
+                    }
+                    Button(model.text("Mostrar originales")) {
+                        NSWorkspace.shared.activateFileViewerSelecting([game.folder])
+                    }.buttonStyle(EasyLinkStyle())
                     Button(model.text("Quitar de la biblioteca")){library.remove(game.id);optionsGame=nil;selectedEntryID=nil}.buttonStyle(EasyLinkStyle()).disabled(occupied)
                     Text(model.text("Sólo se quita el registro. Tus archivos y partidas se conservan.")).font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted)
                 }.padding(24)}

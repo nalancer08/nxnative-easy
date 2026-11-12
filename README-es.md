@@ -32,7 +32,7 @@ Si macOS bloquea la primera apertura, entra a **Configuración del Sistema → P
 
 1. Abre **Mi biblioteca → Añadir juego** y elige **Mac** o **iPhone / iPad**.
 2. Elige la carpeta de tu juego o arrastra sus archivos. Selecciona tu **archivo `prod.keys`**. La app identifica el juego, su versión y los updates disponibles **antes de compilar**.
-3. Revisa y pulsa **Preparar juego**. Durante el proceso verás etapas, contadores y el registro en vivo.
+3. Revisa **Guardar el juego en**, cambia el destino si quieres y pulsa **Preparar juego**. Easy crea una carpeta con el nombre del juego, su app para Mac o su IPA y los datos que necesita. Durante el proceso verás etapas y el registro en vivo.
 4. **Mac:** pulsa **Jugar en Mac**. **iPhone / iPad:** continúa con **dispositivo → cuenta Apple → revisar → instalar**. La app te guía con la firma, instalación y transferencia de los datos del juego.
 
 <img src="docs/images/nxnative-prepare-es-v1.30.jpg" width="49%" alt="Preparación guiada del juego"> <img src="docs/images/nxnative-portal-es-v1.30.jpg" width="49%" alt="Escena original del launcher en 3D">
@@ -44,6 +44,8 @@ Si macOS bloquea la primera apertura, entra a **Configuración del Sistema → P
 
 **¿Ya lo tienes instalado?** Abre **Actualizar o renovar**. Si caducó la firma de iPhone/iPad, reutiliza la IPA registrada; si quieres mejoras o un update, revisa tus archivos y prepara de nuevo. Conserva la app instalada: el instalador comprueba su cuenta, equipo e identidad. [Guía paso a paso](docs/game-maintenance.md).
 
+**Una exportación ordenada:** cada plataforma mantiene una exportación actual. Para iPhone/iPad, la versión ligera contiene una IPA con el nombre del juego y `Datos/romfs`; la IPA completa intermedia se elimina después de verificar el resultado. Las actualizaciones sólo reemplazan exportaciones intactas creadas por Easy. Los originales y las partidas se conservan. Usa **Mover a otra carpeta…** al terminar una preparación para organizarla sin recompilar. Si una renovación automática necesita una IPA anterior, se conserva de forma privada con el mismo contenido y cuenta.
+
 ## Todo en un lugar
 
 - **Tu biblioteca:** una lista de juegos con iconos y buscador, también los que aparecen por tus partidas de iCloud. Ábrela para jugar en Mac, añadir archivos o ver las instalaciones actuales y conocidas de tu iPhone/iPad.
@@ -51,7 +53,7 @@ Si macOS bloquea la primera apertura, entra a **Configuración del Sistema → P
 - **Tus ajustes:** opciones de inicio por juego en Mac y limpieza de cachés con una vista previa de lo que se borrará.
 - **Tus partidas:** Easy gestiona su carpeta en iCloud Drive. Abre tu juego para ver las versiones recibidas por dispositivo, versión y fecha. Añade un respaldo compatible como una versión nueva o prepara una copia para consola sin reemplazar el progreso anterior. Activa la [continuidad con iCloud](docs/icloud-saves.md) al preparar juegos con el mismo contenido; los conflictos conservan ambas partidas. No necesitas la cuenta de firma. [Transferencias y requisitos de consola](docs/save-transfer.md). El juego permanece en la biblioteca aunque no tenga partidas; el primer guardado de Mac aparece en su detalle incluso sin iCloud.
 - **Tu cuenta Apple:** una para toda la app, con sesión recordada en el Llavero, revisión de dispositivos y renovación opcional de firmas en segundo plano. [Requisitos de renovación](docs/background-renewal.md).
-- **Actualizaciones de la app:** pulsa **Actualizar ahora** cuando aparezca una versión. La app descarga y verifica el paquete, conserva la app anterior como respaldo y mantiene tus juegos y partidas. Para aplicar un motor nuevo a un juego existente, vuelve a prepararlo.
+- **Actualizaciones de la app:** pulsa **Actualizar ahora** cuando aparezca una versión. Al abrir la versión nueva, Easy conserva un respaldo verificado y limpia los respaldos obsoletos y las copias de código en caché que no se han modificado. Para aplicar un motor nuevo a un juego existente, vuelve a prepararlo.
 
 <img src="docs/images/nxnative-details-es-v1.30.jpg" width="49%" alt="Detalle del juego y dónde jugar"> <img src="docs/images/nxnative-account-es-v1.30.jpg" width="49%" alt="Tu cuenta Apple global en Configuración">
 

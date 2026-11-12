@@ -2,6 +2,7 @@
 """Build from this checkout and export an unsigned lightweight IPA in one command."""
 import argparse
 from contextlib import contextmanager
+from contextlib import ExitStack
 import hashlib
 import tempfile
 import fcntl
@@ -133,6 +134,7 @@ def parser():
     p.add_argument('-l', '--language', help='first build defaults to es-419; later builds retain identity settings')
     p.add_argument('--bundle-id', help='use the SAME effective identifier when updating an installed app')
     p.add_argument('--app-name')
+    p.add_argument('--export-dir',type=Path,help='destination parent; creates a named game/platform folder and replaces only verified managed exports')
     p.add_argument('--package-metadata',type=Path,help='verified preflight metadata; changed inputs are rejected')
     p.add_argument('--package', help='explicit game update, such as v327680')
     p.add_argument('--gpu', help='pipeline archive target; first build defaults to none')
@@ -183,7 +185,7 @@ def main(argv=None):
     old_id = state.get('bundle_id')
     if old_id and settings['bundle_id'] != old_id:
         raise ValueError('Bundle ID differs from the previous build. Use a separate game folder for a separate app.')
-    output = game / ('nxnative-ios-' + datetime.now().strftime('%Y%m%d-%H%M%S-%f') + '-unsigned.ipa')
+    output = game / 'Game.ipa'  # Dry-run display only; real builds use isolated staging.
     command = [str(game), '--platform','ios','--team-id','0000000000',
                '--gpu',settings['gpu'],'-l',settings['language'],'--progress',os.environ.get('NXE_PROGRESS','lines'),'-o',str(output)]
     for key in ['bundle_id','app_name']:
@@ -199,7 +201,12 @@ def main(argv=None):
         print('Dry run: no build, no key access, no data changes.')
         return 0
     if sys.platform != 'darwin': raise ValueError('Builds require macOS and Xcode.')
-    with build_lock(game):
+    from game_export import export_location, staging, publish
+    with build_lock(game), ExitStack() as exports:
+        export_folder,export_name,export_parent=export_location(game,'ios',{'CFBundleDisplayName':settings['app_name'] or game.name},args.export_dir,state)
+        stage=exports.enter_context(staging(export_folder))
+        output=stage/'package-full.ipa'
+        command[command.index('-o')+1]=str(output)
         if args.app_only:
             works = [p for p in game.glob('*_build') if re.fullmatch(r'[0-9a-fA-F]{16}_build',p.name)]
             if len(works)!=1: raise ValueError('App-only needs exactly one existing title build directory.')
@@ -232,11 +239,27 @@ def main(argv=None):
         from split_ipa import split_ipa
         if os.environ.get('NXE_PROGRESS')=='json' and not args.full_only:
             print(json.dumps({'ev':'stage','name':'Export lightweight IPA','step':'Separating game data','k':0,'n':0}),flush=True)
-        light_dir = None if args.full_only else split_ipa(output)
+        # Use the game's real display name, without changing its signed identity.
+        title_info=dict(info)
+        title_info.setdefault('CFBundleDisplayName',settings['app_name'] or info.get('CFBundleName') or game.name)
+        named_folder,export_name,export_parent=export_location(game,'ios',title_info,args.export_dir,state)
+        if named_folder != export_folder:
+            named_folder.parent.mkdir(parents=True,exist_ok=True)
+            export_folder=named_folder
+        ipa_name=export_name+'.ipa'
+        if args.full_only:
+            output.rename(stage/ipa_name)
+        else:
+            light=split_ipa(output,output_folder=stage/'split',ipa_name=ipa_name,data_folder='Datos/romfs',instructions=False)
+            (light/ipa_name).rename(stage/ipa_name)
+            (light/'Datos').rename(stage/'Datos')
+            light.rmdir()
+            output.unlink()  # Only this run's verified, redundant full IPA.
+        output.with_name(output.name+'.idx').unlink(missing_ok=True)
         record = dict(schema=1, **settings, version=info.get('CFBundleShortVersionString'), save_continuity=info.get('DMEasySaveContinuity', 0),
-                      **preparation_stamp(), light_ipa=str(next(light_dir.glob("*.ipa"))) if light_dir else None, packaging="full" if args.full_only else "split", full_ipa=str(output), light_dir=str(light_dir) if light_dir else None)
-        temp = state_path.with_suffix('.json.tmp')
-        temp.write_text(json.dumps(record,indent=2)+'\n'); temp.replace(state_path)
+                      **preparation_stamp(), light_ipa=None if args.full_only else str(export_folder/ipa_name), packaging="full" if args.full_only else "split", full_ipa=str(export_folder/ipa_name) if args.full_only else None, light_dir=None if args.full_only else str(export_folder), romfs_path=None if args.full_only else str(export_folder/'Datos/romfs'), export_folder=str(export_folder),export_parent=str(export_parent))
+        publish(game,'ios',stage,export_folder,info,record)
+        print('Game export:',export_folder,flush=True)
         print('Build complete. Install over the existing app using the same personal account and effective bundle ID.')
         print('The game is not installed or signed by this script. Keep the existing app Documents and saves.')
         return 0

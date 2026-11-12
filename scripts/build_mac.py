@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Prepare a self-contained Mac game app from the user's own files."""
 import argparse
+from contextlib import ExitStack
 from datetime import datetime
 import json
 import os
@@ -17,6 +18,7 @@ def main(argv=None):
     parser.add_argument('game_dir',type=Path)
     parser.add_argument('--keys-folder',type=Path)
     parser.add_argument('--package-metadata',type=Path)
+    parser.add_argument('--export-dir',type=Path,help='destination parent; creates a named game folder')
     parser.add_argument('--dry-run',action='store_true')
     args=parser.parse_args(argv)
     game=args.game_dir.expanduser().resolve(strict=True)
@@ -51,7 +53,12 @@ def main(argv=None):
         raise ValueError('Mac games require an Apple silicon Mac.')
     args.keys=None
     keys=None if dump is not None else select_keys(args)
-    with build_lock(game):
+    from game_export import export_location, staging, publish
+    with build_lock(game), ExitStack() as exports:
+        initial=dict(old_info);initial.setdefault('CFBundleDisplayName',game.name)
+        export_folder,export_name,export_parent=export_location(game,'mac',initial,args.export_dir,previous)
+        stage=exports.enter_context(staging(export_folder))
+        output=stage/'Game.app';command[command.index('-o')+1]=str(output)
         if any(p.suffix.lower() in {'.nsz','.xcz'} for p in packages) and not __import__('importlib.util',fromlist=['find_spec']).find_spec('nsz'):
             import subprocess
             subprocess.run([sys.executable,'-m','pip','install','nsz'],check=True)
@@ -68,13 +75,14 @@ def main(argv=None):
         info=plistlib.loads((output/'Contents/Info.plist').read_bytes())
         if old_id and info.get('CFBundleIdentifier')!=old_id:raise ValueError('Mac bundle identity changed; previous app record was preserved.')
         if old_title and info.get('DMTitleID')!=old_title:raise ValueError('Mac Title ID changed; use a separate folder for another game.')
-        record={'schema':1,'app_path':str(output),'bundle_id':info.get('CFBundleIdentifier'),
+        export_folder,export_name,export_parent=export_location(game,'mac',info,args.export_dir,previous)
+        export_folder.parent.mkdir(parents=True,exist_ok=True)
+        output.rename(stage/(export_name+'.app'))
+        record={'schema':1,'app_path':str(export_folder/(export_name+'.app')),'bundle_id':info.get('CFBundleIdentifier'),
                 'title_id':info.get('DMTitleID'),'version':info.get('CFBundleShortVersionString'),
-                **preparation_stamp()}
-        temporary=state.with_suffix('.json.tmp')
-        temporary.write_text(json.dumps(record,indent=2)+'\n')
-        temporary.replace(state)
-    print('Mac app:',output,flush=True)
+                **preparation_stamp(),'export_folder':str(export_folder),'export_parent':str(export_parent)}
+        publish(game,'mac',stage,export_folder,info,record)
+    print('Mac app:',record['app_path'],flush=True)
     return 0
 
 if __name__=='__main__':

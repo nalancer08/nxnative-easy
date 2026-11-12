@@ -280,8 +280,7 @@ enum RefreshPolicy {
         guard let id=titleID(for:app),let folder=preparedFolders[id],
               let data=try? Data(contentsOf:folder.appendingPathComponent("nxnative-ios.json")),
               let info=(try? JSONSerialization.jsonObject(with:data)) as? [String:Any],
-              let path=info["light_dir"] as? String else {return nil}
-        let romfs=URL(fileURLWithPath:path).appendingPathComponent("romfs")
+              let romfs=IOSPackageOutput.load(record:info,split:true)?.romfs else {return nil}
         return FileManager.default.fileExists(atPath:romfs.path) ? romfs : nil
     }
     var supportsSaveExport:Bool {helperCapabilities.contains("save-export-v1")}
@@ -684,6 +683,14 @@ enum RefreshPolicy {
         guard FileManager.default.fileExists(atPath:stateURL.path) else{return true}
         guard let data=try? Data(contentsOf:stateURL),let saved=try? JSONDecoder().decode([RefreshJob].self,from:data) else {error="No pudimos leer el registro de renovaciones. Se conservó sin cambios.";return false}
         jobs=saved;return true
+    }
+    func reloadExportedPackages() {
+        guard !busy,let lease=metadataLease() else {return}
+        defer {Darwin.close(lease)}
+        guard reloadJobsForEdit() else {return}
+        if let selected=renewalJob,let updated=jobs.first(where:{$0.id==selected.id}) {
+            renewalJob=updated;ipa=URL(fileURLWithPath:updated.ipa)
+        }
     }
     func setRefresh(_ job:RefreshJob,enabled:Bool) {
         guard !busy else{return}

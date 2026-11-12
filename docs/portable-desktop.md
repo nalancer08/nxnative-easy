@@ -4,7 +4,7 @@ Download `nxnative-Easy-macOS-arm64.zip` from the repository's Releases page,
 unzip it and move `nxnative Easy.app` into Applications. The launcher is already
 compiled. It contains a checksum-pinned ARM64 standalone Python runtime, pinned
 Python packages, XcodeGen, zstd, glslang, their relocated dynamic libraries,
-.NET SDK 10, the metadata/extraction reader, the native installer, the optional
+the native metadata/extraction reader, the native installer, the optional
 renewal worker, source code and third-party notices. It contains no game files,
 console keys, Apple account or personal save data.
 
@@ -20,8 +20,7 @@ not establish notarization or imply that Gatekeeper will skip its normal checks.
 The embedded source is copied once per source revision into
 `~/Library/Application Support/nxnative Easy/PortableSources/<revision>/`.
 Generated build files go there or into the user's game build folders, never into
-the signed application. Older source revisions are retained for provenance and
-rebuild comparisons. Bundled runtimes are read-only during ordinary use; Python
+the signed application. Bundled runtimes are read-only during ordinary use; Python
 bytecode writes are disabled. The pinned prebuilt reader is reused only when its
 source digest agrees with the checkout.
 
@@ -34,6 +33,11 @@ one is replaced; the previous app remains as a backup. User games and source
 folders are not replaced. No Homebrew or frontend compilation is needed for this
 route. A portable update is offered only once its ZIP and checksum assets exist.
 Source-built installations prefer a published portable package on their next update as well; the staged source-build route remains available when no binary release exists.
+
+On the first launch after installation, Easy verifies the installed bundle and
+keeps the most recent valid rollback. It removes superseded Easy backups and
+their unused portable source copies when the files match the original bundled
+source. Open copies and source trees with local changes are preserved.
 
 An in-progress installer/worker owns a shared per-user lease. Final replacement
 refuses while another installation holds that lease. Updating the desktop app does
@@ -52,5 +56,5 @@ The manual `desktop-release.yml` workflow runs checks, builds the same package
 and publishes a ZIP plus `SHA256SUMS`, pinned to the workflow's source commit.
 `desktop/portable-requirements.txt` pins Python dependencies. Homebrew dependency
 license files and SPDX notices are shipped with the tools. Python's upstream
-archive checksum is pinned in `scripts/bundle_tools.py`; .NET and package license
-notices accompany the distribution. Do not include personal SDK caches or keys.
+archive checksum is pinned in `scripts/bundle_tools.py`. Package license notices
+accompany the distribution. Do not include personal SDK caches or keys.

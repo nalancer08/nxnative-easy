@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Pinned, staged self-update for nxnative Easy; never edits an existing checkout."""
 import argparse
+from contextlib import contextmanager
 import fcntl
 import hashlib
 import json
@@ -122,6 +123,200 @@ def replace_bundle(staged,target):
     return backup
 
 
+def bundle_metadata(app):
+    if app.is_symlink() or not app.is_dir():
+        raise ValueError('Invalid app bundle.')
+    info_path = app/'Contents/Info.plist'
+    if info_path.resolve() != info_path or not info_path.is_file():
+        raise ValueError('Invalid app metadata.')
+    info = plistlib.loads(info_path.read_bytes())
+    if info.get('CFBundleIdentifier') != IDENTIFIER:
+        raise ValueError('Unexpected app identity.')
+    build = str(info.get('CFBundleVersion', ''))
+    version = info.get('CFBundleShortVersionString', '')
+    if not re.fullmatch(r'[1-9][0-9]*', build) or not isinstance(version, str) or not re.fullmatch(r'\d+\.\d+(?:\.\d+)?', version):
+        raise ValueError('Invalid app version.')
+    return info, int(build), version
+
+
+def file_hash(path):
+    digest = hashlib.sha256()
+    with path.open('rb') as stream:
+        for block in iter(lambda: stream.read(1024*1024), b''):
+            digest.update(block)
+    return digest.hexdigest()
+
+
+def open_user_paths():
+    result = subprocess.run(
+        ['/usr/sbin/lsof', '-nP', '-a', '-u', str(os.getuid()), '-Fn'],
+        check=True, capture_output=True, text=True, timeout=15,
+    )
+    return [line[1:] for line in result.stdout.splitlines() if line.startswith('n/')]
+
+
+def path_in_use(path, opened):
+    name = str(path)
+    names = (name, '/System/Volumes/Data' + name)
+    return any(item == prefix or item.startswith(prefix + '/') for item in opened for prefix in names)
+
+
+def managed_bundle(info, cache):
+    if info.get('NxNativeLocalModifications'):
+        return False
+    configured = info.get('NxNativeSource')
+    if not configured:
+        return True
+    if not isinstance(configured, str):
+        return False
+    source = Path(configured)
+    return source.parent == cache/'Sources' and bool(re.fullmatch(r'[a-f0-9]{40}-[a-f0-9]{8}', source.name))
+
+
+def matches_source_seed(copied, seed, revision):
+    """A cached tree may be modified by a developer. Match its signed seed."""
+    if copied.resolve() != copied or not copied.is_dir() or copied.stat().st_uid != os.getuid():
+        return False
+    metadata = ('SOURCE_REVISION', 'SOURCE_INDEX.json')
+    if any((copied/name).is_symlink() or not (copied/name).is_file() or not (seed/name).is_file() for name in metadata):
+        return False
+    if (seed/metadata[0]).read_text().strip() != revision:
+        return False
+    if any(file_hash(copied/name) != file_hash(seed/name) for name in metadata):
+        return False
+    index = json.loads((seed/metadata[1]).read_text())
+    if not isinstance(index, dict) or not index:
+        return False
+    expected = set(index) | set(metadata)
+    expected_dirs = {parent.as_posix() for name in expected for parent in PurePosixPath(name).parents}
+    found = set()
+    def fail_walk(error):
+        raise error
+    for parent, dirs, files in os.walk(copied, onerror=fail_walk):
+        for name in dirs:
+            path = Path(parent)/name
+            if path.is_symlink() or path.relative_to(copied).as_posix() not in expected_dirs:
+                return False
+        for name in files:
+            path = Path(parent)/name
+            relative = path.relative_to(copied).as_posix()
+            if relative not in expected or path.is_symlink() or not path.is_file():
+                return False
+            if relative in index and file_hash(path) != index[relative]:
+                return False
+            found.add(relative)
+    return found == expected
+
+
+def clean_installed_storage(target, cache):
+    """Called on a successful launch, also after upgrades from older updaters."""
+    info, build, version = bundle_metadata(target)
+    install = target.stat()
+    stamp = [build, version, install.st_dev, install.st_ino, install.st_ctime_ns]
+    receipt = cache/('storage-'+hashlib.sha256(os.fsencode(target)).hexdigest()[:16]+'.json')
+    if receipt.is_file() and not receipt.is_symlink():
+        try:
+            if json.loads(receipt.read_text()).get('installation') == stamp:
+                return
+        except (OSError, ValueError, AttributeError):
+            pass
+    validate_app(target, build, version)
+
+    pattern = re.escape('.'+target.name+'.previous-') + r'[a-f0-9]{10}'
+    backups = []
+    for path in target.parent.iterdir():
+        if not re.fullmatch(pattern, path.name):
+            continue
+        try:
+            metadata, number, release = bundle_metadata(path)
+            backups.append((path.stat().st_ctime_ns, path, metadata, number, release))
+        except (OSError, ValueError, plistlib.InvalidFileException):
+            continue
+    # Match the rename performed by the updater, including legacy versions.
+    backups.sort(key=lambda item: (item[0], item[3]), reverse=True)
+    previous = None
+    for _, path, metadata, number, release in backups:
+        if number > build:
+            continue
+        try:
+            validate_app(path, number, release)
+            previous = path
+            break
+        except (OSError, ValueError, subprocess.SubprocessError):
+            continue
+
+    removed_bundles = 0
+    removed_sources = 0
+    deferred = False
+    if previous is not None:
+        opened = open_user_paths()
+        obsolete = []
+        protected = [info]
+        source_root = cache.parent/'PortableSources'
+        for _, path, metadata, number, release in backups:
+            revision = metadata.get('NxNativeSourceRevision')
+            source_open = (isinstance(revision, str) and re.fullmatch(r'[a-f0-9]{40}', revision)
+                           and path_in_use(source_root/revision, opened))
+            in_use = path_in_use(path, opened) or source_open
+            if path != previous and number <= build and managed_bundle(metadata, cache) and in_use:
+                deferred = True
+            if (path == previous or number > build or path.stat().st_uid != os.getuid()
+                    or not managed_bundle(metadata, cache) or in_use):
+                protected.append(metadata)
+                continue
+            try:
+                validate_app(path, number, release)
+                obsolete.append((path, metadata))
+            except (OSError, ValueError, subprocess.SubprocessError):
+                protected.append(metadata)
+
+        retained_revisions = {
+            item['NxNativeSourceRevision'] for item in protected
+            if isinstance(item.get('NxNativeSourceRevision'), str)
+        }
+        for path, metadata in obsolete:
+            revision = metadata.get('NxNativeSourceRevision')
+            if isinstance(revision, str) and re.fullmatch(r'[a-f0-9]{40}', revision) and revision not in retained_revisions:
+                copied = source_root/revision
+                seed = path/'Contents/Resources/Source'
+                if not path_in_use(copied, opened) and matches_source_seed(copied, seed, revision):
+                    shutil.rmtree(copied)
+                    removed_sources += 1
+            shutil.rmtree(path)
+            removed_bundles += 1
+
+    result = dict(installation=stamp, rollback=previous.name if previous else None,
+                  removed_bundles=removed_bundles, removed_sources=removed_sources, deferred=deferred)
+    emit('cleaned', message=json.dumps(result))
+    if deferred:
+        # Try again on a later launch after the other process has closed.
+        return
+    with tempfile.NamedTemporaryFile(dir=cache, prefix='.storage-', delete=False) as output:
+        temporary = Path(output.name)
+        output.write(json.dumps(result).encode())
+    try:
+        os.replace(temporary, receipt)
+    finally:
+        temporary.unlink(missing_ok=True)
+
+
+@contextmanager
+def update_lock(cache, target, wait=0):
+    key = hashlib.sha256(os.fsencode(target)).hexdigest()[:16]
+    path = cache/('update-'+key+'.lock')
+    with os.fdopen(os.open(path, os.O_CREAT|os.O_RDWR|os.O_NOFOLLOW, 0o600), 'a') as lock:
+        deadline = time.monotonic() + wait
+        while True:
+            try:
+                fcntl.flock(lock, fcntl.LOCK_EX|fcntl.LOCK_NB)
+                break
+            except BlockingIOError:
+                if time.monotonic() >= deadline:
+                    raise ValueError('Another update is already running.')
+                time.sleep(0.2)
+        yield
+
+
 def portable_update(revision,build,target,cache):
     release=manifest_url('https://raw.githubusercontent.com/nalancer08/nxnative-easy/'+revision+'/desktop/release.json')
     if release['build']!=build:raise ValueError('Release metadata changed.')
@@ -213,24 +408,34 @@ def open_app(target):
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--revision',required=True)
-    parser.add_argument('--build',required=True,type=int)
+    parser.add_argument('--revision')
+    parser.add_argument('--build',type=int)
     parser.add_argument('--target',required=True,type=Path)
     parser.add_argument('--parent-pid',type=int)
     parser.add_argument('--cache',type=Path,default=Path.home()/'Library/Application Support/nxnative Easy/Updates')
-    parser.add_argument('--prepare-only',action='store_true')
+    mode=parser.add_mutually_exclusive_group()
+    mode.add_argument('--prepare-only',action='store_true')
+    mode.add_argument('--cleanup-only',action='store_true')
     args=parser.parse_args()
-    if not re.fullmatch('[0-9a-f]{40}',args.revision) or args.build<1:raise ValueError('Invalid update request.')
+    if not args.cleanup_only and (not re.fullmatch('[0-9a-f]{40}',args.revision or '') or not args.build or args.build<1):
+        raise ValueError('Invalid update request.')
     target=args.target.expanduser().resolve(strict=True)
     if target.suffix!='.app' or plistlib.loads((target/'Contents/Info.plist').read_bytes()).get('CFBundleIdentifier')!=IDENTIFIER:
         raise ValueError('Only the running nxnative Easy app can be updated.')
-    if not args.prepare_only and (not args.parent_pid or args.parent_pid<=1):raise ValueError('Missing launcher process.')
+    if not (args.prepare_only or args.cleanup_only) and (not args.parent_pid or args.parent_pid<=1):raise ValueError('Missing launcher process.')
     try:os.setsid()
     except PermissionError:pass
+    args.cache=args.cache.expanduser().resolve()
     args.cache.mkdir(parents=True,exist_ok=True)
-    lock=(args.cache/('update-'+hashlib.sha256(str(target).encode()).hexdigest()[:16]+'.lock')).open('a')
-    try:fcntl.flock(lock,fcntl.LOCK_EX | fcntl.LOCK_NB)
-    except BlockingIOError:raise ValueError('Another update is already running.')
+    # An older updater can still hold the lock as it launches the new app.
+    with update_lock(args.cache,target,wait=10 if args.cleanup_only else 0):
+        if args.cleanup_only:
+            clean_installed_storage(target,args.cache)
+        else:
+            install_update(args,target)
+
+
+def install_update(args,target):
     staged,source=prepare(args.revision,args.build,target,args.cache)
     if args.prepare_only:
         emit('prepared',1,str(staged));return

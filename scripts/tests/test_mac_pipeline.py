@@ -25,7 +25,7 @@ class MacPipeline(unittest.TestCase):
                     (host.parents[1]/'Info.plist').write_bytes(plistlib.dumps({'CFBundleIdentifier':'org.nxnative.test','DMTitleID':'010093801237C000','CFBundleShortVersionString':'1.0'}))
                     return 0
             with patch.object(build_mac,'load_builder',return_value=Builder()),patch.object(build_mac.platform,'machine',return_value='arm64'):
-                self.assertEqual(build_mac.main([temp,'--keys-folder',temp]),0)
+                self.assertEqual(build_mac.main([temp,'--keys-folder',temp,'--export-dir',str(root/'exports')]),0)
             self.assertEqual(calls[0][calls[0].index('--platform')+1],'mac-app')
             self.assertEqual(calls[0][calls[0].index('--mac-sign')+1],'-')
             self.assertTrue(Path(json.loads((root/'nxnative-mac.json').read_text())['app_path']).is_dir())
@@ -38,7 +38,7 @@ class MacPipeline(unittest.TestCase):
             class Builder:
                 def cli(self,args):return 1
             with patch.object(build_mac,'load_builder',return_value=Builder()),patch.object(build_mac.platform,'machine',return_value='arm64'):
-                self.assertEqual(build_mac.main([temp,'--keys-folder',temp]),1)
+                self.assertEqual(build_mac.main([temp,'--keys-folder',temp,'--export-dir',str(root/'exports')]),1)
             self.assertEqual((root/'nxnative-mac.json').read_text(),'{"app_path":"old"}')
 
     def test_incomplete_app_does_not_replace_previous_record(self):
@@ -52,7 +52,7 @@ class MacPipeline(unittest.TestCase):
                     return 0
             with patch.object(build_mac,'load_builder',return_value=Builder()),patch.object(build_mac.platform,'machine',return_value='arm64'):
                 with self.assertRaisesRegex(ValueError,'embedded game data required'):
-                    build_mac.main([temp,'--keys-folder',temp])
+                    build_mac.main([temp,'--keys-folder',temp,'--export-dir',str(root/'exports')])
             self.assertEqual((root/'nxnative-mac.json').read_text(),'{"app_path":"old"}')
 
     def test_update_preserves_identity_and_records_new_version(self):
@@ -74,9 +74,9 @@ class MacPipeline(unittest.TestCase):
                     return 0
             with patch.object(build_mac,'load_builder',return_value=Builder()),patch.object(build_mac.platform,'machine',return_value='arm64'):
                 if fail:
-                    with self.assertRaisesRegex(ValueError,'identity changed'):build_mac.main([temporary,'--keys-folder',temporary])
+                    with self.assertRaisesRegex(ValueError,'identity changed'):build_mac.main([temporary,'--keys-folder',temporary,'--export-dir',str(root/'exports')])
                     self.assertEqual(state.read_text(),before)
                 else:
-                    self.assertEqual(build_mac.main([temporary,'--keys-folder',temporary]),0)
+                    self.assertEqual(build_mac.main([temporary,'--keys-folder',temporary,'--export-dir',str(root/'exports')]),0)
                     self.assertEqual(json.loads(state.read_text())['version'],'2.0')
             self.assertEqual(calls[0][calls[0].index('--bundle-id')+1],'org.nxnative.custom')

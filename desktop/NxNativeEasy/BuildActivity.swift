@@ -28,6 +28,7 @@ struct BuildActivity {
     static func displayName(_ name:String)->String {
         if name.hasPrefix("build nx_extract") {return "Preparar herramientas"}
         if name.hasPrefix("extract ") {return "Leer el juego"}
+        if name=="Organize export" {return "Organizar el juego"}
         switch name {case "rewrite":return "Adaptar el juego";case "shader split":return "Preparar gráficos";case "iOS shaders":return "Compilar gráficos para iPhone";case "app build":return "Crear la app";case "IPA pack":return "Crear la IPA";case "Export lightweight IPA":return "Preparar instalación";default:return name}
     }
     mutating func receive(_ data:Data) {
@@ -132,7 +133,16 @@ enum IOSPackageOutput {
         }
         guard let path=record["light_dir"] as? String else {return nil}
         let root=URL(fileURLWithPath:path)
-        guard let files=try? FileManager.default.contentsOfDirectory(at:root,includingPropertiesForKeys:nil),let ipa=files.sorted(by:{$0.path<$1.path}).first(where:{$0.pathExtension.lowercased()=="ipa"}) else {return nil}
-        return (ipa,root.appendingPathComponent("romfs"))
+        let ipa:URL
+        if let explicit=record["light_ipa"] as? String {
+            ipa=URL(fileURLWithPath:explicit)
+            guard FileManager.default.isReadableFile(atPath:ipa.path),ipa.pathExtension.lowercased()=="ipa" else {return nil}
+        } else {
+            guard let files=try? FileManager.default.contentsOfDirectory(at:root,includingPropertiesForKeys:nil) else {return nil}
+            let packages=files.filter {$0.pathExtension.lowercased()=="ipa"}
+            guard packages.count==1,let only=packages.first else {return nil}
+            ipa=only
+        }
+        return (ipa,(record["romfs_path"] as? String).map {URL(fileURLWithPath:$0)} ?? root.appendingPathComponent("romfs"))
     }
 }

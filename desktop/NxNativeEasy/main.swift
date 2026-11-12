@@ -237,7 +237,22 @@ struct PackageIdentityView:View {
     }
     @Published var splitIOS=true {didSet {defaults.set(splitIOS,forKey:"iosSplitGameData");output=nil;assets=nil;restoreOutput()}}
     var isMac: Bool {target == "mac"}
-    @Published var folder: URL? {didSet {inspectFiles()}}
+    @Published var folder: URL? {didSet {exportParent=nil;inspectFiles()}}
+    @Published var exportParent:URL?
+    var selectedExportParent:URL {
+        if let exportParent {return exportParent}
+        if let folder,let data=try? Data(contentsOf:folder.appendingPathComponent("nxnative-"+(isMac ? "mac" : "ios")+".json")),
+           let record=(try? JSONSerialization.jsonObject(with:data)) as? [String:Any],let path=record["export_parent"] as? String {return URL(fileURLWithPath:path)}
+        return (folder?.deletingLastPathComponent() ?? FileManager.default.urls(for:.documentDirectory,in:.userDomainMask)[0]).appendingPathComponent("nxnative Games")
+    }
+    @discardableResult func chooseExportParent()->Bool {
+        guard !running else {return false}
+        let panel=NSOpenPanel();panel.canChooseDirectories=true;panel.canChooseFiles=false;panel.canCreateDirectories=true;panel.allowsMultipleSelection=false
+        panel.prompt=text("Guardar aquí");panel.message=text("Crearemos una carpeta con el nombre del juego en este lugar.")
+        panel.directoryURL=selectedExportParent
+        guard panel.runModal() == .OK,let url=panel.url else {return false}
+        exportParent=url.resolvingSymlinksInPath().standardizedFileURL;return true
+    }
     @Published var keysFolder: URL? {didSet {identifyGame()}}
     @Published var inspecting=false
     @Published var expectedLibraryTitleID:String?
@@ -407,18 +422,23 @@ struct PackageIdentityView:View {
     }
 
     var matchesExpectedGame:Bool {expectedLibraryTitleID==nil || inspection?.title_id?.uppercased()==expectedLibraryTitleID?.uppercased()}
-    func build() {
-        guard matchesExpectedGame,let folder, !running, !inspecting,inspection?.ready==true,!target.isEmpty else {return}
-        let script=repo.appendingPathComponent("scripts/prepare_ios.sh")
+    func build(organizeOnly:Bool=false) {
+        guard let folder,!running,!target.isEmpty else {return}
+        if organizeOnly {guard output != nil else {return}}
+        else {guard matchesExpectedGame,!inspecting,inspection?.ready==true else {return}}
+        let script=repo.appendingPathComponent(organizeOnly ? "scripts/organize_export.py" : "scripts/prepare_ios.sh")
         guard FileManager.default.fileExists(atPath:script.path) else {
             phase="No encontramos el código de nxnative.";detail="Vuelve a crear la app desde el repositorio con Abrir-interfaz.command.";failed=true;return
         }
-        guard !isKeylessInput || target=="mac" else {failed=true;phase="Los juegos extraídos o en NUP se preparan para Mac. iPhone/iPad aún no están probados.";return}
-        if !isKeylessInput && !readableKeys {chooseKeysFolder()}
-        guard isKeylessInput || readableKeys else {return}
+        guard organizeOnly || !isKeylessInput || target=="mac" else {failed=true;phase="Los juegos extraídos o en NUP se preparan para Mac. iPhone/iPad aún no están probados.";return}
+        if !organizeOnly && !isKeylessInput && !readableKeys {chooseKeysFolder()}
+        guard organizeOnly || isKeylessInput || readableKeys else {return}
         let task=Process();let pipe=Pipe()
         task.executableURL=PortableRuntime.python
-        var arguments=[repo.appendingPathComponent("desktop/NxNativeEasy/build_session.py").path,script.path,"--target",target,folder.path]
+        var arguments=[repo.appendingPathComponent("desktop/NxNativeEasy/build_session.py").path,script.path]
+        if organizeOnly {arguments += [folder.path,"--target",target]}
+        else {
+        arguments += ["--target",target,folder.path]
         guard let inspectionData else {return}
         let manifest=FileManager.default.temporaryDirectory.appendingPathComponent("nxnative-inspection-"+UUID().uuidString+".json")
         do {try inspectionData.write(to:manifest,options:.atomic);inspectionManifest=manifest}
@@ -426,6 +446,8 @@ struct PackageIdentityView:View {
         arguments += ["--package-metadata",manifest.path]
         if !isKeylessInput,let keysFolder {arguments += ["--keys-folder",keysFolder.path]}
         if target=="ios" && !splitIOS {arguments.append("--full-only")}
+        }
+        arguments += ["--export-dir",selectedExportParent.path]
         task.arguments=arguments;task.currentDirectoryURL=repo
         task.standardOutput=pipe;task.standardError=pipe
         var environment=PortableRuntime.environment()
@@ -435,11 +457,11 @@ struct PackageIdentityView:View {
         logURL=log;environment["NXE_BUILD_LOG"]=log.path;environment["NXE_GAME_DIR"]=folder.path
         startedAt=Date();lastOutputAt=nil;activity=BuildActivity()
         task.environment=environment
-        buildRevision=BuildProvenance.head(repo)
+        buildRevision=organizeOnly ? nil : BuildProvenance.head(repo)
         BuildCompletionNotice.requestIfEnabled(defaults:defaults)
         preparationStep=4
         buildDockDismissed=false;installingInline=false;installerReady=false;running=true;cancelled=false;failed=false;showDetails=true;output=nil;assets=nil;transcript=""
-        phase="Preparando herramientas…";detail="Puedes dejar esta ventana abierta. No necesitas usar Terminal."
+        phase=organizeOnly ? "Organizando tu juego…" : "Preparando herramientas…";detail="Puedes dejar esta ventana abierta. No necesitas usar Terminal."
         pipe.fileHandleForReading.readabilityHandler={ [weak self] handle in
             let data=handle.availableData
             guard !data.isEmpty else { handle.readabilityHandler=nil;return }
@@ -457,7 +479,7 @@ struct PackageIdentityView:View {
                 } else if status==0 {
                     self.restoreOutput()
                     self.failed=self.output==nil
-                    self.installerReady = !self.isMac && self.output != nil
+                    self.installerReady = !organizeOnly && !self.isMac && self.output != nil
                     self.phase=self.output == nil ? "Terminó, pero no encontramos la app." : (self.isMac ? "Tu juego está listo para Mac." : "Tu juego está listo para instalar en iPhone / iPad.")
                     self.detail=self.output == nil ? "Usa Ver error para revisar lo que ocurrió." : "Pulsa Instalar en iPhone / iPad. Inicia sesión con tu cuenta personal para firmar e instalar el juego y sus datos."
                 } else {
@@ -747,6 +769,19 @@ struct ContentView: View {
                             Text(model.inspection?.name ?? model.gameName).font(.headline)
                             if let version=model.inspection?.display_version {Label(model.text("Versión a preparar")+": "+version,systemImage:"tag")}
                             Label(model.text(model.isKeylessInput ? "No necesita prod.keys" : "Llaves seleccionadas"),systemImage: model.isKeylessInput ? "checkmark.shield" : "key.horizontal").foregroundStyle(EasyDesign.muted)
+                            VStack(alignment:.leading,spacing:10) {
+                                HStack(spacing:12) {
+                                    Image(systemName:"folder.badge.plus").foregroundStyle(EasyDesign.accent)
+                                    VStack(alignment:.leading,spacing:4) {
+                                        Text(model.text("Guardar el juego en")).font(.headline)
+                                        Text(model.selectedExportParent.path).font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted).lineLimit(1).truncationMode(.middle).help(model.selectedExportParent.path)
+                                    }
+                                    Spacer()
+                                    Button(model.text("Cambiar carpeta")){model.chooseExportParent()}.buttonStyle(EasySecondaryStyle()).disabled(model.running || updater.busy || sideload.blocksGameWork)
+                                }
+                                Label(model.text(model.isMac ? "Una carpeta con tu app para Mac." : model.splitIOS ? "Una carpeta con tu IPA y los datos del juego." : "Una carpeta con tu IPA completa."),systemImage:model.isMac ? "app" : "shippingbox").font(.callout)
+                                Text(model.text("Las próximas actualizaciones reemplazan esta exportación. Tus originales y partidas se conservan.")).font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted)
+                            }.padding(16).background(EasyDesign.background,in:RoundedRectangle(cornerRadius:12))
                         }
                         if model.target=="ios" && model.preparationStep==3 {
                             Toggle(model.text("IPA ligera: separar los datos del juego"),isOn:$model.splitIOS).disabled(model.running || updater.busy || sideload.blocksGameWork)
@@ -805,6 +840,15 @@ struct ContentView: View {
                     }.padding(22).background(model.preparationStep==0 ? .clear : EasyDesign.panel,in:RoundedRectangle(cornerRadius:14))
                     if model.output != nil && !model.running && !model.failed && model.preparationStep==5 {
                         VStack(alignment:.leading,spacing:16) {
+                            if let output=model.output {
+                                HStack(spacing:12) {
+                                    Label(output.lastPathComponent,systemImage:model.isMac ? "app.fill" : "doc.zipper").font(.headline).lineLimit(2)
+                                    Spacer()
+                                    Button(model.text("Mostrar carpeta del juego")){NSWorkspace.shared.open(output.deletingLastPathComponent())}.buttonStyle(EasySecondaryStyle())
+                                }
+                                if model.assets != nil {Label(model.text("Datos del juego incluidos en la misma carpeta"),systemImage:"folder.fill").font(EasyDesign.metadata).foregroundStyle(EasyDesign.muted)}
+                                Button(model.text("Mover a otra carpeta…")){if model.chooseExportParent(){model.build(organizeOnly:true)}}.buttonStyle(EasyLinkStyle()).disabled(updater.busy || sideload.blocksGameWork)
+                            }
                             if model.isMac {
                                 Label(model.text("Listo. Juega en tu Mac."),systemImage:"checkmark.circle.fill")
                                     .font(.system(size:20,weight:.semibold)).foregroundStyle(lime)
