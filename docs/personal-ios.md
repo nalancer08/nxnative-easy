@@ -14,11 +14,10 @@ select your own game and key folders, and press Prepare game. Cards use existing
 repository screenshots. The interface shows progress, cancellation and the output
 steps appropriate to the selected target.
 
-On another Mac, run the root `START-HERE.command` or the README's single-command
-installer. It keeps an independent checkout and prepared tools in Application
-Support, builds the launcher locally with ad-hoc signing and opens it. Full Xcode
-must already be installed and opened once. No Apple account is used for these
-builds. Source ZIPs can be deleted after setup; games and keys remain external.
+On another Mac, [install the portable Easy app](../README.md#install-easy-on-your-mac).
+For a source setup, use the root `START-HERE.command`. It builds the launcher
+locally, keeps its checkout and tools in Application Support, and opens Easy.
+Full Xcode must already be installed and opened once for the source setup.
 Cancellation signals the entire build process group.
 
 # Personal iOS builds

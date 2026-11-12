@@ -4,17 +4,23 @@
 
 Una biblioteca de juegos para Mac basada en [nxnative](https://github.com/seedds/nxnative). Añade tus propios archivos de Switch, prepara el juego paso a paso y juega en Mac o instálalo en iPhone y iPad.
 
+## Instala Easy en tu Mac
+
 **[Descargar nxnative Easy para Mac](https://github.com/nalancer08/nxnative-easy/releases/latest/download/nxnative-Easy-macOS-arm64.zip)**
 
-Descomprime el ZIP, mueve **nxnative Easy.app** a **Aplicaciones** y ábrela. La biblioteca está lista para usar. Si macOS bloquea la primera apertura, consulta la [ayuda de instalación](docs/personal-ios.md).
+Haz doble clic en el ZIP, arrastra **nxnative Easy.app** a **Aplicaciones** y ábrela desde ahí. La descarga incluye la app lista para abrir.
+
+Si macOS te pide autorizar esta descarga, intenta abrir la app primero y ve a **Configuración del Sistema → Privacidad y seguridad → Abrir de todos modos**. [Instrucciones de Apple](https://support.apple.com/es-mx/102445)
 
 ## Antes de empezar
 
-1. Usa un Mac con Apple silicon, macOS 26.6+ y Xcode 27.2. Abre Xcode una vez antes de preparar un juego.
-2. Pulsa **Añadir juego**, elige Mac o iPhone/iPad y añade tus propios archivos. Easy identifica el título, su versión y las actualizaciones antes de compilar. Los paquetes cifrados de Switch 1 también requieren tu propio `prod.keys`.
-3. Elige dónde guardar la exportación y pulsa **Preparar juego**. Abre el resultado desde tu biblioteca o sigue los pasos de instalación en iPhone/iPad.
+Para preparar juegos, usa un Mac con Apple silicon y macOS 26.6 o posterior. Instala Xcode 27.2 y ábrelo una vez para completar su configuración. Si vas a preparar un juego para iPhone o iPad, instala el componente de iOS desde **Xcode → Configuración → Componentes**. [Descargar Xcode](https://developer.apple.com/news/releases/?id=10292026a)
 
-Para jugar en iPhone necesitas un chip A17 Pro o posterior. En iPad necesitas M1 o posterior. Usa iOS o iPadOS 26+ y tu cuenta Apple para firmar la instalación. [Instalación y renovación de firma](docs/game-maintenance.md)
+1. En Easy, pulsa **Añadir juego**, elige Mac o iPhone/iPad y selecciona tus propios archivos. Easy muestra el título, la versión y las actualizaciones detectadas. Los paquetes cifrados de Switch 1 también requieren tu propio `prod.keys`.
+2. Elige dónde guardar la exportación y pulsa **Preparar juego**.
+3. **Mac:** juega desde tu biblioteca. **iPhone o iPad:** conecta por USB, desbloquea el dispositivo y sigue los pasos de Easy para firmar e instalar con tu cuenta Apple. Pulsa **Confiar** en el dispositivo si te lo pide.
+
+Para jugar en iPhone necesitas un chip A17 Pro o posterior. En iPad necesitas M1 o posterior. Usa iOS o iPadOS 26+. [Instalación y renovación de firma](docs/game-maintenance.md)
 
 ## Compatibilidad
 

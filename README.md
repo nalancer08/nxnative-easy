@@ -4,17 +4,23 @@
 
 A Mac game library built on [nxnative](https://github.com/seedds/nxnative). Add your own Switch game files, prepare them with a guided build, then play on Mac or install on iPhone and iPad.
 
+## Install Easy on your Mac
+
 **[Download nxnative Easy for Mac](https://github.com/nalancer08/nxnative-easy/releases/latest/download/nxnative-Easy-macOS-arm64.zip)**
 
-Unzip, move **nxnative Easy.app** to **Applications**, and open it. The launcher is ready to run. If macOS blocks the first launch, see [installation help](docs/personal-ios.md).
+Double-click the ZIP, drag **nxnative Easy.app** into **Applications**, then open it there. The download contains the ready-to-open app.
+
+If macOS asks you to approve the first launch of this download, go to **System Settings → Privacy & Security → Open Anyway** after trying to open the app. [Apple's instructions](https://support.apple.com/en-us/102445)
 
 ## Before you start
 
-1. Use an Apple silicon Mac with macOS 26.6+ and Xcode 27.2. Open Xcode once before preparing a game.
-2. Choose **Add game**, select Mac or iPhone/iPad, and add your own game files. Easy identifies the title, version and updates before you build. Encrypted Switch 1 packages also need your own `prod.keys`.
-3. Choose where to save the export and click **Prepare game**. Open the result from your library, or follow the installation steps for iPhone/iPad.
+To prepare games, use an Apple silicon Mac with macOS 26.6 or later. Install Xcode 27.2 and open it once to finish setup. If you're preparing for iPhone or iPad, install iOS platform support in **Xcode → Settings → Components**. [Download Xcode](https://developer.apple.com/news/releases/?id=10292026a)
 
-For mobile play, use an iPhone with A17 Pro or newer or an iPad with M1 or newer, running iOS or iPadOS 26+. Installing uses your Apple account for signing. [Installation and signature renewal](docs/game-maintenance.md)
+1. In Easy, click **Add game**, choose Mac or iPhone/iPad, and select your own game files. Easy shows the title, version and detected updates. Encrypted Switch 1 packages also need your own `prod.keys`.
+2. Choose where to save the export and click **Prepare game**.
+3. **Mac:** play from your library. **iPhone or iPad:** connect by USB, unlock the device, and follow Easy's steps to sign and install with your Apple Account. Tap **Trust** on the device if asked.
+
+For mobile play, use an iPhone with A17 Pro or newer or an iPad with M1 or newer, running iOS or iPadOS 26+. [Installation and signature renewal](docs/game-maintenance.md)
 
 ## Compatibility
 

@@ -8,7 +8,7 @@ the native metadata/extraction reader, the native installer, the optional
 renewal worker, source code and third-party notices. It contains no game files,
 console keys, Apple account or personal save data.
 
-Xcode 27.1 and macOS 26.6+ are still required to **compile games**. Xcode is
+Xcode 27.2 and macOS 26.6+ are required to **compile games**. Xcode is
 installed by the user through Apple; the app does not obtain it with an Apple
 account or silently approve its license. Homebrew is not required for a portable
 release. The older one-command source setup remains an alternative.
