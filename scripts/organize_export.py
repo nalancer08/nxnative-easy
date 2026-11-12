@@ -4,7 +4,6 @@ import argparse
 from datetime import datetime, timezone
 import json
 from pathlib import Path
-import re
 import shutil
 import subprocess
 import sys
@@ -136,4 +135,4 @@ if __name__=='__main__':
     try:main()
     except (OSError,ValueError,KeyError,subprocess.SubprocessError) as error:
         print('Export failed; previous files preserved:',error,file=sys.stderr)
-        raise SystemExit(1)
+        raise SystemExit(1) from None
