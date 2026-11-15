@@ -29,7 +29,9 @@ static int rt_view_into(int nvn_format, MTLPixelFormat want_base, uint64_t seria
     e.d.width = 4; e.d.height = 1; e.d.depth = 1; e.d.levels = 1; e.d.target = NVN_TEXTURE_TARGET_2D; e.d.format = nvn_format;
     MTLTextureDescriptor *d = tex_desc(&e, 0);
     failed += !!(d.usage & MTLTextureUsagePixelFormatView) != made_with_pfv;
-    serial_put(e.serial, [g_dev newTextureWithDescriptor:d]);
+    id<MTLTexture> initial = d ? [g_dev newTextureWithDescriptor:d] : nil;
+    if (!initial) { fprintf(stderr, "render target view: unable to allocate the base texture\n"); return 1; }
+    serial_put(e.serial, initial);
     view_t v = {0}; v.set_format = 1; v.format = NVN_FORMAT_R32UI;
     MTLRenderPassDescriptor *rp = [MTLRenderPassDescriptor renderPassDescriptor];
     int tid = (int)(serial - 69000);   // a texture ID registered before the pass, resolved (and cached) as a shader would, and sampled after it
@@ -55,12 +57,13 @@ static int rt_view_into(int nvn_format, MTLPixelFormat want_base, uint64_t seria
     id<MTLRenderPipelineState> ps = lib ? [g_dev newRenderPipelineStateWithDescriptor:pd error:&err] : nil;
     failed += !ps;
     mtl_sub_commit(); mtl_drain();
+    id<MTLBuffer> out = [g_dev newBufferWithLength:16 options:MTLResourceStorageModeShared];
+    if (!base || !out) return failed + 1;
     if (ps) {
         id<MTLCommandQueue> q = [g_dev newCommandQueue]; id<MTLCommandBuffer> cb = [q commandBuffer];
         rp.colorAttachments[0].loadAction = MTLLoadActionClear; rp.colorAttachments[0].storeAction = MTLStoreActionStore;
         id<MTLRenderCommandEncoder> en = [cb renderCommandEncoderWithDescriptor:rp];
         [en setRenderPipelineState:ps]; [en drawPrimitives:MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:3]; [en endEncoding];
-        id<MTLBuffer> out = [g_dev newBufferWithLength:16 options:MTLResourceStorageModeShared];
         id<MTLBlitCommandEncoder> b = [cb blitCommandEncoder];
         [b copyFromTexture:base sourceSlice:0 sourceLevel:0 sourceOrigin:MTLOriginMake(0, 0, 0) sourceSize:MTLSizeMake(4, 1, 1) toBuffer:out destinationOffset:0 destinationBytesPerRow:16 destinationBytesPerImage:16];
         [b endEncoding]; [cb commit]; [cb waitUntilCompleted];

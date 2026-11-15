@@ -186,9 +186,23 @@ static void blocked_start(void *out) {
     assert(signaled(device_stopped, 1));
     dm_audio_suspend(0);
     assert(signaled(start_entered, 2));
-    // A successful start with no callbacks keeps releasing buffers and is retried.
+    // Drive the watchdog after Start returns. The runner can pause a sanitized
+    // process long enough that the live watchdog deliberately resets its timer.
     dispatch_semaphore_signal(start_allowed);
-    assert(signaled(device_stopped, 3));
+    until = now_ns() + 2 * NSEC_PER_SEC;
+    for (;;) {
+        pthread_mutex_lock(&g_aos_lock);
+        if (a->start_phase == AU_WAIT_CALLBACK) break;
+        pthread_mutex_unlock(&g_aos_lock);
+        assert(now_ns() < until);
+        usleep(1000);
+    }
+    au_watchdog_check(a, a->wd_t + NSEC_PER_SEC, 0);
+    assert(a->start_phase == AU_IDLE && a->backend == BK_NULL && a->retry_at);
+    au_watchdog_check(a, a->retry_at, 0);
+    assert(a->start_phase == AU_STARTING);
+    pthread_mutex_unlock(&g_aos_lock);
+    assert(signaled(device_stopped, 1));
     until = now_ns() + NSEC_PER_SEC;
     while (!(released = h_au_Released(out)) && now_ns() < until) usleep(1000);
     assert(released == &next);

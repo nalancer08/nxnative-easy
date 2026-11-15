@@ -23,6 +23,7 @@ int main(void) { @autoreleasepool {
 
     // Added, committed, in the set
     id<MTLBuffer> a = buf(1u << 20);
+    if (!g_res || !a) { fprintf(stderr, "FAIL: unable to allocate Metal residency fixture\n"); return 1; }
     res_add(a); res_commit();
     CHECK("an allocation added and committed is in the set", [g_res containsAllocation:a]);
 
@@ -42,7 +43,7 @@ int main(void) { @autoreleasepool {
     });
     dispatch_semaphore_wait(held, DISPATCH_TIME_FOREVER);
     uint64_t worst = 0, t_all = bp_now();
-    for (int i = 0; i < 200; i++) { id<MTLBuffer> s = buf(4096); [small addObject:s]; uint64_t t0 = bp_now(); res_add(s); res_remove(s); res_add(s); uint64_t d = bp_now() - t0; if (d > worst) worst = d; }
+    for (int i = 0; i < 200; i++) { id<MTLBuffer> s = buf(4096); if (!s) { CHECK("a small buffer allocates", 0); break; } [small addObject:s]; uint64_t t0 = bp_now(); res_add(s); res_remove(s); res_add(s); uint64_t d = bp_now() - t0; if (d > worst) worst = d; }
     uint64_t adds = bp_now() - t_all;
     printf("200 res_add / res_remove while a commit holds its lock: %.2f ms in all, the slowest %.3f ms\n", adds / 1e6, worst / 1e6);
     CHECK("res_add and res_remove do not wait for a commit under way", adds < 50000000ull);
@@ -54,6 +55,7 @@ int main(void) { @autoreleasepool {
     // A change another thread's commit took is in the set when this thread's res_commit returns
     for (int round = 0; round < 50; round++) {
         id<MTLBuffer> x = buf(BIG_BYTES / 4), y = buf(4096);
+        if (!x || !y) { CHECK("buffers for the racing commit allocate", 0); break; }
         res_add(x);
         dispatch_semaphore_t go = dispatch_semaphore_create(0), fin = dispatch_semaphore_create(0);
         dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{ dispatch_semaphore_signal(go); res_commit(); dispatch_semaphore_signal(fin); });

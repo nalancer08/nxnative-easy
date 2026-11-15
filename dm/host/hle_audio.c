@@ -352,6 +352,36 @@ static void stats_drain(void) {
     pthread_mutex_unlock(&g_aos_lock);
     for (int i = 0; i < n; i++) stats_log(&reports[i]);
 }
+// Caller holds g_aos_lock. Use one observation for each output on this tick.
+static void au_watchdog_check(aout *a, uint64_t t, uint64_t gap) {
+    uint64_t n = atomic_load_explicit(&a->cb_n, memory_order_relaxed);
+    if (a->start_phase == AU_WAIT_CALLBACK) {
+        if (n != a->wd_n) {
+            null_stop(a);
+            atomic_store_explicit(&a->hold_device, 0, memory_order_release);
+            if (a->stalled) LOG("audio #%d: AudioUnit restarted", a->id);
+            a->backend = BK_AU; a->start_phase = AU_IDLE; a->stalled = a->retry_ms = 0;
+            a->wd_n = n; a->wd_t = t;
+        } else if (gap > 4ull * WD_TICK_MS * 1000000) a->wd_t = t;
+        else if (t - a->wd_t >= 1000000000ull) {
+            if (!a->stalled) LOG("[RED] audio #%d: no device callback after start; continuing on the silent sink", a->id);
+            AudioOutputUnitStop(a->au); a->start_phase = AU_IDLE; au_retry(a, t);
+        }
+        return;
+    }
+    if (a->backend == BK_NULL) {
+        if (t >= a->retry_at) au_request_start(a);
+        return;
+    }
+    if (a->backend != BK_AU) return;
+    if (gap > 4ull * WD_TICK_MS * 1000000 || n != a->wd_n) {
+        a->wd_n = n; a->wd_t = t;
+    } else if (t - a->wd_t > WD_STALL_MS * 1000000ull) {
+        LOG("[RED] audio #%d: the device has not called back for %.0f ms while playing: the silent sink stands in, retrying the AudioUnit", a->id, (t - a->wd_t) / 1e6);
+        AudioOutputUnitStop(a->au); a->backend = BK_NONE; null_start(a);
+        au_retry(a, t);
+    }
+}
 static void *au_watchdog(void *p) {
     (void)p; uint64_t last = now_ns();
     for (;;) {
@@ -359,34 +389,8 @@ static void *au_watchdog(void *p) {
         pthread_mutex_lock(&g_aos_lock);
         uint64_t t = now_ns(), gap = t - last; last = t;
         for (int i = 0; i < AOMAX; i++) {
-            aout *a = g_aos[i]; if (!a || !a->au) continue;
-            uint64_t n = atomic_load_explicit(&a->cb_n, memory_order_relaxed);
-            if (a->start_phase == AU_WAIT_CALLBACK) {
-                if (n != a->wd_n) {
-                    null_stop(a);
-                    atomic_store_explicit(&a->hold_device, 0, memory_order_release);
-                    if (a->stalled) LOG("audio #%d: AudioUnit restarted", a->id);
-                    a->backend = BK_AU; a->start_phase = AU_IDLE; a->stalled = a->retry_ms = 0;
-                    a->wd_n = n; a->wd_t = t;
-                } else if (gap > 4ull * WD_TICK_MS * 1000000) a->wd_t = t;
-                else if (t - a->wd_t >= 1000000000ull) {
-                    if (!a->stalled) LOG("[RED] audio #%d: no device callback after start; continuing on the silent sink", a->id);
-                    AudioOutputUnitStop(a->au); a->start_phase = AU_IDLE; au_retry(a, t);
-                }
-                continue;
-            }
-            if (a->backend == BK_NULL) {
-                if (t >= a->retry_at) au_request_start(a);
-                continue;
-            }
-            if (a->backend != BK_AU) continue;
-            if (gap > 4ull * WD_TICK_MS * 1000000 || n != a->wd_n) {
-                a->wd_n = n; a->wd_t = t;
-            } else if (t - a->wd_t > WD_STALL_MS * 1000000ull) {
-                LOG("[RED] audio #%d: the device has not called back for %.0f ms while playing: the silent sink stands in, retrying the AudioUnit", a->id, (t - a->wd_t) / 1e6);
-                AudioOutputUnitStop(a->au); a->backend = BK_NONE; null_start(a);
-                au_retry(a, t);
-            }
+            aout *a = g_aos[i];
+            if (a && a->au) au_watchdog_check(a, t, gap);
         }
         pthread_mutex_unlock(&g_aos_lock);
         stats_drain();
