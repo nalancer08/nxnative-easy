@@ -1,7 +1,7 @@
 {
   "schema": 2,
-  "number": 372,
-  "version": "1.0.17",
+  "number": 374,
+  "version": "1.0.19",
   "versions": {
     "355": "1.0.0",
     "356": "1.0.1",
@@ -20,11 +20,27 @@
     "369": "1.0.14",
     "370": "1.0.15",
     "371": "1.0.16",
-    "372": "1.0.17"
+    "372": "1.0.17",
+    "373": "1.0.18",
+    "374": "1.0.19"
   },
-  "revision": "3cc0425f471edf073d013b01cd30e2989efda708",
-  "upstream": "a31c29f9cf086c28075891d1176d3e8529e852f1",
+  "revision": "21bc52d50f6da293ebd441cb010e2c71e5366d9a",
+  "upstream": "c4aa24c57bff65e7a963db539123a260691e4dbe",
   "entries": [
+    {
+      "number": 374,
+      "version": "1.0.19",
+      "revision": "21bc52d50f6da293ebd441cb010e2c71e5366d9a",
+      "date": "2026-11-14T19:45:09-06:00",
+      "title": "Integrate upstream GPU timestamp timeline through c4aa24c5"
+    },
+    {
+      "number": 373,
+      "version": "1.0.18",
+      "revision": "12f64d267073c19346143a0833d9a1d8988291b0",
+      "date": "2026-11-14T19:41:05-06:00",
+      "title": "Guard Metal archive and geometry inputs and validate renderer fixtures"
+    },
     {
       "number": 372,
       "version": "1.0.17",
@@ -178,20 +194,6 @@
       "revision": "1f9da89e29896a7b31d7ea6491321346e599485f",
       "date": "2026-11-02T18:21:16-06:00",
       "title": "Keep the checkpoint lease until claimed workers finish"
-    },
-    {
-      "number": 350,
-      "version": null,
-      "revision": "26ca8eac47f541ec067e7b593969f570f9958f85",
-      "date": "2026-11-02T18:01:25-06:00",
-      "title": "Finish iOS background checkpoints and bound save-history memory"
-    },
-    {
-      "number": 349,
-      "version": null,
-      "revision": "4d62b2b71a2056bd633fc21a5e01fa096cdea375",
-      "date": "2026-11-02T17:29:23-06:00",
-      "title": "Add recoverable iCloud save continuity across rebuilt games"
     }
   ],
   "sources": {
@@ -807,6 +809,9 @@
     "1aabd2b92e9f8e6013142472c94fc7b9045cc49d": 370,
     "e07638f251f40cc6edf8be375f2c55e720c0d5b6": 370,
     "894a9f2d536e90c4beed20b0b47e542952e4d180": 371,
-    "3cc0425f471edf073d013b01cd30e2989efda708": 372
+    "3cc0425f471edf073d013b01cd30e2989efda708": 372,
+    "a826549c2c2f8e13eda5a8421ef17ea38f686d21": 372,
+    "12f64d267073c19346143a0833d9a1d8988291b0": 373,
+    "21bc52d50f6da293ebd441cb010e2c71e5366d9a": 374
   }
 }

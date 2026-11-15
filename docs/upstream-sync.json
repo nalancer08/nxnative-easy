@@ -2,7 +2,7 @@
   "schema": 1,
   "repository": "seedds/nxnative",
   "baseline": "ecbeae164c0b419d1ba1031248fe1402050a3eb0",
-  "reviewed_head": "a31c29f9cf086c28075891d1176d3e8529e852f1",
+  "reviewed_head": "c4aa24c57bff65e7a963db539123a260691e4dbe",
   "integrated": [
     {
       "upstream_sha": "4639c5114cbb8a8f250645941fa3a25c1ba08cc6",
@@ -22,12 +22,12 @@
     }
   ],
   "note": "Original main integrated through 2026-11-14. Easy immutable cloud saves and guarded game exports preserved.",
-  "integrated_head": "a31c29f9cf086c28075891d1176d3e8529e852f1",
+  "integrated_head": "c4aa24c57bff65e7a963db539123a260691e4dbe",
   "latest_full_integration": {
     "from_fork": "e07638f251f40cc6edf8be375f2c55e720c0d5b6",
     "previous_integrated_head": "4c574a6f055217ac0b6d5fbeccd1eb22b86dbe90",
-    "upstream_head": "a31c29f9cf086c28075891d1176d3e8529e852f1",
-    "commit_count": 261,
+    "upstream_head": "c4aa24c57bff65e7a963db539123a260691e4dbe",
+    "commit_count": 262,
     "added_games": [
       {
         "id": "0100C510166F0000",

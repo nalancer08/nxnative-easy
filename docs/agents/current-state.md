@@ -6,7 +6,7 @@ Read this file when resuming, then check Git status and public release metadata.
 
 Easy 1.36.3/build 65 is the last published application before this integration. The website and both README files use the searchable text compatibility catalog and original web art. The upstream community listing request is seedds/nxnative#2506.
 
-The current candidate pulls 261 engine commits through upstream a31c29f9 and adapts #2691's Metal cache safeguard. Its catalog has 170 applications (153 Switch 1, 17 Switch 2). Easy's append-only iCloud history, game exports, signing identities, directory RomFS transfer and opt-in shader cleanup carry forward. The 1.37.0/build 66 metadata is for the candidate. Check the public tag and release assets for the shipping state. See [the integration review](../upstream-reviews/2026-11-14.md).
+The current candidate pulls 262 engine commits through upstream c4aa24c5 and adapts #2691's Metal cache safeguard. Its catalog has 170 applications (153 Switch 1, 17 Switch 2). Easy's append-only iCloud history, game exports, signing identities, directory RomFS transfer and opt-in shader cleanup carry forward. The 1.37.0/build 66 metadata is for the candidate. Follow PR #40 for validation and check the public tag and release assets for the shipping state. See [the integration review](../upstream-reviews/2026-11-14.md).
 
 ## Product and owner intent
 
