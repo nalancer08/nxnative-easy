@@ -25,7 +25,7 @@ Para jugar en iPhone necesitas un chip A17 Pro o posterior. En iPad necesitas M1
 ## Compatibilidad
 
 <!-- BEGIN GENERATED COMPATIBILITY LINKS -->
-[Nintendo Switch 1 · 144](https://nalancer08.github.io/nxnative-easy/es/?console=switch1#games) · [Nintendo Switch 2 · 11](https://nalancer08.github.io/nxnative-easy/es/?console=switch2#games) · [Tabla completa de juegos probados](dm/games/README.md#games)
+[Nintendo Switch 1 · 153](https://nalancer08.github.io/nxnative-easy/es/?console=switch1#games) · [Nintendo Switch 2 · 17](https://nalancer08.github.io/nxnative-easy/es/?console=switch2#games) · [Tabla completa de juegos probados](dm/games/README.md#games)
 <!-- END GENERATED COMPATIBILITY LINKS -->
 
 Filtra el catálogo por consola y busca por título o versión. Cada ficha indica qué versiones y dispositivos se probaron y sus limitaciones. Los juegos de Switch 2 se preparan en Mac desde un NUP o una carpeta extraída. [Formatos y requisitos de Switch 2](docs/switch2.md)

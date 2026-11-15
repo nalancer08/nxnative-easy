@@ -25,7 +25,7 @@ For mobile play, use an iPhone with A17 Pro or newer or an iPad with M1 or newer
 ## Compatibility
 
 <!-- BEGIN GENERATED COMPATIBILITY LINKS -->
-[Nintendo Switch 1 · 144](https://nalancer08.github.io/nxnative-easy/?console=switch1#games) · [Nintendo Switch 2 · 11](https://nalancer08.github.io/nxnative-easy/?console=switch2#games) · [Full tested games table](dm/games/README.md#games)
+[Nintendo Switch 1 · 153](https://nalancer08.github.io/nxnative-easy/?console=switch1#games) · [Nintendo Switch 2 · 17](https://nalancer08.github.io/nxnative-easy/?console=switch2#games) · [Full tested games table](dm/games/README.md#games)
 <!-- END GENERATED COMPATIBILITY LINKS -->
 
 The catalog filters by console and searches by title or version. Each game note lists tested builds, devices and known limitations. Switch 2 preparation is available on Mac from a NUP or extracted game folder. [Switch 2 formats and requirements](docs/switch2.md)

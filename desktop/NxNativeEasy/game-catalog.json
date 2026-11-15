@@ -311,6 +311,17 @@
       "caption": ""
     },
     {
+      "id": "0100C510166F0000",
+      "name": "Chained Echoes",
+      "versions": [
+        "1.1.1"
+      ],
+      "notes": "dm/games/0100C510166F0000/README.md",
+      "console": "switch1",
+      "artwork": null,
+      "caption": ""
+    },
+    {
       "id": "01002E7016C46000",
       "name": "Cult of the Lamb",
       "versions": [
@@ -366,6 +377,28 @@
       "caption": ""
     },
     {
+      "id": "01001B300B9BE000",
+      "name": "Diablo III: Eternal Collection",
+      "versions": [
+        "2.7.7.92380"
+      ],
+      "notes": "dm/games/01001B300B9BE000/README.md",
+      "console": "switch1",
+      "artwork": null,
+      "caption": ""
+    },
+    {
+      "id": "0100726014352000",
+      "name": "Diablo II: Resurrected",
+      "versions": [
+        "1.0.34.0"
+      ],
+      "notes": "dm/games/0100726014352000/README.md",
+      "console": "switch1",
+      "artwork": null,
+      "caption": ""
+    },
+    {
       "id": "010014E00DB56000",
       "name": "Digimon Story Cyber Sleuth: Complete Edition",
       "versions": [
@@ -374,6 +407,17 @@
       "notes": "dm/games/010014E00DB56000/README.md",
       "console": "switch1",
       "artwork": "docs/images/digimon-story-cyber-sleuth.jpg",
+      "caption": ""
+    },
+    {
+      "id": "010027400CDC6000",
+      "name": "Divinity: Original Sin 2 - Definitive Edition",
+      "versions": [
+        "1.0.12"
+      ],
+      "notes": "dm/games/010027400CDC6000/README.md",
+      "console": "switch1",
+      "artwork": null,
       "caption": ""
     },
     {
@@ -487,6 +531,17 @@
       "caption": "60 fps with 1.8d.310c"
     },
     {
+      "id": "040041E0212AE000",
+      "name": "Fast Fusion",
+      "versions": [
+        "v262144"
+      ],
+      "notes": "dm/games/040041E0212AE000/README.md",
+      "console": "switch2",
+      "artwork": null,
+      "caption": ""
+    },
+    {
       "id": "0100CE4010AAC000",
       "name": "FINAL FANTASY CRYSTAL CHRONICLES Remastered Edition",
       "versions": [
@@ -528,6 +583,17 @@
       "notes": "dm/games/010038B015560000/README.md",
       "console": "switch1",
       "artwork": "docs/images/final-fantasy-tactics.jpg",
+      "caption": ""
+    },
+    {
+      "id": "0100EB100AB42000",
+      "name": "FINAL FANTASY XII THE ZODIAC AGE",
+      "versions": [
+        "1.1.0"
+      ],
+      "notes": "dm/games/0100EB100AB42000/README.md",
+      "console": "switch1",
+      "artwork": null,
       "caption": ""
     },
     {
@@ -708,6 +774,17 @@
       "caption": "60 fps with 1.4.0"
     },
     {
+      "id": "0100C9C00E25C000",
+      "name": "Mario Golf: Super Rush",
+      "versions": [
+        "4.0.0"
+      ],
+      "notes": "dm/games/0100C9C00E25C000/README.md",
+      "console": "switch1",
+      "artwork": null,
+      "caption": ""
+    },
+    {
       "id": "0100152000022000",
       "name": "Mario Kart 8 Deluxe",
       "versions": [
@@ -808,6 +885,17 @@
       "caption": ""
     },
     {
+      "id": "010019A01E2F2000",
+      "name": "Metroid Prime 4: Beyond",
+      "versions": [
+        "1.1.0"
+      ],
+      "notes": "dm/games/010019A01E2F2000/README.md",
+      "console": "switch1",
+      "artwork": null,
+      "caption": ""
+    },
+    {
       "id": "010012101468C000",
       "name": "Metroid Prime Remastered",
       "versions": [
@@ -885,6 +973,17 @@
       "caption": "60 fps with 1.0.3"
     },
     {
+      "id": "04008E001F098000",
+      "name": "Nintendo Switch Sports Resort",
+      "versions": [
+        "?"
+      ],
+      "notes": "dm/games/04008E001F098000/README.md",
+      "console": "switch2",
+      "artwork": null,
+      "caption": ""
+    },
+    {
       "id": "010057D006492000",
       "name": "OCTOPATH TRAVELER",
       "versions": [
@@ -926,6 +1025,17 @@
       "notes": "dm/games/0100276009872000/README.md",
       "console": "switch1",
       "artwork": "docs/images/okami-hd.jpg",
+      "caption": ""
+    },
+    {
+      "id": "040032B023CA4000",
+      "name": "Orbitals",
+      "versions": [
+        "1.1.2.0"
+      ],
+      "notes": "dm/games/040032B023CA4000/README.md",
+      "console": "switch2",
+      "artwork": null,
       "caption": ""
     },
     {
@@ -1127,6 +1237,17 @@
       "caption": ""
     },
     {
+      "id": "0400C76024710000",
+      "name": "PRAGMATA",
+      "versions": [
+        "v196608"
+      ],
+      "notes": "dm/games/0400C76024710000/README.md",
+      "console": "switch2",
+      "artwork": null,
+      "caption": ""
+    },
+    {
       "id": "01007A3009184000",
       "name": "Princess Peach: Showtime!",
       "versions": [
@@ -1160,6 +1281,17 @@
       "console": "switch1",
       "artwork": "docs/images/red-dead-redemption.jpg",
       "caption": "Official artwork · Mac testing in game notes"
+    },
+    {
+      "id": "0400569027BF4000",
+      "name": "Resident Evil 4",
+      "versions": [
+        "v131072"
+      ],
+      "notes": "dm/games/0400569027BF4000/README.md",
+      "console": "switch2",
+      "artwork": null,
+      "caption": ""
     },
     {
       "id": "010032E00E6E2000",
@@ -1236,6 +1368,17 @@
       "notes": "dm/games/0100D5B026844000/README.md",
       "console": "switch1",
       "artwork": "docs/images/silver-pines.jpg",
+      "caption": ""
+    },
+    {
+      "id": "0400921025B32000",
+      "name": "Sonic Frontiers Definitive Edition",
+      "versions": [
+        "1.0.0"
+      ],
+      "notes": "dm/games/0400921025B32000/README.md",
+      "console": "switch2",
+      "artwork": null,
       "caption": ""
     },
     {
@@ -1516,6 +1659,17 @@
       "caption": ""
     },
     {
+      "id": "01009BC00C38A000",
+      "name": "The Binding of Isaac: Rebirth",
+      "versions": [
+        "1.0"
+      ],
+      "notes": "dm/games/01009BC00C38A000/README.md",
+      "console": "switch1",
+      "artwork": null,
+      "caption": ""
+    },
+    {
       "id": "010036E00FB20000",
       "name": "The Great Ace Attorney Chronicles",
       "versions": [
@@ -1601,6 +1755,17 @@
       "notes": "dm/games/01008D9022462000/README.md",
       "console": "switch1",
       "artwork": "docs/images/the-rogue-prince-of-persia.jpg",
+      "caption": ""
+    },
+    {
+      "id": "01007A2027548000",
+      "name": "Trails in the Sky 2nd Chapter",
+      "versions": [
+        "1.0.4"
+      ],
+      "notes": "dm/games/01007A2027548000/README.md",
+      "console": "switch1",
+      "artwork": null,
       "caption": ""
     },
     {

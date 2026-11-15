@@ -53,7 +53,7 @@ static void seed(const tex_t *t) {
     [cb commit];[cb waitUntilCompleted];EXPECT("standalone Metal seed done",4,cb.status);
 }
 static uint8_t *read_mip(const tex_t *t,int lv,int w,int h,int bpp) {
-    NSUInteger row=(w*bpp+15)&~15u;id<MTLBuffer> buf=[g_dev newBufferWithLength:row*h options:MTLResourceStorageModeShared];
+    NSUInteger row=(w*bpp+15)&~15u;id<MTLBuffer> buf=[g_dev newBufferWithLength:row*h options:MTLResourceStorageModeShared];if(!buf)abort();
     id<MTLCommandBuffer> cb=q_cb();id<MTLBlitCommandEncoder> b=[cb blitCommandEncoder];
     id<MTLTexture> src=tex_mtl(t);MTLBlitOption opt=t->d.format==NVN_FORMAT_DEPTH32F_STENCIL8?(bpp==1?MTLBlitOptionStencilFromDepthStencil:MTLBlitOptionDepthFromDepthStencil):MTLBlitOptionNone;
     [b copyFromTexture:src sourceSlice:0 sourceLevel:lv sourceOrigin:MTLOriginMake(0,0,0) sourceSize:MTLSizeMake(w,h,1)
