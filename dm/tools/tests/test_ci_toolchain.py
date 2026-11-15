@@ -22,10 +22,13 @@ class Toolchain(unittest.TestCase):
         self.assertEqual(sorted({r for r in runners if r.startswith(('macos-', 'xcode-'))}), [image], f'tests.yml: every macOS job runs on {image} (Xcode {self.xcode})')
 
     def test_readme_names_the_same_xcode(self):
-        readme = (REPO / 'README.md').read_text()
-        named = re.findall(r'\[Xcode\]\([^)]*\) (\d+\.\d+)', readme)
-        self.assertEqual(set(named), {self.xcode}, f'README.md: the Xcode to install is not CI\'s {self.xcode}')
-        self.assertEqual(set(re.findall(r'Xcode[ -](\d+\.\d+)', readme)), {self.xcode}, f'README.md: an Xcode it names (the side-by-side one too) is not CI\'s {self.xcode}')
+        for filename in ('README.md', 'README-es.md'):
+            with self.subTest(readme=filename):
+                readme = (REPO / filename).read_text()
+                # The Easy install guide links the download separately from the version.
+                plain = re.sub(r'\[([^]]+)\]\([^)]*\)', r'\1', readme)
+                named = re.findall(r'Xcode[ -](\d+\.\d+)', plain)
+                self.assertEqual(set(named), {self.xcode}, f'{filename}: install guide must match CI Xcode {self.xcode}')
 
     def test_metal_stop_names_the_same_xcode(self):   # own_compilers.py's stop message: the Xcode to install and select (GitHub issue #717)
         named = re.findall(r"XCODE_VERSION = '(\d+\.\d+)'", (REPO / 'dm/gfx/tools/own_compilers.py').read_text())
