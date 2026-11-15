@@ -1,7 +1,7 @@
 {
   "schema": 2,
-  "number": 370,
-  "version": "1.0.15",
+  "number": 372,
+  "version": "1.0.17",
   "versions": {
     "355": "1.0.0",
     "356": "1.0.1",
@@ -18,11 +18,27 @@
     "367": "1.0.12",
     "368": "1.0.13",
     "369": "1.0.14",
-    "370": "1.0.15"
+    "370": "1.0.15",
+    "371": "1.0.16",
+    "372": "1.0.17"
   },
-  "revision": "f12ef86cc7febde13c8429121e5d4988bd3eba8e",
-  "upstream": "4c574a6f055217ac0b6d5fbeccd1eb22b86dbe90",
+  "revision": "3cc0425f471edf073d013b01cd30e2989efda708",
+  "upstream": "a31c29f9cf086c28075891d1176d3e8529e852f1",
   "entries": [
+    {
+      "number": 372,
+      "version": "1.0.17",
+      "revision": "3cc0425f471edf073d013b01cd30e2989efda708",
+      "date": "2026-11-14T19:24:13-06:00",
+      "title": "Guard Metal archive cleanup against files and symlinks"
+    },
+    {
+      "number": 371,
+      "version": "1.0.16",
+      "revision": "894a9f2d536e90c4beed20b0b47e542952e4d180",
+      "date": "2026-11-14T19:23:56-06:00",
+      "title": "Integrate seedds/nxnative through a31c29f9 and preserve Easy save and build workflows"
+    },
     {
       "number": 370,
       "version": "1.0.15",
@@ -176,20 +192,6 @@
       "revision": "4d62b2b71a2056bd633fc21a5e01fa096cdea375",
       "date": "2026-11-02T17:29:23-06:00",
       "title": "Add recoverable iCloud save continuity across rebuilt games"
-    },
-    {
-      "number": 348,
-      "version": null,
-      "revision": "cbb6be65492741af712963f687d2a036b94de067",
-      "date": "2026-11-02T09:57:39-06:00",
-      "title": "Integrate 33 upstream updates and keep Switch 2 tools complete"
-    },
-    {
-      "number": 347,
-      "version": null,
-      "revision": "f8f75ce9b2d7d84ceac7c6de723d25a71796c7c5",
-      "date": "2026-11-01T16:48:05-06:00",
-      "title": "Shrink C lint baseline for the excluded cloud fixture"
     }
   ],
   "sources": {
@@ -798,6 +800,13 @@
     "65a743d28f988f27825b6bad2494bad596e3c20e": 369,
     "ad4d96650ad59cc1095cffdbebf9bfbbbe3bd18f": 369,
     "d1228ad5b331fb3464700adee2d180b670f0971e": 369,
-    "f12ef86cc7febde13c8429121e5d4988bd3eba8e": 370
+    "f12ef86cc7febde13c8429121e5d4988bd3eba8e": 370,
+    "906ec577f77633773ad774c9a1e18c57a2ce4a68": 370,
+    "469161d8156dc26629f0cdb1a8aea1e592a431b4": 370,
+    "f5223d0a578d13cf0b62c3dbc1a5d0ae10a25eef": 370,
+    "1aabd2b92e9f8e6013142472c94fc7b9045cc49d": 370,
+    "e07638f251f40cc6edf8be375f2c55e720c0d5b6": 370,
+    "894a9f2d536e90c4beed20b0b47e542952e4d180": 371,
+    "3cc0425f471edf073d013b01cd30e2989efda708": 372
   }
 }

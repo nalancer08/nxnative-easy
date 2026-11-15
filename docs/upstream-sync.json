@@ -2,7 +2,7 @@
   "schema": 1,
   "repository": "seedds/nxnative",
   "baseline": "ecbeae164c0b419d1ba1031248fe1402050a3eb0",
-  "reviewed_head": "4c574a6f055217ac0b6d5fbeccd1eb22b86dbe90",
+  "reviewed_head": "a31c29f9cf086c28075891d1176d3e8529e852f1",
   "integrated": [
     {
       "upstream_sha": "4639c5114cbb8a8f250645941fa3a25c1ba08cc6",
@@ -21,66 +21,138 @@
       "title": "Make repeated IPA and Mac app builds incremental (#279)"
     }
   ],
-  "note": "Original main integrated through 2026-11-10; Easy identities, immutable save history, touch profiles and opt-in cleanup preserved.",
-  "integrated_head": "4c574a6f055217ac0b6d5fbeccd1eb22b86dbe90",
+  "note": "Original main integrated through 2026-11-14. Easy immutable cloud saves and guarded game exports preserved.",
+  "integrated_head": "a31c29f9cf086c28075891d1176d3e8529e852f1",
   "latest_full_integration": {
-    "from_fork": "5a88466b0910e864691d82d63847f28e61f9b532",
-    "previous_integrated_head": "cfbdd93ca5cab4be6e7dfd106d72e6a3bdeed262",
-    "upstream_head": "4c574a6f055217ac0b6d5fbeccd1eb22b86dbe90",
-    "commit_count": 64,
+    "from_fork": "e07638f251f40cc6edf8be375f2c55e720c0d5b6",
+    "previous_integrated_head": "4c574a6f055217ac0b6d5fbeccd1eb22b86dbe90",
+    "upstream_head": "a31c29f9cf086c28075891d1176d3e8529e852f1",
+    "commit_count": 261,
     "added_games": [
       {
-        "id": "010061D00DB74000",
-        "name": "Ori and the Blind Forest: Definitive Edition",
+        "id": "0100C510166F0000",
+        "name": "Chained Echoes",
         "versions": [
-          "1.0.2"
+          "1.1.1"
         ]
       },
       {
-        "id": "01008DD013200000",
-        "name": "Ori and the Will of the Wisps",
+        "id": "01001B300B9BE000",
+        "name": "Diablo III: Eternal Collection",
         "versions": [
-          "1.2.1"
+          "2.7.7.92380"
         ]
       },
       {
-        "id": "01007820196A6000",
-        "name": "Red Dead Redemption",
+        "id": "0100726014352000",
+        "name": "Diablo II: Resurrected",
         "versions": [
-          "1.0.0",
-          "1.0.4",
-          "1.0.7"
+          "1.0.34.0"
         ]
       },
       {
-        "id": "0100DA801624E000",
-        "name": "TUNIC",
+        "id": "010027400CDC6000",
+        "name": "Divinity: Original Sin 2 - Definitive Edition",
         "versions": [
-          "1.0.3"
+          "1.0.12"
+        ]
+      },
+      {
+        "id": "040041E0212AE000",
+        "name": "Fast Fusion",
+        "versions": [
+          "v262144"
+        ]
+      },
+      {
+        "id": "0100EB100AB42000",
+        "name": "FINAL FANTASY XII THE ZODIAC AGE",
+        "versions": [
+          "1.1.0"
+        ]
+      },
+      {
+        "id": "0100C9C00E25C000",
+        "name": "Mario Golf: Super Rush",
+        "versions": [
+          "4.0.0"
+        ]
+      },
+      {
+        "id": "010019A01E2F2000",
+        "name": "Metroid Prime 4: Beyond",
+        "versions": [
+          "1.1.0"
+        ]
+      },
+      {
+        "id": "04008E001F098000",
+        "name": "Nintendo Switch Sports Resort",
+        "versions": [
+          "?"
+        ]
+      },
+      {
+        "id": "040032B023CA4000",
+        "name": "Orbitals",
+        "versions": [
+          "1.1.2.0"
+        ]
+      },
+      {
+        "id": "0400C76024710000",
+        "name": "PRAGMATA",
+        "versions": [
+          "v196608"
+        ]
+      },
+      {
+        "id": "0400569027BF4000",
+        "name": "Resident Evil 4",
+        "versions": [
+          "v131072"
+        ]
+      },
+      {
+        "id": "0400921025B32000",
+        "name": "Sonic Frontiers Definitive Edition",
+        "versions": [
+          "1.0.0"
+        ]
+      },
+      {
+        "id": "01009BC00C38A000",
+        "name": "The Binding of Isaac: Rebirth",
+        "versions": [
+          "1.0"
+        ]
+      },
+      {
+        "id": "01007A2027548000",
+        "name": "Trails in the Sky 2nd Chapter",
+        "versions": [
+          "1.0.4"
         ]
       }
     ],
-    "updated_games": [
-      {
-        "id": "0100A00019DE0000",
-        "name": "Hades II",
-        "versions": [
-          "0.0.126424",
-          "1.0.141667"
-        ]
-      }
-    ],
-    "review": "docs/upstream-reviews/2026-11-10.md",
-    "preserved_exceptions": [
-      "Easy immutable parented cloud history; no automatic pruning or newer-wins",
-      "Directory RomFS frontend default and opt-in cleanup",
-      "Source-matched native metadata inspection and exact app identities"
-    ],
+    "updated_games": [],
     "removed_games": [],
-    "translation_chain": "fed5ea909ee7",
-    "catalog_profiles": 155,
-    "internal_program_profiles": 2,
-    "additional_review": "Two later timestamp/exact-report fixes imported after local validation uncovered an independent Metal prebuild-cache crash. Shader chain unchanged."
+    "catalog_profiles": 170,
+    "translation_chain": "66eab9c9a6b4",
+    "review": "docs/upstream-reviews/2026-11-14.md",
+    "preserved_exceptions": [
+      "Easy immutable cloud history and pre-play recovery",
+      "Directory RomFS and opt-in shader cache pruning",
+      "Prepared game exports and signing identity"
+    ],
+    "cherry_picks": [
+      {
+        "pr": 2691,
+        "head": "7abcd8f7f9c5ee3968d36ac8e29253e1b43bfb5a",
+        "revision": "3cc0425f",
+        "summary": "Restrict Metal archive cleanup to old directories"
+      }
+    ]
   },
   "latest_incremental_integration": {
     "upstream_head": "8334fdfb50a9900d8a5fc950d099fde46d85135f",
@@ -1137,6 +1209,65 @@
       "catalog_profiles": 151,
       "internal_program_profiles": 2,
       "review": "docs/upstream-reviews/2026-11-09.md"
+    },
+    {
+      "from_fork": "5a88466b0910e864691d82d63847f28e61f9b532",
+      "previous_integrated_head": "cfbdd93ca5cab4be6e7dfd106d72e6a3bdeed262",
+      "upstream_head": "4c574a6f055217ac0b6d5fbeccd1eb22b86dbe90",
+      "commit_count": 64,
+      "added_games": [
+        {
+          "id": "010061D00DB74000",
+          "name": "Ori and the Blind Forest: Definitive Edition",
+          "versions": [
+            "1.0.2"
+          ]
+        },
+        {
+          "id": "01008DD013200000",
+          "name": "Ori and the Will of the Wisps",
+          "versions": [
+            "1.2.1"
+          ]
+        },
+        {
+          "id": "01007820196A6000",
+          "name": "Red Dead Redemption",
+          "versions": [
+            "1.0.0",
+            "1.0.4",
+            "1.0.7"
+          ]
+        },
+        {
+          "id": "0100DA801624E000",
+          "name": "TUNIC",
+          "versions": [
+            "1.0.3"
+          ]
+        }
+      ],
+      "updated_games": [
+        {
+          "id": "0100A00019DE0000",
+          "name": "Hades II",
+          "versions": [
+            "0.0.126424",
+            "1.0.141667"
+          ]
+        }
+      ],
+      "review": "docs/upstream-reviews/2026-11-10.md",
+      "preserved_exceptions": [
+        "Easy immutable parented cloud history; no automatic pruning or newer-wins",
+        "Directory RomFS frontend default and opt-in cleanup",
+        "Source-matched native metadata inspection and exact app identities"
+      ],
+      "removed_games": [],
+      "translation_chain": "fed5ea909ee7",
+      "catalog_profiles": 155,
+      "internal_program_profiles": 2,
+      "additional_review": "Two later timestamp/exact-report fixes imported after local validation uncovered an independent Metal prebuild-cache crash. Shader chain unchanged."
     }
   ],
   "deferred_features": [
