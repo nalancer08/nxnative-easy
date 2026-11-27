@@ -1,3 +1,981 @@
-# Upstream review resolved
+# Pending upstream review
 
-Original main through `d777f0a340e87f3d87ebd8905f2a99b9ba497134` is incorporated by the reviewed 2026-11-07 integration. See [the review](upstream-reviews/2026-11-07.md) for 47 commits, retained Easy policies and validation/release gates. Supported catalog: 148 standalone applications. Draft proposals and unmerged original PRs do not establish support.
+Pinned head: `28d41fc9d2a8c10e66fb5205c4ed44b1415483c9`.
+
+Manual conflict resolution required. No engine changes are staged in this proposal. Conflicts: .github/workflows/tests.yml, README.md, dm/games/0400C3F00006E000/pso_manifest.tsv, dm/gfx/nvn/nvn_geometry.inc, dm/gfx/nvn/nvn_mtl.m, dm/gfx/tests/t_pfv.m, dm/gfx/tests/t_pso_archive.m, dm/gfx/tests/t_pso_bundle.m, dm/gfx/tests/t_pso_stall.m, dm/gfx/tests/t_res_commit.m, dm/gfx/tests/t_sparse_copy.m, dm/gfx/tests/t_upload_src.m, dm/gfx/tests/t_vk_swapchain_life.m, dm/gfx/tests/t_wline.m, dm/gfx/tests/t_zero_depth.m, dm/host/Makefile, dm/host/hle_audio.c, dm/host/hle_fs.c, dm/host/save_sync.c, dm/host/save_sync.h, dm/host/tests/Makefile, dm/host/tests/t_audio_device.c, dm/host/tests/t_pollwait.c, dm/host/tests/t_save_sync.c, dm/host/tests/t_save_sync_metadata.c, dm/ios/Sources/CloudSaves.h, dm/ios/Sources/CloudSaves.m, dm/ios/Sources/DmIOS-Bridging-Header.h, dm/ios/Sources/Launcher.swift, dm/ios/Sources/SaveSyncReport.swift, dm/ios/Sources/front_ios.m, dm/ios/Sources/main.m, dm/ios/tests/launcher_storage_check.swift, dm/ios/tests/test_launcher_storage.py, dm/mac/Launcher.swift, dm/mac/launcher.c, dm/mac/pack_app.py, dm/tools/impact_map.tsv, dm/tools/lint_c_baseline.tsv, dm/tools/nx_extract/Program.cs, dm/tools/nx_extract_bin/nx_extract, dm/tools/tests/test_nsp_mac.py, dm/tools/tests/test_nsp_mac_app.py, docs/agents/symptoms.md, docs/env_switches.tsv, docs/frontends.md, docs/reference/frame-rate.md, docs/reference/packing.md, docs/reference/services.md, docs/settings.md, scripts/build_ipa_from_nsp.py, scripts/pack_dump.py
+
+```text
+28d41fc9 nvn/prewarm: stop recording and prewarming standalone S rows
+1a54371c gfx/nvn: bring Cyberpunk 2077 to Mac gameplay
+46ba619a game: Cuphead adds prewarm seeds
+4fbe83b0 game: The Legend of Zelda: Ocarina of Time adds prewarm seeds
+0431a0e5 game: Outer Wilds adds prewarm seeds
+6b0295f0 game: Outer Wilds adds prewarm seeds
+04be4be6 game: Donkey Kong Bananza adds prewarm seeds
+ebd64498 game: The Legend of Zelda: Ocarina of Time adds prewarm seeds
+7ba2b149 game: Splatoon 2 adds prewarm seeds
+a4e520da tools/prewarm: select shader maps by capture version
+21b16f59 tools/prewarm: keep inbox captures with missing shaders
+d83dfa64 game: Splatoon 2 boots and renders the Mac aiming tutorial
+fab073b1 packing/shaders: read SARC byte order and agl fallback archives
+a383253a host/oe: handle the SDK gameplay recording work buffer
+4b6150a7 game: The Legend of Zelda: Ocarina of Time adds prewarm seeds
+7dc4e93b game: The Legend of Zelda: Breath of the Wild adds prewarm seeds
+6401094c game: Nintendo Switch Sports Resort adds prewarm seeds
+61ba3350 game: Splatoon Raiders adds prewarm seeds
+18b8e4a9 game: FINAL FANTASY RESONANCE adds prewarm seeds
+b22cac7a game: Mario Kart World adds prewarm seeds
+67e108e6 game: The Legend of Zelda: Tears of the Kingdom adds prewarm seeds
+004fce5b game: Assassin's Creed® Ⅲ Remastered adds prewarm seeds
+9fd5bbef nvn/tests: widen the depth-plane coordinate before adding
+00ef88cd game: Splatoon Raiders adds prewarm seeds
+6d5bb921 game: Super Mario Bros. Wonder adds prewarm seeds
+66bd371b game: Hyrule Warriors: Age of Calamity adds prewarm seeds
+7d1a744e game: Cuphead adds prewarm seeds
+0af81b4c game: The Legend of Zelda: Tears of the Kingdom adds prewarm seeds
+b4aa8c1a game: FINAL FANTASY RESONANCE adds prewarm seeds
+c5cb0d88 game: Hades II adds prewarm seeds
+1c99c126 game: The Legend of Zelda: Ocarina of Time adds prewarm seeds
+f3efb375 tools/prewarm: import geometry pairs
+cdeda510 game: FINAL FANTASY RESONANCE adds prewarm seeds
+e9cbda1d game: Hades II adds prewarm seeds
+57383897 game: Cuphead adds prewarm seeds
+bd1195b5 game: Mario Kart World adds prewarm seeds
+d5b3c2d9 game: Orbitals adds prewarm seeds
+883bdf0f game: Splatoon Raiders adds prewarm seeds
+38bf6f58 game: Super Mario Bros. Wonder adds prewarm seeds
+35c3c597 game: The Legend of Zelda: Ocarina of Time adds prewarm seeds
+946213b3 game: Mario Kart World adds prewarm seeds
+b7d6c5bd opengl: add 11 OpenGL 4.5 direct state access entry points
+d0ae53a4 packing/shaders: read uncompressed .pkdswitch members (stored == 0)
+1a636be9 host/hid: answer six-axis unaltered passthrough
+21d90a86 game: Hollow Knight adds prewarm seeds
+4ac27258 game: Nintendo Switch Sports Resort adds prewarm seeds
+5b39c840 game: Nintendo Switch Sports Resort adds prewarm seeds
+305ae18e game: Mario Kart World adds prewarm seeds
+6633c785 game: Baba Is You adds prewarm seeds
+ca4b4939 game: Hollow Knight: Silksong adds prewarm seeds
+732f5019 game: 13 Sentinels: Aegis Rim (Asia) adds prewarm seeds
+d59373df game: The Legend of Zelda: Breath of the Wild adds prewarm seeds
+9f2b4a28 game: It Takes Two adds prewarm seeds
+76f8d312 game: The Legend of Zelda: Echoes of Wisdom adds prewarm seeds
+b910e3a9 game: Super Mario Bros. Wonder adds prewarm seeds
+aa8658fc game: Assassin's Creed® Ⅲ Remastered adds prewarm seeds
+7894f0e2 game: Kirby and the Forgotten Land adds prewarm seeds
+9a763d97 game: FINAL FANTASY RESONANCE (Asian release) adds prewarm seeds
+7b2344db game: Hades II adds prewarm seeds
+e0869bff game: OCTOPATH TRAVELER II adds prewarm seeds
+8d212ca7 game: The Legend of Zelda: Breath of the Wild adds prewarm seeds
+409d1dd0 game: The Legend of Zelda: Tears of the Kingdom adds prewarm seeds
+89d717a2 game: Mario Kart World adds prewarm seeds
+442c4409 game: Pokémon Legends: Z-A adds prewarm seeds
+68a8ac49 game: The Legend of Zelda: Ocarina of Time adds prewarm seeds
+d0122edf game: Thronebreaker: The Witcher Tales adds prewarm seeds
+6bc9a5f5 game: Donkey Kong Bananza adds prewarm seeds
+84731b37 game: default Thronebreaker to 60 fps
+ffe0d357 game: add provisional Thronebreaker 1.0.2 support
+b66ac34d game: Nintendo Switch Sports Resort adds prewarm seeds
+504a7c62 game: Yoshi and the Mysterious Book adds prewarm seeds
+34155e30 game: The Legend of Zelda: Ocarina of Time adds prewarm seeds
+704ffe5f game: The Legend of Zelda: Tears of the Kingdom adds prewarm seeds
+e644d15e game: Pokémon Legends: Z-A adds prewarm seeds
+01e8d3cd tests/nvn: allow 1 or more adopted files in t_pso_stall prebuild check
+34a7b06a game: Paper Mario: The Thousand-Year Door adds prewarm seeds
+7620c7b9 game: Pokemon Pokopia adds prewarm seeds
+99856a4e game: L.A. Noire adds prewarm seeds
+624a78a7 game: EA SPORTS FC 27 adds prewarm seeds
+87a4f82f game: The Legend of Zelda: Tears of the Kingdom adds prewarm seeds
+0a57ea23 game: The Legend of Zelda: Breath of the Wild adds prewarm seeds
+e864b1e9 game: Kirby and the Forgotten Land adds prewarm seeds
+95a9510c game: The Legend of Zelda: Ocarina of Time adds prewarm seeds
+729a1b11 game: Pokémon Legends: Z-A adds prewarm seeds
+2bc609e0 game: Mario Kart World adds prewarm seeds
+8e38d3e0 game: Star Fox adds prewarm seeds
+94d8a054 game: DRAGON BALL XENOVERSE 2 FOR NINTENDO SWITCH adds prewarm seeds
+af89c248 game: Fire Emblem: Three Houses adds prewarm seeds
+93133c06 game: Yoshi and the Mysterious Book adds prewarm seeds
+0e587d88 game: Unicorn Overlord (Asia) adds prewarm seeds
+39b27cb2 game: The Legend of Zelda: Link's Awakening adds prewarm seeds
+04480507 game: Mario Kart World adds prewarm seeds
+263ada68 game: Super Mario Party Jamboree adds prewarm seeds
+0735f800 game/0100D2D0190A4000: add prewarm seeds
+f5f82f96 game: The Legend of Zelda: Ocarina of Time adds prewarm seeds
+b1ef1be1 game: Donkey Kong Bananza adds prewarm seeds
+9f2282d4 game: Dragon Ball Xenoverse 2 uses native 60 fps timing
+5fa41f31 packing/shader_cache: compress compile-cache blobs inline with Zstandard
+8eeaf99c game: Minecraft Dungeons II adds prewarm seeds
+da83e335 game: FINAL FANTASY XII THE ZODIAC AGE adds prewarm seeds
+4d62497c nvn/archive: batch and parallelize pipeline archive writes during prebuild and prepare
+8386a7b3 game: Unicorn Overlord adds prewarm seeds
+3a515a78 game: The Legend of Zelda: Link's Awakening adds prewarm seeds
+c4e3ef3a game: Mario Kart World adds prewarm seeds
+ce02afbf game: Donkey Kong Bananza adds prewarm seeds
+d67a69af game: port Dragon Ball Xenoverse 2
+0adf5bbc gfx/nvn: extend slice merging to MRT/3D targets and add level-grouped replay (PR #3374)
+b84f3eb5 game: FINAL FANTASY RESONANCE adds prewarm seeds
+9458c06f game: TRIANGLE STRATEGY adds prewarm seeds
+fc2a15d0 game: Mario Kart World adds prewarm seeds
+8bd55038 game: Donkey Kong Bananza adds prewarm seeds
+0eca5ad4 game: Need For Speed™ Hot Pursuit Remastered adds prewarm seeds
+389738fa game: ULTRA STREET FIGHTER II: The Final Challengers adds prewarm seeds
+291ecbcc game: Nintendo Switch Sports Resort adds prewarm seeds
+a2412f2a game/0400453019AA8001: add prewarm seeds
+a5c8dc25 game: Unicorn Overlord adds prewarm seeds
+6f054c88 game: The Legend of Zelda: Ocarina of Time adds prewarm seeds
+d3ef1873 game: Super Mario Odyssey adds prewarm seeds
+dc9c2374 gfx/nvn: keep render passes across vertex-only barriers and leading-target subsets (PR #3374)
+2d0773f4 ci/audio: make the device watchdog test deterministic
+def4aca6 nvn/upscaler: draw same-encoding NDSR variants with MetalFX and add DM_UPSCALER=ab (PR #2340, #3399)
+fed937db packing/shader_split: decode Yaz0 in batches of whole groups (PR #3295)
+a0207da5 game: default Pokémon Shining Pearl to 60 fps
+b1c8a98d game: Hyrule Warriors: Definitive Edition adds prewarm seeds
+bf3a10ab game: OCTOPATH TRAVELER 0 adds prewarm seeds
+b8a4fe2f game: The Legend of Zelda: Ocarina of Time adds prewarm seeds
+7e6df4db game: Pokémon Legends: Z-A adds prewarm seeds
+80f27491 tools/prewarm: clean up captures with no importable rows
+05a37034 game: Pokémon Shining Pearl adds prewarm seeds
+77ad2cc7 game: add Pokémon Shining Pearl 1.3.0
+72eae304 game: Diablo II: Resurrected adds prewarm seeds
+4fd1560b game: Need For Speed™ Hot Pursuit Remastered adds prewarm seeds
+41c5c832 game: The Legend of Zelda: Ocarina of Time adds prewarm seeds
+a8e2a97e game: Persona 5 Royal adds prewarm seeds
+b89fa803 tools/prewarm: delete fully imported inbox captures
+c6cfe86b packing/progress: keep shader stage open through tail and report PSO batches (PR #1691)
+8b80c5d5 ios/launcher: present cloud-save folder picker directly with fileImporter
+7127e74b tools/prewarm: import inbox seed lists
+56d34009 game: Ocarina of Time adds more prewarm seeds
+91f737e1 game: Pokémon Legends: Z-A adds prewarm seeds
+36ae90d7 tools/ue_cvar: find UTF-8 Unreal console-variable names (PR #1200)
+cfdae4aa host/input: set GameController player lights on Mac and iOS (#2747)
+ab308c96 ci: use the Mac packer source list in the launcher test
+715a9403 packing/cra: validate CRA member sizes and bounds before decoding
+847f634b packing/extract: fail on an unpatched sparse base HtmlDocument NCA (PR #1769)
+c48caaea game: Donkey Kong Bananza adds more prewarm seeds
+dc8710ec game: Ocarina of Time adds more prewarm pipelines
+5185f824 game: Paper Mario adds more prewarm seeds
+42be93bf game: EA SPORTS FC 27 adds prewarm seeds
+cfe002da game: Captain Toad adds compatible prewarm seeds
+a58c10bb game: Kirby Star Allies adds more prewarm seeds
+2dbd223c game: Advance Wars 1+2 adds prewarm seeds
+2904b61e docs/env: list DM_PREWARM_UPLOAD_URL in env_switches.tsv
+9a211312 host/input: read hidpad_full buttons in controller prompt
+1947c0df host/input: open each Mac raw HID pad independently
+d2a2a43d game: Mario Kart World adds prewarm seeds from 1.8.0
+8cc3a8a3 game: Tears of the Kingdom adds prewarm seeds
+074d3f64 game: Paper Mario: The Thousand-Year Door adds prewarm seeds
+1a1cab4f game: Kirby Star Allies adds prewarm seeds
+748d63f3 game: Pokémon: Let's Go, Eevee! adds prewarm seeds
+3659656c game: Pokémon: Let's Go, Pikachu! adds prewarm seeds
+50b9b661 games/0400486024DEC000: frame step and dynamic resolution on 1.0.0 (PR #3319)
+6896c0c5 gfx/nvn: track dirty writes on cached sparse texture IDs
+01134c23 rewriter/jump_solver: track provably local fixed stack slots
+dbc26c7f games/0100052004384000: add Axiom Verge 1.0.3 profile (PR #1214)
+432a8bd4 packing/mac-app: unify prebake into pso_offline and guard empty PSO dirs
+ab8ba46f packing/prewarm: upload changed prewarm lists automatically
+c543d65a games/0100EA300DE6E000: add Réussir : Code de la route profile (PR #1000)
+38088bd2 game: Pokémon: Let's Go, Eevee! targets 60 fps
+afd401e2 games/010055700CEA8000: add SD GUNDAM G GENERATION CROSS RAYS profile (PR #1052)
+a7df99f8 chain/spirv: preserve per-location interpolation on indexed fragment inputs (PR #3408)
+15f1f15f games/0100CCF012E9A000: add ENDER LILIES profile (PR #1054)
+7cf637e1 host/launcher: share defaults resolution across windowed and direct launch paths
+a7aea546 games/010065301A2E0000: add Star Ocean: The Second Story R profile (PR #3078)
+92ad9996 game: Pokémon: Let's Go, Eevee! runs on the shared host
+46a83712 games: migrate 21 Unity profiles from reduced app_pool to stdalloc_cap
+ba367c10 games/0100F9600E746000: add ESP Ra.De. Ψ profile (PR #1950)
+923ba571 games/010036F01AE9E000: add Pentiment profile (PR #2028)
+f7f128a4 gfx/shaders: keep dm_mwa_ballot always_inline and default KK3 off (#3405)
+2001c1bf games/010081A00EE62000: add Boomerang Fu profile (PR #2154)
+3dbc8295 game/pikachu: target 60 fps with matched timing functions
+0fc0fc65 games/010095E018944000: add Atelier Ryza 3 profile (PR #3367)
+2b5b41f8 games/0400FF500E34A001: add Xenoblade Chronicles: Definitive Edition Switch 2 profile (PR #3137)
+649c6d76 games/0100CF5010FEC000: add Bayonetta Origins profile (PR #2338)
+e1fbe474 games/0100354017668000: add A Little to the Left profile (PR #2661)
+45cb9ddb games/010025801CEA8000: add stitch. profile (PR #3393)
+27f765ad games/01009A9012022000: add Atelier Ryza 2 profile (PR #3366)
+ab52234f games/010023301E41C000: add Fate/stay night REMASTERED profile (PR #3161)
+1b51e53a games/01002620102C6000: add BioShock 2 Remastered profile (PR #3261)
+ab44edab gfx/nvn: invalidate pool tables when registered views retire
+e4ac9984 games/010016E004796000: add Bridge Constructor Portal profile (PR #2662)
+a56b77d9 game: bring up Pokémon: Let’s Go, Pikachu! 1.0.2
+58c30cd3 packing/shaders: preserve commas in source paths
+816889e5 gfx/nvn: skip empty direct draws and zero-byte buffer copies before pool lookup (PR #3407)
+327f4bcd host/motion: learn and subtract resting gyro bias in passive HID decoders (#3364)
+31a528b3 tools/tests: add pool-table STG cases and bind sblen in test_global_memory (PR #3015)
+186374d9 host/input: make passive Pro stick probe lazy and drop all-zero IMU blocks (#3364)
+e1bcd58c docs/ocarina: record post-8ecae8c41 M1/M2 #2909 follow-ups and bisect plan
+c264119c tools/rewriter: track masked ranges on jump-solver roots (PR #3406)
+30ffe58b gfx/nvn: avoid recursive g_rmu lock in fam_set_valid
+8c7660df games/0400486024DEC000: merge 7,058 prewarm rows from discussion #3291
+5cf87e30 gfx/nvn: rate-limit present interval change logs and summarize per 300 frames (PR #2126)
+479e440b ios/input: wire Switch 2 Bluetooth controllers on iPhone and iPad (PR #1900)
+2daf825b host/time: report the host IANA time zone as device location name (PR #1989)
+b2743d11 ci/checks: restore the lint ratchets and tool tests
+6c3f27a1 gfx/nvn: reject missing texture-copy objects before pass-dump logging (PR #2158)
+2f959ede host/audio: write DM_AUDIO_DUMP per output and unpack DeviceSink PCM
+dbfe1d81 host/threads: validate DM_YIELD_BACKOFF and normalize backoff sleep timespec (PR #2231)
+e8f9c838 packing/shaders: fingerprint DLC roots separately and require shader tables in cache
+85219dd1 tools/regress: cover supplemental GL shaders on mixed NVN+GL builds
+fbee0945 opengl: retain bound buffers across deletion and track EGL surfaces
+92cc26f0 game/alien-isolation: default to 60 fps
+401c7b09 gfx/nvn: scan only addressable texels in stale-float init check
+60f0fe50 host/fs: preserve save capacity records in sync and enforce fallback limit
+96f1f076 game/alien-isolation: register Switch update 1.1.5
+35fea5c2 packing/multi-program: discover and pack sibling programs provisionally
+96b0cc32 host/hid: let the right stick drive motion controls on Mac (PR #2968)
+6234610c host/offline: answer BLE GATT notification-path and disconnect calls offline (PR #2363)
+d3e951d6 packing/dump: read extracted Control NCA metadata and Ounce Acd_1 identity (PR #1562)
+5572329f packing/mac: include checkout provenance in Mac app reuse key (PR #2232)
+b4d40635 tools/bug_report: read provenance from runtime logs and sibling NSP apps (PR #2453)
+396441a9 gfx/nvn: round present viewport size before centring (PR #2295)
+e8ac733c ios/build_ipa: fail when sips writes no icon PNG (PR #2448)
+e9bcc5f3 gfx/nvn: build MetalFX DLSS scalers synchronously, cache per size, and retire on finalize (PR #3373)
+6fd6bba6 packing: honor allow-damaged on matching shader tables (PR #3369)
+e257bade games/naruto-storm3: enable native 60 fps
+473c90de gfx/nvn: cache last mesh pipeline and run-twin lookup (PR #1847)
+10d53249 docs: list DM_NVN_ROP_F16 and DM_SAVE_BACKUPS in env_switches.tsv
+45ff56c7 games/naruto-storm3: add Full Burst support
+f90ba1de packing/shaders: read Fenrir NSGZ shader records (PR #3236)
+1999cbd1 gfx/nvn: wait for successor present on window acquire sync (PR #3372)
+1c672bac game: run Naruto Storm Connections at 60 fps
+b9d0f832 host/save_sync: keep atomic start-of-session save backups (PR #2455)
+1abb838a tools/regress: Make-driven host staging and fixed-function GL mode
+bfa8c070 ios/build_ipa: overwrite existing Info.plist stamps with plutil -replace
+40767172 ios/tests: share packing fixture setting GFXAPI and GD (PR #3370)
+617bb33a tools/packer: target-specific shader stamps, packed GL roots, streamed fingerprints
+e65c3577 host/cheats: deliver enabled cheats once per presented guest frame
+392f98a1 gfx/vk: honor partial renderArea for clears, discards, and resolves
+fa4df544 gfx/nvn: snapshot uncompressed alias writer entries across sync
+9a4a3c5f host/fs: reject stale save handles after rollback and scan read-only save mounts live
+cea11c7d gfx/nvn: make uncompressed alias bookkeeping incremental (PR #3363)
+f56fddeb docs/ocarina: record #2777 M1 Max GPU hang follow-up
+d75a2157 gfx/nvn: zero CPU_NO_ACCESS float textures with non-finite initial storage (PR #3140)
+de4ca24d packing/unity: support stripped Unity 2017.2 shaders (#2649)
+c6842143 tools/romfs: filter NRR and recursive basename globs before building paths
+2ffed890 tools/nup: scope memoryviews in Nup.copy to preserve write and decode errors
+73d19ea8 tools/ue: stamp complete Unreal decode inputs and verify before publish
+d65c0af0 gfx/vk: respect swapchain image ownership and acquire timeouts
+7c02b857 host/sf: give duplicate service handles and in-flight requests shared ownership
+caa1ab48 docs/ocarina: record #2909 M1/M2 and M5/M6 GPU hang follow-ups
+0c932bc9 host/save_sync: propagate getxattr failures when scanning or packing saves
+7886d303 host/save_sync: publish conflict cloud backup before rotating
+6a02debe host/input: filter mouse collections, unwrap -1..0 axes and read AC Back (PR #3352)
+f15dfe46 tools/bug_report: collect macOS GPU fault reports of the host
+ff6b20db opengl/shaders: lower variable texel offsets via overloaded GLSL helpers
+59fc8445 nvn/shaders: store float colours into 16-bit float targets toward zero (PR #3348)
+0834cb6a game: port Xenoblade Chronicles X Switch 2 Edition to Mac
+0a554d79 host/nvn: honour fps_hold at 120 fps (PR #3339)
+67495b45 game: port Xenoblade Chronicles 2 Switch 2 Edition to Mac
+9016bbe5 host/threads: keep wait polls out of clock_wait and include wait target in zero-timeout signature
+eed6ffc9 gfx/shaders: match bounded int(cond) word-1 indices in first_store and float_add_msl
+5ac4f7ed gfx/nvn: key prebuild and mesh prewarm dedup sets by string/dict instead of NSArray
+62bcfd20 packing/shaders: preserve shared cache blobs in library images
+5bdc85b1 game: port Naruto Storm Connections to the Mac
+b0c7928b host/audio: implement AudioOut flush and port Devil May Cry 3
+ef0b5be3 host/input: read unclaimed wired Xbox 360 (XUSB) pads over USB on macOS (PR #2436)
+99ae7c6f gfx/nvn: reject invalid GPU completion times (PR #1759)
+b680dbb9 host/aoc: deduplicate add-on content entries while scanning (PR #1990)
+00904635 nvn/pso: guard Metal cache cleanup by directory identity (PR #2691)
+87260183 host/input: read PDP Wired Fight Pad Pro in Switch wired HID layout (PR #3307)
+01ee10db host/mii: EditAndUpdateMii answered as the editor closed with no change (PR #3298)
+6b352934 packing/shaders: decode nested zstd archive members (PR #1764)
+c698ab83 docs/env: add missing DM_MAC_COMPOSITED switch
+6cefd10e packing/extract: read the base RomFS when an update's data patch changes nothing (PR #3335)
+04fca5c1 host/account: preserve open users across oe::ExecuteProgram (PR #3124)
+ea016897 games/dsr: floor 60 fps FXR emitter intervals to 30 Hz
+1c83bb5d gfx/nvn: drop finalized pool textures from CPU-write tracking
+8ddd5c3f gfx/nvn: sync uncompressed 2D storage aliases on demand (PR #3318)
+b89b2fee gfx/shaders: work around Apple Metal divergent ballot and loop-break bugs (PR #2397)
+8172902d host/mac: use non-opaque Metal layer in mirrored fullscreen (#1821)
+d85b9cb4 gfx/nvn: keep a texture registered when a copy is finalized (PR #3305)
+1cfb717b game: port Volcano Princess to Mac and iOS
+1e06abd9 gfx/nvn: convert GPU feedback timestamps in integer nanoseconds (PR #1978)
+5dcd1f19 gfx/nvn: prune unregistered family serials in fam_set_valid
+cde54c16 gfx/nvn: cache compressed resolution-family metadata on treg_t
+325b9973 host/fs: read save data sizes from control.nacp and ExtendSaveData (PR #3334)
+cfbda8fb host/threads: back off repeated zero-timeout waits as polls (PR #3333)
+168e9e78 game: port Iconoclasts to Mac and iOS
+3778104b docs/readme: lead Games section with compatibility list
+930aa597 gfx/nvn: prune unregistered serials from resolution-family lists (PR #3331)
+889ffd6c gfx/nvn: read the pool tables' counts under g_rmu (PR #3330)
+5b5504ab host/fs: answer path not found for DeleteFile on a directory (PR #3329)
+f9306791 game: target 60 fps in Outer Wilds
+7cc6f19f docs/readme: link the community Game Compatibility List
+1d6bc765 host/nvn: back GameChat virtual camera with an off-screen NVN window (PR #1323)
+2b202936 gfx/nvn: fold pso_pend_kick_budget into pso_pend_kick
+3736ce6a game: port Outer Wilds to Mac and iOS
+5285c89b tools/regress: remove unused pid_alive and own_tree helpers
+fcccbfa7 host/fs: forward IsSaveDataExisting(Uid) to explicit overload
+3426bd1f host/save-sync: skip pre-launch save sync report when cloud sync is off
+5e55efad host/fs: stream RomFS image directories by cursor instead of snapshotting
+1334c97f gfx/nvn: remove obsolete Metal 3 DM_NVN_PASSGPU profiler
+a5b00ba1 vulkan/images: track first upload of converted linear images
+8a8dfcf6 tools/proc_group: reap sibling process groups on parallel rewrite failure
+d1421700 host/save-sync: make cloud replacement conditional under per-title coordination
+f529885c tools/npdm: read ACI0 via one bounds-checked section reader
+b8e2645a tools/regress: key rewritten module cache on actual inputs and verify products
+23cf1ec5 gfx/nvn: report DM_NVN_CPUPROF from replay thread at mtl_sub_commit (PR #1999)
+fd5ae4b9 packing/work: honor caller WORK in task-owned scratch folders (PR #1476)
+41cf6091 game: target 60 fps in Apollo Justice: Ace Attorney Trilogy
+9ae4907a docs: update pipeline look-ahead limits to match 960d203e (PR #1344)
+faf91a9d gfx/nvn: skip synthetic # cover padding pairs in prebuild and offline archive
+5491ae39 gfx/nvn: specialize shader entry function constants before noting g_fn4
+8ecae8c4 gfx/nvn: build Metal 4 mesh pipelines whole to avoid GPU hangs
+48c1154d gfx/xlate: write UIMAD.WIDE carry out to uniform predicate (PR #1548)
+636218f6 tools/bench: stop host and release lock on SIGTERM and SIGINT (PR #2447)
+d144e6e8 games/0100606026F12000: set depth_mode zero and add prewarm seed list (PR #1344)
+d24d9206 host/vi: bind frame history entries to nq_worker physical present tickets
+95940778 nvn/present: pace covered Mac windows by the host clock (PR #1302)
+bb593d1c host/vi: use pacer vsync grid for missing frame-history timestamps (#2339)
+4fdfd479 gfx/nvn: raise fence event from post_complete on unsignaled feedback (PR #1409)
+5dfc86ae game: port Apollo Justice: Ace Attorney Trilogy to Mac
+288803ae packing/regions: make address region verdicts target-aware for Mac-only builds
+d83c32ec opengl/shaders: add missing es profile on #version 310/320 (#3292)
+551228c9 gfx/nvn, tools: honor acquire sync deadlines, fix movie texture handoff/aliases, zxnb reader table, nx_extract literal opens, and provisional marker reuse
+fb3ca11a nvn/present: filter minified presents with a separable tent kernel
+a0d1b2f6 nvn/tests: check pool-residency kernel lookup
+953e8927 nvn/tests: check movie readback buffer allocation
+2746806f packing/profile: type decoder archive scan results
+c07a3cc5 chain/split: report invalid PACx LZ4 chunks
+4be2de4a chain/split: share the zlib header check across archive readers
+ba15f55d game: port XCOM 2 Collection to the Mac
+9b2ee6c7 tools/packing: discover decoder-backed archives in DLC for Oodle host (PR #1403)
+9e889a86 game: Captain Tsubasa 2 World Fighters defaults to 60 fps
+bd3fc779 game: BioShock Remastered plays on the Mac + shadercache.nx reader (PR #3247)
+69b618b3 host/threads: enforce Horizon SetThreadActivity and GetThreadContext3 rules
+f5c5a823 host/web: end an offline HTML page that calls window.close() (PR #3262)
+fb0a0d3b gl/sync: treat a GLsync as a name, not a pointer to read (PR #3282)
+557f1954 host/threads: initialize yield and spin settings in svc_thread_main_init (PR #2031)
+48bc8536 nvn/shaders: keep missing shader keys for the next partial build (PR #3288)
+9f0aa547 nvn: resolve registered textures at pool slot zero (PR #3256)
+b6336876 gfx/nvn: copy-on-write pool updates and cross-submission residency checks
+2cc4cda2 packing/nup: scope provisional romfs_marker to the packed program
+ffb06d60 nvn/textures: stage native-texture movie frames linearly for GPU blit
+dcba0ba1 game: Captain Tsubasa 2 World Fighters on Mac
+7972b110 packing/extract: preserve literal RomFS archive paths
+af9b70ea host/uemalloc: preserve Unreal allocator RTTI
+7e7e55fd nvn/rt: retire stalled acquire threads to standard policy (PR #3285)
+be38b7da nvn/upscaler: retire evicted MetalFX scalers at their fence and evict LRU
+4561f442 host/nvn: borrow shader library file mappings on macOS
+e41e8a96 game: port Mortal Kombat 11
+ed1cf496 packing/shaders: keep partial builds in the shared cache directory
+be172acd nvn/sparse: track buffer-backed textures across run replacements
+73150dd9 chain/atomic: keep float atomic adds out of the constant program
+01439b0f gfx/nvn: recover interrupted archive captures during offline packaging
+549324da host/input: read 8BitDo Ultimate 2 Wireless Bluetooth motion (#2997)
+f708540f packing/mac-app: keep existing app icon on in-place rebuild (PR #3148)
+2fcf7e8c opengl/shaders: strip legacy precision statements after preprocessing (PR #3269)
+1cd57e6a gfx/nvn: add opt-in DM_NVN_ANISO surface-sampler anisotropy floor
+2c0682e7 gfx/present: support DM_PICTURE_FIT=fill on Mac
+900e11ca host/uemalloc: keep each thread's recently freed small blocks intact (PR #3265)
+37512993 host/hid: route JoyDual vibration handles to FullKey and Handheld pads
+8e0a772b host/mem: place thread stacks deterministically in the stack region
+3f6b304d docs/readme: link the prewarm lists discussion
+1f64cee7 game: port Story of Seasons: Friends of Mineral Town
+67e67146 host/audren: clear renderer event on Update and remove catch-up queue (PR #3272)
+002724b8 game: default Assassin's Creed III Remastered to 60 fps
+e148dca9 host/audio: choose surround from the Mac device's speaker layout (PR #3264)
+3b882993 nvn/vertex: declare slot 30 stride 32 for absent attributes (PR #3258)
+110868ee nvn/queue: a wait on an in-flight write carries the writer's fence (PR #3276)
+49aee453 game: add It Takes Two 1.0.3 profile (PR #3101)
+fd4d1134 docs: refresh translator line links in the patch index
+c2badd9f game: Assassin's Creed III Remastered reaches its Mac opening
+5e907fb8 packing/forge: read Scimitar v27 shader archives
+12e0a177 nvn/device: read older NVN minor versions from the SDK
+f856c78d chain/tools: include vendored Ryujinx sources in xlate_source_sha
+ca4ffed4 packing: read Unity shaders in CRI CPK archives
+2f0210db chain/spirv: keep nested Else/If blocks for SPIR-V (PR #3253)
+3e3e18fd games/010013C00E930000: offer 120 fps for Hollow Knight: Silksong (PR #2479)
+7f015ff8 nvn/residency: release committed queue objects under g_res_commit_mu
+208b699c ci/lint: fix NVN table growth and test diagnostics
+44c5500c host/tests: supply the SDK probe in memory fixtures
+c7e74a1f nvn/replay: cache view type and pixel format on treg_t, add bench.py submit metrics
+4015ce2c gfx/nvn: keep resolution families compressed with valid-geometry tracking
+39123f79 games/0100633007D48000: offer 120 fps for Hollow Knight (PR #2478)
+c56ec4d7 host/memstat: add DM_MEMSTAT_WALK=<N> to throttle region walks
+0293739d game: Guacamelee! 2 1.0.4 reaches its opening on Mac
+2398cf78 gfx/tests: update pso_get callers and dual-source main0_u assertion
+973f2d73 nvn/mtl: add opt-in bounded depth-write snapshot copies (DM_NVN_FB_DEPTH_RECT)
+685d2aec gfx/nvn: Metal 4 mesh pipeline bases, mesh_pairs.tsv prebuild, and prefetch
+61e97458 nvn/latch: gate on GPU deadline and exit on late GPU or skipped ticks
+df20cc25 packing/shader_split: parse DrinkBox SHADERS containers (PR #2810)
+4f4d23a8 gfx/nvn: read texture serials lock-free in passdump bind logging (PR #3245)
+f3cbbd72 game: Shredder's Revenge 1.0.9 runs offline
+fe138ad5 game: Oceanhorn 2 defaults to 60 fps
+3bcf8213 gfx/tools: read MGFX v10 effects and raw-DEFLATE .zxnb assets (PR #2546)
+d58f8a79 packing/uepak: read shared v8 shaders and port Oceanhorn 2
+d18b4bc5 ios/tests: define DM_GAME_MEM_ALIAS in DuoHarness fixture
+90edd532 ios/menu: accept localized labels for the in-game menu (PR #3057)
+6724d64d host/audio_input: select and unmute matched DualSense USB mic
+e22fe575 game: record Baba Is You IPA and Mac verification
+d2939c1e packing/shaders: report post-compile phases through DMSH_PROGRESS (PR #2684)
+410f0c9e gfx/tools: drop clock stamps from c1_full and cb_extent headers (PR #3172)
+811091e7 packing/ue3: read wide chunks, small-window zlib, and control-first records (PR #2808)
+62f65f70 host/audio: default Mac microphone gain to 1x and guard AUHAL render buffers
+3f37dd3d host/album: save nn::album::SaveScreenshot buffers as local PNGs
+a694f179 host/memory: default Switch 2 to 128 GB Mac alias and pool limit (PR #3188)
+1ac47a87 host/loader: validate linked swforce table at build time (PR #2702)
+de5b17e8 game: port Oceanhorn 1.0.1
+63bfc863 game: Mario + Rabbids Kingdom Battle defaults to 60 fps
+ba82ccb9 nvn, packing/shader_split: validate WriteTexels bounds and parse VFS2 archives (PR #2906)
+bf8d4ade host/friends: open the notification queue offline (PR #3224)
+bb576f18 game: Mario + Rabbids Sparks of Hope defaults to 60 fps
+00f98d5d nvn/images: avoid relocking the registry for buffer writes
+90fc507d ios/packing: use the selected Python via DM_PYTHON (PR #3219)
+c58270ff tools/tests: type exec namespace in test_nso_match.py
+b9a3364d host/nvn: guard edge-snapshot OOM and add crash/VA diagnostics
+5205e2bb chain/build: narrow fu before concatenation in finish()
+40d4091e mac/launcher: open Advanced settings with a button, not an empty DisclosureGroup (PR #3228)
+65b1523b rewriter/spin, host/fpslock: clear decode cache per head; discover Frostbite frame regulator (PR #3234)
+7d38c8e0 host/loader: restore iOS-only alias cuts on Mac (PR #3218)
+cdd91f0a tools/regress: ignore Metal InstalledDir mount path in toolchain fingerprints (PR #3232)
+ef8b25d2 nvn/vertex: supply default W=1.0 for absent attributes (PR #3237)
+82cad791 host/fs: release cache storage mount names at Unmount (PR #3217)
+0b09b66d nvn/replay: tighten fb_view serial check, pso_get_ return type and docs
+019a1f69 game: Donkey Kong Bananza waits for translation on Layer 1400
+5ccb82ad nvn/replay: drop per-draw retain/release in the draw helpers
+a7821cfe nvn/geometry: set the mesh argument table only for a lone mesh draw
+3a7e53d3 nvn/replay: cache same-pass feedback views
+e49e4814 nvn/replay: walk only a shader's texture and buffer bindings per draw
+c1bd080a nvn/replay: bind only the vertex streams the shader reads
+a359f9e6 nvn/replay: look up pool addresses by 64 KB region first
+c22289c0 packing/shader_split: unify Ubisoft Anvil and Scimitar forge readers (PR #3238)
+15a67252 host/settings: preserve the legacy 15-language list (PR #3235)
+38507975 gfx/tests: update t_missing_src1 and test_dmsh_logic for recent blend and build changes
+c17a5498 gfx/nvn: defer acquire pacing and present-ticket wait to nvnSyncWait
+c25a8670 chain/dual-source: move dual-source blending into main0_u and drop dual_want.tsv (PR #2736)
+bd28b4c4 tools/docs_patches: scan game.header_one profile switches
+b78d7e8e host/input: read unclaimed USB Xbox One (GIP) controllers on macOS (PR #2666)
+ee63b843 packing/profiles: fix registered-update shader coverage and status; register Mario Kart World 1.8.0
+e575e812 tools: document DM_NVN_SPARSE_COPY and fix pyright checks
+9ad1670b game/010063100B2C2000: add Cytus α profile in handheld Normal mode (PR #2811)
+cac1293b host: load exlaunch mod code plugins (PR #3178)
+4add5fbb gfx/nvn: adopt newly prebuilt p*.mtl4a archives before frame 0
+3e8f1ce5 host/haptics: drive 8BitDo Ultimate 2 Wireless through HID report 0x05 (PR #2763)
+be3b8bf8 host/mac: automatic passive HID stick fallback for Switch Pro Controllers
+2fc4e70a chain/nvn: pool runtime-selected NVN2 storage images
+7153c4fe game/0400A3A01EE4C000: add 14 later-session Pokopia shaders to shader_seen.tsv (PR #1892)
+48781edc nvn/chain: sparse misaligned shadows, bounded c[0] storage buffers, and Anvil shader split (PR #3126)
+4066c402 game/0400A3A01EE4C000: add 5 Pokopia Pokedex and world shaders to shader_seen.tsv (PR #3171)
+85b222bb games/010099801C4FA000: add Peace Walker Master Collection profiles and render-thread sync fix
+e8460ebc tools/cheat_anchor: bound .bss by the module's end, not the loaded image
+7130d4db host/oe: pick default language from control.nacp when DM_LANG is unset
+d9a70339 chain/split: read the shaders of Monolith's DMPA model packages and NDSR packs (PR #3135)
+5fc927d5 nvn/fstep: 40 fps in ticks of 1/120 s (Ocarina of Time)
+24346dac games/01008CB0156BC000: target 60 fps in Trails into Reverie
+3a2a62f7 gfx/nvn: clear relaxed draw-pass barrier state on NVN queue switch
+3cf75061 gfx/dmsh: specialize the blend fix-up away when both blend words are 0 (PR #3176)
+dc75d1fc host/hid: fix handle metadata and bring up Trails into Reverie
+3d186f2b nvn/present: put a retried display link on probation
+dbefe889 games/0400486024DEC000: update sead::PerspectiveProjection in place for Vert+ screen shape
+610baa4d gfx/shaders: build mesh libraries for every shader variation's geometry pair (PR #3191)
+54c602f2 game: BRAVELY DEFAULT II defaults to 60 fps
+033793f0 chain/vertex: share dm_vs_body_o with capture entry main0_gs (PR #3186)
+1ed3e12a chain/atomics: translate RED.ADD.F16x2, the half-pair atomic add (PR #3200)
+184847c5 host/gates: grow the dispatch index during module preload (PR #3121)
+8d888054 host/nvn: freeze guest clock and park clock reads during prepare and archive open
+12c98ed0 ci/tests: supply Xcode fixture capture-table paths
+fbee62f1 ci/tests: account for Ocarina render-scale hooks
+9c2ad512 ci/opengl: size uniform readback buffers for matrices
+8cc63cc9 packing/shaders: accept mutable NXSH input
+65dfeb33 rewriter/layout: preserve read-only jump table offsets
+b2d41ac5 host/audren: leave explicit CPU/manual renderers to the game (issue #3212)
+1a1d5124 game: port BRAVELY DEFAULT II 1.0.0
+388befdf ios/rotation: add Rotation setting (DM_ROTATION) to launcher and in-game menu
+f75a85aa opengl/shaders: promote desktop GLSL 1.10-1.30, honor layout(binding) and swizzle, and recover GL capture
+3f852b8c ci/coverage: install SPIRV-Tools for Vulkan tests
+36c09285 host/haptics: drive Switch Pro Controllers through their HD rumble report (PR #2607)
+7ff0aef4 gfx/nvn: publish coherent presentation-time and display-link history snapshots (PR #2194)
+acbb26c3 chain/meshstage: spill task payloads past Metal's 16 KB through a device buffer (PR #2264)
+58272b4a ci/lint: fix FFT replay and matcher test typing
+d08d7da6 gfx/nvn: trim on memory pressure and evict idle spares and uploaded textures
+c36551c3 host/front_mac: guard fullscreen mode switches against re-entry and bounces, and settle before display link
+ef393b7e games/pragmata: reserve a 40 GiB iOS alias region and note the entitlement on failure
+6ef18a1f nvn/fstep: ignore pauses and window switches for hold steps and payback (PR #3174)
+3dd1f7a6 gfx/nvn: keep CPU_NO_ACCESS texture pools out of gmem_map and chunk from 256 MB
+e3f2d21f chain/shader_lib: clean up partial outputs and stop cleanly on a full drive (PR #2610)
+b3d287fe games/0400486024DEC000: support launcher Render scale (DM_RENDER_SCALE)
+38a787a0 host/save-sync: ask before sending over a missing cloud save (PR #3197)
+e531be81 tools/regress: run each revision's pso_offline.py in its own process (PR #3190)
+3c4e06aa game: port Ultra Street Fighter II 1.1.1
+9143b6ff nvn: keep shader-code pools out of gmem_map, pre-wire guest files, and pace late 30 fps frames (PR #1971)
+5e098c8c rewriter/fft: match job-pool wake-up stub across updates
+a95c91f4 game/digimon: select 60 fps in Time Stranger startup
+977f5cab host/friends: hook blocked-user availability, no-Uid forms, and cut-object methods
+b3e0d8c5 packing/uepak: use raw size for single-block Unreal pak entries
+a3d58526 gfx/nvn: verify kernel writability before claiming PG_NONE faults
+c12000da games/ocarina: scale dynamic-resolution threshold to target fps (PR #1954)
+930e9195 packing/shader_split: read Falcom .pkg/.pka archives and Phyre RYHP GLSLC shaders
+b768913f host/streamplay: serve the supported HID feature query (PR #3162)
+c5d9c7eb ci/lint: restore the C and Objective-C lint ratchet
+fa59a0a7 gfx/nvn: resolve mismatched-size MSAA Downsample and add Time Stranger profile
+131bd013 packing/shader_split: read wide MVGL archives and NXVS/NXFS/NXCS containers
+22222648 packing/unreal: decode Zstandard pak blocks directly
+602ad87d game: FINAL FANTASY VIII Remastered runs on Mac (PR #3139)
+17454fc3 rewriter/layout: give module data a 16 KB page of its own (PR #3138)
+0cf3a702 nvn/geometry: order deferred updates before mesh-stage buffer use (PR #3120)
+da242230 nvn/textures: partition packaged-texture and CPU-written tables by pool
+194da5fb nvn/submit: track segment commits with shared event and encode-thread gating
+a67583a4 nvn/gw: make running-write tables set-associative and grow sbw
+b4588a53 nvn/vconv: index cached index ranges by page for GPU write invalidation
+ae7c1023 host/mac: revert fullscreen hard-hide of the menu bar (PR #2850)
+a41f0270 host/codec: queue registered video decoder buffers until filled
+d294f3a5 rewriter: fix Pikmin 4 cutscene fade timing
+cb126758 docs/pragmata: record the iPhone startup and memory results
+15f8f6fb docs/ocarina: document the Xcode install fallback
+983a9ab2 docs/frame-rate: record fixed-rate fullscreen stutter
+74c9fd7c docs/playing: explain Xbox button remapping on Mac
+73f23d41 docs: clarify game build and reporting instructions
+584b10a9 docs/games: list frame-rate targets and modes
+0c39549c docs/nba-2k26: record the player lighting prototype
+90dab9b8 docs/rendering: record an iPhone residency commit freeze
+6e12b9f8 docs/ocarina: record Saria cutscene GPU hang tests
+32ff5eef docs/ocarina: document save fields and live game data
+22d84b12 docs: record Ocarina of Time peak-memory diagnosis
+f41613f7 packing/shaders: keep registered sources across RomFS files
+c8d312c0 docs/ocarina: record base M4 and M1 Max benchmarks
+692c8047 docs/games: record Mario Kart World and base M4 Ocarina results
+5b315037 docs: list nxnative Easy and record an iPhone archive rejection
+6dc27632 chain/mesh: pass subgroup inputs by value (PR #3169)
+4cc27d10 ci/tests: update SDK patch and NVN opcode checks
+a706ddef docs/ocarina: record debugging and save findings
+d0556e77 docs/guides: correct CI Xcode and Pro Controller gyro guidance
+930fbff2 nvn/mem: keep sparse memory reports in long sessions
+74c9b1fd opengl/framebuffer: honor sRGB conversion on the window
+6c50d74e host/svc: release unmapped stack pages (PR #2720)
+54569e82 nvn/present: honor an explicit display link at 30 fps (PR #2730)
+de348580 nvn/pso: drain autoreleases after each background build (PR #2714)
+f76fe0c1 game/factorio: port Factorio 2.0.76
+a6c4f687 game: default Hitman Absolution to 60 fps
+25ef427e host/gl: implement glGetShaderSource, exact NACP display version, and Fate/hollow ataraxia profile
+d69a37c5 opengl/shaders: expose only active default uniforms
+806fabe1 host/svc: make native SDK module enumeration work (PR #3023)
+656f8844 host/offline: register friend-ID and network Result hooks (PR #3119)
+75a588f5 opengl/framebuffer: honor sRGB conversion state (PR #3117)
+3e1ada5b nvn/texture: check dimensions before making linear views (PR #2908)
+1364b89a host/prepo: report idle transmission offline (PR #2908)
+a63ca651 packing/shader_split: read NXSD shader containers (PR #2706)
+47578ded game: Ocarina of Time renders taller screens natively (PR #3037)
+6b5c177d docs: update the NxNative Launcher links (PR #2994)
+ded77fda docs: sort the depth bounds environment switch
+5b7dad03 gfx/nvn: depth bounds test on Apple10+ GPUs, for NVN and Vulkan
+cddba4e9 game: default South Park to 60 fps
+79555b67 nvn/vertex: bind the mapped bytes of indexed draws
+e74c3fa7 game: South Park: The Fractured But Whole runs on Mac (PR #843)
+c96c45e9 nvn/vertex: bind the mapped bytes a draw reads
+294572de docs: list two packing environment switches
+9a3eb02e host/audio: make callback bounds and test timing explicit
+fdfbaf9d packing/romfs: keep resource staging compatible with Python 3.9
+953c5a90 chain/build: make shader output modes explicit
+67736c99 game: South Park: The Stick of Truth runs at 60 fps
+1487bca8 game: Star Fox prewarms the tutorial ring course
+fc09c9bc game: South Park: The Stick of Truth runs on Mac
+072cb3fd packing/nup: accept explicit DLC image directories (PR #2905)
+f7ae8a3a game: Ocarina of Time increases the alias region to 8 GiB
+16608f83 docs: record Kakarot's iPhone playtest
+88360118 game: EA SPORTS FC 27 PRMT shaders build without warnings
+8b966e2a game: Persona 5 Royal uses near-zero archive depth (PR #2880)
+098f76ab game: Star Fox builds its archive for near-zero depth (PR #2882)
+246b4b08 game: Donkey Kong Bananza document M4 iPad signing
+ae5d8f51 packing/shaders: recover shaders compiled during play (PR #2869)
+ff18e88a nvn/texture: retain CPU upload data when it is recorded
+33b0cf51 chain/maxwell: implement PRMT byte permutations (PR #3072)
+ad0115fa packing/uepak: read untagged Unreal shader archives (PR #3022)
+2e6f6fd0 chain/vertex: lower draw-uniform viewport masks (PR #3074)
+4381b10c host/hid: expose whole pads as single Joy-Cons (PR #3086)
+d7191d83 game: DRAGON BALL Z: KAKAROT support for update 1.70
+f9e00f44 mac: start the game activity once
+e8ab5f35 host/input: use the Taiko Drum's HID button map (PR #3061)
+da63a9ee rewriter/engine: repair Unity 2018 stream buffer wakeups
+67ba927a nvn/ctl: retire bufsnap buffers after writing the file (PR #2865)
+1f03e2fd nvn/owner: log texture sharing allocation failure (PR #2883)
+b061578e nvn/mem: handle vertex cache edge allocation failure (PR #2883)
+71a9a829 host/svc: start guest-file watcher after memory setup (PR #2870)
+d1d126e3 host/movie: fence deferred video output across Flush (PR #3073)
+6d0ee04a nvn/sparse: honor descriptor lifetime in mapping scans (PR #3091)
+9b03dee5 game: Nintendo Switch Sports Resort refreshes its shader map
+db970cc0 game: Splatoon Raiders refreshes its BAHS shader map
+c9b12271 packing/shaders: preserve verified registered duplicate sources
+4c278799 vulkan: clarify descriptor generation cache checks
+f539b2dc nvn/pso: defer timed archive writes during play (PR #3060)
+7d3d893b ios/cloud-saves: balance the selected folder security scope
+6aaf73ba packing/shader_split: decode zstd frames in process (PR #3002)
+588a5d72 packing/shader_split: share archive probes (PR #3002)
+caccf926 chain: compile the Mac shaders in Metal's relaxed math mode
+3ec5b785 chain/ampere: preserve runtime per-texel gather offsets (PR #2831)
+e30aca5e host/audio: recover from stalls after an output route change
+dd19334e opengl: silence unsupported fixed-function disables (PR #2995)
+a1a81f7e packing/nup: normalize shifted metadata and validate NACP size
+d2fd78b4 gfx/tests: supply shader functions to the pending PSO fixture
+18a96b32 mac: keep the menu bar off fullscreen games (PR #2850)
+c4f12d24 nvn/residency: retire upload staging off Metal feedback (PR #2868)
+6df16dbe nvn/suspend: bound the graphics wait on backgrounding (PR #2864)
+8e06d235 nvn/sampler: model the reserved pool slot zero (#3049)
+8997e195 ci/checks: fix lint and test failures on main
+742e959e packing/nup: prefer the selected build's display version
+78bd42b9 host/vi: share Switch 2 display resolution tiers
+9df3c09f nvn/compute: keep NDVE running after compiler death (#2920)
+f3f73320 packing/nup: preserve selected package display versions
+2e86b714 host/audio: stage short AudioOut tails for large callbacks (PR #2989)
+040c3ae4 packing/nup: inherit missing update icons from the base game
+8c94bd1e host/nvn: release shader library file mappings after loading
+75863bdd host/time: avoid false clock changes across restarts (PR #3065)
+5588e99d nvn/queue: replay completed submission nodes while copying
+99224562 textures: reuse the row copier for sparse tile uploads (PR #3052)
+d0824312 nvn/pipeline: reject missing required render functions
+fdbb359d host/hid: keep stick diagonals within the Switch radius (PR #3053)
+72e81a32 packing/tables: avoid redundant shader scans (PR #3001)
+32fe34ef chain/mesh: keep subgroup helpers out of line (PR #3069)
+6fc64d8a games/witcher3: add opt-in histogram ordering repair
+e59c910a nvn/bind: keep vertex stage when binding non-vertex graphics programs with 0x1f (PR #3055)
+2edad182 host/audren: give the audio producer a real-time deadline
+ff2d3efe game: add FIFA 23 Legacy Edition profile (PR #1696)
+a3e25ed4 nvn/dispatch: skip empty direct grids (PR #1696)
+bbacc45c nvn/residency: retain placed texture parents (PR #1696)
+81e22cca nvn/views: compose nested view offsets (PR #1696)
+c9aceb29 nvn/copy: store compressed IMAGE copies in guest storage
+4508f894 host/oe: handle crash-report switches (PR #1696)
+cb6eb28b packing/easf: read EA shader archives (PR #1696)
+acd6bd02 host/loader: run module initializers dependencies first
+fa549e08 nvn/present: complete startup display-link rescue (PR #3004)
+74abcae5 games/vanillaware: refresh checked shader representatives
+981161a3 game: Pokémon Legends: Arceus refreshes its shader map
+34fa4691 host/movie: re-arm deferred video output events
+c9ef5e74 game: Sonic Frontiers Definitive Edition refreshes its shader map
+c43a1f7a game: FINAL FANTASY XII refreshes its shader map (PR #3016)
+3b7580bc game: Pikmin 4 refreshes its shader map (PR #2992)
+82367f3f game: Persona 5 Strikers keeps patch labels private (PR #3054)
+c075ab26 game: Ocarina of Time refreshes its BAHS shader map (PR #3010)
+7ebb76ed game: run Skywalker Saga at 60 fps by default
+733ecb83 vulkan/clears: honor partial attachment rectangles
+d43d4355 game: Skywalker Saga 1.10.0 plays on the Mac
+ce41059a nvn/blend: write source-only float blends directly
+d43a3790 nvn/image: bind integer buffer storage through float views
+5cd38d39 packing/ttdat: decode DFLT add-on shader members
+8a06d255 game: correct Minecraft graphics mode reachability
+57174ec5 game: Minecraft records the ForwardPBR capability gate
+7b9c59b9 vulkan/shaders: load complete resource tables
+f3950c50 packing/sharc: read GIANTS shader archives (PR #1962)
+220bbc0e game: Twelve Minutes fits its uncapped allocator (PR #2947)
+aae41c11 opengl: compile missing shaders during capture
+b526a50b vulkan/shaders: repair RenderDragon bone inputs before translation
+ee998ae6 game/sam-max: seed validated opening pipelines
+04e3a49b opengl: support legacy GLSL and FNA rendering (PR #1864)
+5c198742 rewriter: preserve 32-bit bounds across guard refinement (PR #1864)
+c714bb92 engine/telltale: read archives and add provisional Sam & Max profile
+66f51684 vulkan: lower passthrough geometry viewport selection
+905de42a vulkan: support Minecraft 1.26.62 RenderDragon on Mac
+81f8e8ce rewriter: distribute branch hops between reachable patch areas
+14f54e4c vulkan: implement ordered replay and compute for Re:ZERO
+130ef293 game: L.A. Noire 1.2 runs on the Mac
+b95a6b24 nvn/present: wait for the frame producer before screenshots (PR #2805)
+80075911 vulkan/tools: detect loader-only games and translate DXC shaders
+2149d856 host/irs: match disconnected processor control replies
+46c67335 opengl: draw with the legacy fixed pipeline (PR #2805)
+92a61243 game: Bloodstained: Ritual of the Night defaults to 60 fps
+0ec204f5 game: add the TSUKIHIME 1.0.2 profile
+79868f86 host/irs: accept valid processor starts with a disconnected camera
+950212b9 nvn/texture: track CPU writes to sparse-layout textures
+087faba9 host/irs: validate the clustering camera handle and gain
+a018d6a7 game/persona5strikers: select native 60 Hz timing
+6c24c65c docs/shaders: record the Bloodstained full split
+19c5379d packing/shader_split: read RAGE WAD shader arrays (PR #2861)
+2cc128ac host/irs: serve disconnected IR cameras to direct clients
+6c554b56 game: add the Persona 5 Strikers 1.0.0 profile
+9f4c3c57 game: add Bloodstained: Curse of the Moon 2 1.3.2
+cd0cf744 game: add Bloodstained: Curse of the Moon 1.1.1
+637f1dfe packing/uepak: read short v8 paks and v1 shader archives
+34ace8cc game: default Persona 5 Tactica to 60 fps
+8fa1b0c1 game: add the Persona 5 Tactica 1.1.0 profile
+e689cb71 game: add the SNES Classics 6.0.0 profile (PR #2165)
+09af1a6b ci: make the mock audio route channel count atomic
+58e709bc ci: reuse the compiled launcher in Mac app tests
+57ecdf85 ci: account for launch QoS clamps in the task-role test
+760c7fe8 packing/shaders: validate PACx 403 root table bounds
+c70c242d ci: repair host and tool test failures on main
+56371f8b game: Resident Evil plays on the Mac (PR #2894)
+c931e584 packing/shader_split: read MT Framework ARC v9 / headed SPK (PR #2894)
+9f834e41 packing/shader_split: extract TT Games DAT and executable shaders (PR #2785)
+f35ebba7 game: add Wonder Switch 2 Edition Program 1 (PR #2957)
+d5e6a529 game: run Borderlands at 60 fps by default
+8d44bd6a rewriter/catherine: enable the game's 60 fps mode
+02614c26 chain: read padded UE3 packages and paired vertex constants
+a6aaf66d opengl: implement active attribute queries after linking (PR #2322)
+f07b1dba packing/gl: discover managed loaders and standalone shaders (PR #2322)
+a67c884f docs/mkw: record v0 duplicate shader control checks
+c311523c chain/rewrite: skip impossible guard scan positions (PR #2970)
+a4c82979 game: add The Witcher 3 and its REDengine shader cache readers
+e0c30043 packing/shader_split: read UbiArt IPK v5 archives (PR #2976)
+54e57a7c packing/shaders: refresh Mario Kart World v0 map
+b989137a chain/vertex: compile shader variants together (PR #2951)
+31fdefeb nvn/upload: bound zero-copy sources per batch on opt-in
+1d1c5b4a nvn/clears: fit zero fills in the shared buffer
+943a6111 nvn/heaps: cap render-target recycle slack at 4 MiB
+93c76c1c nvn/upload: trim completed idle staging on opt-in (PR #1491)
+538da5d9 host/threads: keep replay clock out of relative waits (PR #2027)
+4815cbbf ios/staging: clone changed resource images on rebuild (PR #2949)
+18617ba3 packing/shaders: refresh the Smash Ultimate 13.0.5 map
+4b92e232 host/hid: read Npad style under the bind lock (PR #2878)
+3d8fc824 ios: apply the saved Metal HUD choice before UIKit (PR #1966)
+398fc046 packing/survey: skip AppleDouble NRO sidecars (PR #1667)
+ac3fc4d7 packing/mac: preserve shader image names (PR #1790)
+51d804cd opengl/tests: compare RGBA32F upload values directly
+e22744db tools/fonts: accept TrueType collections as sources (PR #2845)
+74d17535 nvn/geometry: check live mesh argument addresses (PR #2938)
+ce152fd2 docs/mkw: record driver and vehicle pipeline prewarm
+79ac8c89 host/settings: support Polish and Thai (PR #1508)
+7dacea9c opengl/textures: unpack 32-bit packed pixels by word (PR #1224)
+99074948 docs/mkw: trace the Grand Prix race-entry hitch
+985ea6cf ios/input: route lone Joy-Cons through GameController live input
+0b5fd602 rewriter: avoid guest stack spills for x18 conditional selects
+7493ce8c packing/shaders: refresh Fortune's Weave and Z-A maps (PR #2948)
+831b22bb docs/mkw: record cold pipeline rerun on main
+c84297cf host/movie: report NV12 keys for the loaded movie SDK (PR #2955)
+501df0e2 opengl/textures: expand RED and RG uploads (PR #2955)
+5df3dbe8 packing/shaders: reject stray BAHS descriptors (PR #2943)
+e7dc2d9a host/account: return cancellation for offline network accounts
+8da8081e game: Orbitals packs with the checked first-copy shader map
+79f28b06 host/audren: pace burst refills and preserve PCM order (PR #2983)
+48f6bd3b nvn/tests: stop swizzle image case when texture setup fails
+b83913bc host/codec: forward C Opus calls on C++ decoder objects (PR #2974)
+8da15b21 lint/c: clear geometry and haptics ratchet failures
+cf4ff071 docs/mkw: record cold pipeline benchmark
+736a2ecb chain/gmem: shorten raw load pool checks (PR #1833)
+c48a98d5 host/input: select the Steam Link Xbox 360 HID layout (PR #2958)
+5012821e nvn/pso: keep texture resolution out of pipeline lookahead
+313f226c nvn/tests: use the wait counter in geometry replay
+42d02fa8 packing/shaders: refresh Wonder and Mario Tennis Fever maps
+5d101030 nvn/mdx: invalidate indirect masks after primitive barriers (PR #2945)
+66cd8d8c host/input: restore left in the raw HID hat table (PR #2933)
+a3663659 chain/ampere: translate VABSDIFF (PR #2053)
+31b537f1 packing/uepak: read version 9 frozen pak indices (PR #2476)
+2dacca8d chain/ampere: translate IDP dot products (PR #2052)
+3984f5aa nvn/present: clamp early acquire lateness to zero (PR #1041)
+c25d4011 host/audio: capture opt-in Mac microphone streams (PR #1822)
+c379a903 chain/f2fp: honor packing modifiers (PR #2046)
+64a1b8f6 nvn/present: hold queued frames by display link ticks (PR #1045)
+6a4e3215 chain/i2f: round 64-bit inputs once (PR #2045)
+c22f30a3 chain/rounding: honor directed f32 arithmetic (PR #2051)
+3443d482 nvn/mtl: attach only existing residency sets
+50bdfe87 chain/minmax: preserve NVIDIA signed-zero ordering
+cd8c97e4 nvn/render: track color stores with the draw write mask (PR #2771)
+4f4bfb6a nvn/mtl: serialize shared Metal initialization
+4df29405 nvn/textures: borrow replay lookup results (PR #1473)
+be4c103c chain/ampere: round packed HFMA2 once to half
+50bb4ba1 mac: set the default task role for windowless games (PR #2876)
+efd1bddd nvn/textures: cache Metal texture conformance per thread (PR #1467)
+461a5f9f chain/rewrite: skip source scans that cannot match
+a3e5ec1e nvn/texture: use the owning device's GOB order (PR #1257)
+083c5e4f chain: promote read-only fragment storage buffers (PR #2889)
+391c68f9 chain/ampere: translate HFMA2.MMA and preserve RELU NaNs (PR #2049)
+a739027a nvn: continue render passes across independent depth and stencil use
+631ceb39 host/threads: notify same-core handoffs when peers block
+6212f018 chain/spirv: compare proven uniform bounds by row
+eaf327a7 nvn/compute: honor guest barriers for unknown ranges
+30d89215 nvn/mtl: merge face-split draws with independent accesses
+2a67900b nvn/queue: grow command buffers geometrically
+5ca161f2 nvn/pso: normalize NVN2 mesh stages during prewarm
+2ddea510 nvn/queue: read replay timing through the pthread port
+5916c3b5 nvn/mtl: scan compact binds when merging render slices
+e4b0d9b7 packing/extract: reject truncated PFS0 payloads (PR #2122)
+f15d6585 nvn: discover raw pointer pools at binding time
+376adca5 packing: tolerate optional base lookup failures (PR #2701)
+7124b0ad host/movie: recover invalid VideoToolbox sessions (PR #2877)
+e27effd5 packing/ipa: resolve entitlement paths from the caller (PR #2698)
+0bd40f9f chain/ampere: flush half subnormals for FTZ (PR #2048)
+bd072733 chain/spirv-cross: preserve ordered not-equal in MSL (PR #2042)
+44661163 mac/input: threshold controller triggers (PR #2504)
+fb18e83a chain: mask register SHFL lanes (PR #2044)
+e953b5b8 host/haptics: preserve Joy-Con actuator routing (PR #2472)
+0afeb5b8 vulkan/clear: interpret values by attachment format (PR #2450)
+6dbccfc9 nvn: treat an empty DM_NVN_TSV as off (PR #2733)
+3f54c610 host/sf: serve mnpp:app offline (PR #2164)
+8f51289d nvn: retain viewport recording origin (PR #1763)
+fa2ed14d nvn: publish buffer flushes and preserve API contracts (PR #1285)
+1af88aad host/audio: preserve surround across output route changes
+607a5329 packing/heap-check: preserve the pool while capping StandardAllocator
+a2c731e3 nvn/dirty: preserve first-match range lookups (PR #1227)
+c4c1ffda gfx/shaders: keep raw searches inline in final mesh stages
+cc7a9df5 host/friends: hook play history key without a Uid (PR #2162)
+2925d7af games/dream-buffet: order dependent module initialization
+bf93977b nvn: accept small guest command-memory grants (PR #826)
+fbf08e7b rewriter: accept NOP padding after pointer tail calls
+760ef393 game/ocarina: record GPU hang regression isolation
+db07cbde game: Tropical Freeze refreshes stale SNVN shader tables
+82c354b0 gfx/shaders: verify representatives and refresh two profiles
+23427a7b nvn: order texture uploads after buffer copies (PR #2919)
+3fe574df nvn/arena: share submission tails and retire idle blocks (PR #2862)
+015fed3a nvn/pipelines: persist demand before background compilation
+1db4bcb2 nvn/dlss: preserve alpha through MetalFX (PR #2898)
+9bd8bb38 nvn/archive: discard periods after compiler death (PR #2901)
+b04c42b0 host/fs: propagate child failures before parent cleanup
+42c91e1c host/tests: drive HID timers with synthetic deadlines
+2a3c453a ci/opengl: separate hardware rendering from CPU checks
+87d3a47a chain/control-flow: preserve constant jump-entry conditions
+97a19f21 nvn: express the fill pattern buffer size in KiB
+a710f08d tools/abi: include the ray-tracing reflection writer
+3f7fd466 nvn/tests: pass pool ownership metadata in feedback fixtures
+20b59b6e nvn: bind logic state for typed-output shaders (issue #928)
+e99583c9 gfx/shaders: refresh duplicate maps and bound NVN2 stage reads
+60896b35 host/friends: accept offline presence (PR #2903)
+bb574c70 chain/compute: contain runaway loops and report capped kernels
+233e68b8 game: Cozy Land profile with matching pipeline depth (PR #2167)
+b3fe7770 nvn: preserve live BUFFER source ordering (issue #2247)
+a2b819fd game: track Minecraft Dungeons II account validation (PR #2846)
+9e6acda6 host/account: persist users and offer explicit selection (PR #2846)
+48808752 host/movie: order AVC output by codec buffer occupancy (PR #2166)
+1467219c host/motion: qualify controller gyro reports (PR #1877)
+e3230cc1 host/hid: keep vibration capabilities valid before routing (PR #2859)
+1073e98b nvn/args: an arena allocation returns its own addresses
+f3e53afe game: Donkey Kong Bananza record submission-copy measurement limits
+b2e52b37 host/input: verify GameController delivery for virtual pads
+0c134641 packing/ios: allow profiles without prewarm seeds (PR #1706)
+f67a9e88 nvn: guard private buffer CPU-access fallbacks (PR #2230)
+47c210f1 tools/bug_report: preserve redaction across log cuts (PR #2325)
+d6585a2d nvn/pool: a patched pool table takes a finished spare of its own and the logged entries, not a whole copy (PR #2663)
+19d159c0 chain/rewrite: preserve float-add loop retry flags
+854a5967 nvn/tests: fix fixtures rejected by C lint
+422ec240 packing/pso: bundle prewarm pipelines in IPAs (PR #2674)
+d6bb5894 nvn/timestamps: NVN2 counter reports record nanoseconds
+4cda80ea docs/rendering: the cached-view entry's check names DM_NVN_RT_RECLAIM as never on main
+1015aedf nvn/latch: keep the drain's early-present rule inside the latch's wait (PR #2757 review)
+b7e4b982 docs/env_switches: rows for DM_GL_RENDERPROGS and DM_NVN_UNBIND_DEFER
+1b3ff73e docs: measure corrected prediction against current main (PR #2677)
+d664d317 nvn/textures: inspect each overlapping alias once (PR #2677)
+c3efaa90 host/gs: answer the application GPU scheduling time query
+8d62601f nvn/raytracing: run Welcome Tour's native ray modules on Metal
+24e007be nvn/pso: admit archives within the task's address space
+edc7eff9 nvn/pipelines: wait for archive lookup completion (PR #2770)
+9d3a5836 nvn/pipelines: look up predicted bases in background (PR #2677)
+44d67fbe nvn/args: preserve GPU addresses across arena rollover (PR #2847)
+60284e79 gfx/nvn: the display-link callback latches the present of the acquire it woke (#2648, PR #2757)
+be46dc4c host/registration: declare contiguous linker tables (PR #2856)
+9d316360 ci/tests: document the CPU graphics target list (PR #2856)
+7f62966a host/tests: pass complete SVC register frames (PR #2856)
+913fe496 gfx/tests: run t_refl's real-shader cases from inline fixtures
+87422462 nvn: decouple handle checks from unbind deferral
+6c079578 docs/rendering: document the EGL single-context limit
+9537d92f opengl: bind shader resources through argument buffers
+d6b5fc1b nvn: continue passes across redundant target unbinds (#2806)
+5d54b885 opengl: preserve validation, context ownership and clear semantics
+2d601a4d packing: reuse unchanged build inputs safely (PR #2820)
+02789106 tools/tests: the solver bounds 1- and 2-entry tables masked before a bit test (#2562)
+aca80c31 host/input: read DualShock 4 Bluetooth motion (PR #2087)
+b396df3a host/input: handle Nintendo HID protocol and fallback (PR #989)
+ba9ce212 gl/shaders: a GLSL ES 1.00 name that later GLSL takes is renamed for the compile and given back in the table rows (#2818, PR #2819)
+58ab54a5 gl/loader: extension names by the registry's aliases, EGL's current binding per thread, and the GL calls Fate/hollow ataraxia REMASTERED makes (#2818, PR #2819)
+bf1e4edd nvn/blend: bind the blend words under the draw's map (PR #2463, #2329)
+d92b54da nvn/tests: validate storage-pair readbacks and compare sample values
+5cb0806b host/time: run the SDK's UTC localtime and mktime, not host local time
+25cb950e host/nsd: answer the server environment type without the nsd service (PR #1199)
+27ae7736 games/typed-outputs: the six profiles' hand-written integer output rows go; main0_u serves those shaders
+80ad3e7a nvn/tests: check census capture I/O and close failed captures
+9423f7db nvn/tests: check the lazy-clear readback allocation
+4619a14d nvn/owner: document the pool index's retained set for clang-tidy
+17ab7888 opengl/uniforms: require a buffer before returning its Metal storage
+c75f0126 chain/typed-outputs: every pixel shader gets main0_u, typed per target with the alpha test and logic operation in it (#2760, PR #2807)
+d1b58260 games/metro-2033-redux: add Metro 2033 Redux's profile and note (PR #2743)
+89e00cda nvn/alias: clears, CPU uploads and late-made sides reach a compressed-alias pair's other side
+c8744e4f ios: report the game screen's frame rate, so 120 fps can run on ProMotion (PR #2792)
+2acc593b nvn/pend: index large queued writes by granule, with no limit on their count (PR #2801)
+3d795fec nvn/alias: a compressed texture and its uncompressed alias stay equal through every GPU write (PR #2802)
+d941a6dc host/movie: the SDK's own graphics allocator setter runs, native textures need no byte capacity, Flush resets audio history (PR #2798)
+c25315f5 nvn/textures: a 4-sample target and the single-sample image over its pool bytes share one heap, whichever is made first (PR #2789)
+2da2c145 chain/ldc: a lone LDC immediate is the address; beside a register it stays signed (PR #2800)
+3ce43e2a games/ocarina-of-time: held submissions do not raise memory at an area load on the iPhone 17
+d8cfcf27 nvn/census: a census with no texture of its own says so, and t_rt_recycle runs the census
+fa20b6a1 games/mmlc: add Mega Man Legacy Collection's profile and note, with the audio, GL and shader fixes it needs
+8b830abb nvn/census: mem_census retains the textures it reads
+13c35e90 nvn/owner: a memory pool's Finalize ends every texture made on its storage, so a texture object finalized after its pool no longer keeps the pool's memory
+8950f2ea tools/rewriter: prove jump tables by dataflow over each function (#2562)
+84e63860 host/account: GetUserId copies the Uid of any handle, as the SDK does
+e6a358f5 gl/textures: GL_TEXTURE_LOD_BIAS is the sampler's lodBias
+6dad3406 chain: MSL 3.2 for every shader, so a BAR.SYNC after a MEMBAR is kept
+85897523 games/doom3: add DOOM 3's profile and note, with the GL calls and the run-time shader capture it needs
+c3afe786 nvn/clears: every pass takes the waiting lazy clears, not only a draw's (PR #2780)
+0de2ac2e nvn/vis: draws count for occlusion queries only while a later report can see them (PR #2574)
+a0cad7e0 tools/env_switches: enum constants are no switches either
+52ca101d packing/nup: pack one program of a Switch 2 Edition NUP, with the others' RomFS beside it (PR #2692)
+33c734f6 lint/c: the clang-tidy ratchet passes again: seven new findings fixed, the baseline shrunk to 188
+cb994686 gl/textures: upload compressed 2D arrays (PR #2704)
+b4b1c8d7 packing/shader_split: read Phyre shaders from split KIT archives (PR #1939)
+c8c58e6c chain/pull: pulling libraries read NVN2's attributes 16-31
+e5e6b9cb gfx/tests: t_vk_desc watches a plain object for the pipeline's depth-stencil release
+4b50e432 games/burnout: add Burnout Paradise Remastered's profile and note
+9cc20e64 ci/tests: the CPU-only gfx tests no longer name t_rt_depth_ro
+43e816d8 chain: build the raw global lookup's search once per shader (PR #2769)
+25b9d2fe packing/shaders: read Bundle 2 version 2's three-block layout (PR #1883)
+69e7b11b nvn/vertex: layouts the vertex fetch cannot read draw with their pulling pipeline (PR #1129)
+7b586ac6 gfx/tests: t_dlss_scaler passes the bias mask argument, and checks the mask in the scaler's key
+d20e9e7e chain: Maxwell ATOM.CAS, and signed displacements of 40-bit global addresses
+12778f80 docs/env: DM_OBSOLETE gets its row
+83a74d7d nvn/residency: every command buffer names the residency sets, none is attached to a queue (PR #2715)
+063fd073 games/ocarina: movie update takes up to three pictures a frame
+af286190 games/ocarina: movie player takes two pictures a frame, its frame counts pictures (PR #2456)
+6f7e196f chain: retain compute uniform origins for texture handles
+75758b94 host/nvn: no two archive captures of one vertex-stage function at once; prebuild puts such pairs back (PR #2758)
+74181da8 nvn/stand-in: textures in a sparse pool get stand-ins read through the page table (PR #2477)
+89ea16e3 host/os: the guest object map deletes by backward shift, so a key put again keeps one entry (PR #2711)
+23790f8d nvn/dlss: pass the game's bias mask to MetalFX as its reactive mask (PR #1904)
+7b67bfe0 game: Sid Meier's Civilization VI reaches the Mac map
+bc36ee25 packing: read NVBC-wrapped CIVBSF shader records
+4e1d7394 nvn: resolve descriptor handles against the execution pools
+44b8ab17 chain: preserve both words of buffer texture handles
+6229bbd1 packing: another edition's files keep a RomFS marker they hold (PR #1882)
+94a09447 gfx/nvn: return stored sampler builder state from five getters (PR #2115)
+c91dc47a nvn/fault: name every GPU address below 1 MB the host hands Metal (issue #1289)
+f21855e3 packing: one obsolete/ folder for unused build and pipeline archive files
+7c8dc0e6 packing: one compile cache file per shader chain version
+eb2e27f8 host/audren: serve audren:u for SDK 1, whose renderer is only its client; Rayman Legends: Definitive Edition plays with sound (PR #1540)
+40270c08 rewriter/jump: guarded runs proved over control flow; Tied Together's masked tables rewrite (PR #1937)
+fb26adfc host/svc: count the host's memory beside the pool when choosing guest files
+addbe8d6 host/memstat: start DM_MEMSTAT and DM_THRCPU after the iOS env files
+730738e7 packing: key Mac prewarm pipelines on packed shader inputs
+b6baa5d2 packing: port Civilization VII on the Mac with CIVBSF shaders
+7b5d6310 rewriter/jump: one recognizer for guarded dispatch tails; ULTRA STREET FIGHTER II's main rewrites (PR #2108)
+edc07d34 nvn/fstep: one stall is not a rate: the 30-frame average leaves out its longest frame
+48ec04dd vulkan/draw: triangle fans drawn as lists, indexed ones converted before each stretch of a pass (PR #2708)
+2da518bc game: TUNIC record iOS build and Mac validation
+5c3f9052 host/codec: hardware Opus class members bind to the software class's by guest alias (PR #2746)
+5facb9cb host/sf: serve notif:a, the reminder alarms, with an empty answer (PR #1974)
+5e62b189 game/warhammer-survivors: profile, and oe::SetPerformanceConfiguration(int) hooked (PR #2318)
+6336a359 host/oe: EnableStartupLogoDisappearedMessage queues message 95 (PR #1973)
+a68978a7 packing: a build that allows damaged files reuses its split and shaders (PR #2683)
+0ace41d4 host/hid: touch samples on a 4 ms grid, with a history of 16 (PR #2766)
+d7877c50 chain/meshstage: mesh stage memory of 6 KB and more in a leased device slice (PR #2308)
+b827a3b9 gfx/tools: tex_census.py counts the TEX LOD clamps and residency predicates the translator drops (issue #2350)
+409be941 host/thread: guest thread wakes are signalled after G is released (PR #1466)
+fb4da077 nvn/owner: the memory line gives the size and idle age of textures only the sharing table keeps
+293b1d4d nvn/fstep: a scene that fits hold 1 is tried there up to 0.95 vsyncs
+ad1ee5bf nvn: remove the TBDR mode and other dead switches
+aa9e0ff7 game/xcx: run at 60 fps with native engine timing
+b32d0bf3 packing: support Xenoblade Chronicles X: Definitive Edition
+ae3f1699 nvn/pso: ask Metal whether a run can capture before leaving Metal 4 (PR #2688)
+1d8e5feb game/kirby-air-riders: depth_mode zero, so the Mac app's pipeline archive is built for main0_z (PR #2287)
+f91979ba packing: free-space checks count what APFS frees on demand (PR #2257)
+bac9f821 host/font: shared-font stand-ins sized for the games' font engines
+04ba572d chain/nvn: a vertex shader with z = w is drawn with a depth bias past the far value and depth clamping (PR #2199)
+0def324d nvn: a feedback draw gets the levels its sampler's clamp reads (PR #1004)
+03039baa nvn/resolve: implement tiled downsample commands (PR #2703)
+1b24f3d6 nvn: check resource setup and fix analyzer findings in fixtures
+815a4980 host/tests: observe polling sleeps without waiting on a frozen clock
+049f8e0e packing/shaders: reject malformed NARC layouts with their diagnosis
+c365e59f host/font: track and release enlarged engine work buffers (PR #2707)
+a44ca5e7 host/pad: original Joy-Cons are read wholly from their HID reports on the Mac
+960d203e nvn: the look-ahead admits every later draw's pipeline (PR #1344)
+3fabafc8 host/nvn: an ID marked gone releases all its cached views (PR #923)
+b2e2fdbf game: run Overcooked at 60 fps
+a3b5230f host/pad: original Joy-Cons drive the Mac host as motion input (PR #2594)
+b12d2977 game: Overcooked! All You Can Eat runs on Mac
+34d86291 host/movie: nn::codec's VP8 and VP9 decoders are made as the movie path makes its own (PR #2198)
+e251e168 host/audio: the AudioOutBuffer is the SDK's own 40-byte object, and its descriptor functions run in the sdk (PR #2739)
+f8fce3fb game: Divinity: Original Sin 2 defaults to 60 fps
+b1ba6570 nvn/fstep: a GPU-slowed probe needs the scene to fit hold 1 (PR #2611)
+0e409ed8 gfx/nvn: a record that does not fit claims its position, and a lent segment hangs off the recording's bytes in the block it ran short in
+73f6cbbb host/fs: a host error in a save path change refuses the save's next commit (PR #2690)
+2e9a7bde game: port FINAL FANTASY VI
+b2ae958f gfx/nvn: submissions that end behind running work go to the queue together, each in its own command buffer (PR #2645)
+ddcc0f62 game: port FINAL FANTASY V
+1fc17bbc nvn/submit: every commit of the submission's command buffer ends through cb_commit
+```
+
+Follow docs/agents/07-upstream-maintenance.md before integrating. This workflow never advances integrated_head, bumps releases, signs, installs or merges the PR.
